@@ -1713,57 +1713,66 @@ def api_demo_seed():
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
 
+# --- Serve the actual website (frontend folder) ---
 @app.route("/", methods=["GET"])
-def root():
+def serve_root():
+    """Serve frontend/index.html as the homepage."""
+    index_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(index_path):
+        return send_file(index_path)
+    # Fallback: API status page if no frontend found
     return render_template_string("""
-    <!DOCTYPE html>
-    <html><head><title>SKILLINTEL Backend</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-           padding:2rem;background:#f1f5f9;color:#0b1a33;margin:0;}
-      h1{color:#2563eb;margin-top:0;}
-      code{background:#e2e8f0;padding:2px 6px;border-radius:4px;font-size:.9em;}
-      .box{background:white;padding:1.75rem;border-radius:12px;max-width:720px;
-           margin:2rem auto;box-shadow:0 4px 16px rgba(0,0,0,.06);}
-      .ok{color:#16a34a;font-weight:600;}
-      ul{line-height:1.8;}
-      a{color:#2563eb;}
-    </style></head>
-    <body><div class="box">
-      <h1>SKILLINTEL backend is running <span class="ok">● Online</span></h1>
+    <html><head><title>SKILLINTEL Backend</title></head>
+    <body style="font-family:system-ui;padding:2rem;background:#f1f5f9;">
+      <h1 style="color:#2563eb;">SKILLINTEL backend is running</h1>
       <p>Base API: <code>/api/...</code></p>
-      <p>Super admin: <b>vithanalamanisri@gmail.com</b> / <b>vManisri@1512</b></p>
-      <ul>
-        <li>Health: <a href="/api/system/health">/api/system/health</a></li>
-        <li>Login: <code>POST /api/auth/login</code></li>
-        <li>Seed demo data: <code>POST /api/demo/seed</code> (admin only)</li>
-      </ul>
-      <p style="color:#64748b;font-size:.9em;">
-        Deployed with Render · DB at <code>%DB%</code>
-      </p>
-    </div></body></html>
-    """.replace("%DB%", DB_PATH))
+      <p>Health: <a href="/api/system/health">/api/system/health</a></p>
+      <p style="color:#64748b;">Frontend not found at <code>%FRONTEND%</code></p>
+    </body></html>
+    """.replace("%FRONTEND%", FRONTEND_DIR))
 
 
-@app.errorhandler(500)
-def internal_error(e):
-    try:
-        qx("INSERT INTO system_errors (level,message) VALUES ('error',?)", (str(e),))
-    except Exception:
-        pass
-    return jsonify(error="internal server error"), 500
+@app.route("/<path:path>", methods=["GET"])
+def serve_frontend(path):
+    """
+    Serve static files from the frontend folder.
+    Handles:
+      /css/style.css            → frontend/css/style.css
+      /js/api.js                → frontend/js/api.js
+      /auth/login.html          → frontend/auth/login.html
+      /admin/admin.html         → frontend/admin/admin.html
+      /login                    → frontend/login.html (auto adds .html)
+      /dashboard                → frontend/dashboard.html
+      /admin                    → frontend/admin/index.html or admin.html
+    """
+    # Never intercept API routes (safety net — they're already matched above)
+    if path.startswith("api/") or path.startswith("static/"):
+        return jsonify(error="not found"), 404
 
+    # 1. Try exact file: /css/style.css → frontend/css/style.css
+    exact = os.path.join(FRONTEND_DIR, path)
+    if os.path.isfile(exact):
+        return send_file(exact)
 
-@app.errorhandler(404)
-def not_found(e):
-    return jsonify(error="not found"), 404
+    # 2. Try with .html: /login → frontend/login.html
+    html_path = os.path.join(FRONTEND_DIR, path + ".html")
+    if os.path.isfile(html_path):
+        return send_file(html_path)
 
+    # 3. Try path as folder with index.html: /admin → frontend/admin/index.html
+    index_path = os.path.join(FRONTEND_DIR, path, "index.html")
+    if os.path.isfile(index_path):
+        return send_file(index_path)
 
-@app.errorhandler(405)
-def method_not_allowed(e):
-    return jsonify(error="method not allowed"), 405
+    # 4. Try path as folder with <last-segment>.html: /admin → frontend/admin/admin.html
+    last_seg = path.split("/")[-1]
+    if last_seg:
+        alt_html = os.path.join(FRONTEND_DIR, path, last_seg + ".html")
+        if os.path.isfile(alt_html):
+            return send_file(alt_html)
 
+    # 5. Nothing found
+    return jsonify(error="not found", path=path), 404
 
 # =============================================================================
 #  SECTION 22 — ENTRY POINT (Render + Local compatible)
