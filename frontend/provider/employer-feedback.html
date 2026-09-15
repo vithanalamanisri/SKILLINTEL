@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Employer Feedback · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body {
+            background: #f0f4f9;
+            display: flex;
+            min-height: 100vh;
+        }
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 275px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 24px 16px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 18px;
+        }
+        .sidebar-brand .icon {
+            width: 44px; height: 44px; border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+        .sidebar-brand p { font-size: 10px; opacity: 0.5; font-weight: 500; margin-top: 2px; }
+        .sidebar-user {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 16px;
+        }
+        .sidebar-user .avatar {
+            width: 44px; height: 44px; border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px;
+            flex-shrink: 0;
+        }
+        .sidebar-user .info .name { font-size: 14px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 11px; opacity: 0.5; }
+        .menu-label {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.35; padding: 12px 12px 6px; font-weight: 700;
+        }
+        .menu a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: 12px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none; transition: all 0.2s;
+            margin: 2px 0; font-size: 14px; font-weight: 500;
+            cursor: pointer;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .menu a i { width: 20px; text-align: center; font-size: 15px; }
+        .menu a .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 20px;
+        }
+        .menu a .badge.success { background: #22c55e; }
+        .menu a .badge.warning { background: #eab308; }
+        .sidebar-footer {
+            padding: 20px 12px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 16px;
+        }
+        .sidebar-footer a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: 12px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none; transition: 0.2s;
+            font-size: 14px; font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+        /* ===== MAIN ===== */
+        .main-content {
+            margin-left: 275px;
+            flex: 1;
+            padding: 0;
+            min-height: 100vh;
+        }
+        /* ===== HEADER ===== */
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .menu-toggle {
+            display: none;
+            background: none; border: none;
+            font-size: 22px; color: #0b1a33;
+            cursor: pointer;
+        }
+        .header-left .page-title h1 {
+            font-size: 20px; color: #0b1a33;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .header-left .page-title h1 i { color: #2563eb; }
+        .header-left .page-title p {
+            font-size: 12px; color: #64748b;
+            margin-top: 1px;
+        }
+        .header-right {
+            display: flex; align-items: center; gap: 16px;
+        }
+        .header-right .date {
+            font-size: 13px; color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .header-right .notif {
+            position: relative;
+            font-size: 20px; color: #475569;
+            cursor: pointer;
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge {
+            position: absolute; top: 2px; right: 2px;
+            background: #ef4444; color: white;
+            width: 20px; height: 20px;
+            font-size: 10px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .header-right .profile-btn {
+            display: flex; align-items: center; gap: 10px;
+            background: #f1f5f9;
+            padding: 5px 14px 5px 5px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px;
+        }
+        .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+        /* ===== CONTAINER ===== */
+        .container {
+            padding: 24px 32px 32px;
+            max-width: 1440px;
+            margin: auto;
+        }
+        /* ===== WELCOME ===== */
+        .welcome {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+            color: white;
+            padding: 28px 32px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome::before {
+            content: "";
+            position: absolute;
+            width: 350px; height: 350px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -130px; right: -80px;
+        }
+        .welcome-content { position: relative; z-index: 1; }
+        .welcome h2 {
+            font-size: 26px; margin-bottom: 4px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .welcome p { font-size: 15px; opacity: 0.85; }
+        .welcome .welcome-stats {
+            display: flex; gap: 30px;
+            margin-top: 16px; flex-wrap: wrap;
+        }
+        .welcome .welcome-stats div { font-size: 13px; }
+        .welcome .welcome-stats strong { font-size: 20px; display: block; }
+        /* ===== STATS GRID ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            padding: 18px 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid #eef2f6;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
+        }
+        .stat-card .stat-top {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 8px;
+        }
+        .stat-card .stat-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .stat-card .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-card .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-card .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-card .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-card .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
+        .stat-card .stat-icon.rose { background: #fce7f3; color: #db2777; }
+        .stat-card .stat-number {
+            font-size: 28px; font-weight: 800;
+            color: #0b1a33;
+        }
+        .stat-card .stat-label {
+            font-size: 13px; color: #64748b;
+            margin-top: 2px;
+        }
+        .stat-card .stat-change {
+            font-size: 11px; font-weight: 600;
+            padding: 2px 10px; border-radius: 20px;
+        }
+        .stat-card .stat-change.up { background: #dcfce7; color: #16a34a; }
+        .stat-card .stat-change.down { background: #fee2e2; color: #dc2626; }
+        .stat-card .stat-change.neutral { background: #f1f5f9; color: #64748b; }
+        /* ===== RATING SECTION ===== */
+        .rating-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .rating-card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .rating-card .card-title {
+            font-size: 14px; font-weight: 600;
+            color: #64748b; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .rating-card .card-title i { color: #2563eb; }
+        .rating-card .rating-number {
+            font-size: 42px; font-weight: 800;
+            color: #0b1a33;
+        }
+        .rating-card .rating-stars {
+            color: #eab308;
+            font-size: 18px;
+            margin: 4px 0;
+        }
+        .rating-card .rating-label {
+            font-size: 13px; color: #64748b;
+        }
+        .rating-card .rating-bar {
+            margin-top: 12px;
+        }
+        .rating-card .rating-bar .bar-item {
+            display: flex; align-items: center;
+            gap: 10px; margin-bottom: 6px;
+        }
+        .rating-card .rating-bar .bar-item .bar-label {
+            font-size: 12px; color: #475569;
+            width: 100px;
+            flex-shrink: 0;
+        }
+        .rating-card .rating-bar .bar-item .bar-track {
+            flex: 1; height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .rating-card .rating-bar .bar-item .bar-track .fill {
+            height: 100%; border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+        .rating-card .rating-bar .bar-item .bar-track .fill.green { background: #22c55e; }
+        .rating-card .rating-bar .bar-item .bar-track .fill.blue { background: #2563eb; }
+        .rating-card .rating-bar .bar-item .bar-track .fill.orange { background: #d97706; }
+        .rating-card .rating-bar .bar-item .bar-track .fill.purple { background: #7c3aed; }
+        .rating-card .rating-bar .bar-item .bar-value {
+            font-size: 12px; font-weight: 600;
+            color: #0b1a33;
+            width: 40px;
+            text-align: right;
+        }
+        /* ===== FEEDBACK CARDS ===== */
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .feedback-card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px 24px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: all 0.3s;
+        }
+        .feedback-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
+        }
+        .feedback-card .fb-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 12px;
+        }
+        .feedback-card .fb-header .fb-user {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .feedback-card .fb-header .fb-user .avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px; color: white;
+            flex-shrink: 0;
+        }
+        .feedback-card .fb-header .fb-user .name {
+            font-weight: 600; font-size: 14px;
+            color: #0b1a33;
+        }
+        .feedback-card .fb-header .fb-user .sub {
+            font-size: 11px; color: #64748b;
+        }
+        .feedback-card .fb-header .fb-rating {
+            color: #eab308; font-size: 14px;
+            display: flex; gap: 2px;
+        }
+        .feedback-card .fb-body {
+            margin-top: 8px;
+        }
+        .feedback-card .fb-body .fb-text {
+            font-size: 14px; color: #475569;
+            line-height: 1.6;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 4px solid #2563eb;
+            font-style: italic;
+        }
+        .feedback-card .fb-body .fb-tags {
+            display: flex; flex-wrap: wrap;
+            gap: 6px; margin-top: 10px;
+        }
+        .feedback-card .fb-body .fb-tags .tag {
+            padding: 4px 12px; border-radius: 12px;
+            font-size: 10px; font-weight: 600;
+        }
+        .feedback-card .fb-body .fb-tags .tag.strong { background: #dcfce7; color: #16a34a; }
+        .feedback-card .fb-body .fb-tags .tag.weak { background: #fee2e2; color: #dc2626; }
+        .feedback-card .fb-body .fb-tags .tag.improve { background: #fef3c7; color: #d97706; }
+        .feedback-card .fb-body .fb-tags .tag.technical { background: #dbeafe; color: #2563eb; }
+        .feedback-card .fb-footer {
+            margin-top: 12px; padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+            display: flex; justify-content: space-between;
+            font-size: 11px; color: #94a3b8;
+        }
+        /* ===== TWO COLUMN ===== */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1024px) {
+            .two-column { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px 24px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+        }
+        .card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .card-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 16px;
+        }
+        .card-header h3 {
+            font-size: 16px; color: #0b1a33;
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700;
+        }
+        .card-header h3 i { color: #2563eb; }
+        .card-header .view-all {
+            font-size: 12px; color: #2563eb;
+            font-weight: 600; text-decoration: none;
+            cursor: pointer; transition: 0.2s;
+        }
+        .card-header .view-all:hover { text-decoration: underline; }
+        /* ===== COMPETENCY LIST ===== */
+        .competency-item {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .competency-item:last-child { border-bottom: none; }
+        .competency-item .info {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .competency-item .info .icon {
+            width: 32px; height: 32px;
+            border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 13px;
+        }
+        .competency-item .info .icon.high { background: #dcfce7; color: #16a34a; }
+        .competency-item .info .icon.medium { background: #fef3c7; color: #d97706; }
+        .competency-item .info .icon.low { background: #fee2e2; color: #dc2626; }
+        .competency-item .info .name {
+            font-size: 13px; font-weight: 500;
+            color: #0b1a33;
+        }
+        .competency-item .score {
+            font-weight: 700; font-size: 14px;
+        }
+        .competency-item .score.high { color: #16a34a; }
+        .competency-item .score.medium { color: #d97706; }
+        .competency-item .score.low { color: #dc2626; }
+        /* ===== QUICK ACTIONS ===== */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .quick-actions .action-btn {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #0b1a33;
+            font-weight: 500;
+            font-size: 11px;
+        }
+        .quick-actions .action-btn:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+        }
+        .quick-actions .action-btn i {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 4px;
+            color: #2563eb;
+        }
+        .quick-actions .action-btn:hover i { color: white; }
+        /* ===== CONNECT BUTTON ===== */
+        .connect-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+        }
+        .connect-btn i { font-size: 14px; }
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .rating-section { grid-template-columns: 1fr; }
+            .feedback-grid { grid-template-columns: 1fr; }
+            .two-column { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 12px 18px; flex-wrap: wrap; gap: 8px; }
+            .header-left .page-title h1 { font-size: 17px; }
+            .header-right .date { display: none; }
+            .container { padding: 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .stat-card { padding: 14px; }
+            .stat-card .stat-number { font-size: 22px; }
+            .welcome { padding: 20px; }
+            .welcome h2 { font-size: 20px; }
+            .welcome .welcome-stats { gap: 16px; }
+            .quick-actions { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+            .feedback-card .fb-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>SkillBridge</h2>
+            <p>Provider Portal</p>
+        </div>
+    </div>
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">P</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Provider</div>
+            <div class="role" id="sidebarRole">Training Provider</div>
+        </div>
+    </div>
+    <div class="menu-label">Main</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-chart-pie"></i> Overview</a>
+        <a href="trainee-outcomes.html"><i class="fas fa-users"></i> Trainee Outcomes</a>
+        <a href="employment&retention.html"><i class="fas fa-briefcase"></i> Employment & Retention</a>
+        <a class="active" href="employer-feedback.html"><i class="fas fa-comment"></i> Employer Feedback</a>
+        <a href="skill-gaps.html"><i class="fas fa-arrow-up"></i> Skills Gaps</a>
+    </div>
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-comment"></i> Employer Feedback</h1>
+                <p>View employer ratings, competency scores, and detailed feedback</p>
+            </div>
+        </div>
+        <div class="header-right">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+      <i class="fas fa-moon"></i>
+    </button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn">
+                <div class="avatar" id="headerAvatar">P</div>
+                <span class="name" id="headerName">Provider</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== CONTAINER ===== -->
+    <div class="container">
+
+        <!-- WELCOME -->
+        <div class="welcome">
+            <div class="welcome-content">
+                <h2><i class="fas fa-hand-peace"></i> Employer Feedback Overview</h2>
+                <p>Track employer satisfaction, competency ratings, and trainee performance feedback.</p>
+                <div class="welcome-stats">
+                    <div><strong id="totalFeedback">0</strong> Total Feedback</div>
+                    <div><strong id="avgRating">0.0</strong> Average Rating</div>
+                    <div><strong id="satisfactionRate">0%</strong> Satisfaction Rate</div>
+                    <div><strong id="activeEmployers">0</strong> Active Employers</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon blue"><i class="fas fa-star"></i></div>
+                    <span class="stat-change up">↑ 12%</span>
+                </div>
+                <div class="stat-number" id="statAvgRating">0.0</div>
+                <div class="stat-label">Average Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                    <span class="stat-change up">↑ 8%</span>
+                </div>
+                <div class="stat-number" id="statSatisfaction">0%</div>
+                <div class="stat-label">Satisfaction Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+                    <span class="stat-change neutral">–</span>
+                </div>
+                <div class="stat-number" id="statTotalFeedback">0</div>
+                <div class="stat-label">Total Feedback</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon orange"><i class="fas fa-building"></i></div>
+                    <span class="stat-change up">↑ 5%</span>
+                </div>
+                <div class="stat-number" id="statEmployers">0</div>
+                <div class="stat-label">Active Employers</div>
+            </div>
+        </div>
+
+        <!-- RATING SECTION -->
+        <div class="rating-section">
+
+            <!-- OVERALL RATING -->
+            <div class="rating-card">
+                <div class="card-title"><i class="fas fa-star"></i> Overall Rating</div>
+                <div class="rating-number" id="overallRating">0.0</div>
+                <div class="rating-stars" id="overallStars">☆☆☆☆☆</div>
+                <div class="rating-label" id="ratingLabel">No ratings yet</div>
+                <div class="rating-bar">
+                    <div class="bar-item">
+                        <span class="bar-label">5 Stars</span>
+                        <div class="bar-track"><div class="fill green" id="bar5" style="width:0%;"></div></div>
+                        <span class="bar-value" id="val5">0</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">4 Stars</span>
+                        <div class="bar-track"><div class="fill blue" id="bar4" style="width:0%;"></div></div>
+                        <span class="bar-value" id="val4">0</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">3 Stars</span>
+                        <div class="bar-track"><div class="fill purple" id="bar3" style="width:0%;"></div></div>
+                        <span class="bar-value" id="val3">0</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">2 Stars</span>
+                        <div class="bar-track"><div class="fill orange" id="bar2" style="width:0%;"></div></div>
+                        <span class="bar-value" id="val2">0</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">1 Star</span>
+                        <div class="bar-track"><div class="fill" id="bar1" style="width:0%;background:#dc2626;"></div></div>
+                        <span class="bar-value" id="val1">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPETENCY RATINGS -->
+            <div class="rating-card">
+                <div class="card-title"><i class="fas fa-chart-bar"></i> Competency Ratings</div>
+                <div class="rating-bar" id="competencyRatings">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TWO COLUMN -->
+        <div class="two-column">
+
+            <!-- FEEDBACK CARDS -->
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="font-size:16px; color:#0b1a33; display:flex; align-items:center; gap:10px; font-weight:700;">
+                        <i class="fas fa-comment-dots" style="color:#2563eb;"></i> Recent Feedback
+                    </h3>
+                    <div style="display:flex; gap:10px;">
+                        <a class="view-all" href="#" onclick="viewAllFeedback(); return false;">View All <i class="fas fa-arrow-right"></i></a>
+                        <a class="connect-btn" href="../../employer/employer-feedback-form.html" title="Go to Employer Feedback Form">
+                            <i class="fas fa-pen"></i> Submit Feedback
+                        </a>
+                    </div>
+                </div>
+                <div class="feedback-grid" id="feedbackGrid">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+
+            <!-- RIGHT: SUMMARY + ACTIONS -->
+            <div>
+
+                <!-- FEEDBACK SUMMARY -->
+                <div class="card" style="margin-bottom:22px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Feedback Summary</h3>
+                        <a class="view-all" href="#" onclick="exportFeedback(); return false;">Export <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div id="feedbackSummary">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+
+                <!-- QUICK ACTIONS -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    </div>
+                    <div class="quick-actions">
+                        <a href="../../employer/employer-feedback-form.html" class="action-btn">
+                            <i class="fas fa-plus-circle"></i> Submit Feedback
+                        </a>
+                        <a href="#" class="action-btn" onclick="exportFeedback(); return false;">
+                            <i class="fas fa-file-export"></i> Export Report
+                        </a>
+                        <a href="#" class="action-btn" onclick="viewAnalytics(); return false;">
+                            <i class="fas fa-chart-line"></i> View Analytics
+                        </a>
+                        <a href="#" class="action-btn" onclick="window.print(); return false;">
+                            <i class="fas fa-print"></i> Print Report
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // DATA LOADER - From localStorage (Real Data)
+    // ============================================================
+
+    function getEmployerData() {
+        let data = localStorage.getItem('employerData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing employerData:', e); }
+        }
+        return null;
+    }
+
+    function getTraineeData() {
+        let data = localStorage.getItem('traineeData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing traineeData:', e); }
+        }
+        return null;
+    }
+
+    function getEmploymentData() {
+        let data = localStorage.getItem('employmentData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing employmentData:', e); }
+        }
+        return null;
+    }
+
+    function getFollowupData() {
+        let data = localStorage.getItem('followupData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing followupData:', e); }
+        }
+        return null;
+    }
+
+    // ============================================================
+    // GET FEEDBACK DATA FROM LOCALSTORAGE
+    // ============================================================
+
+    function getFeedbackData() {
+        let data = localStorage.getItem('employerFeedbackData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing feedback data:', e); }
+        }
+        return [];
+    }
+
+    // ============================================================
+    // BUILD FEEDBACK DATA
+    // ============================================================
+
+    function buildFeedbackData() {
+        // First check if there's stored feedback data from employers
+        const storedFeedback = getFeedbackData();
+        
+        if (storedFeedback && storedFeedback.length > 0) {
+            console.log('📋 Loaded stored feedback from employers:', storedFeedback.length);
+            return storedFeedback;
+        }
+
+        // If no stored data, try to generate from trainee/employer data
+        const traineeData = getTraineeData();
+        const employerData = getEmployerData();
+        const employmentData = getEmploymentData();
+        const followupData = getFollowupData();
+
+        const feedbacks = [];
+
+        // Generate from available data
+        if (traineeData && employerData) {
+            const rating = calculateRating(traineeData, employmentData, followupData);
+            const competencies = getCompetencies(traineeData, employmentData);
+            
+            feedbacks.push({
+                id: 'FB001',
+                traineeName: traineeData.fullName || 'Trainee',
+                traineeId: traineeData.traineeId || 'TRN001',
+                employerName: employerData.contactPerson || 'Employer',
+                employerOrg: employerData.orgName || 'Organization',
+                rating: rating,
+                date: new Date().toISOString().split('T')[0],
+                text: generateFeedbackText(traineeData, employmentData, followupData),
+                competencies: competencies,
+                avatar: traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T',
+                color: '#2563eb',
+                tags: generateTags(traineeData, employmentData)
+            });
+        }
+
+        if (feedbacks.length === 0) {
+            console.log('⚠️ No feedback data found. Please submit feedback from employer portal.');
+        }
+
+        return feedbacks;
+    }
+
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+
+    function calculateRating(traineeData, employmentData, followupData) {
+        let rating = 3;
+        if (employmentData?.status === 'Employed') rating += 1;
+        if (employmentData?.status === 'Self-Employed') rating += 0.5;
+        if (followupData?.status === 'Completed') rating += 0.5;
+        if (traineeData?.trainingProgress >= 90) rating += 0.5;
+        if (employmentData?.currentIncome && employmentData?.currentIncome > 25000) rating += 0.5;
+        return Math.min(Math.round(rating * 2) / 2, 5);
+    }
+
+    function getCompetencies(traineeData, employmentData) {
+        const competencies = [
+            { name: 'Technical Skills', score: 0 },
+            { name: 'Communication', score: 0 },
+            { name: 'Problem Solving', score: 0 },
+            { name: 'Teamwork', score: 0 },
+            { name: 'Work Ethic', score: 0 },
+            { name: 'Adaptability', score: 0 }
+        ];
+
+        if (traineeData) {
+            competencies[0].score = traineeData.technicalSkills || 75;
+            competencies[1].score = traineeData.communication || 70;
+            competencies[2].score = traineeData.problemSolving || 72;
+            competencies[3].score = traineeData.teamwork || 78;
+            competencies[4].score = traineeData.workEthic || 80;
+            competencies[5].score = traineeData.adaptability || 68;
+        }
+
+        if (employmentData?.status === 'Employed') {
+            competencies.forEach(c => c.score += 5);
+        }
+
+        competencies.forEach(c => c.score = Math.min(c.score, 100));
+        return competencies;
+    }
+
+    function generateFeedbackText(traineeData, employmentData, followupData) {
+        let text = '';
+        if (employmentData?.status === 'Employed') {
+            text = `${traineeData?.fullName || 'The trainee'} has performed exceptionally well in their role. `;
+            if (employmentData.companyName) {
+                text += `They have been a valuable asset to ${employmentData.companyName}. `;
+            }
+        } else if (employmentData?.status === 'Self-Employed') {
+            text = `${traineeData?.fullName || 'The trainee'} has successfully established their own venture. `;
+        } else {
+            text = `${traineeData?.fullName || 'The trainee'} has completed their training and is ready for employment. `;
+        }
+        if (followupData?.status === 'Completed') {
+            text += 'The follow-up process has been completed successfully. ';
+        }
+        return text;
+    }
+
+    function generateTags(traineeData, employmentData) {
+        const tags = [];
+        if (traineeData?.trainingProgress >= 90) tags.push({ label: 'Training Complete', type: 'strong' });
+        if (employmentData?.status === 'Employed') tags.push({ label: 'Employed', type: 'strong' });
+        if (employmentData?.status === 'Self-Employed') tags.push({ label: 'Self-Employed', type: 'technical' });
+        if (tags.length === 0) tags.push({ label: 'Pending Review', type: 'weak' });
+        return tags;
+    }
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+
+    let allFeedbacks = [];
+    let stats = {};
+
+    function loadAndRender() {
+        allFeedbacks = buildFeedbackData();
+        stats = calculateStats(allFeedbacks);
+        renderAll();
+        updateSidebar();
+        updateNotificationBadge();
+    }
+
+    function calculateStats(feedbacks) {
+        const total = feedbacks.length;
+        const ratings = feedbacks.map(f => f.rating);
+        const avg = ratings.length > 0 ? (ratings.reduce((a,b) => a + b, 0) / ratings.length) : 0;
+        const satisfied = ratings.filter(r => r >= 4).length;
+        const satRate = total > 0 ? Math.round((satisfied / total) * 100) : 0;
+        const employers = new Set(feedbacks.map(f => f.employerOrg));
+        return { total, avg, satRate, employers: employers.size, ratings };
+    }
+
+    function renderAll() {
+        renderStats();
+        renderOverallRating();
+        renderCompetencyRatings();
+        renderFeedbackGrid();
+        renderFeedbackSummary();
+        updateWelcomeStats();
+    }
+
+    function renderStats() {
+        document.getElementById('statAvgRating').textContent = stats.avg.toFixed(1);
+        document.getElementById('statSatisfaction').textContent = stats.satRate + '%';
+        document.getElementById('statTotalFeedback').textContent = stats.total;
+        document.getElementById('statEmployers').textContent = stats.employers;
+    }
+
+    function updateWelcomeStats() {
+        document.getElementById('totalFeedback').textContent = stats.total;
+        document.getElementById('avgRating').textContent = stats.avg.toFixed(1);
+        document.getElementById('satisfactionRate').textContent = stats.satRate + '%';
+        document.getElementById('activeEmployers').textContent = stats.employers;
+    }
+
+    function updateNotificationBadge() {
+        document.getElementById('notifBadge').textContent = stats.total;
+    }
+
+    function renderOverallRating() {
+        const avg = stats.avg || 0;
+        document.getElementById('overallRating').textContent = avg.toFixed(1);
+        
+        const fullStars = Math.floor(avg);
+        const halfStar = avg - fullStars >= 0.5;
+        let starsHtml = '';
+        for (let i = 0; i < 5; i++) {
+            if (i < fullStars) starsHtml += '★';
+            else if (i === fullStars && halfStar) starsHtml += '★';
+            else starsHtml += '☆';
+        }
+        document.getElementById('overallStars').textContent = starsHtml;
+
+        const labels = {
+            5: 'Excellent Performance ⭐',
+            4: 'Very Good Performance 🌟',
+            3: 'Good Performance 👍',
+            2: 'Needs Improvement 📈',
+            1: 'Requires Attention ⚠️',
+            0: 'No ratings yet'
+        };
+        const labelKey = avg >= 4.5 ? 5 : Math.floor(avg);
+        document.getElementById('ratingLabel').textContent = labels[labelKey] || labels[0];
+
+        const ratingCounts = {1:0, 2:0, 3:0, 4:0, 5:0};
+        stats.ratings.forEach(r => {
+            const key = Math.min(Math.max(Math.round(r), 1), 5);
+            ratingCounts[key] = (ratingCounts[key] || 0) + 1;
+        });
+
+        const maxCount = Math.max(...Object.values(ratingCounts), 1);
+        for (let i = 1; i <= 5; i++) {
+            const pct = (ratingCounts[i] / maxCount) * 100;
+            document.getElementById('bar' + i).style.width = pct + '%';
+            document.getElementById('val' + i).textContent = ratingCounts[i];
+        }
+    }
+
+    function renderCompetencyRatings() {
+        const container = document.getElementById('competencyRatings');
+        const compMap = {};
+        allFeedbacks.forEach(f => {
+            f.competencies.forEach(c => {
+                if (!compMap[c.name]) compMap[c.name] = { total: 0, count: 0 };
+                compMap[c.name].total += c.score;
+                compMap[c.name].count += 1;
+            });
+        });
+
+        const comps = Object.keys(compMap).map(name => ({
+            name: name,
+            score: Math.round(compMap[name].total / compMap[name].count)
+        }));
+
+        if (comps.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center;padding:20px;color:#94a3b8;">
+                    <i class="fas fa-chart-bar" style="font-size:30px;display:block;margin-bottom:8px;"></i>
+                    No competency data available
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = comps.map(c => {
+            const level = c.score >= 80 ? 'green' : c.score >= 60 ? 'blue' : 'orange';
+            return `
+                <div class="bar-item">
+                    <span class="bar-label">${c.name}</span>
+                    <div class="bar-track">
+                        <div class="fill ${level}" style="width:${c.score}%;"></div>
+                    </div>
+                    <span class="bar-value">${c.score}%</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderFeedbackGrid() {
+        const container = document.getElementById('feedbackGrid');
+        
+        if (allFeedbacks.length === 0) {
+            container.innerHTML = `
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">
+                    <i class="fas fa-comment-slash" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+                    <h3 style="color:#475569;">No Feedback Available</h3>
+                    <p>Employers can submit feedback using the <strong>"Submit Feedback"</strong> button above.</p>
+                    <br>
+                    <a href="../../employer/employer-feedback-form.html" style="display:inline-block;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:8px;">
+                        <i class="fas fa-pen"></i> Submit Feedback Now
+                    </a>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = allFeedbacks.slice(0, 4).map(f => {
+            const stars = '★'.repeat(Math.round(f.rating)) + '☆'.repeat(5 - Math.round(f.rating));
+            return `
+                <div class="feedback-card">
+                    <div class="fb-header">
+                        <div class="fb-user">
+                            <div class="avatar" style="background:${f.color}">${f.avatar}</div>
+                            <div>
+                                <div class="name">${f.traineeName}</div>
+                                <div class="sub">${f.employerOrg} · ${f.date}</div>
+                            </div>
+                        </div>
+                        <div class="fb-rating">${stars}</div>
+                    </div>
+                    <div class="fb-body">
+                        <div class="fb-text">"${f.text}"</div>
+                        <div class="fb-tags">
+                            ${f.tags.map(t => `<span class="tag ${t.type}">${t.label}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="fb-footer">
+                        <span><i class="fas fa-user"></i> ${f.employerName}</span>
+                        <span><i class="fas fa-id-card"></i> ${f.traineeId}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderFeedbackSummary() {
+        const container = document.getElementById('feedbackSummary');
+        const total = stats.total;
+        const avg = stats.avg || 0;
+        const satRate = stats.satRate || 0;
+        const employers = stats.employers || 0;
+
+        const high = stats.ratings.filter(r => r >= 4).length;
+        const medium = stats.ratings.filter(r => r >= 3 && r < 4).length;
+        const low = stats.ratings.filter(r => r < 3).length;
+
+        container.innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+                <div><strong>Total Feedback:</strong> ${total}</div>
+                <div><strong>Avg Rating:</strong> ${avg.toFixed(1)} ⭐</div>
+                <div><strong>Satisfaction:</strong> ${satRate}%</div>
+                <div><strong>Active Employers:</strong> ${employers}</div>
+                <div style="grid-column:span 2;padding-top:8px;border-top:1px solid #f1f5f9;">
+                    <strong>Rating Distribution:</strong>
+                </div>
+                <div style="grid-column:span 2;">
+                    <div style="display:flex;gap:8px;margin-top:4px;">
+                        <span style="background:#dcfce7;padding:2px 10px;border-radius:12px;font-size:11px;">🌟 High (4-5): ${high}</span>
+                        <span style="background:#fef3c7;padding:2px 10px;border-radius:12px;font-size:11px;">📊 Medium (3): ${medium}</span>
+                        <span style="background:#fee2e2;padding:2px 10px;border-radius:12px;font-size:11px;">⚠️ Low (1-2): ${low}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateSidebar() {
+        const employerData = getEmployerData();
+        if (employerData && employerData.contactPerson) {
+            const initial = employerData.contactPerson.charAt(0).toUpperCase();
+            document.getElementById('sidebarAvatar').textContent = initial;
+            document.getElementById('sidebarName').textContent = employerData.contactPerson;
+            document.getElementById('sidebarRole').textContent = employerData.orgName || 'Provider';
+            document.getElementById('headerAvatar').textContent = initial;
+            document.getElementById('headerName').textContent = employerData.contactPerson;
+        }
+    }
+
+    // ============================================================
+    // QUICK ACTIONS
+    // ============================================================
+
+    function exportFeedback() {
+        if (allFeedbacks.length === 0) {
+            alert('No feedback data to export!');
+            return;
+        }
+
+        let report = '📊 EMPLOYER FEEDBACK REPORT\n';
+        report += '================================\n';
+        report += `📅 Generated: ${new Date().toLocaleDateString()}\n\n`;
+        report += `📈 SUMMARY\n`;
+        report += `• Total Feedback: ${stats.total}\n`;
+        report += `• Average Rating: ${stats.avg.toFixed(1)} ⭐\n`;
+        report += `• Satisfaction Rate: ${stats.satRate}%\n`;
+        report += `• Active Employers: ${stats.employers}\n\n`;
+        report += `📋 DETAILED FEEDBACK\n`;
+        report += '================================\n\n';
+
+        allFeedbacks.forEach((f, i) => {
+            report += `${i+1}. ${f.traineeName} (${f.traineeId})\n`;
+            report += `   👤 Employer: ${f.employerName} - ${f.employerOrg}\n`;
+            report += `   ⭐ Rating: ${f.rating}/5\n`;
+            report += `   📅 Date: ${f.date}\n`;
+            report += `   💬 "${f.text}"\n`;
+            report += `   🏷️ Tags: ${f.tags.map(t => t.label).join(', ')}\n`;
+            report += `   📊 Competencies:\n`;
+            f.competencies.forEach(c => {
+                report += `      • ${c.name}: ${c.score}%\n`;
+            });
+            report += '\n';
+        });
+
+        report += '================================\n';
+        report += '📌 Generated by SkillBridge Platform';
+
+        alert(report);
+        console.log('📊 Feedback Report:\n', report);
+    }
+
+    function viewAnalytics() {
+        const high = stats.ratings.filter(r => r >= 4).length;
+        const medium = stats.ratings.filter(r => r >= 3 && r < 4).length;
+        const low = stats.ratings.filter(r => r < 3).length;
+        
+        const avgComp = {};
+        allFeedbacks.forEach(f => {
+            f.competencies.forEach(c => {
+                if (!avgComp[c.name]) avgComp[c.name] = { total: 0, count: 0 };
+                avgComp[c.name].total += c.score;
+                avgComp[c.name].count += 1;
+            });
+        });
+
+        let compStr = '';
+        Object.keys(avgComp).forEach(name => {
+            const score = Math.round(avgComp[name].total / avgComp[name].count);
+            compStr += `   • ${name}: ${score}%\n`;
+        });
+
+        alert(`📊 FEEDBACK ANALYTICS\n\n` +
+              `📈 OVERVIEW\n` +
+              `• Total Feedback: ${stats.total}\n` +
+              `• Average Rating: ${stats.avg.toFixed(1)} ⭐\n` +
+              `• Satisfaction Rate: ${stats.satRate}%\n\n` +
+              `📊 RATING DISTRIBUTION\n` +
+              `• 🌟 High (4-5): ${high} (${Math.round((high/stats.total)*100)}%)\n` +
+              `• 📊 Medium (3): ${medium} (${Math.round((medium/stats.total)*100)}%)\n` +
+              `• ⚠️ Low (1-2): ${low} (${Math.round((low/stats.total)*100)}%)\n\n` +
+              `🎯 COMPETENCY AVERAGES\n` +
+              compStr + '\n' +
+              `💡 RECOMMENDATIONS\n` +
+              `${low > stats.total * 0.2 ? '• ⚠️ High number of low ratings. Consider training improvements.\n' : '• ✅ Most feedback is positive.\n'}`);
+    }
+
+    function viewAllFeedback() {
+        if (allFeedbacks.length === 0) {
+            alert('No feedback available.');
+            return;
+        }
+
+        let msg = '📋 ALL FEEDBACK\n';
+        msg += '================================\n\n';
+        allFeedbacks.forEach((f, i) => {
+            msg += `${i+1}. ${f.traineeName} - ⭐ ${f.rating}/5\n`;
+            msg += `   ${f.employerOrg} · ${f.date}\n`;
+            msg += `   "${f.text.substring(0, 80)}${f.text.length > 80 ? '...' : ''}"\n\n`;
+        });
+        msg += '================================\n';
+        msg += `Total: ${allFeedbacks.length} feedback entries`;
+        alert(msg);
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            alert('Logging out... Redirecting to login page.');
+            window.location.href = '../../auth/login.html';
+        }
+    }
+
+    // ============================================================
+    // UTILITY
+    // ============================================================
+
+    function updateDate() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    function setActiveSidebar() {
+        const currentPage = window.location.pathname.split('/').pop() || 'employer-feedback.html';
+        const pageMap = {
+            'employer-feedback.html': 'feedback',
+            'dashboard.html': 'overview',
+            'trainee-outcomes.html': 'outcomes',
+            'employment&retention.html': 'retention',
+            'skill-gaps.html': 'skills'
+        };
+        const currentId = pageMap[currentPage] || 'feedback';
+
+        document.querySelectorAll('.menu a').forEach(link => {
+            link.classList.remove('active');
+            const href = link.getAttribute('href');
+            if (href) {
+                const page = href.split('/').pop();
+                const pageId = pageMap[page] || '';
+                if (pageId === currentId) {
+                    link.classList.add('active');
+                }
+            }
+        });
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDate();
+        loadAndRender();
+        setActiveSidebar();
+
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        console.log('📊 Employer Feedback page loaded in PROVIDER folder!');
+        console.log('📋 Feedback entries:', allFeedbacks.length);
+        console.log('📊 Stats:', stats);
+        console.log('🔗 Connected to: ../../employer/employer-feedback-form.html');
+    });
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

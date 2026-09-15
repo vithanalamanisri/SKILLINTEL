@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trainee Profile · VerifyPro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+
+    body {
+      background: #f0f4f9;
+      min-height: 100vh;
+      color: #0b1a33;
+    }
+
+    .topbar {
+      background: white;
+      padding: 14px 32px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      color: #475569;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: 0.2s;
+      border: 1px solid #e2e8f0;
+    }
+    .back-btn:hover { background: #e2e8f0; }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0b1a33;
+    }
+    .topbar-title span {
+      color: #2563eb;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .role-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #dbeafe;
+      color: #2563eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 24px 60px;
+    }
+
+    /* ===== LOADING ===== */
+    .loading-box {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 18px;
+      border: 1px solid #eef2f6;
+    }
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid #e0e7ff;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== NOT FOUND ===== */
+    .notfound-box {
+      text-align: center;
+      padding: 80px 20px;
+      background: white;
+      border-radius: 18px;
+      border: 1px solid #eef2f6;
+    }
+    .notfound-box i {
+      font-size: 64px;
+      color: #fecaca;
+      margin-bottom: 20px;
+      display: block;
+    }
+    .notfound-box h2 {
+      font-size: 22px;
+      margin-bottom: 8px;
+      color: #0b1a33;
+    }
+    .notfound-box p {
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    .notfound-box .id {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 20px;
+      background: #f1f5f9;
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    /* ===== PROFILE HEADER ===== */
+    .profile-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 100%);
+      color: white;
+      padding: 32px 36px;
+      border-radius: 20px 20px 0 0;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .profile-header::before {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      top: -200px;
+      right: -100px;
+    }
+    .profile-avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      border: 3px solid rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 700;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .profile-info {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      min-width: 220px;
+    }
+    .profile-info h1 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .profile-info .sub {
+      font-size: 14px;
+      opacity: 0.9;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .profile-info .sub span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .profile-status {
+      position: relative;
+      z-index: 1;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
+    /* ===== SECTIONS ===== */
+    .section {
+      background: white;
+      padding: 24px 36px;
+      border-bottom: 1px solid #eef2f6;
+    }
+    .section:last-of-type {
+      border-radius: 0 0 20px 20px;
+      border-bottom: none;
+    }
+    .section h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #2563eb;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eff6ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+    .section h2 i { font-size: 14px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 32px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #f1f5f9;
+    }
+    .field .label {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .field .value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0b1a33;
+      word-break: break-word;
+    }
+    .field .value.muted { color: #94a3b8; font-weight: 500; }
+
+    .skills-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .skill-tag {
+      padding: 5px 14px;
+      background: #dbeafe;
+      color: #1e40af;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ===== ACTION BAR ===== */
+    .action-bar {
+      margin-top: 24px;
+      padding: 20px 24px;
+      background: white;
+      border-radius: 16px;
+      border: 1px solid #eef2f6;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .btn {
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, #16a34a, #059669);
+      color: white;
+    }
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(22,163,74,0.3);
+    }
+    .btn-outline {
+      background: white;
+      color: #2563eb;
+      border: 2px solid #bfdbfe;
+    }
+    .btn-outline:hover { background: #eff6ff; }
+
+    #regDetails {
+      display: none;
+      margin-top: 16px;
+      padding: 18px 20px;
+      background: #f0f9ff;
+      border-left: 4px solid #2563eb;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #334155;
+    }
+    #regDetails.show { display: block; }
+    #regDetails strong { color: #1e40af; }
+    #regDetails table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+    #regDetails td { padding: 6px 10px; border-bottom: 1px solid #dbeafe; font-size: 13px; }
+    #regDetails td:first-child { color: #64748b; font-weight: 600; width: 180px; }
+    #regDetails td:last-child { color: #0b1a33; font-weight: 500; }
+
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+      .profile-header { padding: 24px; }
+      .profile-avatar { width: 70px; height: 70px; font-size: 28px; }
+      .profile-info h1 { font-size: 20px; }
+      .section { padding: 20px 24px; }
+      .container { padding: 0 16px 40px; }
+      .topbar { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== TOP BAR ===== -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="verify-trainee.html" class="back-btn">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+    <div class="topbar-title">Trainee <span>Profile</span></div>
+  </div>
+  <div class="topbar-right">
+    <span class="role-badge" id="roleBadge">
+      <i class="fas fa-user-tie"></i> Employer View
+    </span>
+  </div>
+</div>
+
+<div class="container" id="container">
+  <!-- Loading state -->
+  <div class="loading-box" id="loadingBox">
+    <div class="spinner"></div>
+    <p style="color:#64748b;font-size:14px;">Loading trainee record…</p>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   REAL DATA SOURCE — same localStorage keys as verify-trainee.html
+   ------------------------------------------------------------
+   allTrainees   → registered trainee master records
+   allEmployment → employment details captured later
+   allFollowups  → 30/90/180/365-day follow-up data
+   ============================================================ */
+
+/* ============================================================
+   1. READ traineeId FROM URL
+   ============================================================ */
+const params = new URLSearchParams(window.location.search);
+const traineeId = params.get('traineeId');
+const roleParam = params.get('role') || 'employer';  // employer | provider | government
+
+document.getElementById('roleBadge').innerHTML = {
+  employer:   '<i class="fas fa-user-tie"></i> Employer View',
+  provider:   '<i class="fas fa-chalkboard-teacher"></i> Provider View',
+  government: '<i class="fas fa-landmark"></i> Government View'
+}[roleParam] || '<i class="fas fa-user-tie"></i> Employer View';
+
+/* ============================================================
+   2. LOAD REAL DATA FROM localStorage
+   ============================================================ */
+function findTraineeById(id) {
+  if (!id) return null;
+
+  const allTrainees   = JSON.parse(localStorage.getItem('allTrainees')   || '[]');
+  const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+  const allFollowups  = JSON.parse(localStorage.getItem('allFollowups')  || '[]');
+
+  console.log('🔍 Searching for traineeId:', id);
+  console.log('   Total trainees in storage:', allTrainees.length);
+
+  // Match by traineeId OR by index-based ID (TRN + number) OR by email (fallback)
+  let index = allTrainees.findIndex(t =>
+    t.traineeId === id ||
+    t.id === id
+  );
+
+  // If not found by ID, try matching by generated ID pattern TRN + index
+  if (index === -1 && /^TRN\d+$/.test(id)) {
+    const num = parseInt(id.replace('TRN', ''), 10) - 1;
+    if (num >= 0 && num < allTrainees.length) index = num;
+  }
+
+  if (index === -1) {
+    console.warn('❌ Trainee not found:', id);
+    return null;
+  }
+
+  const t   = allTrainees[index];
+  const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
+  const fol = allFollowups.find(f => f.traineeEmail === t.email)  || {};
+
+  console.log('✅ Found trainee:', t.fullName || t.name);
+
+  // Compute verification status
+  let verStatus = t.verificationStatus || 'pending';
+  if (verStatus === 'verified' || emp.verified) verStatus = 'verified';
+
+  return {
+    // -------- Master record --------
+    raw: t,
+    employment: emp,
+    followup: fol,
+
+    // -------- Basic --------
+    id: t.traineeId || id,
+    name: t.fullName || t.name || 'Unnamed Trainee',
+    dob: t.dateOfBirth || t.dob || '',
+    gender: t.gender || '',
+    phone: t.mobile || t.phone || '',
+    email: t.email || '',
+    location: [t.district, t.state].filter(Boolean).join(', ') || t.location || '',
+    category: t.category || t.socialCategory || '',
+    address: t.address || '',
+
+    // -------- Education --------
+    qualification: t.qualification || t.highestQualification || '',
+    institution: t.institution || t.school || '',
+    passYear: t.yearOfPassing || t.passYear || '',
+    score: t.percentage || t.cgpa || t.score || '',
+
+    // -------- Training --------
+    course: t.skillTrade || t.course || '',
+    provider: t.trainingProvider || t.provider || '',
+    batch: t.batchId || t.batch || '',
+    trainingStatus: t.trainingStatus || t.certificationStatus || '',
+
+    // -------- Skills --------
+    skills: t.skills || [],
+    certifications: t.certifications || t.certs || [],
+
+    // -------- Assessment --------
+    assessmentScore: t.assessmentScore || '',
+    assessmentDate: t.assessmentDate || '',
+    assessmentResult: t.assessmentResult || '',
+
+    // -------- Career --------
+    prefRole: t.preferredRole || t.prefRole || '',
+    prefLocation: t.preferredLocation || t.prefLoc || '',
+    prefSalary: t.expectedSalary || t.prefSalary || '',
+
+    // -------- Employment --------
+    empStatus: emp.status || '',
+    empCompany: emp.companyName || '',
+    empRole: emp.jobRole || '',
+    empType: emp.employmentType || '',
+    empJoining: emp.joiningDate || '',
+    empLocation: emp.jobCity || '',
+    empIncome: emp.currentIncome || '',
+    empPrevIncome: emp.previousIncome || '',
+
+    // -------- Registration --------
+    regDate: t.registrationDate || t.registeredAt || '',
+    regBy: t.registeredBy || t.regBy || 'Self (Online Portal)',
+
+    // -------- Verification --------
+    verificationStatus: verStatus,
+    verifiedBy: t.verifiedBy || '',
+    verifiedAt: t.verifiedAt || ''
+  };
+}
+
+/* ============================================================
+   3. RENDER
+   ============================================================ */
+function render() {
+  const container = document.getElementById('container');
+
+  if (!traineeId) {
+    container.innerHTML = notFoundHTML('No trainee ID provided in the URL.');
+    return;
+  }
+
+  const t = findTraineeById(traineeId);
+
+  if (!t) {
+    container.innerHTML = notFoundHTML(
+      'This trainee record could not be found in the system.',
+      traineeId
+    );
+    return;
+  }
+
+  const initial = (t.name || 'T').charAt(0).toUpperCase();
+  const muted = v => v ? escapeHtml(v) : '<span class="value muted">Not provided</span>';
+
+  const skillsHTML = Array.isArray(t.skills) && t.skills.length
+    ? t.skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')
+    : '<span class="value muted">No skills recorded</span>';
+
+  const certsHTML = Array.isArray(t.certifications) && t.certifications.length
+    ? t.certifications.map(c => `<span class="skill-tag">${escapeHtml(c)}</span>`).join('')
+    : '<span class="value muted">No certifications recorded</span>';
+
+  const statusClass = t.verificationStatus === 'verified' ? 'verified'
+                    : t.verificationStatus === 'pending'  ? 'pending'
+                    : 'interview';
+
+  container.innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">${escapeHtml(initial)}</div>
+      <div class="profile-info">
+        <h1>${escapeHtml(t.name)}</h1>
+        <div class="sub">
+          <span><i class="fas fa-id-card"></i> ${escapeHtml(t.id)}</span>
+          ${t.course ? `<span><i class="fas fa-graduation-cap"></i> ${escapeHtml(t.course)}</span>` : ''}
+          ${t.location ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(t.location)}</span>` : ''}
+        </div>
+      </div>
+      <div class="profile-status">
+        <span class="badge">
+          <span class="dot"></span>
+          ${t.verificationStatus.charAt(0).toUpperCase() + t.verificationStatus.slice(1)}
+        </span>
+      </div>
+    </div>
+
+    <!-- BASIC -->
+    <div class="section">
+      <h2><i class="fas fa-user"></i> Basic Information</h2>
+      <div class="grid">
+        <div class="field"><span class="label">Trainee ID</span><span class="value">${escapeHtml(t.id)}</span></div>
+        <div class="field"><span class="label">Full Name</span><span class="value">${escapeHtml(t.name)}</span></div>
+        <div class="field"><span class="label">Date of Birth</span><span class="value">${muted(t.dob)}</span></div>
+        <div class="field"><span class="label">Gender</span><span class="value">${muted(t.gender)}</span></div>
+        <div class="field"><span class="label">Phone</span><span class="value">${muted(t.phone)}</span></div>
+        <div class="field"><span class="label">Email</span><span class="value">${muted(t.email)}</span></div>
+        <div class="field"><span class="label">District / State</span><span class="value">${muted(t.location)}</span></div>
+        <div class="field"><span class="label">Category</span><span class="value">${muted(t.category)}</span></div>
+      </div>
+    </div>
+
+    <!-- EDUCATION -->
+    <div class="section">
+      <h2><i class="fas fa-book"></i> Education Details</h2>
+      <div class="grid">
+        <div class="field"><span class="label">Highest Qualification</span><span class="value">${muted(t.qualification)}</span></div>
+        <div class="field"><span class="label">Institution</span><span class="value">${muted(t.institution)}</span></div>
+        <div class="field"><span class="label">Year of Passing</span><span class="value">${muted(t.passYear)}</span></div>
+        <div class="field"><span class="label">Percentage / CGPA</span><span class="value">${muted(t.score)}</span></div>
+      </div>
+    </div>
+
+    <!-- TRAINING -->
+    <div class="section">
+      <h2><i class="fas fa-chalkboard-teacher"></i> Training Details</h2>
+      <div class="grid">
+        <div class="field"><span class="label">Course Name</span><span class="value">${muted(t.course)}</span></div>
+        <div class="field"><span class="label">Training Provider</span><span class="value">${muted(t.provider)}</span></div>
+        <div class="field"><span class="label">Batch / Duration</span><span class="value">${muted(t.batch)}</span></div>
+        <div class="field"><span class="label">Training Status</span><span class="value">${muted(t.trainingStatus)}</span></div>
+      </div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="section">
+      <h2><i class="fas fa-star"></i> Skills & Certifications</h2>
+      <div class="grid">
+        <div class="field" style="grid-column:1/-1;">
+          <span class="label">Primary Skills</span>
+          <div class="skills-list" style="margin-top:6px;">${skillsHTML}</div>
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <span class="label">Certifications</span>
+          <div class="skills-list" style="margin-top:6px;">${certsHTML}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASSESSMENT -->
+    <div class="section">
+      <h2><i class="fas fa-clipboard-check"></i> Assessment Details</h2>
+      <div class="grid">
+        <div class="field"><span class="label">Assessment Score</span><span class="value">${muted(t.assessmentScore)}</span></div>
+        <div class="field"><span class="label">Assessment Date</span><span class="value">${muted(t.assessmentDate)}</span></div>
+        <div class="field"><span class="label">Result</span><span class="value">${muted(t.assessmentResult)}</span></div>
+      </div>
+    </div>
+
+    <!-- CAREER -->
+    <div class="section">
+      <h2><i class="fas fa-bullseye"></i> Career Preferences</h2>
+      <div class="grid">
+        <div class="field"><span class="label">Preferred Job Role</span><span class="value">${muted(t.prefRole)}</span></div>
+        <div class="field"><span class="label">Preferred Location</span><span class="value">${muted(t.prefLocation)}</span></div>
+        <div class="field"><span class="label">Expected Salary</span><span class="value">${muted(t.prefSalary)}</span></div>
+      </div>
+    </div>
+
+    <!-- EMPLOYMENT -->
+    <div class="section">
+      <h2><i class="fas fa-briefcase"></i> Employment Status</h2>
+      <div class="grid">
+        <div class="field"><span class="label">Current Status</span><span class="value">${muted(t.empStatus)}</span></div>
+        <div class="field"><span class="label">Employer</span><span class="value">${muted(t.empCompany)}</span></div>
+        <div class="field"><span class="label">Job Role</span><span class="value">${muted(t.empRole)}</span></div>
+        <div class="field"><span class="label">Employment Type</span><span class="value">${muted(t.empType)}</span></div>
+        <div class="field"><span class="label">Joining Date</span><span class="value">${muted(t.empJoining)}</span></div>
+        <div class="field"><span class="label">Job Location</span><span class="value">${muted(t.empLocation)}</span></div>
+        <div class="field"><span class="label">Monthly Income</span><span class="value">${t.empIncome ? '₹' + Number(t.empIncome).toLocaleString() : '<span class="value muted">Not updated</span>'}</span></div>
+        <div class="field"><span class="label">Previous Income</span><span class="value">${t.empPrevIncome ? '₹' + Number(t.empPrevIncome).toLocaleString() : '<span class="value muted">Not recorded</span>'}</span></div>
+      </div>
+    </div>
+
+    <!-- REGISTRATION -->
+    <div class="section">
+      <h2><i class="fas fa-file-alt"></i> Registration Information</h2>
+      <div class="grid">
+        <div class="field"><span class="label">Registered On</span><span class="value">${muted(t.regDate)}</span></div>
+        <div class="field"><span class="label">Registered By</span><span class="value">${muted(t.regBy)}</span></div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-outline" onclick="toggleRegDetails()">
+          <i class="fas fa-file-alt"></i> View Registration Details
+        </button>
+      </div>
+
+      <div id="regDetails">
+        <strong>Authorized Registration Data (Read-Only)</strong><br>
+        This information was submitted by the trainee during registration.
+        Employers, providers, and government users can view it, but cannot edit it.
+        It is sourced from the central trainee master record.
+        <table>
+          <tr><td>Registration Date</td><td>${escapeHtml(t.regDate) || '—'}</td></tr>
+          <tr><td>Registered By</td><td>${escapeHtml(t.regBy) || '—'}</td></tr>
+          <tr><td>Email</td><td>${escapeHtml(t.email) || '—'}</td></tr>
+          <tr><td>Mobile</td><td>${escapeHtml(t.phone) || '—'}</td></tr>
+          <tr><td>Course</td><td>${escapeHtml(t.course) || '—'}</td></tr>
+          <tr><td>Training Provider</td><td>${escapeHtml(t.provider) || '—'}</td></tr>
+          <tr><td>Batch</td><td>${escapeHtml(t.batch) || '—'}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- VERIFICATION -->
+    <div class="section">
+      <h2><i class="fas fa-shield-alt"></i> Verification Status</h2>
+      <div class="grid">
+        <div class="field">
+          <span class="label">Current Status</span>
+          <span class="value">
+            <span class="badge ${statusClass}" style="background:#dcfce7;color:#16a34a;">
+              ${t.verificationStatus.charAt(0).toUpperCase() + t.verificationStatus.slice(1)}
+            </span>
+          </span>
+        </div>
+        <div class="field">
+          <span class="label">Verified By</span>
+          <span class="value">${muted(t.verifiedBy)}</span>
+        </div>
+        <div class="field">
+          <span class="label">Verified At</span>
+          <span class="value">${muted(t.verifiedAt)}</span>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        ${t.verificationStatus !== 'verified' ? `
+          <button class="btn btn-success" onclick="verifyTrainee()">
+            <i class="fas fa-check"></i> Verify This Trainee
+          </button>
+        ` : ''}
+        <a href="verify-trainee.html" class="btn btn-outline">
+          <i class="fas fa-arrow-left"></i> Back to Trainees
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   4. ACTIONS
+   ============================================================ */
+function toggleRegDetails() {
+  document.getElementById('regDetails').classList.toggle('show');
+}
+
+function verifyTrainee() {
+  if (!traineeId) return;
+  if (!confirm('Mark this trainee as verified by your organization?')) return;
+
+  const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+  const idx = allTrainees.findIndex(t => t.traineeId === traineeId || t.id === traineeId);
+
+  if (idx !== -1) {
+    allTrainees[idx].verificationStatus = 'verified';
+    allTrainees[idx].verifiedAt = new Date().toISOString();
+    allTrainees[idx].verifiedBy = 'Employer Portal';
+    localStorage.setItem('allTrainees', JSON.stringify(allTrainees));
+  }
+
+  alert('✅ Trainee verified successfully.');
+  render();
+}
+
+/* ============================================================
+   5. HELPERS
+   ============================================================ */
+function escapeHtml(str) {
+  if (str === undefined || str === null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function notFoundHTML(message, id) {
+  return `
+    <div class="notfound-box">
+      <i class="fas fa-user-slash"></i>
+      <h2>Trainee Not Found</h2>
+      <p>${escapeHtml(message)}</p>
+      <p>The trainee record you are looking for may not have been registered yet, or the ID is incorrect.</p>
+      ${id ? `<div class="id">ID: ${escapeHtml(id)}</div>` : ''}
+      <div style="margin-top:24px;">
+        <a href="verify-trainee.html" class="btn btn-primary">
+          <i class="fas fa-arrow-left"></i> Back to Trainee List
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   6. INIT
+   ============================================================ */
+render();
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

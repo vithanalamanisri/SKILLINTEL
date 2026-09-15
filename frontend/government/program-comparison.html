@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Government Scheme Comparison · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* ============================================================
+           RESET & BASE
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
+
+        /* ============================================================
+           SIDEBAR
+           ============================================================ */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 20px 14px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            scrollbar-width: thin;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 8px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 14px;
+        }
+        .sidebar-brand .icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
+        .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
+
+        .sidebar-user {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 10px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 12px;
+        }
+        .sidebar-user .avatar {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px;
+            flex-shrink: 0;
+        }
+        .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
+
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none; transition: all 0.2s;
+            margin: 1px 0; font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .menu a i { width: 18px; text-align: center; font-size: 14px; }
+        .menu a .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 10px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 12px;
+        }
+        .sidebar-footer a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none; transition: 0.2s;
+            font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
+        .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 12px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-toggle {
+            display: none;
+            background: none; border: none;
+            font-size: 20px; color: #0b1a33;
+            cursor: pointer;
+        }
+        .header-left .page-title h1 {
+            font-size: 18px; color: #0b1a33;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .header-left .page-title h1 i { color: #2563eb; }
+        .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .header-right {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .header-right .date {
+            font-size: 12px; color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .header-right .notif {
+            position: relative;
+            font-size: 18px; color: #475569;
+            cursor: pointer;
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge {
+            position: absolute; top: 2px; right: 2px;
+            background: #ef4444; color: white;
+            width: 18px; height: 18px;
+            font-size: 9px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .header-right .profile-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: #f1f5f9;
+            padding: 4px 12px 4px 4px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 12px;
+        }
+        .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
+
+        /* ============================================================
+           CONTAINER
+           ============================================================ */
+        .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
+
+        /* ============================================================
+           WELCOME BANNER
+           ============================================================ */
+        .welcome-banner {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+            color: white;
+            padding: 22px 28px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .welcome-banner::before {
+            content: "";
+            position: absolute;
+            width: 350px; height: 350px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -150px; right: -80px;
+        }
+        .welcome-banner .banner-content { position: relative; z-index: 1; }
+        .welcome-banner h2 {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .welcome-banner p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+        .welcome-banner .banner-stats {
+            display: flex;
+            gap: 18px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+        .welcome-banner .banner-stats div {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 6px 16px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .welcome-banner .banner-stats strong {
+            font-size: 20px;
+            display: block;
+        }
+        .welcome-banner .banner-stats span { font-size: 10px; opacity: 0.7; }
+
+        /* ============================================================
+           SECTION TITLES
+           ============================================================ */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .section-title i { color: #2563eb; }
+        .section-title .badge-count {
+            background: #f1f5f9;
+            padding: 1px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            margin-left: auto;
+        }
+
+        /* ============================================================
+           SCHEME SELECTOR
+           ============================================================ */
+        .scheme-selector {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 22px;
+            border: 1px solid #eef2f6;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .scheme-selector .selector-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .scheme-selector .selector-title i { color: #2563eb; }
+        .scheme-selector .selector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+        }
+        .scheme-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+            position: relative;
+            overflow: hidden;
+        }
+        .scheme-checkbox::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: transparent;
+            transition: 0.2s;
+        }
+        .scheme-checkbox:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .scheme-checkbox.selected {
+            border-color: #2563eb;
+            background: #dbeafe;
+        }
+        .scheme-checkbox.selected::before {
+            background: #2563eb;
+        }
+        .scheme-checkbox input {
+            width: 16px;
+            height: 16px;
+            accent-color: #2563eb;
+            cursor: pointer;
+        }
+        .scheme-checkbox .scheme-info {
+            flex: 1;
+        }
+        .scheme-checkbox .scheme-info .sname {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .scheme-checkbox .scheme-info .sname .ministry-badge {
+            font-size: 8px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background: #ede9fe;
+            color: #7c3aed;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .scheme-checkbox .scheme-info .sstats {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* ============================================================
+           VIEW TOGGLE
+           ============================================================ */
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            width: fit-content;
+        }
+        .view-toggle button {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .view-toggle button:hover { color: #0b1a33; }
+        .view-toggle button.active {
+            background: white;
+            color: #2563eb;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.15);
+        }
+
+        /* ============================================================
+           COMPARISON TABLE
+           ============================================================ */
+        .comparison-table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .comparison-table-container .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .comparison-table-container .table-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .comparison-table-container .table-header h3 i { color: #2563eb; }
+        .comparison-table-container .table-header .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .comparison-table-container .table-header button {
+            padding: 6px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            font-size: 11px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .comparison-table-container .table-header button:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .comparison-table-wrapper { overflow-x: auto; }
+        .comparison-table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .comparison-table-wrapper thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #eef2f6;
+        }
+        .comparison-table-wrapper thead th {
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .comparison-table-wrapper thead th.metric-col {
+            position: sticky;
+            left: 0;
+            background: #f8fafc;
+            z-index: 2;
+            border-right: 2px solid #eef2f6;
+            min-width: 180px;
+        }
+        .comparison-table-wrapper tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+        .comparison-table-wrapper tbody tr:hover { background: #f8fafc; }
+        .comparison-table-wrapper tbody td {
+            padding: 10px 14px;
+            color: #0b1a33;
+            vertical-align: middle;
+        }
+        .comparison-table-wrapper tbody td.metric-col {
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 2;
+            border-right: 2px solid #eef2f6;
+            font-weight: 600;
+            font-size: 11px;
+            color: #0b1a33;
+        }
+        .comparison-table-wrapper tbody tr:hover td.metric-col { background: #f8fafc; }
+        .comparison-table-wrapper .section-row {
+            background: #f1f5f9;
+        }
+        .comparison-table-wrapper .section-row td {
+            font-weight: 700;
+            font-size: 11px;
+            color: #2563eb;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 8px 14px;
+        }
+
+        .value-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .value-cell .value-num {
+            font-weight: 700;
+            font-size: 13px;
+            min-width: 50px;
+        }
+        .rank-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 10px;
+        }
+        .rank-badge.rank-1 { background: #fef3c7; color: #d97706; }
+        .rank-badge.rank-2 { background: #e2e8f0; color: #475569; }
+
+        /* ============================================================
+           VISUAL COMPARISON CARDS
+           ============================================================ */
+        .visual-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .visual-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+        }
+        .visual-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .visual-card .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .visual-card .card-title i { color: #2563eb; }
+
+        .visual-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .visual-item:last-child { border-bottom: none; }
+        .visual-item .vi-color {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .visual-item .vi-name {
+            font-size: 11px;
+            font-weight: 500;
+            color: #0b1a33;
+            flex: 1;
+            min-width: 100px;
+        }
+        .visual-item .vi-bar {
+            flex: 2;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .visual-item .vi-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+        .visual-item .vi-val {
+            font-size: 11px;
+            font-weight: 700;
+            color: #0b1a33;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        /* ============================================================
+           SCHEME CARDS GRID
+           ============================================================ */
+        .scheme-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .scheme-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .scheme-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+        .scheme-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.1);
+        }
+        .scheme-card .scheme-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .scheme-card .scheme-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .scheme-card .scheme-ministry {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: #ede9fe;
+            color: #7c3aed;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .scheme-card .scheme-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .scheme-card .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #f8fafc;
+            font-size: 11px;
+        }
+        .scheme-card .metric-row:last-child { border-bottom: none; }
+        .scheme-card .metric-row .label {
+            color: #64748b;
+        }
+        .scheme-card .metric-row .value {
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .scheme-card .scheme-score {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid #f1f5f9;
+        }
+        .scheme-card .scheme-score .score-label {
+            font-size: 11px;
+            color: #64748b;
+        }
+        .scheme-card .scheme-score .score-value {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        /* ============================================================
+           COURSE DRILL-DOWN
+           ============================================================ */
+        .course-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .course-list-item:hover {
+            background: #f1f5f9;
+            transform: translateX(4px);
+        }
+        .course-list-item .course-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #0b1a33;
+        }
+        .course-list-item .course-stats {
+            font-size: 10px;
+            color: #64748b;
+        }
+        .course-list-item .course-rate {
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        /* ============================================================
+           AI INSIGHTS
+           ============================================================ */
+        .ai-insights-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .ai-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .ai-card .ai-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .ai-card .ai-header i { color: #2563eb; }
+        .ai-card .ai-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8fafc;
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.5;
+        }
+        .ai-card .ai-item:last-child { border-bottom: none; }
+        .ai-card .ai-item .ai-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .ai-card .ai-item strong { color: #0b1a33; }
+
+        /* ============================================================
+           REGION GRID
+           ============================================================ */
+        .region-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .region-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: 1px solid #eef2f6;
+            transition: 0.3s;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .region-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
+        }
+        .region-card .region-name {
+            font-weight: 700;
+            font-size: 13px;
+            color: #0b1a33;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .region-card .region-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 12px;
+        }
+        .region-card .region-metrics .rm {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #64748b;
+        }
+        .region-card .region-metrics .rm strong {
+            color: #0b1a33;
+        }
+
+        /* ============================================================
+           QUICK ACTIONS
+           ============================================================ */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .quick-actions .action-btn {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #0b1a33;
+            font-weight: 500;
+            font-size: 11px;
+        }
+        .quick-actions .action-btn:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+        }
+        .quick-actions .action-btn i {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 4px;
+            color: #2563eb;
+        }
+        .quick-actions .action-btn:hover i { color: white; }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 1200px) {
+            .visual-grid { grid-template-columns: 1fr 1fr; }
+            .ai-insights-container { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 10px 16px; }
+            .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; }
+            .container { padding: 12px 14px; }
+            .visual-grid { grid-template-columns: 1fr; }
+            .ai-insights-container { grid-template-columns: 1fr; }
+            .welcome-banner { flex-direction: column; align-items: flex-start; }
+            .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
+            .scheme-selector .selector-grid { grid-template-columns: 1fr; }
+            .scheme-cards-grid { grid-template-columns: 1fr; }
+            .region-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 480px) {
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+            .region-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================
+SIDEBAR
+============================================================ -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>SkillBridge</h2>
+            <p>Government Portal</p>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">G</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Government</div>
+            <div class="role" id="sidebarRole">Admin</div>
+        </div>
+    </div>
+
+    <div class="menu-label">Analytics</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="government-analytics.html"><i class="fas fa-chart-line"></i> Government Analytics</a>
+        <a href="retention-analytics.html"><i class="fas fa-user-check"></i> Retention Analysis</a>
+        <a href="income.html"><i class="fas fa-rupee-sign"></i> Income/Livelihood</a>
+        <a href="training-to-job-relevance.html"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
+        <a href="non-placement-analysis.html"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
+        <a href="program-comparison.html" class="active"><i class="fas fa-graduation-cap"></i> Program Comparison</a>
+        <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ============================================================
+MAIN CONTENT
+============================================================ -->
+<div class="main-content">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-landmark"></i> Government Scheme Comparison</h1>
+                <p>Compare PMKVY, DDU-GKY, PM-DAKSH and other skill development schemes · SIH26135</p>
+            </div>
+        </div>
+        <div class="header-right">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+  <i class="fas fa-moon"></i>
+</button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">G</div>
+                <span class="name" id="headerName">Government</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== CONTAINER ===== -->
+    <div class="container">
+
+        <!-- ===== WELCOME BANNER ===== -->
+        <div class="welcome-banner">
+            <div class="banner-content">
+                <h2><i class="fas fa-landmark"></i> Government Scheme Comparison Analytics</h2>
+                <p>Which Government skill development scheme produces employment that is relevant, sustainable, financially beneficial, and valued by employers?</p>
+            </div>
+            <div class="banner-stats">
+                <div>
+                    <strong id="bannerSchemes">0</strong>
+                    <span>Schemes</span>
+                </div>
+                <div>
+                    <strong id="bannerTopScheme">-</strong>
+                    <span>Top Scheme</span>
+                </div>
+                <div>
+                    <strong id="bannerTrainees">0</strong>
+                    <span>Total Trainees</span>
+                </div>
+                <div>
+                    <strong id="bannerAvgEmployment">0%</strong>
+                    <span>Avg Employment</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SCHEME SELECTOR ===== -->
+        <div class="scheme-selector">
+            <div class="selector-title"><i class="fas fa-check-square"></i> Select Government Schemes to Compare (2-4 schemes)</div>
+            <div class="selector-grid" id="schemeSelector">
+                <!-- Dynamic -->
+            </div>
+        </div>
+
+        <!-- ===== VIEW TOGGLE ===== -->
+        <div class="view-toggle">
+            <button class="active" onclick="switchView('scheme')" id="viewSchemeBtn">
+                <i class="fas fa-landmark"></i> Scheme View
+            </button>
+            <button onclick="switchView('course')" id="viewCourseBtn">
+                <i class="fas fa-book"></i> Course/Trade View
+            </button>
+            <button onclick="switchView('provider')" id="viewProviderBtn">
+                <i class="fas fa-chalkboard-teacher"></i> Provider View
+            </button>
+        </div>
+
+        <!-- ===== COMPARISON TABLE ===== -->
+        <div class="section-title">
+            <i class="fas fa-table"></i> <span id="comparisonTitle">Government Scheme Comparison</span>
+            <span class="badge-count" id="compareCount">0 selected</span>
+        </div>
+        <div class="comparison-table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-chart-bar"></i> Detailed Comparison Matrix</h3>
+                <div class="table-actions">
+                    <button onclick="exportComparison()"><i class="fas fa-download"></i> Export</button>
+                    <button onclick="resetComparison()"><i class="fas fa-undo"></i> Reset</button>
+                </div>
+            </div>
+            <div class="comparison-table-wrapper">
+                <table id="comparisonTable">
+                    <thead id="comparisonHead"></thead>
+                    <tbody id="comparisonBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== SCHEME CARDS ===== -->
+        <div class="section-title">
+            <i class="fas fa-id-card"></i> Scheme Overview Cards
+            <span class="badge-count">At-a-glance performance</span>
+        </div>
+        <div class="scheme-cards-grid" id="schemeCardsGrid">
+            <!-- Dynamic -->
+        </div>
+
+        <!-- ===== VISUAL COMPARISON ===== -->
+        <div class="section-title">
+            <i class="fas fa-chart-pie"></i> Visual Comparison
+            <span class="badge-count">Key metrics at a glance</span>
+        </div>
+        <div class="visual-grid" id="visualGrid">
+            <!-- Dynamic -->
+        </div>
+
+        <!-- ===== COURSE DRILL-DOWN ===== -->
+        <div class="section-title">
+            <i class="fas fa-book"></i> Course/Trade Performance by Scheme
+            <span class="badge-count">Drill down to job roles</span>
+        </div>
+        <div class="visual-grid" id="courseDrillDown">
+            <!-- Dynamic -->
+        </div>
+
+        <!-- ===== PROVIDER PERFORMANCE ===== -->
+        <div class="section-title">
+            <i class="fas fa-chalkboard-teacher"></i> Provider Performance by Scheme
+            <span class="badge-count">Training partner rankings</span>
+        </div>
+        <div class="visual-grid" id="providerGrid">
+            <!-- Dynamic -->
+        </div>
+
+        <!-- ===== REGIONAL COMPARISON ===== -->
+        <div class="section-title">
+            <i class="fas fa-map-marked-alt"></i> Regional Scheme Performance
+            <span class="badge-count">State-wise outcomes</span>
+        </div>
+        <div class="region-grid" id="regionGrid">
+            <!-- Dynamic -->
+        </div>
+
+        <!-- ===== AI INSIGHTS ===== -->
+        <div class="section-title">
+            <i class="fas fa-robot"></i> AI Scheme Insights
+            <span class="badge-count">Policy-level intelligence</span>
+        </div>
+        <div class="ai-insights-container">
+            <div class="ai-card">
+                <div class="ai-header"><i class="fas fa-trophy" style="color:#d97706;"></i> Top Performers</div>
+                <div id="aiHighlights">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+            <div class="ai-card">
+                <div class="ai-header"><i class="fas fa-lightbulb" style="color:#2563eb;"></i> Policy Recommendations</div>
+                <div id="aiRecommendations">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== QUICK ACTIONS ===== -->
+        <div class="chart-card" style="padding:16px 20px; margin-bottom:20px; background:white; border-radius:16px; border:1px solid #eef2f6;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size:14px; color:#0b1a33; display:flex; align-items:center; gap:8px; font-weight:700;">
+                    <i class="fas fa-bolt" style="color:#2563eb;"></i> Quick Actions
+                </h3>
+            </div>
+            <div class="quick-actions">
+                <a href="#" class="action-btn" onclick="exportFullReport(); return false;"><i class="fas fa-file-export"></i> Export Full Report</a>
+                <a href="#" class="action-btn" onclick="viewTopScheme(); return false;"><i class="fas fa-trophy"></i> View Top Scheme</a>
+                <a href="#" class="action-btn" onclick="generateAIInsights(); return false;"><i class="fas fa-robot"></i> AI Insights</a>
+                <a href="#" class="action-btn" onclick="window.print(); return false;"><i class="fas fa-print"></i> Print Dashboard</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // GOVERNMENT SCHEME DATA - SIH26135
+    // ============================================================
+
+    const govtSchemes = {
+        schemes: [
+            {
+                id: 'pmkvy',
+                name: 'PMKVY 2.0',
+                fullName: 'Pradhan Mantri Kaushal Vikas Yojana',
+                ministry: 'MSDE',
+                ministryFull: 'Ministry of Skill Development & Entrepreneurship',
+                color: '#2563eb',
+                year: '2016-2020',
+                budget: '₹12,000 Cr',
+                budgetUtilized: 10800,
+                totalTrainees: 15000,
+                completed: 13800,
+                assessed: 12400,
+                jobEligible: 10500,
+                placed: 8200,
+                relevantJob: 6800,
+                retained: 5900,
+                incomeImproved: 5200,
+                employmentRate: 78,
+                placementRate: 55,
+                nonPlacementRate: 22,
+                timeToEmployment: 45,
+                retention30: 92,
+                retention90: 85,
+                retention180: 78,
+                retention365: 71,
+                dropoutRate: 29,
+                sustainedEmployment: 71,
+                avgIncomeAfter: 28000,
+                medianIncomeAfter: 26000,
+                incomeBefore: 12000,
+                incomeGrowth: 16000,
+                incomeGrowthPct: 133,
+                incomeImprovementRate: 62,
+                selfEmploymentRate: 12,
+                highRelevance: 62,
+                mediumRelevance: 24,
+                lowRelevance: 14,
+                jobMismatch: 14,
+                skillMatch: 84,
+                roleMatch: 78,
+                alignmentScore: 82,
+                employerSatisfaction: 86,
+                technicalSatisfaction: 88,
+                practicalSatisfaction: 82,
+                communicationSatisfaction: 78,
+                workplaceReadiness: 84,
+                employerRecommendation: 88,
+                relevantEmployment: 82,
+                permanentEmployment: 72,
+                fullTimeEmployment: 78,
+                expectedSalary: 30000,
+                actualSalary: 28000,
+                salaryMatch: 93,
+                salaryMismatch: 7,
+                employerDemand: 82,
+                skillDemandMatch: 84,
+                skillShortage: 16,
+                outcomeScore: 82,
+                courses: [
+                    { name: 'Data Analytics', trainees: 3000, employmentRate: 82, incomeGrowth: 145, relevance: 80 },
+                    { name: 'Full Stack Development', trainees: 2500, employmentRate: 78, incomeGrowth: 128, relevance: 76 },
+                    { name: 'Digital Marketing', trainees: 2000, employmentRate: 85, incomeGrowth: 155, relevance: 84 },
+                    { name: 'Data Science', trainees: 1500, employmentRate: 76, incomeGrowth: 122, relevance: 78 },
+                    { name: 'Cloud Computing', trainees: 1200, employmentRate: 80, incomeGrowth: 118, relevance: 82 },
+                    { name: 'UI/UX Design', trainees: 1000, employmentRate: 68, incomeGrowth: 140, relevance: 72 }
+                ],
+                providers: [
+                    { name: 'Skill India Centre', trainees: 4000, employmentRate: 82, outcomeScore: 79 },
+                    { name: 'NITC Training', trainees: 3500, employmentRate: 78, outcomeScore: 75 },
+                    { name: 'Digital India Academy', trainees: 3000, employmentRate: 80, outcomeScore: 78 },
+                    { name: 'Data Science Institute', trainees: 2500, employmentRate: 76, outcomeScore: 73 },
+                    { name: 'Cloud Academy', trainees: 2000, employmentRate: 84, outcomeScore: 80 }
+                ]
+            },
+            {
+                id: 'ddu-gky',
+                name: 'DDU-GKY',
+                fullName: 'Deen Dayal Upadhyaya Grameen Kaushalya Yojana',
+                ministry: 'MoRD',
+                ministryFull: 'Ministry of Rural Development',
+                color: '#16a34a',
+                year: '2014-Present',
+                budget: '₹8,500 Cr',
+                budgetUtilized: 7200,
+                totalTrainees: 12000,
+                completed: 10800,
+                assessed: 9600,
+                jobEligible: 8000,
+                placed: 6200,
+                relevantJob: 4600,
+                retained: 4000,
+                incomeImproved: 3500,
+                employmentRate: 72,
+                placementRate: 52,
+                nonPlacementRate: 28,
+                timeToEmployment: 52,
+                retention30: 88,
+                retention90: 78,
+                retention180: 68,
+                retention365: 65,
+                dropoutRate: 35,
+                sustainedEmployment: 65,
+                avgIncomeAfter: 22000,
+                medianIncomeAfter: 20000,
+                incomeBefore: 9000,
+                incomeGrowth: 13000,
+                incomeGrowthPct: 144,
+                incomeImprovementRate: 58,
+                selfEmploymentRate: 18,
+                highRelevance: 55,
+                mediumRelevance: 28,
+                lowRelevance: 17,
+                jobMismatch: 17,
+                skillMatch: 74,
+                roleMatch: 68,
+                alignmentScore: 72,
+                employerSatisfaction: 78,
+                technicalSatisfaction: 76,
+                practicalSatisfaction: 80,
+                communicationSatisfaction: 72,
+                workplaceReadiness: 76,
+                employerRecommendation: 78,
+                relevantEmployment: 74,
+                qualityEmployment: 68,
+                permanentEmployment: 62,
+                fullTimeEmployment: 70,
+                expectedSalary: 24000,
+                actualSalary: 22000,
+                salaryMatch: 92,
+                salaryMismatch: 8,
+                employerDemand: 76,
+                skillDemandMatch: 74,
+                skillShortage: 26,
+                outcomeScore: 72,
+                courses: [
+                    { name: 'Agriculture & Allied', trainees: 3000, employmentRate: 70, incomeGrowth: 138, relevance: 72 },
+                    { name: 'Construction', trainees: 2500, employmentRate: 74, incomeGrowth: 152, relevance: 68 },
+                    { name: 'Healthcare', trainees: 2000, employmentRate: 78, incomeGrowth: 145, relevance: 80 },
+                    { name: 'Automotive', trainees: 1800, employmentRate: 72, incomeGrowth: 130, relevance: 74 },
+                    { name: 'Retail', trainees: 1500, employmentRate: 66, incomeGrowth: 142, relevance: 62 },
+                    { name: 'Logistics', trainees: 1200, employmentRate: 68, incomeGrowth: 128, relevance: 66 }
+                ],
+                providers: [
+                    { name: 'Rural Skill Foundation', trainees: 3500, employmentRate: 72, outcomeScore: 71 },
+                    { name: 'Gramin Kaushal Kendra', trainees: 3000, employmentRate: 70, outcomeScore: 68 },
+                    { name: 'Bharat Skills', trainees: 2800, employmentRate: 74, outcomeScore: 73 },
+                    { name: 'Rural Development Trust', trainees: 2700, employmentRate: 68, outcomeScore: 66 }
+                ]
+            },
+            {
+                id: 'pm-daksh',
+                name: 'PM-DAKSH',
+                fullName: 'Pradhan Mantri Dakshta Aur Kushalta Sampann Hitgrahi',
+                ministry: 'MoSJE',
+                ministryFull: 'Ministry of Social Justice & Empowerment',
+                color: '#d97706',
+                year: '2020-Present',
+                budget: '₹4,200 Cr',
+                budgetUtilized: 3200,
+                totalTrainees: 8000,
+                completed: 7000,
+                assessed: 6200,
+                jobEligible: 5000,
+                placed: 3600,
+                relevantJob: 2600,
+                retained: 2200,
+                incomeImproved: 1900,
+                employmentRate: 68,
+                placementRate: 45,
+                nonPlacementRate: 32,
+                timeToEmployment: 58,
+                retention30: 84,
+                retention90: 74,
+                retention180: 62,
+                retention365: 60,
+                dropoutRate: 40,
+                sustainedEmployment: 60,
+                avgIncomeAfter: 18000,
+                medianIncomeAfter: 17000,
+                incomeBefore: 7000,
+                incomeGrowth: 11000,
+                incomeGrowthPct: 157,
+                incomeImprovementRate: 52,
+                selfEmploymentRate: 22,
+                highRelevance: 48,
+                mediumRelevance: 30,
+                lowRelevance: 22,
+                jobMismatch: 22,
+                skillMatch: 70,
+                roleMatch: 62,
+                alignmentScore: 66,
+                employerSatisfaction: 72,
+                technicalSatisfaction: 70,
+                practicalSatisfaction: 74,
+                communicationSatisfaction: 68,
+                workplaceReadiness: 70,
+                employerRecommendation: 72,
+                relevantEmployment: 68,
+                qualityEmployment: 62,
+                permanentEmployment: 55,
+                fullTimeEmployment: 62,
+                expectedSalary: 20000,
+                actualSalary: 18000,
+                salaryMatch: 90,
+                salaryMismatch: 10,
+                employerDemand: 70,
+                skillDemandMatch: 70,
+                skillShortage: 30,
+                outcomeScore: 66,
+                courses: [
+                    { name: 'Beauty & Wellness', trainees: 2000, employmentRate: 68, incomeGrowth: 165, relevance: 70 },
+                    { name: 'Retail', trainees: 1500, employmentRate: 64, incomeGrowth: 148, relevance: 58 },
+                    { name: 'Healthcare', trainees: 1400, employmentRate: 72, incomeGrowth: 155, relevance: 76 },
+                    { name: 'Hospitality', trainees: 1200, employmentRate: 66, incomeGrowth: 140, relevance: 64 },
+                    { name: 'IT & Digital', trainees: 1000, employmentRate: 70, incomeGrowth: 160, relevance: 72 },
+                    { name: 'Logistics', trainees: 900, employmentRate: 62, incomeGrowth: 135, relevance: 60 }
+                ],
+                providers: [
+                    { name: 'Social Empowerment Trust', trainees: 2500, employmentRate: 68, outcomeScore: 65 },
+                    { name: 'Inclusive Skills', trainees: 2200, employmentRate: 66, outcomeScore: 63 },
+                    { name: 'Uplift Foundation', trainees: 1800, employmentRate: 70, outcomeScore: 67 },
+                    { name: 'Samaj Vikas Sansthan', trainees: 1500, employmentRate: 68, outcomeScore: 65 }
+                ]
+            },
+            {
+                id: 'state-mission',
+                name: 'State Skill Mission',
+                fullName: 'State-Level Skill Development Missions',
+                ministry: 'State Govt',
+                ministryFull: 'State Governments (e.g., KSDC, MSSDS)',
+                color: '#7c3aed',
+                year: '2018-Present',
+                budget: '₹6,000 Cr',
+                budgetUtilized: 4800,
+                totalTrainees: 10000,
+                completed: 9000,
+                assessed: 8000,
+                jobEligible: 6600,
+                placed: 5200,
+                relevantJob: 4200,
+                retained: 3600,
+                incomeImproved: 3200,
+                employmentRate: 76,
+                placementRate: 52,
+                nonPlacementRate: 24,
+                timeToEmployment: 48,
+                retention30: 90,
+                retention90: 80,
+                retention180: 72,
+                retention365: 68,
+                dropoutRate: 32,
+                sustainedEmployment: 68,
+                avgIncomeAfter: 26000,
+                medianIncomeAfter: 24000,
+                incomeBefore: 11000,
+                incomeGrowth: 15000,
+                incomeGrowthPct: 136,
+                incomeImprovementRate: 60,
+                selfEmploymentRate: 15,
+                highRelevance: 58,
+                mediumRelevance: 26,
+                lowRelevance: 16,
+                jobMismatch: 16,
+                skillMatch: 78,
+                roleMatch: 72,
+                alignmentScore: 76,
+                employerSatisfaction: 82,
+                technicalSatisfaction: 80,
+                practicalSatisfaction: 78,
+                communicationSatisfaction: 76,
+                workplaceReadiness: 80,
+                employerRecommendation: 82,
+                relevantEmployment: 78,
+                qualityEmployment: 74,
+                permanentEmployment: 68,
+                fullTimeEmployment: 74,
+                expectedSalary: 28000,
+                actualSalary: 26000,
+                salaryMatch: 93,
+                salaryMismatch: 7,
+                employerDemand: 80,
+                skillDemandMatch: 78,
+                skillShortage: 22,
+                outcomeScore: 76,
+                courses: [
+                    { name: 'IT & Digital', trainees: 2500, employmentRate: 80, incomeGrowth: 140, relevance: 78 },
+                    { name: 'Manufacturing', trainees: 2000, employmentRate: 76, incomeGrowth: 132, relevance: 74 },
+                    { name: 'Tourism & Hospitality', trainees: 1500, employmentRate: 72, incomeGrowth: 145, relevance: 70 },
+                    { name: 'Construction', trainees: 1400, employmentRate: 74, incomeGrowth: 128, relevance: 72 },
+                    { name: 'Healthcare', trainees: 1300, employmentRate: 78, incomeGrowth: 138, relevance: 76 },
+                    { name: 'Logistics', trainees: 1300, employmentRate: 70, incomeGrowth: 125, relevance: 68 }
+                ],
+                providers: [
+                    { name: 'State Skill Corp', trainees: 3500, employmentRate: 78, outcomeScore: 77 },
+                    { name: 'Regional Training Institute', trainees: 2800, employmentRate: 76, outcomeScore: 74 },
+                    { name: 'State Kaushal Kendra', trainees: 2200, employmentRate: 74, outcomeScore: 72 },
+                    { name: 'District Skill Centre', trainees: 1500, employmentRate: 72, outcomeScore: 70 }
+                ]
+            },
+            {
+                id: 'nielit',
+                name: 'NIELIT Programs',
+                fullName: 'National Institute of Electronics & IT Programs',
+                ministry: 'MeitY',
+                ministryFull: 'Ministry of Electronics & Information Technology',
+                color: '#0891b2',
+                year: '2015-Present',
+                budget: '₹2,500 Cr',
+                budgetUtilized: 2100,
+                totalTrainees: 5000,
+                completed: 4600,
+                assessed: 4200,
+                jobEligible: 3600,
+                placed: 2900,
+                relevantJob: 2400,
+                retained: 2100,
+                incomeImproved: 1900,
+                employmentRate: 82,
+                placementRate: 58,
+                nonPlacementRate: 18,
+                timeToEmployment: 40,
+                retention30: 94,
+                retention90: 88,
+                retention180: 82,
+                retention365: 76,
+                dropoutRate: 24,
+                sustainedEmployment: 76,
+                avgIncomeAfter: 32000,
+                medianIncomeAfter: 30000,
+                incomeBefore: 14000,
+                incomeGrowth: 18000,
+                incomeGrowthPct: 129,
+                incomeImprovementRate: 65,
+                selfEmploymentRate: 10,
+                highRelevance: 68,
+                mediumRelevance: 22,
+                lowRelevance: 10,
+                jobMismatch: 10,
+                skillMatch: 86,
+                roleMatch: 82,
+                alignmentScore: 84,
+                employerSatisfaction: 88,
+                technicalSatisfaction: 90,
+                practicalSatisfaction: 86,
+                communicationSatisfaction: 82,
+                workplaceReadiness: 86,
+                employerRecommendation: 90,
+                relevantEmployment: 86,
+                qualityEmployment: 82,
+                permanentEmployment: 76,
+                fullTimeEmployment: 82,
+                expectedSalary: 34000,
+                actualSalary: 32000,
+                salaryMatch: 94,
+                salaryMismatch: 6,
+                employerDemand: 84,
+                skillDemandMatch: 86,
+                skillShortage: 14,
+                outcomeScore: 84,
+                courses: [
+                    { name: 'Cloud Computing', trainees: 1500, employmentRate: 86, incomeGrowth: 132, relevance: 86 },
+                    { name: 'Cybersecurity', trainees: 1200, employmentRate: 84, incomeGrowth: 128, relevance: 84 },
+                    { name: 'AI & ML', trainees: 1000, employmentRate: 88, incomeGrowth: 138, relevance: 88 },
+                    { name: 'Data Science', trainees: 800, employmentRate: 82, incomeGrowth: 122, relevance: 82 },
+                    { name: 'IoT', trainees: 500, employmentRate: 80, incomeGrowth: 118, relevance: 80 }
+                ],
+                providers: [
+                    { name: 'NIELIT Centre A', trainees: 2000, employmentRate: 84, outcomeScore: 83 },
+                    { name: 'NIELIT Centre B', trainees: 1500, employmentRate: 82, outcomeScore: 81 },
+                    { name: 'NIELIT Centre C', trainees: 1000, employmentRate: 80, outcomeScore: 79 }
+                ]
+            }
+        ],
+        regions: [
+            { name: 'Karnataka', schemes: { pmkvy: 82, ddugky: 74, pmdaksh: 68, state: 80, nielit: 86 }, employment: 80, retention: 74, incomeGrowth: 68, satisfaction: 85 },
+            { name: 'Maharashtra', schemes: { pmkvy: 78, ddugky: 72, pmdaksh: 70, state: 78, nielit: 84 }, employment: 78, retention: 72, incomeGrowth: 65, satisfaction: 83 },
+            { name: 'Delhi NCR', schemes: { pmkvy: 80, ddugky: 74, pmdaksh: 66, state: 76, nielit: 86 }, employment: 79, retention: 74, incomeGrowth: 70, satisfaction: 84 },
+            { name: 'Tamil Nadu', schemes: { pmkvy: 76, ddugky: 74, pmdaksh: 72, state: 78, nielit: 82 }, employment: 76, retention: 70, incomeGrowth: 64, satisfaction: 82 },
+            { name: 'Telangana', schemes: { pmkvy: 74, ddugky: 70, pmdaksh: 68, state: 76, nielit: 84 }, employment: 74, retention: 68, incomeGrowth: 62, satisfaction: 80 },
+            { name: 'Uttar Pradesh', schemes: { pmkvy: 70, ddugky: 68, pmdaksh: 66, state: 72, nielit: 78 }, employment: 70, retention: 64, incomeGrowth: 58, satisfaction: 76 }
+        ]
+    };
+
+    // ============================================================
+    // STATE MANAGEMENT
+    // ============================================================
+
+    let selectedSchemes = ['pmkvy', 'ddu-gky', 'pm-daksh'];
+    let currentView = 'scheme';
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+
+    function renderAll() {
+        renderSchemeSelector();
+        renderComparisonTable();
+        renderSchemeCards();
+        renderVisualComparison();
+        renderCourseDrillDown();
+        renderProviderGrid();
+        renderRegionGrid();
+        renderAIInsights();
+        updateBanner();
+    }
+
+    function updateBanner() {
+        document.getElementById('bannerSchemes').textContent = govtSchemes.schemes.length;
+        const topScheme = govtSchemes.schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, govtSchemes.schemes[0]);
+        document.getElementById('bannerTopScheme').textContent = topScheme.name;
+        const totalTrainees = govtSchemes.schemes.reduce((sum, s) => sum + s.totalTrainees, 0);
+        document.getElementById('bannerTrainees').textContent = (totalTrainees / 1000).toFixed(0) + 'K';
+        const avgEmp = Math.round(govtSchemes.schemes.reduce((sum, s) => sum + s.employmentRate, 0) / govtSchemes.schemes.length);
+        document.getElementById('bannerAvgEmployment').textContent = avgEmp + '%';
+    }
+
+    function renderSchemeSelector() {
+        const container = document.getElementById('schemeSelector');
+        container.innerHTML = govtSchemes.schemes.map(s => {
+            const isSelected = selectedSchemes.includes(s.id);
+            return `<label class="scheme-checkbox ${isSelected ? 'selected' : ''}" onclick="toggleScheme('${s.id}')">
+                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="event.stopPropagation(); toggleScheme('${s.id}')">
+                <div class="scheme-info">
+                    <div class="sname">
+                        ${s.name}
+                        <span class="ministry-badge">${s.ministry}</span>
+                    </div>
+                    <div class="sstats">${s.totalTrainees.toLocaleString()} trained · ${s.employmentRate}% employed · Score ${s.outcomeScore}</div>
+                </div>
+            </label>`;
+        }).join('');
+    }
+
+    function toggleScheme(id) {
+        const index = selectedSchemes.indexOf(id);
+        if (index > -1) {
+            if (selectedSchemes.length > 2) {
+                selectedSchemes.splice(index, 1);
+            } else {
+                showToast('⚠️ Select at least 2 schemes to compare');
+                return;
+            }
+        } else {
+            if (selectedSchemes.length < 4) {
+                selectedSchemes.push(id);
+            } else {
+                showToast('⚠️ Maximum 4 schemes can be compared at once');
+                return;
+            }
+        }
+        renderAll();
+    }
+
+    function switchView(view) {
+        currentView = view;
+        document.querySelectorAll('.view-toggle button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('view' + view.charAt(0).toUpperCase() + view.slice(1) + 'Btn').classList.add('active');
+        
+        const titles = {
+            'scheme': 'Government Scheme Comparison',
+            'course': 'Course/Trade Comparison within Schemes',
+            'provider': 'Provider Comparison within Schemes'
+        };
+        document.getElementById('comparisonTitle').textContent = titles[view];
+        renderComparisonTable();
+    }
+
+    function renderComparisonTable() {
+        const head = document.getElementById('comparisonHead');
+        const body = document.getElementById('comparisonBody');
+        const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
+        document.getElementById('compareCount').textContent = schemes.length + ' selected';
+
+        // Header
+        head.innerHTML = `<tr>
+            <th class="metric-col">Metric</th>
+            ${schemes.map(s => `<th style="color:${s.color};">${s.name}<br><span style="font-size:9px;font-weight:400;color:#94a3b8;">${s.ministry}</span></th>`).join('')}
+        </tr>`;
+
+        // Metrics based on view
+        let metrics = [];
+        
+        if (currentView === 'scheme') {
+            metrics = [
+                { section: 'Scheme Overview' },
+                { key: 'totalTrainees', label: 'Total Trainees', unit: '', format: 'number', higher: true },
+                { key: 'completed', label: 'Completed Training', unit: '', format: 'number', higher: true },
+                { key: 'placed', label: 'Placed', unit: '', format: 'number', higher: true },
+                { key: 'budgetUtilized', label: 'Budget Utilized', unit: ' Cr', prefix: '₹', format: 'number', higher: true },
+                
+                { section: 'Employment Metrics' },
+                { key: 'employmentRate', label: 'Employment Rate', unit: '%', higher: true },
+                { key: 'placementRate', label: 'Placement Rate', unit: '%', higher: true },
+                { key: 'nonPlacementRate', label: 'Non-Placement Rate', unit: '%', higher: false },
+                { key: 'timeToEmployment', label: 'Time to Employment', unit: ' days', higher: false },
+                
+                { section: 'Retention Metrics' },
+                { key: 'retention30', label: '30-Day Retention', unit: '%', higher: true },
+                { key: 'retention90', label: '90-Day Retention', unit: '%', higher: true },
+                { key: 'retention180', label: '180-Day Retention', unit: '%', higher: true },
+                { key: 'retention365', label: '365-Day Retention', unit: '%', higher: true },
+                { key: 'sustainedEmployment', label: 'Sustained Employment', unit: '%', higher: true },
+                
+                { section: 'Income Metrics' },
+                { key: 'incomeBefore', label: 'Income Before', unit: '', prefix: '₹', format: 'number', higher: false },
+                { key: 'avgIncomeAfter', label: 'Avg Income After', unit: '', prefix: '₹', format: 'number', higher: true },
+                { key: 'incomeGrowth', label: 'Income Growth', unit: '', prefix: '₹', format: 'number', higher: true },
+                { key: 'incomeGrowthPct', label: 'Income Growth %', unit: '%', higher: true },
+                { key: 'selfEmploymentRate', label: 'Self-Employment Rate', unit: '%', higher: true },
+                
+                { section: 'Job Relevance' },
+                { key: 'highRelevance', label: 'High Relevance', unit: '%', higher: true },
+                { key: 'jobMismatch', label: 'Job Mismatch Rate', unit: '%', higher: false },
+                { key: 'skillMatch', label: 'Skill Match', unit: '%', higher: true },
+                { key: 'alignmentScore', label: 'Alignment Score', unit: '/100', higher: true },
+                
+                { section: 'Employer Satisfaction' },
+                { key: 'employerSatisfaction', label: 'Overall Satisfaction', unit: '%', higher: true },
+                { key: 'technicalSatisfaction', label: 'Technical Skills', unit: '%', higher: true },
+                { key: 'practicalSatisfaction', label: 'Practical Skills', unit: '%', higher: true },
+                { key: 'communicationSatisfaction', label: 'Communication', unit: '%', higher: true },
+                { key: 'workplaceReadiness', label: 'Workplace Readiness', unit: '%', higher: true },
+                
+                { section: 'Outcome Score' },
+                { key: 'outcomeScore', label: 'Scheme Outcome Score', unit: '/100', higher: true, highlight: true }
+            ];
+        } else if (currentView === 'course') {
+            metrics = [
+                { section: 'Course Performance (Aggregated)' },
+                { key: 'avgCourseEmployment', label: 'Avg Course Employment', unit: '%', higher: true, computed: true },
+                { key: 'avgCourseIncome', label: 'Avg Income Growth', unit: '%', higher: true, computed: true },
+                { key: 'avgCourseRelevance', label: 'Avg Job Relevance', unit: '%', higher: true, computed: true },
+                { key: 'courseCount', label: 'Number of Courses', unit: '', higher: true, computed: true }
+            ];
+        } else if (currentView === 'provider') {
+            metrics = [
+                { section: 'Provider Performance (Aggregated)' },
+                { key: 'providerCount', label: 'Number of Providers', unit: '', higher: true, computed: true },
+                { key: 'avgProviderEmployment', label: 'Avg Provider Employment', unit: '%', higher: true, computed: true },
+                { key: 'avgProviderScore', label: 'Avg Provider Score', unit: '/100', higher: true, computed: true },
+                { key: 'totalProviderTrainees', label: 'Total Provider Trainees', unit: '', format: 'number', higher: true, computed: true }
+            ];
+        }
+
+        // Build body
+        let html = '';
+        metrics.forEach(m => {
+            if (m.section) {
+                html += `<tr class="section-row"><td colspan="${schemes.length + 1}">${m.section}</td></tr>`;
+                return;
+            }
+            
+            let values = schemes.map(s => {
+                if (m.computed) {
+                    if (m.key === 'avgCourseEmployment') return Math.round(s.courses.reduce((sum, c) => sum + c.employmentRate, 0) / s.courses.length);
+                    if (m.key === 'avgCourseIncome') return Math.round(s.courses.reduce((sum, c) => sum + c.incomeGrowth, 0) / s.courses.length);
+                    if (m.key === 'avgCourseRelevance') return Math.round(s.courses.reduce((sum, c) => sum + c.relevance, 0) / s.courses.length);
+                    if (m.key === 'courseCount') return s.courses.length;
+                    if (m.key === 'providerCount') return s.providers.length;
+                    if (m.key === 'avgProviderEmployment') return Math.round(s.providers.reduce((sum, p) => sum + p.employmentRate, 0) / s.providers.length);
+                    if (m.key === 'avgProviderScore') return Math.round(s.providers.reduce((sum, p) => sum + p.outcomeScore, 0) / s.providers.length);
+                    if (m.key === 'totalProviderTrainees') return s.providers.reduce((sum, p) => sum + p.trainees, 0);
+                }
+                return s[m.key];
+            });
+            
+            const bestValue = m.higher ? Math.max(...values) : Math.min(...values);
+            
+            html += `<tr>
+                <td class="metric-col">${m.label}</td>
+                ${schemes.map((s, i) => {
+                    const val = values[i];
+                    const isBest = val === bestValue;
+                    const color = isBest ? '#16a34a' : '#0b1a33';
+                    let displayVal = '';
+                    if (m.format === 'number') {
+                        displayVal = (m.prefix || '') + val.toLocaleString() + (m.unit || '');
+                    } else {
+                        displayVal = (m.prefix || '') + val + (m.unit || '');
+                    }
+                    const rankBadge = isBest && metrics.length > 3 ? '<span class="rank-badge rank-1">BEST</span>' : '';
+                    return `<td>
+                        <div class="value-cell">
+                            <span class="value-num" style="color:${color};${m.highlight && isBest ? 'font-size:16px;' : ''}">${displayVal}</span>
+                            ${rankBadge}
+                        </div>
+                    </td>`;
+                }).join('')}
+            </tr>`;
+        });
+
+        body.innerHTML = html;
+    }
+
+    function renderSchemeCards() {
+        const container = document.getElementById('schemeCardsGrid');
+        const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
+        
+        container.innerHTML = schemes.map(s => {
+            const scoreColor = s.outcomeScore >= 80 ? '#16a34a' : s.outcomeScore >= 70 ? '#d97706' : '#dc2626';
+            return `<div class="scheme-card" style="border-top-color:${s.color};">
+                <style>.scheme-card[style*="border-top-color:${s.color}"]::before { background: ${s.color}; }</style>
+                <div class="scheme-header">
+                    <div class="scheme-name">${s.name}</div>
+                    <div class="scheme-ministry">${s.ministry}</div>
+                </div>
+                <div style="font-size:10px;color:#64748b;margin-bottom:10px;">${s.fullName}</div>
+                <div style="font-size:10px;color:#94a3b8;">${s.year} · Budget: ${s.budget}</div>
+                <div class="scheme-metrics">
+                    <div class="metric-row"><span class="label">Trainees</span><span class="value">${s.totalTrainees.toLocaleString()}</span></div>
+                    <div class="metric-row"><span class="label">Placed</span><span class="value" style="color:#16a34a;">${s.placed.toLocaleString()}</span></div>
+                    <div class="metric-row"><span class="label">Employment</span><span class="value">${s.employmentRate}%</span></div>
+                    <div class="metric-row"><span class="label">365-Day Ret.</span><span class="value">${s.retention365}%</span></div>
+                    <div class="metric-row"><span class="label">Income Growth</span><span class="value">+${s.incomeGrowthPct}%</span></div>
+                    <div class="metric-row"><span class="label">Job Relevance</span><span class="value">${s.highRelevance}%</span></div>
+                    <div class="metric-row"><span class="label">Skill Match</span><span class="value">${s.skillMatch}%</span></div>
+                    <div class="metric-row"><span class="label">Employer Sat.</span><span class="value">${s.employerSatisfaction}%</span></div>
+                </div>
+                <div class="scheme-score">
+                    <span class="score-label">Outcome Score</span>
+                    <span class="score-value" style="color:${scoreColor};">${s.outcomeScore}<span style="font-size:12px;color:#94a3b8;">/100</span></span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderVisualComparison() {
+        const container = document.getElementById('visualGrid');
+        const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
+        
+        const visualMetrics = [
+            { title: 'Employment Rate', icon: 'fa-briefcase', key: 'employmentRate', unit: '%' },
+            { title: '365-Day Retention', icon: 'fa-user-check', key: 'retention365', unit: '%' },
+            { title: 'Income Growth %', icon: 'fa-chart-line', key: 'incomeGrowthPct', unit: '%' },
+            { title: 'Job Relevance', icon: 'fa-bullseye', key: 'highRelevance', unit: '%' },
+            { title: 'Employer Satisfaction', icon: 'fa-star', key: 'employerSatisfaction', unit: '%' },
+            { title: 'Skill Match', icon: 'fa-code', key: 'skillMatch', unit: '%' }
+        ];
+
+        container.innerHTML = visualMetrics.map(m => {
+            const maxVal = Math.max(...schemes.map(s => s[m.key]), 1);
+            return `<div class="visual-card">
+                <div class="card-title"><i class="fas ${m.icon}"></i> ${m.title}</div>
+                ${schemes.map(s => {
+                    const val = s[m.key];
+                    const width = (val / maxVal) * 100;
+                    return `<div class="visual-item">
+                        <div class="vi-color" style="background:${s.color};"></div>
+                        <div class="vi-name">${s.name}</div>
+                        <div class="vi-bar"><div class="fill" style="width:${width}%;background:${s.color};"></div></div>
+                        <div class="vi-val">${val}${m.unit}</div>
+                    </div>`;
+                }).join('')}
+            </div>`;
+        }).join('');
+    }
+
+    function renderCourseDrillDown() {
+        const container = document.getElementById('courseDrillDown');
+        const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
+        
+        container.innerHTML = schemes.map(s => `
+            <div class="visual-card">
+                <div class="card-title"><i class="fas fa-book" style="color:${s.color};"></i> ${s.name} — Courses</div>
+                ${s.courses.map(c => {
+                    const color = c.employmentRate >= 80 ? '#16a34a' : c.employmentRate >= 70 ? '#d97706' : '#dc2626';
+                    return `<div class="course-list-item">
+                        <div>
+                            <div class="course-name">${c.name}</div>
+                            <div class="course-stats">${c.trainees} trainees · +${c.incomeGrowth}% income growth</div>
+                        </div>
+                        <div class="course-rate" style="color:${color};">${c.employmentRate}%</div>
+                    </div>`;
+                }).join('')}
+            </div>
+        `).join('');
+    }
+
+    function renderProviderGrid() {
+        const container = document.getElementById('providerGrid');
+        const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
+        
+        container.innerHTML = schemes.map(s => `
+            <div class="visual-card">
+                <div class="card-title"><i class="fas fa-chalkboard-teacher" style="color:${s.color};"></i> ${s.name} — Providers</div>
+                ${s.providers.map(p => {
+                    const color = p.outcomeScore >= 78 ? '#16a34a' : p.outcomeScore >= 70 ? '#d97706' : '#dc2626';
+                    return `<div class="course-list-item">
+                        <div>
+                            <div class="course-name">${p.name}</div>
+                            <div class="course-stats">${p.trainees} trainees · ${p.employmentRate}% employment</div>
+                        </div>
+                        <div class="course-rate" style="color:${color};">${p.outcomeScore}</div>
+                    </div>`;
+                }).join('')}
+            </div>
+        `).join('');
+    }
+
+    function renderRegionGrid() {
+        const container = document.getElementById('regionGrid');
+        const regions = [...govtSchemes.regions].sort((a, b) => b.employment - a.employment);
+        
+        container.innerHTML = regions.map(r => {
+            const empColor = r.employment >= 78 ? '#16a34a' : r.employment >= 70 ? '#d97706' : '#dc2626';
+            return `<div class="region-card">
+                <div class="region-name">📍 ${r.name}</div>
+                <div class="region-metrics">
+                    <div class="rm"><span>Employment</span><strong style="color:${empColor};">${r.employment}%</strong></div>
+                    <div class="rm"><span>Retention</span><strong>${r.retention}%</strong></div>
+                    <div class="rm"><span>Income Growth</span><strong>${r.incomeGrowth}%</strong></div>
+                    <div class="rm"><span>Satisfaction</span><strong>${r.satisfaction}%</strong></div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderAIInsights() {
+        const highlightsContainer = document.getElementById('aiHighlights');
+        const recsContainer = document.getElementById('aiRecommendations');
+
+        const schemes = govtSchemes.schemes;
+        const topScheme = schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, schemes[0]);
+        const topEmployment = schemes.reduce((best, s) => s.employmentRate > best.employmentRate ? s : best, schemes[0]);
+        const topRetention = schemes.reduce((best, s) => s.retention365 > best.retention365 ? s : best, schemes[0]);
+        const topIncome = schemes.reduce((best, s) => s.incomeGrowthPct > best.incomeGrowthPct ? s : best, schemes[0]);
+        const topRelevance = schemes.reduce((best, s) => s.highRelevance > best.highRelevance ? s : best, schemes[0]);
+
+        let highlightsHtml = `
+            <div class="ai-item"><span class="ai-icon">🏆</span><div><strong>Top Performing Scheme:</strong> ${topScheme.name} (${topScheme.ministry}) with outcome score ${topScheme.outcomeScore}/100.</div></div>
+            <div class="ai-item"><span class="ai-icon">💼</span><div><strong>Best Employment Rate:</strong> ${topEmployment.name} at ${topEmployment.employmentRate}%.</div></div>
+            <div class="ai-item"><span class="ai-icon">🔄</span><div><strong>Best 365-Day Retention:</strong> ${topRetention.name} at ${topRetention.retention365}%.</div></div>
+            <div class="ai-item"><span class="ai-icon">📈</span><div><strong>Highest Income Growth:</strong> ${topIncome.name} at +${topIncome.incomeGrowthPct}%.</div></div>
+            <div class="ai-item"><span class="ai-icon">🎯</span><div><strong>Best Job Relevance:</strong> ${topRelevance.name} at ${topRelevance.highRelevance}%.</div></div>
+        `;
+
+        let recsHtml = `
+            <div class="ai-item"><span class="ai-icon">📌</span><div><strong>Policy Recommendation:</strong> Scale up ${topScheme.name} model across states with low-performing schemes.</div></div>
+            <div class="ai-item"><span class="ai-icon">📌</span><div><strong>Budget Allocation:</strong> Consider reallocating budget from schemes with outcome score below 70 to high-performing schemes.</div></div>
+            <div class="ai-item"><span class="ai-icon">📌</span><div><strong>Curriculum Focus:</strong> Strengthen practical skill modules for schemes with employer satisfaction below 80%.</div></div>
+            <div class="ai-item"><span class="ai-icon">📌</span><div><strong>Regional Intervention:</strong> Deploy best practices from ${topScheme.name} to states with employment below 70%.</div></div>
+        `;
+
+        // Add gap analysis
+        const lowestScheme = schemes.reduce((worst, s) => s.outcomeScore < worst.outcomeScore ? s : worst, schemes[0]);
+        if (topScheme.outcomeScore - lowestScheme.outcomeScore > 10) {
+            highlightsHtml += `<div class="ai-item"><span class="ai-icon">📊</span><div><strong>Performance Gap:</strong> ${topScheme.name} outperforms ${lowestScheme.name} by ${topScheme.outcomeScore - lowestScheme.outcomeScore} points in outcome score.</div></div>`;
+            recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Conduct audit of ${lowestScheme.name} to identify bottlenecks and improvement areas.</div></div>`;
+        }
+
+        highlightsContainer.innerHTML = highlightsHtml;
+        recsContainer.innerHTML = recsHtml;
+    }
+
+    // ============================================================
+    // UTILITY FUNCTIONS
+    // ============================================================
+
+    function updateDate() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `position:fixed;bottom:30px;right:30px;background:white;padding:14px 22px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.15);border-left:4px solid #2563eb;max-width:400px;z-index:1000;font-size:13px;color:#0b1a33;display:flex;align-items:center;gap:10px;font-weight:500;`;
+        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#2563eb;font-size:16px;"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function showNotifications() {
+        alert(`📬 Notifications\n\n• ${govtSchemes.schemes.length} Government schemes available\n• ${govtSchemes.regions.length} states analyzed\n• Top scheme: ${govtSchemes.schemes.reduce((b, s) => s.outcomeScore > b.outcomeScore ? s : b, govtSchemes.schemes[0]).name}`);
+    }
+
+    function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            alert('Logging out... Redirecting to login page.');
+            window.location.href = '../auth/login.html';
+        }
+    }
+
+    function exportComparison() {
+        const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
+        let csv = 'Metric,' + schemes.map(s => s.name + ' (' + s.ministry + ')').join(',') + '\n';
+        csv += 'Total Trainees,' + schemes.map(s => s.totalTrainees).join(',') + '\n';
+        csv += 'Placed,' + schemes.map(s => s.placed).join(',') + '\n';
+        csv += 'Employment Rate,' + schemes.map(s => s.employmentRate + '%').join(',') + '\n';
+        csv += '365-Day Retention,' + schemes.map(s => s.retention365 + '%').join(',') + '\n';
+        csv += 'Income Growth,' + schemes.map(s => '+' + s.incomeGrowthPct + '%').join(',') + '\n';
+        csv += 'Job Relevance,' + schemes.map(s => s.highRelevance + '%').join(',') + '\n';
+        csv += 'Employer Satisfaction,' + schemes.map(s => s.employerSatisfaction + '%').join(',') + '\n';
+        csv += 'Skill Match,' + schemes.map(s => s.skillMatch + '%').join(',') + '\n';
+        csv += 'Outcome Score,' + schemes.map(s => s.outcomeScore).join(',') + '\n';
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `govt-scheme-comparison-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('📥 Comparison exported successfully!');
+    }
+
+    function resetComparison() {
+        selectedSchemes = ['pmkvy', 'ddu-gky', 'pm-daksh'];
+        renderAll();
+        showToast('🔄 Comparison reset to default');
+    }
+
+    function exportFullReport() {
+        const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
+        let report = '📊 GOVERNMENT SCHEME COMPARISON REPORT\n';
+        report += '================================\n';
+        report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
+        report += `📈 COMPARING ${schemes.length} GOVERNMENT SCHEMES\n\n`;
+        
+        schemes.forEach(s => {
+            report += `━━━ ${s.name} (${s.ministry}) ━━━\n`;
+            report += `${s.fullName}\n`;
+            report += `• Duration: ${s.year}\n`;
+            report += `• Budget: ${s.budget}\n`;
+            report += `• Total Trainees: ${s.totalTrainees.toLocaleString()}\n`;
+            report += `• Placed: ${s.placed.toLocaleString()}\n`;
+            report += `• Employment Rate: ${s.employmentRate}%\n`;
+            report += `• 365-Day Retention: ${s.retention365}%\n`;
+            report += `• Income Growth: +${s.incomeGrowthPct}%\n`;
+            report += `• Job Relevance: ${s.highRelevance}%\n`;
+            report += `• Employer Satisfaction: ${s.employerSatisfaction}%\n`;
+            report += `• Skill Match: ${s.skillMatch}%\n`;
+            report += `• Outcome Score: ${s.outcomeScore}/100\n\n`;
+        });
+        
+        report += '================================\n';
+        report += '📌 Generated by SkillBridge Government Portal';
+        alert(report);
+    }
+
+    function viewTopScheme() {
+        const topScheme = govtSchemes.schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, govtSchemes.schemes[0]);
+        alert(`🏆 TOP PERFORMING GOVERNMENT SCHEME\n\n` +
+              `Scheme: ${topScheme.name}\n` +
+              `Ministry: ${topScheme.ministryFull}\n` +
+              `Duration: ${topScheme.year}\n` +
+              `Budget: ${topScheme.budget}\n\n` +
+              `📊 OUTCOME METRICS\n` +
+              `• Total Trainees: ${topScheme.totalTrainees.toLocaleString()}\n` +
+              `• Placed: ${topScheme.placed.toLocaleString()}\n` +
+              `• Employment Rate: ${topScheme.employmentRate}%\n` +
+              `• 365-Day Retention: ${topScheme.retention365}%\n` +
+              `• Income Growth: +${topScheme.incomeGrowthPct}%\n` +
+              `• Job Relevance: ${topScheme.highRelevance}%\n` +
+              `• Employer Satisfaction: ${topScheme.employerSatisfaction}%\n` +
+              `• Skill Match: ${topScheme.skillMatch}%\n\n` +
+              `⭐ Outcome Score: ${topScheme.outcomeScore}/100\n\n` +
+              `💡 This scheme demonstrates strong outcomes across all dimensions and should be used as a model for other schemes.`);
+    }
+
+    function generateAIInsights() {
+        const schemes = govtSchemes.schemes;
+        const topScheme = schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, schemes[0]);
+        const lowScheme = schemes.reduce((worst, s) => s.outcomeScore < worst.outcomeScore ? s : worst, schemes[0]);
+        
+        alert(`🤖 AI GOVERNMENT SCHEME INSIGHTS\n\n` +
+              `📊 ANALYSIS OF ${schemes.length} SCHEMES\n\n` +
+              `🏆 Top Performer: ${topScheme.name} (${topScheme.ministry})\n` +
+              `• Employment: ${topScheme.employmentRate}%\n` +
+              `• Retention: ${topScheme.retention365}%\n` +
+              `• Income Growth: +${topScheme.incomeGrowthPct}%\n` +
+              `• Outcome Score: ${topScheme.outcomeScore}/100\n\n` +
+              `⚠️ Needs Improvement: ${lowScheme.name} (${lowScheme.ministry})\n` +
+              `• Employment: ${lowScheme.employmentRate}%\n` +
+              `• Retention: ${lowScheme.retention365}%\n` +
+              `• Income Growth: +${lowScheme.incomeGrowthPct}%\n` +
+              `• Outcome Score: ${lowScheme.outcomeScore}/100\n\n` +
+              `💡 POLICY RECOMMENDATIONS\n` +
+              `• Scale up ${topScheme.name} model across all states\n` +
+              `• Reallocate budget to high-performing schemes\n` +
+              `• Address skill gaps in underperforming schemes\n` +
+              `• Strengthen employer partnerships for better placement\n` +
+              `• Focus on practical skills and workplace readiness\n` +
+              `• Improve 365-day retention through career counseling\n` +
+              `• Deploy regional best practices across all states`);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDate();
+        renderAll();
+
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        console.log('🏛️ Government Scheme Comparison page loaded!');
+        console.log('📋 Total Schemes:', govtSchemes.schemes.length);
+        console.log('🏆 Top Scheme:', govtSchemes.schemes.reduce((b, s) => s.outcomeScore > b.outcomeScore ? s : b, govtSchemes.schemes[0]).name);
+    });
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

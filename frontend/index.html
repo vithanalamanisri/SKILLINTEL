@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SKILLINTEL — AI-Powered Skill Training Outcome Intelligence Platform (SIH 26135)." />
+  <title>SKILLINTEL · AI-Powered Skill Training Outcome Intelligence</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('skillintel-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+
+  <style>
+    :root {
+      --navy-900: #0B1220;
+      --navy-800: #0F172A;
+      --royal-600: #1E40AF;
+      --royal-500: #2563EB;
+      --royal-400: #3B82F6;
+      --royal-100: #DBEAFE;
+      --royal-50:  #EFF6FF;
+      --cyan-500:  #06B6D4;
+      --cyan-400:  #22D3EE;
+      --success-500: #22C55E;
+      --warning-500: #F59E0B;
+      --danger-500:  #EF4444;
+      --purple-500:  #7C3AED;
+
+      --bg-body:     #F4F7FC;
+      --bg-card:     #FFFFFF;
+      --bg-elevated: #F8FAFC;
+
+      --text-primary:   #0B1220;
+      --text-secondary: #475569;
+      --text-muted:     #64748B;
+      --text-faint:     #94A3B8;
+
+      --border-light: #EEF2F6;
+      --border-base:  #E2E8F0;
+
+      --gradient-primary: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+
+      --shadow-sm: 0 2px 8px rgba(11, 18, 32, 0.05);
+      --shadow-md: 0 4px 16px rgba(11, 18, 32, 0.06);
+      --shadow-lg: 0 20px 50px -12px rgba(37, 99, 235, 0.15);
+      --shadow-xl: 0 40px 80px -20px rgba(0, 20, 60, 0.15);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+
+      --ease-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --ease-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    html[data-theme="dark"] {
+      --bg-body:     #0B1220;
+      --bg-card:     #172033;
+      --bg-elevated: #1E293B;
+      --text-primary:   #F1F5F9;
+      --text-secondary: #CBD5E1;
+      --text-muted:     #94A3B8;
+      --text-faint:     #64748B;
+      --border-light: rgba(255, 255, 255, 0.06);
+      --border-base:  rgba(255, 255, 255, 0.10);
+      --royal-100: rgba(37, 99, 235, 0.18);
+      --royal-50:  rgba(37, 99, 235, 0.08);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+      transition: background var(--ease-base), color var(--ease-base);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 10% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 80%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      animation: bgPulse 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgPulse {
+      0%   { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
+    .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.05);
+      animation: floatParticle 25s infinite ease-in-out;
+      filter: blur(20px);
+    }
+    .particle:nth-child(1) { width: 380px; height: 380px; top: -160px; right: -120px; }
+    .particle:nth-child(2) { width: 280px; height: 280px; bottom: -100px; left: -100px; animation-delay: 5s; background: rgba(124, 58, 237, 0.05); }
+    .particle:nth-child(3) { width: 200px; height: 200px; top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: 10s; background: rgba(6, 182, 212, 0.04); }
+
+    @keyframes floatParticle {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%      { transform: translate(40px, -40px) scale(1.05); }
+      66%      { transform: translate(-30px, 30px) scale(0.95); }
+    }
+
+    .theme-toggle-float {
+      position: fixed;
+      top: 24px; right: 24px;
+      z-index: 100;
+      width: 46px; height: 46px;
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      border: 1px solid var(--border-base);
+      color: var(--text-secondary);
+      display: grid;
+      place-items: center;
+      font-size: 17px;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      transition: all var(--ease-base);
+    }
+    .theme-toggle-float:hover {
+      background: var(--royal-500);
+      color: white;
+      border-color: var(--royal-500);
+      transform: rotate(15deg) scale(1.05);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .landing-container {
+      width: 100%;
+      max-width: 1080px;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-radius: 2.5rem;
+      padding: 3rem 3.5rem 2.5rem;
+      box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+      position: relative;
+      z-index: 1;
+      transition: all var(--ease-base);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    html[data-theme="dark"] .landing-container {
+      background: rgba(23, 32, 51, 0.85);
+      border-color: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    }
+
+    .brand-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .brand { display: flex; align-items: center; gap: 0.85rem; }
+    .brand-icon {
+      background: var(--gradient-primary);
+      width: 54px; height: 54px;
+      border-radius: var(--radius-lg);
+      display: grid; place-items: center;
+      color: white; font-size: 1.5rem;
+      box-shadow: 0 12px 30px -8px rgba(37, 99, 235, 0.45);
+      transition: var(--ease-base);
+    }
+    .brand:hover .brand-icon { transform: rotate(-5deg) scale(1.05); }
+
+    .brand-text { font-weight: 800; font-size: 1.5rem; letter-spacing: -0.03em; color: var(--text-primary); line-height: 1.1; }
+    .brand-text span {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .brand-sub { display: flex; gap: 0.5rem; margin-top: 4px; align-items: center; }
+    .brand-badge {
+      background: var(--gradient-primary);
+      color: white; font-size: 0.6rem; font-weight: 700;
+      padding: 0.22rem 0.75rem; border-radius: 20px;
+      letter-spacing: 0.06em;
+    }
+    .brand-tag { font-size: 0.6rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+      padding: 0.4rem 1.1rem;
+      border-radius: 30px;
+      border: 1px solid var(--border-base);
+      transition: all 0.3s ease;
+    }
+    .status-badge .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success-500);
+      animation: dotPulse 2s infinite;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+    }
+    .status-badge.offline .dot {
+      background: var(--danger-500);
+      animation: none;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.9); }
+    }
+
+    .hero-section {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .hero-section h1 {
+      font-size: 2.5rem; font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+      margin-bottom: 0.6rem;
+      line-height: 1.15;
+    }
+    .hero-section h1 .highlight {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-section h1 .robot-icon {
+      color: var(--royal-500);
+      font-size: 2rem;
+      margin-right: 0.4rem;
+      display: inline-block;
+      animation: robotBob 3s ease-in-out infinite;
+    }
+    @keyframes robotBob {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-4px); }
+    }
+    .hero-section p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.6rem; flex-wrap: wrap;
+    }
+    .hero-section p i { color: var(--cyan-500); font-size: 0.9rem; }
+
+    .workflow {
+      display: flex; justify-content: center; align-items: center;
+      gap: 0.5rem; margin-bottom: 2.5rem; flex-wrap: wrap;
+    }
+    .workflow .step {
+      display: flex; align-items: center; gap: 0.45rem;
+      font-size: 0.72rem; font-weight: 600;
+      color: var(--text-faint);
+      padding: 0.4rem 1.05rem;
+      border-radius: 30px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-light);
+    }
+    .workflow .step.active {
+      color: white;
+      background: var(--gradient-primary);
+      border-color: transparent;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3);
+    }
+    .workflow .step i { font-size: 0.8rem; }
+    .workflow .arrow { color: var(--text-faint); font-size: 0.6rem; }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 2.5rem;
+    }
+    .role-card {
+      background: var(--bg-elevated);
+      border-radius: var(--radius-xl);
+      padding: 1.8rem 1.2rem 1.5rem;
+      border: 2px solid var(--border-light);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text-primary);
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.65rem;
+      position: relative; overflow: hidden;
+    }
+    .role-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.04), rgba(124, 58, 237, 0.04));
+      opacity: 0;
+      transition: 0.5s;
+    }
+    .role-card:hover::before { opacity: 1; }
+    .role-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: var(--royal-500);
+      box-shadow: var(--shadow-lg);
+      background: var(--bg-card);
+    }
+    .role-card:active { transform: scale(0.97); }
+    .role-card .icon-wrapper {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 1.7rem; color: white;
+      position: relative; z-index: 1;
+      transition: var(--ease-base);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    .role-card:hover .icon-wrapper { transform: scale(1.1) rotate(-6deg); }
+    .role-card:nth-child(1) .icon-wrapper { background: linear-gradient(135deg, #2563EB, #4F46E5); }
+    .role-card:nth-child(2) .icon-wrapper { background: linear-gradient(135deg, #7C3AED, #A78BFA); }
+    .role-card:nth-child(3) .icon-wrapper { background: linear-gradient(135deg, #059669, #34D399); }
+    .role-card:nth-child(4) .icon-wrapper { background: linear-gradient(135deg, #DC2626, #F87171); }
+
+    .role-card .role-name { font-weight: 700; font-size: 1.1rem; color: var(--text-primary); position: relative; z-index: 1; }
+    .role-card .role-desc {
+      font-size: 0.76rem; color: var(--text-muted);
+      text-align: center; line-height: 1.45;
+      min-height: 38px;
+      position: relative; z-index: 1;
+    }
+    .role-card .role-arrow {
+      color: var(--royal-500);
+      font-size: 0.78rem; font-weight: 600;
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: var(--ease-base);
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      position: relative; z-index: 1;
+    }
+    .role-card:hover .role-arrow { opacity: 1; transform: translateX(0); }
+    .role-card .trainee-count {
+      font-size: 0.62rem; color: var(--text-faint);
+      display: flex; align-items: center; gap: 0.35rem;
+      font-weight: 500;
+      position: relative; z-index: 1;
+    }
+    .role-card .trainee-count i { color: var(--royal-500); font-size: 0.7rem; }
+
+    .footer-section {
+      padding-top: 1.8rem;
+      border-top: 1px solid var(--border-light);
+      text-align: center;
+    }
+    .footer-links {
+      display: flex; justify-content: center;
+      gap: 1.8rem; flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem; font-weight: 500;
+      transition: var(--ease-base);
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .footer-links a:hover { color: var(--royal-500); transform: translateY(-1px); }
+    .footer-links a i { font-size: 0.78rem; }
+
+    .footer-note {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      letter-spacing: 0.02em;
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; flex-wrap: wrap;
+    }
+    .footer-note i { color: var(--cyan-500); }
+    .footer-note strong { color: var(--text-muted); font-weight: 600; }
+
+    /* HIDDEN ADMIN ACCESS */
+    .admin-trigger-zone {
+      position: relative;
+      display: inline-block;
+      padding: 0 6px;
+      cursor: default;
+      user-select: none;
+    }
+    .admin-trigger {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.6);
+      opacity: 0;
+      pointer-events: none;
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #dc2626, #f59e0b);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 0.85rem;
+      box-shadow: 0 6px 16px rgba(220, 38, 38, 0.5);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 100;
+    }
+    .admin-trigger-zone:hover .admin-trigger {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .admin-trigger:hover {
+      transform: translate(-50%, -50%) scale(1.15) rotate(15deg) !important;
+      box-shadow: 0 10px 24px rgba(220, 38, 38, 0.6);
+    }
+
+    /* ADMIN MODAL */
+    .admin-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(11, 18, 32, 0.75);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 1.5rem;
+    }
+    .admin-modal-overlay.show { display: flex; }
+
+    .admin-modal {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    html[data-theme="dark"] .admin-modal { background: #151E32; }
+
+    .admin-modal .modal-icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      margin: 0 auto 1rem;
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    .admin-modal .modal-icon.success { background: #dcfce7; color: #16a34a; }
+    .admin-modal .modal-icon.locked  { background: #fef3c7; color: #d97706; }
+    .admin-modal .modal-icon.loading { background: #e0e7ff; color: #4338ca; }
+
+    .admin-modal h3 {
+      font-size: 1.2rem; font-weight: 800;
+      color: #0b1a33;
+      margin-bottom: 0.5rem;
+    }
+    html[data-theme="dark"] .admin-modal h3 { color: #F1F5F9; }
+
+    .admin-modal p {
+      font-size: 0.85rem;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 1.4rem;
+    }
+    html[data-theme="dark"] .admin-modal p { color: #94A3B8; }
+
+    .admin-modal input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.15s;
+      margin-bottom: 0.6rem;
+      font-family: inherit;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .admin-modal input:focus {
+      border-color: #dc2626;
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
+    }
+    html[data-theme="dark"] .admin-modal input {
+      background: #1A2338;
+      border-color: rgba(255,255,255,0.12);
+      color: #F1F5F9;
+    }
+
+    .admin-modal .modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: center;
+      margin-top: 0.6rem;
+    }
+    .admin-modal button {
+      padding: 0.75rem 1.4rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+      font-family: inherit;
+    }
+    .admin-modal .btn-danger {
+      background: #dc2626;
+      color: white;
+      box-shadow: 0 6px 16px -6px rgba(220, 38, 38, 0.4);
+    }
+    .admin-modal .btn-danger:hover { background: #b91c1c; transform: translateY(-1px); }
+    .admin-modal .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+    .admin-modal .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1.5px solid #e2e8f0;
+    }
+    .admin-modal .btn-secondary:hover { background: #e2e8f0; }
+    html[data-theme="dark"] .admin-modal .btn-secondary {
+      background: #1E293B;
+      color: #CBD5E1;
+      border-color: rgba(255,255,255,0.10);
+    }
+
+    .admin-modal .attempts-warning {
+      font-size: 0.72rem;
+      color: #dc2626;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      min-height: 1em;
+    }
+
+    .admin-modal .field-label {
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.3rem;
+      padding-left: 0.2rem;
+    }
+    html[data-theme="dark"] .admin-modal .field-label { color: #94A3B8; }
+
+    /* Hide elements per step */
+    .admin-step { display: none; }
+    .admin-step.active { display: block; }
+
+    @media (max-width: 992px) {
+      .role-grid { grid-template-columns: repeat(2, 1fr); }
+      .landing-container { padding: 2.5rem 2rem; border-radius: 2rem; }
+      .hero-section h1 { font-size: 2rem; }
+    }
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .theme-toggle-float { top: 14px; right: 14px; width: 42px; height: 42px; font-size: 15px; }
+      .brand-section { flex-direction: column; align-items: center; text-align: center; }
+      .hero-section h1 { font-size: 1.7rem; }
+      .hero-section p { font-size: 0.92rem; }
+      .workflow .step { font-size: 0.62rem; padding: 0.28rem 0.75rem; }
+    }
+    @media (max-width: 576px) {
+      .role-grid { grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+      .landing-container { padding: 1.5rem 1rem; border-radius: 1.5rem; }
+      .hero-section h1 { font-size: 1.4rem; }
+      .workflow .step span { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="theme-toggle-float" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode">
+  <i class="fas fa-moon"></i>
+</button>
+
+<div class="particles" aria-hidden="true">
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+</div>
+
+<main class="landing-container">
+
+  <div class="brand-section">
+    <div class="brand">
+      <div class="brand-icon"><i class="fas fa-shield-halved"></i></div>
+      <div>
+        <div class="brand-text">SKILL<span>INTEL</span></div>
+        <div class="brand-sub">
+          <span class="brand-badge">SIH 26135</span>
+          <span class="brand-tag">Outcome Intelligence</span>
+        </div>
+      </div>
+    </div>
+    <div class="status-badge" id="statusBadge">
+      <span class="dot"></span>
+      <span id="statusText">Checking backend…</span>
+    </div>
+  </div>
+
+  <section class="hero-section">
+    <h1>
+      <i class="fas fa-robot robot-icon"></i>
+      AI-Powered <span class="highlight">Skill Training</span> Platform
+    </h1>
+    <p>
+      <i class="fas fa-arrow-right"></i>
+      From Training Completion to Employment Success
+    </p>
+  </section>
+
+  <div class="workflow" aria-label="User flow">
+    <span class="step active"><i class="fas fa-home"></i> <span>Select Role</span></span>
+    <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+    <span class="step"><i class="fas fa-sign-in-alt"></i> <span>Login</span></span>
+    <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+    <span class="step"><i class="fas fa-user-plus"></i> <span>Register</span></span>
+    <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+    <span class="step"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></span>
+  </div>
+
+  <section class="role-grid" aria-label="Select your role">
+
+    <a href="auth/login.html?role=trainee" class="role-card" data-role="trainee">
+      <div class="icon-wrapper"><i class="fas fa-user-graduate"></i></div>
+      <div class="role-name">Trainee</div>
+      <div class="role-desc">Track training &amp; employment outcomes</div>
+      <div class="trainee-count"><i class="fas fa-users"></i> Active Trainees</div>
+      <div class="role-arrow">Get Started <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+    <a href="auth/login.html?role=employer" class="role-card" data-role="employer">
+      <div class="icon-wrapper"><i class="fas fa-briefcase"></i></div>
+      <div class="role-name">Employer</div>
+      <div class="role-desc">Verify employment &amp; provide feedback</div>
+      <div class="trainee-count"><i class="fas fa-check-circle"></i> Verify Placements</div>
+      <div class="role-arrow">Get Started <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+    <a href="auth/login.html?role=provider" class="role-card" data-role="provider">
+      <div class="icon-wrapper"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div class="role-name">Provider</div>
+      <div class="role-desc">Monitor programs &amp; trainee outcomes</div>
+      <div class="trainee-count"><i class="fas fa-graduation-cap"></i> Manage Programs</div>
+      <div class="role-arrow">Get Started <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+    <a href="auth/login.html?role=government" class="role-card" data-role="government">
+      <div class="icon-wrapper"><i class="fas fa-landmark"></i></div>
+      <div class="role-name">Government</div>
+      <div class="role-desc">AI analytics &amp; policy insights</div>
+      <div class="trainee-count"><i class="fas fa-chart-line"></i> Policy Insights</div>
+      <div class="role-arrow">Get Started <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+  </section>
+
+  <footer class="footer-section">
+    <div class="footer-links">
+      <a href="auth/trainee-register.html"><i class="fas fa-user-plus"></i> Trainee Register</a>
+      <a href="auth/employer-register.html"><i class="fas fa-building"></i> Employer Register</a>
+      <a href="auth/provider-register.html"><i class="fas fa-chalkboard-teacher"></i> Provider Register</a>
+      <a href="auth/login.html"><i class="fas fa-sign-in-alt"></i> Login</a>
+    </div>
+    <div class="footer-note">
+      <i class="fas fa-robot"></i>
+      Smart India Hackathon
+      <span class="admin-trigger-zone" title="Admin Zone">
+        ·
+        <button class="admin-trigger" onclick="openAdminGate()" title="Admin Access" aria-label="Admin Access">
+          <i class="fas fa-user-shield"></i>
+        </button>
+      </span>
+      <strong>SKILLINTEL Platform v1.0</strong>
+    </div>
+  </footer>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════
+     ADMIN GATE MODAL — TWO STEPS
+     Step 1: Passcode
+     Step 2: Username + Password
+     ═══════════════════════════════════════════════════════ -->
+<div class="admin-modal-overlay" id="adminOverlay" onclick="if(event.target===this)closeAdminGate()">
+  <div class="admin-modal" id="adminModal">
+
+    <!-- STEP 1: PASSCODE -->
+    <div class="admin-step active" id="adminStep1">
+      <div class="modal-icon" id="passcodeIcon"><i class="fas fa-lock"></i></div>
+      <h3 id="passcodeTitle">Admin Gate</h3>
+      <p id="passcodeText">Enter the admin passcode to unlock the next step.</p>
+
+      <div class="field-label">Passcode</div>
+      <input type="password"
+             id="adminPasscodeInput"
+             placeholder="••••"
+             maxlength="8"
+             autocomplete="off"
+             inputmode="numeric"
+             onkeydown="if(event.key==='Enter')verifyPasscode()" />
+
+      <div class="attempts-warning" id="passcodeWarning"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeAdminGate()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn-danger" id="passcodeSubmitBtn" onclick="verifyPasscode()">
+          <i class="fas fa-arrow-right"></i> Continue
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: USERNAME + PASSWORD -->
+    <div class="admin-step" id="adminStep2">
+      <div class="modal-icon" id="adminModalIcon"><i class="fas fa-user-shield"></i></div>
+      <h3 id="adminModalTitle">Admin Credentials</h3>
+      <p id="adminModalText">Enter your admin username and password to continue.</p>
+
+      <div class="field-label">Username</div>
+      <input type="text"
+             id="adminUsernameInput"
+             placeholder="admin username"
+             autocomplete="username"
+             spellcheck="false" />
+
+      <div class="field-label">Password</div>
+      <input type="password"
+             id="adminPasswordInput"
+             placeholder="••••••••"
+             autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')verifyAdminCredentials()" />
+
+      <div class="attempts-warning" id="adminAttemptsWarning"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="backToPasscode()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn-danger" id="adminSubmitBtn" onclick="verifyAdminCredentials()">
+          <i class="fas fa-unlock"></i> Unlock
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CONFIGURATION
+   ═══════════════════════════════════════════════════════════════ */
+const API_BASE = '/api';                       // Flask backend
+const ADMIN_PANEL_PATH = 'admin/admin.html';   // Where admin lands after login
+const MAX_ATTEMPTS = 3;
+const LOCKOUT_MS = 30000;
+
+/* ═══════════════════════════════════════════════════════════════
+   HARDCODED CREDENTIALS
+   ═══════════════════════════════════════════════════════════════ */
+const ADMIN_PASSCODE = '1512';                              // Step 1 passcode
+const DEMO_ADMIN_USERNAME = 'vithanalamanisri@gmail.com';   // Step 2 username
+const DEMO_ADMIN_PASSWORD = 'vManisri@1512';                // Step 2 password
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════ */
+let adminAttempts = 0;
+let adminLockedUntil = 0;
+let passcodeAttempts = 0;
+
+try {
+  adminAttempts = parseInt(sessionStorage.getItem('admin_attempts') || '0', 10);
+  adminLockedUntil = parseInt(sessionStorage.getItem('admin_locked_until') || '0', 10);
+} catch (e) {}
+
+/* ═══════════════════════════════════════════════════════════════
+   BACKEND HEALTH CHECK
+   ═══════════════════════════════════════════════════════════════ */
+async function checkBackendHealth() {
+  const statusBadge = document.getElementById('statusBadge');
+  const statusText  = document.getElementById('statusText');
+  if (!statusBadge || !statusText) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/system/health`, { method: 'GET' });
+    if (!res.ok) throw new Error('Backend returned ' + res.status);
+    const data = await res.json();
+    statusBadge.classList.remove('offline');
+    statusText.textContent = 'Backend Online · DB ' + (data.checks?.database || 'connected');
+  } catch (e) {
+    statusBadge.classList.add('offline');
+    statusText.textContent = 'Backend Offline (demo mode)';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   OPEN / CLOSE GATE
+   ═══════════════════════════════════════════════════════════════ */
+function openAdminGate() {
+  const now = Date.now();
+
+  if (adminLockedUntil > now) {
+    const secondsLeft = Math.ceil((adminLockedUntil - now) / 1000);
+    showLockedModal(secondsLeft);
+    return;
+  }
+
+  resetGateModal();
+
+  const overlay = document.getElementById('adminOverlay');
+  overlay.classList.add('show');
+
+  setTimeout(() => {
+    const input = document.getElementById('adminPasscodeInput');
+    if (input) input.focus();
+  }, 100);
+}
+
+function closeAdminGate() {
+  const overlay = document.getElementById('adminOverlay');
+  overlay.classList.remove('show');
+  ['adminPasscodeInput', 'adminUsernameInput', 'adminPasswordInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('passcodeWarning').textContent = '';
+  document.getElementById('adminAttemptsWarning').textContent = '';
+  showStep(1);
+}
+
+function resetGateModal() {
+  // Reset to Step 1
+  showStep(1);
+
+  // Reset passcode step
+  const pIcon  = document.getElementById('passcodeIcon');
+  const pTitle = document.getElementById('passcodeTitle');
+  const pText  = document.getElementById('passcodeText');
+  const pBtn   = document.getElementById('passcodeSubmitBtn');
+  pIcon.className = 'modal-icon';
+  pIcon.innerHTML = '<i class="fas fa-lock"></i>';
+  pTitle.textContent = 'Admin Gate';
+  pText.textContent  = 'Enter the admin passcode to unlock the next step.';
+  pBtn.disabled = false;
+  pBtn.innerHTML = '<i class="fas fa-arrow-right"></i> Continue';
+  const pInput = document.getElementById('adminPasscodeInput');
+  if (pInput) { pInput.value = ''; pInput.disabled = false; }
+  document.getElementById('passcodeWarning').textContent = '';
+
+  // Reset credentials step
+  const icon  = document.getElementById('adminModalIcon');
+  const title = document.getElementById('adminModalTitle');
+  const text  = document.getElementById('adminModalText');
+  const btn   = document.getElementById('adminSubmitBtn');
+  icon.className = 'modal-icon';
+  icon.innerHTML = '<i class="fas fa-user-shield"></i>';
+  title.textContent = 'Admin Credentials';
+  text.textContent  = 'Enter your admin username and password to continue.';
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
+  ['adminUsernameInput', 'adminPasswordInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.disabled = false; }
+  });
+  document.getElementById('adminAttemptsWarning').textContent = '';
+}
+
+function showStep(n) {
+  document.getElementById('adminStep1').classList.toggle('active', n === 1);
+  document.getElementById('adminStep2').classList.toggle('active', n === 2);
+  setTimeout(() => {
+    const focusId = n === 1 ? 'adminPasscodeInput' : 'adminUsernameInput';
+    const el = document.getElementById(focusId);
+    if (el) el.focus();
+  }, 100);
+}
+
+function backToPasscode() {
+  document.getElementById('passcodeWarning').textContent = '';
+  const pInput = document.getElementById('adminPasscodeInput');
+  if (pInput) { pInput.value = ''; pInput.disabled = false; }
+  showStep(1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STEP 1: VERIFY PASSCODE
+   ═══════════════════════════════════════════════════════════════ */
+function verifyPasscode() {
+  const input = document.getElementById('adminPasscodeInput');
+  const warningEl = document.getElementById('passcodeWarning');
+  const btn = document.getElementById('passcodeSubmitBtn');
+  const entered = (input.value || '').trim();
+
+  if (!entered) {
+    warningEl.textContent = 'Please enter the passcode.';
+    return;
+  }
+
+  // Lock UI
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking…';
+  warningEl.textContent = '';
+
+  setTimeout(() => {
+    if (entered === ADMIN_PASSCODE) {
+      // ✅ Passcode correct → move to Step 2
+      const icon = document.getElementById('passcodeIcon');
+      icon.className = 'modal-icon success';
+      icon.innerHTML = '<i class="fas fa-check"></i>';
+      document.getElementById('passcodeTitle').textContent = 'Passcode Verified';
+      document.getElementById('passcodeText').textContent = 'Proceeding to credentials…';
+
+      logAdminAccess(`Passcode verified`);
+
+      setTimeout(() => {
+        showStep(2);
+      }, 500);
+    } else {
+      // ❌ Wrong passcode
+      passcodeAttempts++;
+      logSuspiciousAttempt(`Failed passcode attempt #${passcodeAttempts}`);
+      warningEl.textContent = `⚠ Incorrect passcode. ${MAX_ATTEMPTS - passcodeAttempts} attempt${(MAX_ATTEMPTS - passcodeAttempts) !== 1 ? 's' : ''} left.`;
+      input.value = '';
+      input.focus();
+      shakeModal();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-arrow-right"></i> Continue';
+
+      if (passcodeAttempts >= MAX_ATTEMPTS) {
+        closeAdminGate();
+        showIntrusionAlert();
+      }
+    }
+  }, 300);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STEP 2: VERIFY USERNAME + PASSWORD
+   ═══════════════════════════════════════════════════════════════ */
+async function verifyAdminCredentials() {
+  const now = Date.now();
+
+  if (adminLockedUntil > now) {
+    showLockedModal(Math.ceil((adminLockedUntil - now) / 1000));
+    return;
+  }
+
+  const usernameEl = document.getElementById('adminUsernameInput');
+  const passwordEl = document.getElementById('adminPasswordInput');
+  const warningEl  = document.getElementById('adminAttemptsWarning');
+  const submitBtn  = document.getElementById('adminSubmitBtn');
+
+  const username = (usernameEl.value || '').trim();
+  const password = (passwordEl.value || '').trim();
+
+  if (!username || !password) {
+    warningEl.textContent = 'Both username and password are required.';
+    return;
+  }
+
+  // Lock UI
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying…';
+  warningEl.textContent = '';
+
+  let handledByBackend = false;
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ username, password })
+    });
+
+    // If backend actually responds (not a 404/500), treat as reachable
+    if (res.status !== 404 && res.status !== 500 && res.status !== 502 && res.status !== 503) {
+      handledByBackend = true;
+      const data = await res.json().catch(() => ({}));
+
+      // ── SUCCESS from backend ──
+      if (res.ok && data.role) {
+        const allowedRoles = ['super_admin', 'admin', 'verifier'];
+        if (!allowedRoles.includes(data.role)) {
+          warningEl.textContent = 'This account is not an admin. Access denied.';
+          logSuspiciousAttempt(`Non-admin role tried to access: ${data.role}`);
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
+          passwordEl.value = '';
+          return;
+        }
+
+        adminAttempts = 0;
+        try { sessionStorage.setItem('admin_attempts', '0'); } catch (e) {}
+
+        const icon = document.getElementById('adminModalIcon');
+        icon.className = 'modal-icon success';
+        icon.innerHTML = '<i class="fas fa-check"></i>';
+        document.getElementById('adminModalTitle').textContent = 'Access Granted';
+        document.getElementById('adminModalText').textContent =
+          `Welcome ${data.full_name || data.username}. Redirecting…`;
+
+        logAdminAccess(`Admin login (backend): ${data.username} (${data.role})`);
+
+        setTimeout(() => {
+          window.location.href = ADMIN_PANEL_PATH;
+        }, 900);
+        return;
+      }
+
+      // ── FAILURE from backend (401/403) ──
+      if (res.status === 401 || res.status === 403) {
+        adminAttempts++;
+        try { sessionStorage.setItem('admin_attempts', String(adminAttempts)); } catch (e) {}
+
+        const remaining = MAX_ATTEMPTS - adminAttempts;
+        logSuspiciousAttempt(`Failed admin attempt #${adminAttempts} (user: ${username})`);
+
+        if (adminAttempts >= MAX_ATTEMPTS) {
+          adminLockedUntil = now + LOCKOUT_MS;
+          try { sessionStorage.setItem('admin_locked_until', String(adminLockedUntil)); } catch (e) {}
+          showIntrusionAlert();
+          showLockedModal(Math.ceil(LOCKOUT_MS / 1000));
+          return;
+        }
+
+        warningEl.textContent = data.error
+          ? `⚠ ${data.error}. ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`
+          : `⚠ Invalid credentials. ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`;
+
+        passwordEl.value = '';
+        passwordEl.focus();
+        shakeModal();
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
+        return;
+      }
+    }
+  } catch (networkErr) {
+    // Backend unreachable → fall through to offline mode
+    handledByBackend = false;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // OFFLINE FALLBACK — accept hardcoded admin credentials
+  // ─────────────────────────────────────────────────────────────
+  if (username === DEMO_ADMIN_USERNAME && password === DEMO_ADMIN_PASSWORD) {
+    adminAttempts = 0;
+    try { sessionStorage.setItem('admin_attempts', '0'); } catch (e) {}
+
+    const icon = document.getElementById('adminModalIcon');
+    icon.className = 'modal-icon success';
+    icon.innerHTML = '<i class="fas fa-check"></i>';
+    document.getElementById('adminModalTitle').textContent = 'Access Granted';
+    document.getElementById('adminModalText').textContent =
+      'Backend offline. Redirecting to admin panel…';
+
+    logAdminAccess(`Admin login (offline): ${username}`);
+
+    setTimeout(() => {
+      window.location.href = ADMIN_PANEL_PATH;
+    }, 900);
+    return;
+  }
+
+  // Wrong credentials offline
+  adminAttempts++;
+  try { sessionStorage.setItem('admin_attempts', String(adminAttempts)); } catch (e) {}
+
+  const remaining = MAX_ATTEMPTS - adminAttempts;
+  logSuspiciousAttempt(`Failed offline admin attempt #${adminAttempts} (user: ${username})`);
+
+  if (adminAttempts >= MAX_ATTEMPTS) {
+    adminLockedUntil = now + LOCKOUT_MS;
+    try { sessionStorage.setItem('admin_locked_until', String(adminLockedUntil)); } catch (e) {}
+    showIntrusionAlert();
+    showLockedModal(Math.ceil(LOCKOUT_MS / 1000));
+    return;
+  }
+
+  warningEl.innerHTML =
+    `⚠ Invalid credentials. ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`;
+
+  passwordEl.value = '';
+  passwordEl.focus();
+  shakeModal();
+  submitBtn.disabled = false;
+  submitBtn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOCKED / INTRUSION UI
+   ═══════════════════════════════════════════════════════════════ */
+function showLockedModal(secondsLeft) {
+  showStep(2);
+  const icon = document.getElementById('adminModalIcon');
+  icon.className = 'modal-icon locked';
+  icon.innerHTML = '<i class="fas fa-lock"></i>';
+  document.getElementById('adminModalTitle').textContent = 'Access Temporarily Locked';
+  document.getElementById('adminModalText').textContent =
+    `Too many failed attempts. Try again in ${secondsLeft} seconds.`;
+  document.getElementById('adminAttemptsWarning').textContent =
+    'This attempt has been logged for security.';
+
+  ['adminUsernameInput', 'adminPasswordInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.disabled = true; el.value = ''; }
+  });
+
+  const btn = document.getElementById('adminSubmitBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-lock"></i> Locked'; }
+
+  clearTimeout(window._lockTimer);
+  window._lockTimer = setTimeout(() => {
+    if (adminLockedUntil > Date.now()) {
+      showLockedModal(Math.ceil((adminLockedUntil - Date.now()) / 1000));
+    } else {
+      resetGateModal();
+    }
+  }, 1000);
+}
+
+function showIntrusionAlert() {
+  const alertBox = document.createElement('div');
+  alertBox.style.cssText = `
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: white; padding: 14px 24px; border-radius: 14px;
+    font-weight: 700; font-size: 14px; z-index: 99999;
+    box-shadow: 0 20px 50px -10px rgba(220, 38, 38, 0.6);
+    display: flex; align-items: center; gap: 12px;
+    animation: slideDown 0.4s ease; max-width: 92vw;
+  `;
+  alertBox.innerHTML = `
+    <i class="fas fa-exclamation-triangle" style="font-size:1.3rem;"></i>
+    <div>
+      <div>⚠ UNAUTHORIZED ACCESS ATTEMPT</div>
+      <div style="font-size:11px; font-weight:500; opacity:.9; margin-top:2px;">
+        Your attempt has been logged. You are not authorized to access this area.
+      </div>
+    </div>`;
+  document.body.appendChild(alertBox);
+  setTimeout(() => {
+    alertBox.style.animation = 'slideUp 0.4s ease';
+    setTimeout(() => alertBox.remove(), 400);
+  }, 5000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGGING
+   ═══════════════════════════════════════════════════════════════ */
+function logAdminAccess(message) {
+  try {
+    const logs = JSON.parse(localStorage.getItem('adminAccessLogs') || '[]');
+    logs.unshift({ type: 'granted', message, url: location.href,
+                   userAgent: navigator.userAgent, timestamp: new Date().toISOString() });
+    if (logs.length > 100) logs.length = 100;
+    localStorage.setItem('adminAccessLogs', JSON.stringify(logs));
+  } catch (e) {}
+}
+function logSuspiciousAttempt(message) {
+  try {
+    const logs = JSON.parse(localStorage.getItem('adminIntrusionLogs') || '[]');
+    logs.unshift({ type: 'failed', message, url: location.href,
+                   userAgent: navigator.userAgent, timestamp: new Date().toISOString() });
+    if (logs.length > 100) logs.length = 100;
+    localStorage.setItem('adminIntrusionLogs', JSON.stringify(logs));
+  } catch (e) {}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+    e.preventDefault();
+    openAdminGate();
+  }
+  if (e.key === 'Escape') closeAdminGate();
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+const animStyle = document.createElement('style');
+animStyle.textContent = `
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%     { transform: translateX(-8px); }
+    40%     { transform: translateX(8px); }
+    60%     { transform: translateX(-5px); }
+    80%     { transform: translateX(5px); }
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translate(-50%, -20px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 1; transform: translate(-50%, 0); }
+    to   { opacity: 0; transform: translate(-50%, -20px); }
+  }
+`;
+document.head.appendChild(animStyle);
+
+function shakeModal() {
+  const modal = document.getElementById('adminModal');
+  if (!modal) return;
+  modal.style.animation = 'none';
+  modal.offsetHeight;
+  modal.style.animation = 'shake 0.4s';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME TOGGLE
+   ═══════════════════════════════════════════════════════════════ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme') || 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+  updateThemeIcon(next);
+}
+function toggleLandingTheme() { toggleTheme(); }
+
+function updateThemeIcon(theme) {
+  const btn = document.querySelector('.theme-toggle-float i');
+  if (!btn) return;
+  btn.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+(function initTheme() {
+  const saved = document.documentElement.getAttribute('data-theme') || 'light';
+  updateThemeIcon(saved);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   GREETING
+   ═══════════════════════════════════════════════════════════════ */
+function setGreeting() {
+  const statusText = document.getElementById('statusText');
+  if (!statusText) return;
+  if (statusText.textContent.startsWith('Backend Offline')) return;
+  const hour = new Date().getHours();
+  let greeting = 'Good Morning';
+  if (hour >= 12 && hour < 17) greeting = 'Good Afternoon';
+  else if (hour >= 17) greeting = 'Good Evening';
+  statusText.textContent = `${greeting} · Backend Online`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ROLE CARD CLICK
+   ═══════════════════════════════════════════════════════════════ */
+document.querySelectorAll('.role-card').forEach(card => {
+  card.addEventListener('click', function () {
+    const role = this.dataset.role || 'trainee';
+    try {
+      localStorage.setItem('selectedRole', role);
+      sessionStorage.setItem('selectedRole', role);
+    } catch (e) {}
+    fetch(`${API_BASE}/auth/sessions`, { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   HIGHLIGHT PREVIOUSLY SELECTED ROLE
+   ═══════════════════════════════════════════════════════════════ */
+(function highlightPreviousRole() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const roleFromUrl = params.get('role');
+    const savedRole = roleFromUrl || localStorage.getItem('selectedRole');
+    if (!savedRole) return;
+    document.querySelectorAll('.role-card').forEach(card => {
+      if (card.dataset.role === savedRole) {
+        card.style.borderColor = 'var(--royal-500)';
+        card.style.background = 'var(--bg-card)';
+        card.style.boxShadow = 'var(--shadow-lg)';
+      }
+    });
+  } catch (e) {}
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  checkBackendHealth().then(setGreeting);
+  setInterval(checkBackendHealth, 60000);
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   CONSOLE BRANDING
+   ═══════════════════════════════════════════════════════════════ */
+console.log('%cSKILLINTEL%c  ·  Landing page ready',
+  'background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;padding:6px 12px;border-radius:6px;font-weight:800;font-size:13px;',
+  'color:#64748B;font-size:12px;margin-left:8px;');
+console.log('%cHint: Ctrl + Shift + A opens the admin gate', 'color:#94A3B8;font-size:11px;font-style:italic;');
+</script>
+
+</body>
+</html>

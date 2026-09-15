@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>GovDash · Analytics Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* ============================================================
+           RESET & BASE
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
+
+        /* ============================================================
+           SIDEBAR
+           ============================================================ */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 20px 14px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            scrollbar-width: thin;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 8px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 14px;
+        }
+        .sidebar-brand .icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
+        .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
+
+        .sidebar-user {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 10px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 12px;
+        }
+        .sidebar-user .avatar {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px;
+            flex-shrink: 0;
+        }
+        .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
+
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none; transition: all 0.2s;
+            margin: 1px 0; font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .menu a i { width: 18px; text-align: center; font-size: 14px; }
+        .menu a .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 10px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 12px;
+        }
+        .sidebar-footer a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none; transition: 0.2s;
+            font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
+        .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 12px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-toggle {
+            display: none;
+            background: none; border: none;
+            font-size: 20px; color: #0b1a33;
+            cursor: pointer;
+        }
+        .header-left .page-title h1 {
+            font-size: 18px; color: #0b1a33;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .header-left .page-title h1 i { color: #2563eb; }
+        .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .header-right {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .header-right .date {
+            font-size: 12px; color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .header-right .notif {
+            position: relative;
+            font-size: 18px; color: #475569;
+            cursor: pointer;
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge {
+            position: absolute; top: 2px; right: 2px;
+            background: #ef4444; color: white;
+            width: 18px; height: 18px;
+            font-size: 9px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .header-right .profile-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: #f1f5f9;
+            padding: 4px 12px 4px 4px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 12px;
+        }
+        .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
+
+        /* ============================================================
+           CONTAINER
+           ============================================================ */
+        .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
+
+        /* ============================================================
+           DATA SOURCE BANNER
+           ============================================================ */
+        .data-source-banner {
+            background: linear-gradient(135deg, #065f46, #16a34a, #22c55e);
+            color: white;
+            padding: 14px 22px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 20px rgba(22,163,74,0.25);
+        }
+        .data-source-banner.warning {
+            background: linear-gradient(135deg, #7c2d12, #ea580c, #f59e0b);
+            box-shadow: 0 4px 20px rgba(234,88,12,0.25);
+        }
+        .data-source-banner .ds-icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .data-source-banner .ds-content { flex: 1; }
+        .data-source-banner .ds-title {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .data-source-banner .ds-sub {
+            font-size: 11px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+        .data-source-banner .ds-stats {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .data-source-banner .ds-stat {
+            text-align: center;
+            background: rgba(255,255,255,0.12);
+            padding: 6px 14px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 10px;
+        }
+        .data-source-banner .ds-stat strong {
+            display: block;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        /* ============================================================
+           WELCOME BANNER
+           ============================================================ */
+        .welcome-banner {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+            color: white;
+            padding: 24px 28px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .welcome-banner::before {
+            content: "";
+            position: absolute;
+            width: 350px; height: 350px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -150px; right: -80px;
+        }
+        .welcome-banner .banner-content { position: relative; z-index: 1; }
+        .welcome-banner h2 {
+            font-size: 22px;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .welcome-banner p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+        .welcome-banner .banner-stats {
+            display: flex;
+            gap: 18px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+        .welcome-banner .banner-stats div {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 18px;
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .welcome-banner .banner-stats strong {
+            font-size: 22px;
+            display: block;
+        }
+        .welcome-banner .banner-stats span { font-size: 10px; opacity: 0.75; }
+
+        /* ============================================================
+           SECTION TITLES
+           ============================================================ */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .section-title i { color: #2563eb; }
+        .section-title .badge-count {
+            background: #f1f5f9;
+            padding: 1px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            margin-left: auto;
+        }
+        .section-title .badge-count.green { background: #dcfce7; color: #16a34a; }
+        .section-title .badge-count.orange { background: #fef3c7; color: #d97706; }
+
+        /* ============================================================
+           STATS ROW
+           ============================================================ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 18px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        .stat-box:hover::before { transform: scaleX(1); }
+        .stat-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.12);
+        }
+        .stat-box .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .stat-box .stat-icon {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .stat-box .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-box .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-box .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
+        .stat-box .stat-icon.rose { background: #fce7f3; color: #db2777; }
+        .stat-box .stat-icon.red { background: #fee2e2; color: #dc2626; }
+        .stat-box .stat-number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0b1a33;
+            letter-spacing: -0.02em;
+        }
+        .stat-box .stat-label { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .stat-box .stat-trend {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 6px;
+        }
+        .stat-box .stat-trend.up { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-trend.down { background: #fee2e2; color: #dc2626; }
+        .stat-box .stat-trend.neutral { background: #f1f5f9; color: #64748b; }
+        .stat-box .stat-trend.good { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-trend.warning { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-trend.danger { background: #fee2e2; color: #dc2626; }
+
+        /* ============================================================
+           CHART GRID
+           ============================================================ */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 22px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+        }
+        .chart-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .chart-card .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-card .card-title i { color: #2563eb; }
+        .chart-card .card-title .live-badge {
+            margin-left: auto;
+            font-size: 9px;
+            font-weight: 700;
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .chart-card .card-title .live-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #16a34a;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ============================================================
+           BAR CHARTS
+           ============================================================ */
+        .bar-chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 160px;
+            padding: 4px 0;
+            gap: 8px;
+        }
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .bar-group .bar {
+            width: 100%;
+            max-width: 40px;
+            border-radius: 6px 6px 0 0;
+            transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 6px;
+            position: relative;
+        }
+        .bar-group .bar .bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .bar-group .bar-label {
+            font-size: 9px;
+            color: #64748b;
+            margin-top: 6px;
+            text-align: center;
+            max-width: 60px;
+            word-wrap: break-word;
+        }
+        .bar-group .bar-label .count {
+            font-weight: 600;
+            color: #0b1a33;
+            display: block;
+        }
+
+        /* ============================================================
+           DONUT CHART
+           ============================================================ */
+        .donut-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: 8px 0;
+            flex-wrap: wrap;
+        }
+        .donut {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .donut .donut-center {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .donut .donut-center .num {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0b1a33;
+        }
+        .donut .donut-center .label {
+            font-size: 9px;
+            color: #64748b;
+        }
+        .donut-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .donut-legend .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #475569;
+        }
+        .donut-legend .legend-item .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .donut-legend .legend-item .pct {
+            font-weight: 700;
+            color: #0b1a33;
+            margin-left: auto;
+        }
+
+        /* ============================================================
+           PIPELINE
+           ============================================================ */
+        .pipeline-container {
+            background: white;
+            border-radius: 16px;
+            padding: 22px 24px;
+            border: 1px solid #eef2f6;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .pipeline-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 10px 0;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .pipeline-steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 4%;
+            right: 4%;
+            height: 4px;
+            background: linear-gradient(90deg, #22c55e, #2563eb, #eab308, #dc2626);
+            border-radius: 10px;
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+        }
+        .pipeline-step .step-circle {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: white;
+            border: 3px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        .pipeline-step.completed .step-circle {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+            box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+        }
+        .pipeline-step.active .step-circle {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+            animation: pulse-step 2s infinite;
+        }
+        .pipeline-step.pending .step-circle {
+            background: #f1f5f9;
+            color: #94a3b8;
+            border-color: #e2e8f0;
+        }
+        @keyframes pulse-step {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .pipeline-step .step-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        .pipeline-step .step-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+
+        /* ============================================================
+           DATA TABLE
+           ============================================================ */
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .table-container .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 22px;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .table-container .table-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .table-container .table-header h3 i { color: #2563eb; }
+        .table-container .table-header .count {
+            background: #f1f5f9;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .table-wrapper { overflow-x: auto; }
+        .table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .table-wrapper thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #eef2f6;
+        }
+        .table-wrapper thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .table-wrapper thead th i { margin-right: 4px; color: #94a3b8; }
+        .table-wrapper tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+        .table-wrapper tbody tr:hover { background: #f8fafc; }
+        .table-wrapper tbody td {
+            padding: 12px 16px;
+            color: #0b1a33;
+            vertical-align: middle;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .status-badge .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-badge.employed { background: #dcfce7; color: #16a34a; }
+        .status-badge.employed .dot { background: #16a34a; }
+        .status-badge.unemployed { background: #fee2e2; color: #dc2626; }
+        .status-badge.unemployed .dot { background: #dc2626; }
+        .status-badge.self { background: #dbeafe; color: #2563eb; }
+        .status-badge.self .dot { background: #2563eb; }
+        .status-badge.internship { background: #fef3c7; color: #d97706; }
+        .status-badge.internship .dot { background: #d97706; }
+
+        /* ============================================================
+           VIEW 360° ACTION BUTTON
+           ============================================================ */
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .action-btn.view {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+        .action-btn.view:hover {
+            background: #dbeafe;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.15);
+        }
+
+        /* ============================================================
+           EMPTY STATE
+           ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+        .empty-state i {
+            font-size: 56px;
+            color: #c7d2fe;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .empty-state h3 { color: #475569; margin-bottom: 6px; font-size: 18px; }
+        .empty-state p { font-size: 13px; }
+        .empty-state a {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 10px 24px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .empty-state a:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+        }
+
+        /* ============================================================
+           QUICK ACTIONS
+           ============================================================ */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .quick-action-card {
+            background: white;
+            border-radius: 14px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+            color: #0b1a33;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .quick-action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.12);
+            border-color: #2563eb;
+        }
+        .quick-action-card .qa-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .quick-action-card .qa-info .qa-title {
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .quick-action-card .qa-info .qa-desc {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 1200px) {
+            .chart-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 10px 16px; }
+            .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; }
+            .container { padding: 12px 14px; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .welcome-banner { flex-direction: column; align-items: flex-start; }
+            .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
+            .pipeline-steps { gap: 4px; }
+            .pipeline-step .step-circle { width: 40px; height: 40px; font-size: 16px; }
+            .pipeline-step .step-label { font-size: 8px; }
+            .pipeline-step .step-value { font-size: 11px; }
+            .data-source-banner { flex-direction: column; align-items: flex-start; }
+            .data-source-banner .ds-stats { width: 100%; justify-content: space-around; }
+        }
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .stat-box { padding: 12px; }
+            .stat-box .stat-number { font-size: 20px; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+            .quick-actions-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================
+SIDEBAR
+============================================================ -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>GovDash</h2>
+            <p>Government Portal</p>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">G</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Government</div>
+            <div class="role" id="sidebarRole">Admin</div>
+        </div>
+    </div>
+
+    <div class="menu-label">Analytics</div>
+    <div class="menu">
+        <a href="dashboard.html" class="active"><i class="fas fa-home"></i> Overview</a>
+        <a href="government-analytics.html"><i class="fas fa-chart-line"></i> Government Analytics</a>
+        <a href="retention-analytics.html"><i class="fas fa-user-check"></i> Retention Analysis</a>
+        <a href="income.html"><i class="fas fa-rupee-sign"></i> Income/Livelihood</a>
+        <a href="training-to-job-relevance.html"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
+        <a href="non-placement-analysis.html"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
+        <a href="program-comparison.html"><i class="fas fa-landmark"></i> Government Schemes</a>
+        <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ============================================================
+MAIN CONTENT
+============================================================ -->
+<div class="main-content">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-home"></i> Government Dashboard</h1>
+                <p>Real-time overview of skill development outcomes · SIH26135</p>
+            </div>
+        </div>
+        <div class="header-right">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+  <i class="fas fa-moon"></i>
+</button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">G</div>
+                <span class="name" id="headerName">Government</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== CONTAINER ===== -->
+    <div class="container">
+
+        <!-- ===== DATA SOURCE BANNER ===== -->
+        <div class="data-source-banner" id="dataSourceBanner">
+            <div class="ds-icon" id="dsIcon">🟢</div>
+            <div class="ds-content">
+                <div class="ds-title" id="dsTitle">Live Data Connected</div>
+                <div class="ds-sub" id="dsSub">Real-time data from trainee, employer, and provider registrations</div>
+            </div>
+            <div class="ds-stats" id="dsStats">
+                <div class="ds-stat"><strong id="dsTrainees">0</strong>Trainees</div>
+                <div class="ds-stat"><strong id="dsEmployers">0</strong>Employers</div>
+                <div class="ds-stat"><strong id="dsProviders">0</strong>Providers</div>
+            </div>
+        </div>
+
+        <!-- ===== WELCOME BANNER ===== -->
+        <div class="welcome-banner">
+            <div class="banner-content">
+                <h2><i class="fas fa-hand-peace"></i> Welcome, <span id="welcomeName">Government</span>!</h2>
+                <p>Real-time overview of training, employment, and livelihood outcomes across all Government schemes</p>
+            </div>
+            <div class="banner-stats">
+                <div>
+                    <strong id="bannerTrainees">0</strong>
+                    <span>Total Trainees</span>
+                </div>
+                <div>
+                    <strong id="bannerEmployed">0</strong>
+                    <span>Employed</span>
+                </div>
+                <div>
+                    <strong id="bannerRate">0%</strong>
+                    <span>Employment Rate</span>
+                </div>
+                <div>
+                    <strong id="bannerIncome">₹0</strong>
+                    <span>Avg Income</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== KPI CARDS ===== -->
+        <div class="section-title">
+            <i class="fas fa-chart-pie"></i> Key Performance Indicators
+            <span class="badge-count green" id="liveStatus"><i class="fas fa-circle" style="font-size:6px;"></i> Live</span>
+        </div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-top">
+                    <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                    <span class="stat-trend up" id="trendTrainees">↑ Live</span>
+                </div>
+                <div class="stat-number" id="kpiTotalTrainees">0</div>
+                <div class="stat-label">Total Trainees</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-top">
+                    <div class="stat-icon green"><i class="fas fa-briefcase"></i></div>
+                    <span class="stat-trend up" id="trendEmployed">↑ Live</span>
+                </div>
+                <div class="stat-number" id="kpiEmployed">0</div>
+                <div class="stat-label">Employed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-top">
+                    <div class="stat-icon purple"><i class="fas fa-percent"></i></div>
+                    <span class="stat-trend good" id="trendRate">● Good</span>
+                </div>
+                <div class="stat-number" id="kpiEmploymentRate">0%</div>
+                <div class="stat-label">Employment Rate</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-top">
+                    <div class="stat-icon teal"><i class="fas fa-user-check"></i></div>
+                    <span class="stat-trend good" id="trendRetention">● Good</span>
+                </div>
+                <div class="stat-number" id="kpiRetentionRate">0%</div>
+                <div class="stat-label">Retention Rate</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-top">
+                    <div class="stat-icon orange"><i class="fas fa-rupee-sign"></i></div>
+                    <span class="stat-trend up" id="trendIncome">↑ Live</span>
+                </div>
+                <div class="stat-number" id="kpiAvgIncome">₹0</div>
+                <div class="stat-label">Avg Income</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-top">
+                    <div class="stat-icon rose"><i class="fas fa-building"></i></div>
+                    <span class="stat-trend neutral">–</span>
+                </div>
+                <div class="stat-number" id="kpiProviders">0</div>
+                <div class="stat-label">Active Providers</div>
+            </div>
+        </div>
+
+        <!-- ===== TRAINING PIPELINE ===== -->
+        <div class="section-title">
+            <i class="fas fa-filter"></i> Training Pipeline
+            <span class="badge-count green">Real-time tracking</span>
+        </div>
+        <div class="pipeline-container">
+            <div class="pipeline-steps" id="pipelineSteps">
+                <div class="pipeline-step completed">
+                    <div class="step-circle">📋</div>
+                    <div class="step-label">Registered</div>
+                    <div class="step-value" id="pipeRegistered">0</div>
+                </div>
+                <div class="pipeline-step completed">
+                    <div class="step-circle">✅</div>
+                    <div class="step-label">Completed</div>
+                    <div class="step-value" id="pipeCompleted">0</div>
+                </div>
+                <div class="pipeline-step active">
+                    <div class="step-circle">🎓</div>
+                    <div class="step-label">Certified</div>
+                    <div class="step-value" id="pipeCertified">0</div>
+                </div>
+                <div class="pipeline-step active">
+                    <div class="step-circle">💼</div>
+                    <div class="step-label">Placed</div>
+                    <div class="step-value" id="pipePlaced">0</div>
+                </div>
+                <div class="pipeline-step pending">
+                    <div class="step-circle">🤝</div>
+                    <div class="step-label">Joined</div>
+                    <div class="step-value" id="pipeJoined">0</div>
+                </div>
+                <div class="pipeline-step pending">
+                    <div class="step-circle">🏆</div>
+                    <div class="step-label">Retained</div>
+                    <div class="step-value" id="pipeRetained">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== CHARTS ROW 1 ===== -->
+        <div class="chart-grid">
+            <div class="chart-card">
+                <div class="card-title">
+                    <i class="fas fa-graduation-cap"></i> Employment by Program
+                    <span class="live-badge"><span class="dot"></span> Live</span>
+                </div>
+                <div class="bar-chart-container" id="programChart"></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="card-title">
+                    <i class="fas fa-chart-pie"></i> Employment Status
+                    <span class="live-badge"><span class="dot"></span> Live</span>
+                </div>
+                <div class="donut-container" id="statusDonut">
+                    <div class="donut" id="statusDonutChart">
+                        <div class="donut-center">
+                            <div class="num" id="statusTotal">0</div>
+                            <div class="label">Total</div>
+                        </div>
+                    </div>
+                    <div class="donut-legend" id="statusLegend"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== CHARTS ROW 2 ===== -->
+        <div class="chart-grid">
+            <div class="chart-card">
+                <div class="card-title">
+                    <i class="fas fa-chalkboard-teacher"></i> Employment by Provider
+                    <span class="live-badge"><span class="dot"></span> Live</span>
+                </div>
+                <div class="bar-chart-container" id="providerChart"></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="card-title">
+                    <i class="fas fa-rupee-sign"></i> Income Distribution
+                    <span class="live-badge"><span class="dot"></span> Live</span>
+                </div>
+                <div class="donut-container" id="incomeDonut">
+                    <div class="donut" id="incomeDonutChart">
+                        <div class="donut-center">
+                            <div class="num" id="incomeTotal">0</div>
+                            <div class="label">Earning</div>
+                        </div>
+                    </div>
+                    <div class="donut-legend" id="incomeLegend"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RECENT TRAINEES ===== -->
+        <div class="section-title">
+            <i class="fas fa-list"></i> Recent Trainee Records
+            <span class="badge-count" id="recordCount">0</span>
+        </div>
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-database"></i> Live Records from LocalStorage</h3>
+                <div style="display:flex; gap:8px;">
+                    <button onclick="refreshData()" style="padding:6px 14px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; font-size:11px; font-weight:600; color:#475569; cursor:pointer;">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> Trainee</th>
+                            <th><i class="fas fa-graduation-cap"></i> Program</th>
+                            <th><i class="fas fa-building"></i> Provider</th>
+                            <th><i class="fas fa-map-pin"></i> District</th>
+                            <th><i class="fas fa-briefcase"></i> Status</th>
+                            <th><i class="fas fa-rupee-sign"></i> Income</th>
+                            <th><i class="fas fa-cog"></i> Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="traineeTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== QUICK ACTIONS ===== -->
+        <div class="section-title">
+            <i class="fas fa-bolt"></i> Quick Actions
+            <span class="badge-count">Navigate to detailed views</span>
+        </div>
+        <div class="quick-actions-grid">
+            <a href="government-analytics.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#dbeafe; color:#2563eb;"><i class="fas fa-chart-line"></i></div>
+                <div class="qa-info">
+                    <div class="qa-title">Government Analytics</div>
+                    <div class="qa-desc">Multi-dimensional filters & insights</div>
+                </div>
+            </a>
+            <a href="retention-analytics.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#dcfce7; color:#16a34a;"><i class="fas fa-user-check"></i></div>
+                <div class="qa-info">
+                    <div class="qa-title">Retention Analysis</div>
+                    <div class="qa-desc">30/90/180/365-day tracking</div>
+                </div>
+            </a>
+            <a href="income.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#fef3c7; color:#d97706;"><i class="fas fa-rupee-sign"></i></div>
+                <div class="qa-info">
+                    <div class="qa-title">Income & Livelihood</div>
+                    <div class="qa-desc">Before vs after training analysis</div>
+                </div>
+            </a>
+            <a href="training-to-job-relevance.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#ede9fe; color:#7c3aed;"><i class="fas fa-bullseye"></i></div>
+                <div class="qa-info">
+                    <div class="qa-title">Training-Job Relevance</div>
+                    <div class="qa-desc">Skill match & job alignment</div>
+                </div>
+            </a>
+            <a href="non-placement-analysis.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#fee2e2; color:#dc2626;"><i class="fas fa-user-slash"></i></div>
+                <div class="qa-info">
+                    <div class="qa-title">Non-Placement Analysis</div>
+                    <div class="qa-desc">Why candidates fail to transition</div>
+                </div>
+            </a>
+            <a href="program-comparison.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#ccfbf1; color:#0d9488;"><i class="fas fa-landmark"></i></div>
+                <div class="qa-info">
+                    <div class="qa-title">Government Schemes</div>
+                    <div class="qa-desc">PMKVY vs DDU-GKY vs PM-DAKSH</div>
+                </div>
+            </a>
+            <a href="ai-insights.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#ede9fe; color:#7c3aed;"><i class="fas fa-robot"></i></div>
+                <div class="qa-info">
+                    <div class="qa-title">AI Insights</div>
+                    <div class="qa-desc">Decision intelligence & recommendations</div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // ✅ Load ALL data from arrays
+    // ============================================================
+
+    function getAllTraineesFromArray() {
+        const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+        const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+        const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
+
+        console.log('📊 Government Dashboard - Loading data:');
+        console.log('   allTrainees:', allTrainees.length);
+        console.log('   allEmployment:', allEmployment.length);
+        console.log('   allFollowups:', allFollowups.length);
+
+        if (allTrainees.length === 0) return [];
+
+        return allTrainees.map((t, index) => {
+            const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
+            const fol = allFollowups.find(f => f.traineeEmail === t.email) || {};
+
+            const empStatus = emp.status || t.employmentStatusDisplay || 'Not Updated';
+            let status = 'unemployed';
+            if (empStatus === 'Employed') status = 'employed';
+            else if (empStatus === 'Self-Employed') status = 'self-employed';
+            else if (empStatus === 'Internship' || empStatus === 'Apprenticeship') status = 'internship';
+
+            return {
+                id: t.traineeId || 'TRN' + (index + 1),
+                name: t.fullName || 'Unknown',
+                email: t.email || '',
+                program: t.skillTrade || 'N/A',
+                provider: t.trainingProvider || 'N/A',
+                district: emp.jobCity || t.location || t.district || 'N/A',
+                status: status,
+                income: parseInt(emp.currentIncome) || parseInt(t.currentIncome) || 0,
+                joiningDate: emp.joiningDate || t.joiningDate || 'N/A',
+                avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
+                color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
+                isRealData: true
+            };
+        });
+    }
+
+    function getEmployersCount() {
+        const allEmployers = JSON.parse(localStorage.getItem('allEmployers') || '[]');
+        return allEmployers.length;
+    }
+
+    function getProvidersCount() {
+        const allProviders = JSON.parse(localStorage.getItem('allProviders') || '[]');
+        return allProviders.length;
+    }
+
+    function getGovernmentData() {
+        const govData = localStorage.getItem('governmentData');
+        if (govData) {
+            try { return JSON.parse(govData); } catch(e) {}
+        }
+        return null;
+    }
+
+    // ============================================================
+    // FALLBACK SAMPLE DATA
+    // ============================================================
+
+    function getFallbackRecords() {
+        return [
+            { id: 'TRN001', name: 'Priya Sharma', program: 'Data Analytics', provider: 'Skill India Centre', district: 'Bengaluru', status: 'employed', income: 28000, joiningDate: '2026-04-12', avatar: 'P', color: '#2563eb' },
+            { id: 'TRN002', name: 'Rahul Verma', program: 'Full Stack Development', provider: 'NITC Training', district: 'Mumbai', status: 'employed', income: 32000, joiningDate: '2026-05-15', avatar: 'R', color: '#7c3aed' },
+            { id: 'TRN003', name: 'Ananya Reddy', program: 'Digital Marketing', provider: 'Digital India Academy', district: 'Delhi', status: 'self-employed', income: 25000, joiningDate: '2026-06-01', avatar: 'A', color: '#16a34a' },
+            { id: 'TRN004', name: 'Vikram Singh', program: 'Data Science', provider: 'Data Science Institute', district: 'Hyderabad', status: 'employed', income: 35000, joiningDate: '2026-07-01', avatar: 'V', color: '#d97706' },
+            { id: 'TRN005', name: 'Sneha Patel', program: 'UI/UX Design', provider: 'Design Academy', district: 'Bengaluru', status: 'unemployed', income: 0, joiningDate: 'N/A', avatar: 'S', color: '#dc2626' },
+            { id: 'TRN006', name: 'Arjun Nair', program: 'Cloud Computing', provider: 'Cloud Academy', district: 'Chennai', status: 'employed', income: 30000, joiningDate: '2026-08-01', avatar: 'A', color: '#0d9488' }
+        ];
+    }
+
+    function getAllRecords() {
+        const realRecords = getAllTraineesFromArray();
+
+        if (realRecords.length > 0) {
+            console.log('✅ Using REAL data:', realRecords.length, 'records');
+            return { records: realRecords, isRealData: true };
+        } else {
+            console.log('⚠️ No real data found - using fallback');
+            return { records: getFallbackRecords(), isRealData: false };
+        }
+    }
+
+    // ============================================================
+    // CALCULATE STATISTICS
+    // ============================================================
+
+    function calculateStats(records) {
+        const total = records.length;
+        const employed = records.filter(r => r.status === 'employed').length;
+        const selfEmployed = records.filter(r => r.status === 'self-employed').length;
+        const internship = records.filter(r => r.status === 'internship').length;
+        const unemployed = records.filter(r => r.status === 'unemployed').length;
+        const totalEmployed = employed + selfEmployed + internship;
+        const rate = total > 0 ? Math.round((totalEmployed / total) * 100) : 0;
+
+        const incomes = records.filter(r => r.income > 0).map(r => r.income);
+        const avgIncome = incomes.length > 0 ? Math.round(incomes.reduce((a,b) => a + b, 0) / incomes.length) : 0;
+
+        const now = new Date();
+        const retained = records.filter(r => {
+            if (r.status !== 'employed' && r.status !== 'self-employed') return false;
+            if (!r.joiningDate || r.joiningDate === 'N/A') return false;
+            const joinDate = new Date(r.joiningDate);
+            const diff = (now - joinDate) / (1000 * 60 * 60 * 24);
+            return diff > 180;
+        }).length;
+        const retentionRate = totalEmployed > 0 ? Math.round((retained / totalEmployed) * 100) : 0;
+
+        const programs = {};
+        records.forEach(r => {
+            if (r.program && r.program !== 'N/A') {
+                if (!programs[r.program]) programs[r.program] = { total: 0, employed: 0 };
+                programs[r.program].total++;
+                if (r.status === 'employed' || r.status === 'self-employed' || r.status === 'internship') {
+                    programs[r.program].employed++;
+                }
+            }
+        });
+
+        const providers = {};
+        records.forEach(r => {
+            if (r.provider && r.provider !== 'N/A') {
+                if (!providers[r.provider]) providers[r.provider] = { total: 0, employed: 0 };
+                providers[r.provider].total++;
+                if (r.status === 'employed' || r.status === 'self-employed' || r.status === 'internship') {
+                    providers[r.provider].employed++;
+                }
+            }
+        });
+
+        const incomeDistribution = {
+            '₹0': records.filter(r => r.income === 0).length,
+            '₹0-15K': records.filter(r => r.income > 0 && r.income <= 15000).length,
+            '₹15K-25K': records.filter(r => r.income > 15000 && r.income <= 25000).length,
+            '₹25K-35K': records.filter(r => r.income > 25000 && r.income <= 35000).length,
+            '₹35K+': records.filter(r => r.income > 35000).length
+        };
+
+        return {
+            total, employed, selfEmployed, internship, unemployed, totalEmployed, rate,
+            avgIncome, retentionRate, retained,
+            programs, providers, incomeDistribution
+        };
+    }
+
+    // ============================================================
+    // RENDER
+    // ============================================================
+
+    let allRecords = [];
+    let stats = {};
+    let isRealData = false;
+
+    function loadAndRender() {
+        const result = getAllRecords();
+        allRecords = result.records;
+        isRealData = result.isRealData;
+        stats = calculateStats(allRecords);
+
+        renderDataSourceBanner();
+        renderBanner();
+        renderKPIs();
+        renderPipeline();
+        renderProgramChart();
+        renderStatusDonut();
+        renderProviderChart();
+        renderIncomeDonut();
+        renderTraineeTable();
+        updateSidebar();
+        updateNotificationBadge();
+    }
+
+    function renderDataSourceBanner() {
+        const banner = document.getElementById('dataSourceBanner');
+        const icon = document.getElementById('dsIcon');
+        const title = document.getElementById('dsTitle');
+        const sub = document.getElementById('dsSub');
+
+        const employerCount = getEmployersCount();
+        const providerCount = getProvidersCount();
+
+        document.getElementById('dsTrainees').textContent = allRecords.length;
+        document.getElementById('dsEmployers').textContent = employerCount;
+        document.getElementById('dsProviders').textContent = providerCount;
+
+        if (isRealData) {
+            banner.className = 'data-source-banner';
+            icon.textContent = '🟢';
+            title.textContent = 'Live Data Connected';
+            sub.textContent = 'Real-time data from trainee, employer, and provider registrations';
+        } else {
+            banner.className = 'data-source-banner warning';
+            icon.textContent = '⚠️';
+            title.textContent = 'No Real Data Found — Using Sample Data';
+            sub.textContent = 'Register as trainee, employer, or provider to see live data here';
+        }
+    }
+
+    function renderBanner() {
+        document.getElementById('bannerTrainees').textContent = stats.total;
+        document.getElementById('bannerEmployed').textContent = stats.totalEmployed;
+        document.getElementById('bannerRate').textContent = stats.rate + '%';
+        document.getElementById('bannerIncome').textContent = '₹' + (stats.avgIncome >= 1000 ? (stats.avgIncome/1000).toFixed(0) + 'K' : stats.avgIncome);
+    }
+
+    function renderKPIs() {
+        document.getElementById('kpiTotalTrainees').textContent = stats.total;
+        document.getElementById('kpiEmployed').textContent = stats.employed;
+        document.getElementById('kpiEmploymentRate').textContent = stats.rate + '%';
+        document.getElementById('kpiRetentionRate').textContent = stats.retentionRate + '%';
+        document.getElementById('kpiAvgIncome').textContent = '₹' + (stats.avgIncome >= 1000 ? (stats.avgIncome/1000).toFixed(0) + 'K' : stats.avgIncome);
+        document.getElementById('kpiProviders').textContent = Object.keys(stats.providers).length;
+    }
+
+    function renderPipeline() {
+        const total = stats.total;
+        const completed = Math.round(total * 0.87);
+        const certified = Math.round(total * 0.72);
+        const placed = stats.totalEmployed;
+        const joined = stats.employed + stats.selfEmployed;
+        const retained = stats.retained;
+
+        document.getElementById('pipeRegistered').textContent = total;
+        document.getElementById('pipeCompleted').textContent = completed;
+        document.getElementById('pipeCertified').textContent = certified;
+        document.getElementById('pipePlaced').textContent = placed;
+        document.getElementById('pipeJoined').textContent = joined;
+        document.getElementById('pipeRetained').textContent = retained;
+    }
+
+    function renderProgramChart() {
+        const container = document.getElementById('programChart');
+        const data = Object.keys(stats.programs).map(name => ({
+            name,
+            total: stats.programs[name].total,
+            employed: stats.programs[name].employed,
+            rate: stats.programs[name].total > 0 ? Math.round((stats.programs[name].employed / stats.programs[name].total) * 100) : 0
+        }));
+        data.sort((a, b) => b.total - a.total);
+        const top = data.slice(0, 5);
+
+        if (top.length === 0) {
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No program data</div>';
+            return;
+        }
+
+        const maxTotal = Math.max(...top.map(r => r.total), 1);
+
+        container.innerHTML = top.map(r => {
+            const height = Math.max((r.total / maxTotal) * 130, 16);
+            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
+            return `<div class="bar-group">
+                <div class="bar" style="height:${height}px;background:${color};">
+                    <span class="bar-value">${r.rate}%</span>
+                </div>
+                <div class="bar-label">
+                    ${r.name.length > 12 ? r.name.substring(0, 12) + '…' : r.name}
+                    <span class="count">${r.total}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderStatusDonut() {
+        const container = document.getElementById('statusDonutChart');
+        const legend = document.getElementById('statusLegend');
+
+        const data = [
+            { label: 'Employed', value: stats.employed, color: '#22c55e' },
+            { label: 'Self-Employed', value: stats.selfEmployed, color: '#2563eb' },
+            { label: 'Internship', value: stats.internship, color: '#d97706' },
+            { label: 'Unemployed', value: stats.unemployed, color: '#dc2626' }
+        ];
+
+        const totalVal = stats.total || 1;
+        let gradient = '';
+        let currentAngle = 0;
+
+        data.forEach(d => {
+            const pct = (d.value / totalVal) * 100;
+            if (pct > 0) {
+                const angle = (pct / 100) * 360;
+                gradient += `${d.color} ${currentAngle}deg ${currentAngle + angle}deg, `;
+                currentAngle += angle;
+            }
+        });
+        gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
+
+        container.style.background = `conic-gradient(${gradient})`;
+        document.getElementById('statusTotal').textContent = stats.total;
+
+        legend.innerHTML = data.map(d => {
+            const pct = totalVal > 0 ? Math.round((d.value / totalVal) * 100) : 0;
+            return `<div class="legend-item">
+                <div class="dot" style="background:${d.color};"></div>
+                ${d.label} <span class="pct">${d.value} (${pct}%)</span>
+            </div>`;
+        }).join('');
+    }
+
+    function renderProviderChart() {
+        const container = document.getElementById('providerChart');
+        const data = Object.keys(stats.providers).map(name => ({
+            name,
+            total: stats.providers[name].total,
+            employed: stats.providers[name].employed,
+            rate: stats.providers[name].total > 0 ? Math.round((stats.providers[name].employed / stats.providers[name].total) * 100) : 0
+        }));
+        data.sort((a, b) => b.total - a.total);
+        const top = data.slice(0, 5);
+
+        if (top.length === 0) {
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No provider data</div>';
+            return;
+        }
+
+        const maxTotal = Math.max(...top.map(r => r.total), 1);
+
+        container.innerHTML = top.map(r => {
+            const height = Math.max((r.total / maxTotal) * 130, 16);
+            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
+            return `<div class="bar-group">
+                <div class="bar" style="height:${height}px;background:${color};">
+                    <span class="bar-value">${r.rate}%</span>
+                </div>
+                <div class="bar-label">
+                    ${r.name.length > 12 ? r.name.substring(0, 12) + '…' : r.name}
+                    <span class="count">${r.total}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderIncomeDonut() {
+        const container = document.getElementById('incomeDonutChart');
+        const legend = document.getElementById('incomeLegend');
+
+        const dist = stats.incomeDistribution;
+        const colors = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#2563eb'];
+        const labels = Object.keys(dist);
+        const values = Object.values(dist);
+        const totalVal = values.reduce((a,b) => a + b, 0) || 1;
+        const earningCount = allRecords.filter(r => r.income > 0).length;
+
+        let gradient = '';
+        let currentAngle = 0;
+        values.forEach((val, i) => {
+            const pct = (val / totalVal) * 100;
+            if (pct > 0) {
+                const angle = (pct / 100) * 360;
+                gradient += `${colors[i]} ${currentAngle}deg ${currentAngle + angle}deg, `;
+                currentAngle += angle;
+            }
+        });
+        gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
+
+        container.style.background = `conic-gradient(${gradient})`;
+        document.getElementById('incomeTotal').textContent = earningCount;
+
+        legend.innerHTML = labels.map((label, i) => {
+            const pct = totalVal > 0 ? Math.round((values[i] / totalVal) * 100) : 0;
+            return `<div class="legend-item">
+                <div class="dot" style="background:${colors[i]};"></div>
+                ${label} <span class="pct">${values[i]} (${pct}%)</span>
+            </div>`;
+        }).join('');
+    }
+
+    // ============================================================
+    // ✅ UPDATED: renderTraineeTable WITH "View 360°" LINK
+    // ============================================================
+    function renderTraineeTable() {
+        const tbody = document.getElementById('traineeTableBody');
+        document.getElementById('recordCount').textContent = allRecords.length + ' records';
+
+        if (allRecords.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-database"></i>
+                            <h3>No Real Data Found</h3>
+                            <p>Register as a trainee, employer, or provider to see live data here.</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = allRecords.slice(0, 10).map(r => {
+            const statusClass = r.status === 'employed' ? 'employed' :
+                               r.status === 'self-employed' ? 'self' :
+                               r.status === 'internship' ? 'internship' : 'unemployed';
+            const statusLabel = r.status === 'employed' ? 'Employed' :
+                               r.status === 'self-employed' ? 'Self-Employed' :
+                               r.status === 'internship' ? 'Internship' : 'Unemployed';
+
+            // ✅ Real trainee ID passed to the 360° profile page
+            const profileUrl = `trainee-360-profile.html?traineeId=${encodeURIComponent(r.id)}`;
+
+            return `<tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:34px;height:34px;border-radius:50%;background:${r.color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;">${r.avatar}</div>
+                        <div>
+                            <div style="font-weight:600;font-size:12px;">${r.name}</div>
+                            <div style="font-size:10px;color:#64748b;">${r.id}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><strong style="font-size:11px;">${r.program}</strong></td>
+                <td style="font-size:11px;">${r.provider}</td>
+                <td style="font-size:11px;">${r.district}</td>
+                <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
+                <td style="font-weight:700;color:${r.income > 0 ? '#16a34a' : '#94a3b8'};font-size:12px;">${r.income > 0 ? '₹' + r.income.toLocaleString() : 'N/A'}</td>
+                <td>
+                    <a href="${profileUrl}" class="action-btn view">
+                        <i class="fas fa-eye"></i> View 360°
+                    </a>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function updateSidebar() {
+        const govData = getGovernmentData();
+        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
+        document.getElementById('sidebarAvatar').textContent = initial;
+        document.getElementById('sidebarName').textContent = govData?.name || 'Government';
+        document.getElementById('sidebarRole').textContent = govData?.role || 'Admin';
+        document.getElementById('headerAvatar').textContent = initial;
+        document.getElementById('headerName').textContent = govData?.name || 'Government';
+        document.getElementById('welcomeName').textContent = govData?.name || 'Government';
+    }
+
+    function updateNotificationBadge() {
+        const pending = allRecords.filter(r => r.status === 'unemployed').length;
+        document.getElementById('notifBadge').textContent = pending;
+    }
+
+    // ============================================================
+    // UTILITIES
+    // ============================================================
+
+    function updateDate() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    function refreshData() {
+        loadAndRender();
+        showToast('🔄 Data refreshed from localStorage!');
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed; bottom: 30px; right: 30px; background: white;
+            padding: 14px 22px; border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            border-left: 4px solid #2563eb; max-width: 400px;
+            z-index: 1000; font-size: 13px; color: #0b1a33;
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 500;
+        `;
+        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#2563eb;font-size:16px;"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function showNotifications() {
+        const pending = allRecords.filter(r => r.status === 'unemployed').length;
+        const employed = allRecords.filter(r => r.status === 'employed').length;
+        alert(`📬 Notifications\n\n• ${pending} trainees unemployed\n• ${employed} trainees employed\n• ${allRecords.length} total records\n\n${isRealData ? '✅ Using REAL data from localStorage' : '⚠️ Using SAMPLE data - register users to see live data'}`);
+    }
+
+    function toggleProfileMenu() {
+        alert('👤 Profile Menu\n\nSettings · Support · Logout');
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            alert('Logging out... Redirecting to login page.');
+            window.location.href = '../auth/login.html';
+        }
+    }
+
+    // ============================================================
+    // AUTO-REFRESH: Listen for localStorage changes
+    // ============================================================
+
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'allTrainees' || e.key === 'allEmployment' ||
+            e.key === 'allProviders' || e.key === 'allEmployers' ||
+            e.key === 'allFollowups') {
+            console.log('🔄 Data changed, reloading dashboard...');
+            loadAndRender();
+        }
+    });
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDate();
+        loadAndRender();
+
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        console.log('✅ Government Dashboard loaded!');
+        console.log('📋 Data Source:', isRealData ? '✅ REAL DATA' : '⚠️ SAMPLE DATA');
+        console.log('📈 Total Records:', allRecords.length);
+        console.log('💼 Employed:', stats.employed);
+        console.log('📊 Employment Rate:', stats.rate + '%');
+        console.log('💰 Avg Income:', '₹' + stats.avgIncome.toLocaleString());
+    });
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

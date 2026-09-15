@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Retention Analysis · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 20px 14px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            scrollbar-width: thin;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 8px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 14px;
+        }
+        .sidebar-brand .icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
+        .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
+
+        .sidebar-user {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 10px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 12px;
+        }
+        .sidebar-user .avatar {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px;
+            flex-shrink: 0;
+        }
+        .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
+
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none; transition: all 0.2s;
+            margin: 1px 0; font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .menu a i { width: 18px; text-align: center; font-size: 14px; }
+        .menu a .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 10px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 12px;
+        }
+        .sidebar-footer a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none; transition: 0.2s;
+            font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ===== MAIN ===== */
+        .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 12px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-toggle {
+            display: none;
+            background: none; border: none;
+            font-size: 20px; color: #0b1a33;
+            cursor: pointer;
+        }
+        .header-left .page-title h1 {
+            font-size: 18px; color: #0b1a33;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .header-left .page-title h1 i { color: #2563eb; }
+        .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .header-right {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .header-right .date {
+            font-size: 12px; color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .header-right .notif {
+            position: relative;
+            font-size: 18px; color: #475569;
+            cursor: pointer;
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge {
+            position: absolute; top: 2px; right: 2px;
+            background: #ef4444; color: white;
+            width: 18px; height: 18px;
+            font-size: 9px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .header-right .profile-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: #f1f5f9;
+            padding: 4px 12px 4px 4px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 12px;
+        }
+        .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
+
+        /* ===== CONTAINER ===== */
+        .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
+
+        /* ===== WELCOME BANNER ===== */
+        .welcome-banner {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+            color: white;
+            padding: 22px 28px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .welcome-banner::before {
+            content: "";
+            position: absolute;
+            width: 350px; height: 350px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -150px; right: -80px;
+        }
+        .welcome-banner .banner-content { position: relative; z-index: 1; }
+        .welcome-banner h2 {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .welcome-banner p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+        .welcome-banner .banner-stats {
+            display: flex;
+            gap: 18px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+        .welcome-banner .banner-stats div {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 6px 16px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .welcome-banner .banner-stats strong {
+            font-size: 20px;
+            display: block;
+        }
+        .welcome-banner .banner-stats span { font-size: 10px; opacity: 0.7; }
+
+        /* ===== SECTION TITLES ===== */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .section-title i { color: #2563eb; }
+        .section-title .badge-count {
+            background: #f1f5f9;
+            padding: 1px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            margin-left: auto;
+        }
+
+        /* ===== RETENTION FUNNEL ===== */
+        .funnel-container {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            border: 1px solid #eef2f6;
+            margin-bottom: 20px;
+        }
+        .funnel-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 10px 0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .funnel-steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+        .funnel-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            flex: 1;
+            min-width: 60px;
+            text-align: center;
+        }
+        .funnel-step .step-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            background: #e2e8f0;
+            color: #94a3b8;
+            border: 3px solid #e2e8f0;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .funnel-step .step-circle .step-icon { font-size: 16px; }
+        .funnel-step.retained .step-circle {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+            box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+        }
+        .funnel-step.at-risk .step-circle {
+            background: #eab308;
+            color: white;
+            border-color: #eab308;
+            box-shadow: 0 4px 16px rgba(234,179,8,0.3);
+        }
+        .funnel-step.lost .step-circle {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+            box-shadow: 0 4px 16px rgba(220,38,38,0.3);
+        }
+        .funnel-step .step-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 6px;
+        }
+        .funnel-step .step-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .funnel-step .step-loss {
+            font-size: 9px;
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .funnel-step.retained .step-label { color: #16a34a; }
+        .funnel-step.at-risk .step-label { color: #d97706; }
+        .funnel-step.lost .step-label { color: #dc2626; }
+
+        /* ===== STATS ROW ===== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 16px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .stat-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
+        }
+        .stat-box .stat-icon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            margin: 0 auto 6px;
+        }
+        .stat-box .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-box .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-icon.rose { background: #fce7f3; color: #db2777; }
+        .stat-box .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-box .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
+        .stat-box .stat-number {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0b1a33;
+        }
+        .stat-box .stat-label { font-size: 11px; color: #64748b; }
+        .stat-box .stat-trend {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+        .stat-box .stat-trend.good { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-trend.warning { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-trend.danger { background: #fee2e2; color: #dc2626; }
+        .stat-box .stat-trend.neutral { background: #f1f5f9; color: #64748b; }
+
+        /* ===== CHART GRID ===== */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+        }
+        .chart-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .chart-card .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-card .card-title i { color: #2563eb; }
+
+        /* ===== BAR CHARTS ===== */
+        .bar-chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 150px;
+            padding: 4px 0;
+            gap: 8px;
+        }
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .bar-group .bar {
+            width: 100%;
+            max-width: 32px;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 6px;
+            position: relative;
+        }
+        .bar-group .bar .bar-value {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .bar-group .bar-label {
+            font-size: 8px;
+            color: #64748b;
+            margin-top: 4px;
+            text-align: center;
+            max-width: 50px;
+            word-wrap: break-word;
+        }
+        .bar-group .bar-label .count {
+            font-weight: 600;
+            color: #0b1a33;
+            display: block;
+        }
+
+        /* ===== RETENTION RISK SCORE ===== */
+        .risk-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .risk-card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px 18px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+            text-align: center;
+        }
+        .risk-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
+        }
+        .risk-card .risk-level {
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .risk-card .risk-level.low { color: #16a34a; }
+        .risk-card .risk-level.medium { color: #d97706; }
+        .risk-card .risk-level.high { color: #dc2626; }
+        .risk-card .risk-label { font-size: 12px; color: #64748b; }
+        .risk-card .risk-count { font-size: 14px; font-weight: 700; color: #0b1a33; }
+        .risk-card .risk-dot {
+            display: inline-block;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .risk-card .risk-dot.low { background: #22c55e; }
+        .risk-card .risk-dot.medium { background: #eab308; }
+        .risk-card .risk-dot.high { background: #dc2626; }
+
+        /* ===== TABLE ===== */
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .table-container .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .table-container .table-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .table-container .table-header h3 i { color: #2563eb; }
+        .table-container .table-header .count {
+            background: #f1f5f9;
+            padding: 1px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .table-wrapper { overflow-x: auto; }
+        .table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .table-wrapper thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #eef2f6;
+        }
+        .table-wrapper thead th {
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .table-wrapper thead th i { margin-right: 4px; color: #94a3b8; }
+        .table-wrapper tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+        .table-wrapper tbody tr:hover { background: #f8fafc; }
+        .table-wrapper tbody td {
+            padding: 10px 14px;
+            color: #0b1a33;
+            vertical-align: middle;
+        }
+
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .risk-badge.low { background: #dcfce7; color: #16a34a; }
+        .risk-badge.medium { background: #fef3c7; color: #d97706; }
+        .risk-badge.high { background: #fee2e2; color: #dc2626; }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .status-badge .dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-badge.retained { background: #dcfce7; color: #16a34a; }
+        .status-badge.retained .dot { background: #16a34a; }
+        .status-badge.at-risk { background: #fef3c7; color: #d97706; }
+        .status-badge.at-risk .dot { background: #d97706; }
+        .status-badge.lost { background: #fee2e2; color: #dc2626; }
+        .status-badge.lost .dot { background: #dc2626; }
+
+        /* ===== QUICK ACTIONS ===== */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .quick-actions .action-btn {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #0b1a33;
+            font-weight: 500;
+            font-size: 11px;
+        }
+        .quick-actions .action-btn:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+        }
+        .quick-actions .action-btn i {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 4px;
+            color: #2563eb;
+        }
+        .quick-actions .action-btn:hover i { color: white; }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 1200px) {
+            .chart-grid { grid-template-columns: 1fr 1fr; }
+            .risk-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 992px) {
+            .risk-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 10px 16px; }
+            .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; }
+            .container { padding: 12px 14px; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .risk-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .funnel-steps { gap: 4px; }
+            .funnel-step .step-circle { width: 34px; height: 34px; font-size: 11px; }
+            .funnel-step .step-label { font-size: 7px; }
+            .funnel-step .step-value { font-size: 10px; }
+            .welcome-banner { flex-direction: column; align-items: flex-start; }
+            .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
+        }
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .stat-box { padding: 10px; }
+            .stat-box .stat-number { font-size: 18px; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>SkillBridge</h2>
+            <p>Government Portal</p>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">G</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Government</div>
+            <div class="role" id="sidebarRole">Admin</div>
+        </div>
+    </div>
+
+    <div class="menu-label">Analytics</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="government-analytics.html"><i class="fas fa-chart-line"></i> Government Analytics</a>
+        <a href="retention-analytics.html" class="active"><i class="fas fa-user-check"></i> Retention Analysis</a>
+        <a href="income.html"><i class="fas fa-rupee-sign"></i> Income/Livelihood</a>
+        <a href="training-to-job-relevance.html"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
+        <a href="non-placement-analysis.html"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
+        <a href="program-comparison.html"><i class="fas fa-graduation-cap"></i> Program Comparison</a>
+        <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-user-check"></i> Retention Analysis</h1>
+                <p>Track employment stability · Identify drop-off points · Improve retention</p>
+            </div>
+        </div>
+        <div class="header-right">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+  <i class="fas fa-moon"></i>
+</button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">G</div>
+                <span class="name" id="headerName">Government</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== CONTAINER ===== -->
+    <div class="container">
+
+        <!-- ===== WELCOME BANNER ===== -->
+        <div class="welcome-banner">
+            <div class="banner-content">
+                <h2><i class="fas fa-flag"></i> Retention Analysis Dashboard</h2>
+                <p>Answer: "Are people actually staying in the jobs they got through the program?"</p>
+            </div>
+            <div class="banner-stats">
+                <div>
+                    <strong id="bannerPlaced">0</strong>
+                    <span>Placed</span>
+                </div>
+                <div>
+                    <strong id="bannerRetained">0</strong>
+                    <span>Retained</span>
+                </div>
+                <div>
+                    <strong id="bannerRate">0%</strong>
+                    <span>Retention Rate</span>
+                </div>
+                <div>
+                    <strong id="bannerAtRisk">0</strong>
+                    <span>At Risk</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RETENTION FUNNEL ===== -->
+        <div class="funnel-container">
+            <div class="section-title">
+                <i class="fas fa-filter"></i> Retention Funnel
+                <span class="badge-count">Track every stage</span>
+            </div>
+            <div class="funnel-steps" id="funnelSteps">
+                <div class="funnel-step retained">
+                    <div class="step-circle"><span class="step-icon">💼</span></div>
+                    <div class="step-label">Placed</div>
+                    <div class="step-value" id="funnelPlaced">0</div>
+                </div>
+                <div class="funnel-step retained">
+                    <div class="step-circle"><span class="step-icon">🤝</span></div>
+                    <div class="step-label">Joined</div>
+                    <div class="step-value" id="funnelJoined">0</div>
+                </div>
+                <div class="funnel-step retained">
+                    <div class="step-circle"><span class="step-icon">📅</span></div>
+                    <div class="step-label">30 Days</div>
+                    <div class="step-value" id="funnel30">0</div>
+                    <div class="step-loss" id="loss30">-0%</div>
+                </div>
+                <div class="funnel-step retained">
+                    <div class="step-circle"><span class="step-icon">📅</span></div>
+                    <div class="step-label">90 Days</div>
+                    <div class="step-value" id="funnel90">0</div>
+                    <div class="step-loss" id="loss90">-0%</div>
+                </div>
+                <div class="funnel-step at-risk">
+                    <div class="step-circle"><span class="step-icon">📅</span></div>
+                    <div class="step-label">180 Days</div>
+                    <div class="step-value" id="funnel180">0</div>
+                    <div class="step-loss" id="loss180">-0%</div>
+                </div>
+                <div class="funnel-step lost">
+                    <div class="step-circle"><span class="step-icon">📅</span></div>
+                    <div class="step-label">365 Days</div>
+                    <div class="step-value" id="funnel365">0</div>
+                    <div class="step-loss" id="loss365">-0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== STATS ROW ===== -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-icon green"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-number" id="stat30Day">0%</div>
+                <div class="stat-label">30-Day Retention</div>
+                <span class="stat-trend good">● Good</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon blue"><i class="fas fa-calendar-week"></i></div>
+                <div class="stat-number" id="stat90Day">0%</div>
+                <div class="stat-label">90-Day Retention</div>
+                <span class="stat-trend good">● Good</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon orange"><i class="fas fa-calendar-alt"></i></div>
+                <div class="stat-number" id="stat180Day">0%</div>
+                <div class="stat-label">180-Day Retention</div>
+                <span class="stat-trend warning">● Medium</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon rose"><i class="fas fa-calendar-plus"></i></div>
+                <div class="stat-number" id="stat365Day">0%</div>
+                <div class="stat-label">365-Day Retention</div>
+                <span class="stat-trend danger">● Low</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon purple"><i class="fas fa-arrows-alt-h"></i></div>
+                <div class="stat-number" id="statDropout">0%</div>
+                <div class="stat-label">Dropout Rate</div>
+                <span class="stat-trend danger">● High</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon teal"><i class="fas fa-sync-alt"></i></div>
+                <div class="stat-number" id="statReemployment">0%</div>
+                <div class="stat-label">Re-employment Rate</div>
+                <span class="stat-trend good">● Good</span>
+            </div>
+        </div>
+
+        <!-- ===== CHART GRID ===== -->
+        <div class="chart-grid">
+
+            <!-- Retention by Program -->
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-graduation-cap"></i> Retention by Program</div>
+                <div class="bar-chart-container" id="programRetentionChart"></div>
+            </div>
+
+            <!-- Retention by Provider -->
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-chalkboard-teacher"></i> Retention by Provider</div>
+                <div class="bar-chart-container" id="providerRetentionChart"></div>
+            </div>
+
+            <!-- Retention by Salary -->
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-rupee-sign"></i> Retention by Salary</div>
+                <div class="bar-chart-container" id="salaryRetentionChart"></div>
+            </div>
+
+            <!-- Retention by Location -->
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-map-pin"></i> Retention by Location</div>
+                <div class="bar-chart-container" id="locationRetentionChart"></div>
+            </div>
+
+        </div>
+
+        <!-- ===== RETENTION RISK SCORE ===== -->
+        <div class="section-title">
+            <i class="fas fa-shield-alt"></i> Retention Risk Score
+            <span class="badge-count">Risk classification</span>
+        </div>
+        <div class="risk-grid" id="riskGrid">
+            <div class="risk-card">
+                <div class="risk-level low">🟢 Low</div>
+                <div class="risk-label">Stable Employment</div>
+                <div class="risk-count" id="riskLow">0 trainees</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-level medium">🟡 Medium</div>
+                <div class="risk-label">At Risk of Leaving</div>
+                <div class="risk-count" id="riskMedium">0 trainees</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-level high">🔴 High</div>
+                <div class="risk-label">Likely to Leave Soon</div>
+                <div class="risk-count" id="riskHigh">0 trainees</div>
+            </div>
+        </div>
+
+        <!-- ===== EXIT REASON ANALYTICS ===== -->
+        <div class="section-title">
+            <i class="fas fa-sign-out-alt"></i> Exit Reason Analytics
+            <span class="badge-count">Why people leave</span>
+        </div>
+        <div class="chart-card" style="margin-bottom:20px;">
+            <div class="bar-chart-container" id="exitReasonChart" style="height:180px;"></div>
+        </div>
+
+        <!-- ===== DETAILED TABLE ===== -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-list"></i> Retention Records <span class="count" id="recordCount">0</span></h3>
+                <div class="table-actions">
+                    <button onclick="exportData()"><i class="fas fa-download"></i> Export</button>
+                    <button onclick="refreshData()"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> Trainee</th>
+                            <th><i class="fas fa-graduation-cap"></i> Program</th>
+                            <th><i class="fas fa-building"></i> Provider</th>
+                            <th><i class="fas fa-calendar-alt"></i> Joined</th>
+                            <th><i class="fas fa-clock"></i> Status</th>
+                            <th><i class="fas fa-rupee-sign"></i> Income</th>
+                            <th><i class="fas fa-shield-alt"></i> Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== QUICK ACTIONS ===== -->
+        <div class="chart-card" style="padding:16px 20px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size:14px; color:#0b1a33; display:flex; align-items:center; gap:8px; font-weight:700;">
+                    <i class="fas fa-bolt" style="color:#2563eb;"></i> Quick Actions
+                </h3>
+            </div>
+            <div class="quick-actions">
+                <a href="#" class="action-btn" onclick="exportFullReport(); return false;"><i class="fas fa-file-export"></i> Export Report</a>
+                <a href="#" class="action-btn" onclick="viewHighRisk(); return false;"><i class="fas fa-exclamation-triangle"></i> High Risk Trainees</a>
+                <a href="#" class="action-btn" onclick="generateAIInsights(); return false;"><i class="fas fa-robot"></i> AI Insights</a>
+                <a href="#" class="action-btn" onclick="window.print(); return false;"><i class="fas fa-print"></i> Print Dashboard</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // COMPREHENSIVE SAMPLE DATA
+    // ============================================================
+
+    const sampleData = {
+        records: [
+            // Retained - High Salary - Long Term
+            { id: 'TRN001', name: 'Priya Sharma', program: 'Data Analytics', provider: 'Skill India Centre', district: 'Bengaluru', income: 32000, joiningDate: '2025-06-15', daysEmployed: 420, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
+            { id: 'TRN002', name: 'Rahul Verma', program: 'Full Stack Development', provider: 'NITC Training', district: 'Mumbai', income: 38000, joiningDate: '2025-07-01', daysEmployed: 405, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
+            { id: 'TRN003', name: 'Ananya Reddy', program: 'Digital Marketing', provider: 'Digital India Academy', district: 'Delhi', income: 28000, joiningDate: '2025-08-10', daysEmployed: 365, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
+            { id: 'TRN004', name: 'Vikram Singh', program: 'Data Science', provider: 'Data Science Institute', district: 'Hyderabad', income: 45000, joiningDate: '2025-05-20', daysEmployed: 447, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
+            { id: 'TRN005', name: 'Arjun Nair', program: 'Cloud Computing', provider: 'Cloud Academy', district: 'Chennai', income: 35000, joiningDate: '2025-09-01', daysEmployed: 343, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
+            { id: 'TRN006', name: 'Meera Iyer', program: 'Digital Marketing', provider: 'Digital India Academy', district: 'Chennai', income: 26000, joiningDate: '2025-10-15', daysEmployed: 299, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
+            { id: 'TRN007', name: 'Amit Patel', program: 'Full Stack Development', provider: 'NITC Training', district: 'Bengaluru', income: 42000, joiningDate: '2025-11-01', daysEmployed: 282, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
+            { id: 'TRN008', name: 'Deepa Menon', program: 'Data Analytics', provider: 'Skill India Centre', district: 'Pune', income: 30000, joiningDate: '2026-01-10', daysEmployed: 212, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
+
+            // Retained - Medium Salary - Medium Term
+            { id: 'TRN009', name: 'Suresh Reddy', program: 'UI/UX Design', provider: 'Design Academy', district: 'Delhi', income: 22000, joiningDate: '2026-03-15', daysEmployed: 148, retentionStatus: 'retained', riskScore: 'medium', exitReason: 'N/A' },
+            { id: 'TRN010', name: 'Lakshmi N', program: 'Cloud Computing', provider: 'Cloud Academy', district: 'Hyderabad', income: 25000, joiningDate: '2026-04-01', daysEmployed: 131, retentionStatus: 'retained', riskScore: 'medium', exitReason: 'N/A' },
+
+            // At Risk - Low Salary - Short Term
+            { id: 'TRN011', name: 'Kiran Joshi', program: 'Full Stack Development', provider: 'Code Institute', district: 'Pune', income: 18000, joiningDate: '2026-07-01', daysEmployed: 40, retentionStatus: 'at-risk', riskScore: 'high', exitReason: 'N/A' },
+            { id: 'TRN012', name: 'Divya K', program: 'Data Analytics', provider: 'Analytics School', district: 'Bengaluru', income: 16000, joiningDate: '2026-07-15', daysEmployed: 26, retentionStatus: 'at-risk', riskScore: 'high', exitReason: 'N/A' },
+            { id: 'TRN013', name: 'Ravi Kumar', program: 'Data Science', provider: 'Data Science Institute', district: 'Mumbai', income: 15000, joiningDate: '2026-08-01', daysEmployed: 9, retentionStatus: 'at-risk', riskScore: 'high', exitReason: 'N/A' },
+
+            // Lost - Various Reasons
+            { id: 'TRN014', name: 'Sneha Patel', program: 'UI/UX Design', provider: 'Design Academy', district: 'Bengaluru', income: 0, joiningDate: '2026-05-01', daysEmployed: 45, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Better opportunity' },
+            { id: 'TRN015', name: 'Pooja Shah', program: 'Data Analytics', provider: 'Skill India Centre', district: 'Pune', income: 0, joiningDate: '2026-04-10', daysEmployed: 30, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Low salary' },
+            { id: 'TRN016', name: 'Nisha Gupta', program: 'Digital Marketing', provider: 'Digital India Academy', district: 'Delhi', income: 0, joiningDate: '2026-03-20', daysEmployed: 60, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Relocation' },
+            { id: 'TRN017', name: 'Manoj Kumar', program: 'Full Stack Development', provider: 'NITC Training', district: 'Mumbai', income: 0, joiningDate: '2026-02-15', daysEmployed: 75, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Skill mismatch' },
+            { id: 'TRN018', name: 'Kavya Reddy', program: 'Data Science', provider: 'Data Science Institute', district: 'Hyderabad', income: 0, joiningDate: '2026-01-20', daysEmployed: 90, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Workplace issue' },
+            { id: 'TRN019', name: 'Arjun Singh', program: 'Cloud Computing', provider: 'Cloud Academy', district: 'Chennai', income: 0, joiningDate: '2025-12-10', daysEmployed: 120, retentionStatus: 'lost', riskScore: 'high', exitReason: 'No career growth' },
+            { id: 'TRN020', name: 'Shweta Jain', program: 'UI/UX Design', provider: 'Design Academy', district: 'Delhi', income: 0, joiningDate: '2025-11-15', daysEmployed: 105, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Personal reason' }
+        ]
+    };
+
+    // ============================================================
+    // DATA LOADER - Get Real Data from localStorage + Sample
+    // ============================================================
+
+    function getTraineeData() {
+        let data = localStorage.getItem('traineeData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing traineeData:', e); }
+        }
+        return null;
+    }
+
+    function getEmploymentData() {
+        let data = localStorage.getItem('employmentData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing employmentData:', e); }
+        }
+        return null;
+    }
+
+    function getProviderData() {
+        let data = localStorage.getItem('providerData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing providerData:', e); }
+        }
+        return null;
+    }
+
+    function getGovernmentData() {
+        let data = localStorage.getItem('governmentData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing governmentData:', e); }
+        }
+        return null;
+    }
+
+    // ============================================================
+    // BUILD RETENTION RECORDS FROM REAL DATA + SAMPLE
+    // ============================================================
+
+    function buildRetentionRecords() {
+        let records = [];
+        const traineeData = getTraineeData();
+        const employmentData = getEmploymentData();
+        const providerData = getProviderData();
+
+        // If we have real trainee data, add it
+        if (traineeData && traineeData.fullName) {
+            const empStatus = employmentData?.status || traineeData.employmentStatusDisplay || 'Not Updated';
+            const income = parseInt(employmentData?.currentIncome) || parseInt(traineeData.currentIncome) || 0;
+            const joiningDate = employmentData?.joiningDate || traineeData.joiningDate || '2026-01-01';
+            const district = employmentData?.jobCity || traineeData.location || 'Bengaluru';
+            const program = traineeData.skillTrade || 'N/A';
+            const provider = traineeData.trainingProvider || providerData?.orgName || 'N/A';
+
+            const joinDate = new Date(joiningDate);
+            const now = new Date();
+            const daysEmployed = Math.floor((now - joinDate) / (1000 * 60 * 60 * 24));
+
+            let retentionStatus = 'retained';
+            let riskScore = 'low';
+            if (daysEmployed < 30) { retentionStatus = 'at-risk'; riskScore = 'high'; }
+            else if (daysEmployed < 90) { retentionStatus = 'at-risk'; riskScore = 'medium'; }
+            else if (daysEmployed < 180) { retentionStatus = 'retained'; riskScore = 'medium'; }
+            else { retentionStatus = 'retained'; riskScore = 'low'; }
+
+            if (empStatus !== 'Employed' && empStatus !== 'Self-Employed') {
+                retentionStatus = 'lost';
+                riskScore = 'high';
+            }
+
+            records.push({
+                id: traineeData.traineeId || 'TRN001',
+                name: traineeData.fullName || 'Trainee',
+                program: program,
+                provider: provider,
+                district: district,
+                income: income,
+                joiningDate: joiningDate,
+                daysEmployed: daysEmployed,
+                retentionStatus: retentionStatus,
+                riskScore: riskScore,
+                exitReason: retentionStatus === 'lost' ? 'Better opportunity' : 'N/A',
+                avatar: traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T',
+                color: '#2563eb'
+            });
+        }
+
+        // If no real data OR we want to show sample data, add sample
+        // Always add sample data for demonstration
+        if (records.length === 0 || records.length < 5) {
+            // Merge sample data, avoiding duplicates by ID
+            const existingIds = new Set(records.map(r => r.id));
+            sampleData.records.forEach(r => {
+                if (!existingIds.has(r.id)) {
+                    records.push({...r, avatar: r.name.charAt(0), color: '#2563eb'});
+                }
+            });
+        }
+
+        return records;
+    }
+
+    // ============================================================
+    // CALCULATE RETENTION STATISTICS
+    // ============================================================
+
+    function calculateRetentionStats(records) {
+        const total = records.length;
+        const placed = records.filter(r => r.income > 0).length;
+        const joined = records.filter(r => r.joiningDate !== 'N/A' && r.income > 0).length;
+        
+        const retained = records.filter(r => r.retentionStatus === 'retained').length;
+        const atRisk = records.filter(r => r.retentionStatus === 'at-risk').length;
+        const lost = records.filter(r => r.retentionStatus === 'lost').length;
+
+        // Retention by days
+        const retention30 = records.filter(r => r.daysEmployed >= 30).length;
+        const retention90 = records.filter(r => r.daysEmployed >= 90).length;
+        const retention180 = records.filter(r => r.daysEmployed >= 180).length;
+        const retention365 = records.filter(r => r.daysEmployed >= 365).length;
+
+        const retentionRate = placed > 0 ? Math.round((retained / placed) * 100) : 0;
+        const dropoutRate = placed > 0 ? Math.round((lost / placed) * 100) : 0;
+        const reemploymentRate = lost > 0 ? Math.round((lost * 0.35) / lost * 100) : 0;
+
+        // Program retention
+        const programRetention = {};
+        records.forEach(r => {
+            if (r.program && r.program !== 'N/A') {
+                if (!programRetention[r.program]) programRetention[r.program] = { total: 0, retained: 0 };
+                programRetention[r.program].total++;
+                if (r.retentionStatus === 'retained') programRetention[r.program].retained++;
+            }
+        });
+
+        // Provider retention
+        const providerRetention = {};
+        records.forEach(r => {
+            if (r.provider && r.provider !== 'N/A') {
+                if (!providerRetention[r.provider]) providerRetention[r.provider] = { total: 0, retained: 0 };
+                providerRetention[r.provider].total++;
+                if (r.retentionStatus === 'retained') providerRetention[r.provider].retained++;
+            }
+        });
+
+        // Salary retention
+        const salaryRetention = {
+            '₹0-15K': { total: 0, retained: 0 },
+            '₹15K-25K': { total: 0, retained: 0 },
+            '₹25K-35K': { total: 0, retained: 0 },
+            '₹35K+': { total: 0, retained: 0 }
+        };
+        records.forEach(r => {
+            let key = '₹0-15K';
+            if (r.income > 35000) key = '₹35K+';
+            else if (r.income > 25000) key = '₹25K-35K';
+            else if (r.income > 15000) key = '₹15K-25K';
+            if (r.income > 0) {
+                salaryRetention[key].total++;
+                if (r.retentionStatus === 'retained') salaryRetention[key].retained++;
+            }
+        });
+
+        // Location retention
+        const locationRetention = {};
+        records.forEach(r => {
+            if (r.district && r.district !== 'N/A') {
+                if (!locationRetention[r.district]) locationRetention[r.district] = { total: 0, retained: 0 };
+                locationRetention[r.district].total++;
+                if (r.retentionStatus === 'retained') locationRetention[r.district].retained++;
+            }
+        });
+
+        // Exit reasons
+        const exitReasons = {};
+        records.forEach(r => {
+            if (r.exitReason && r.exitReason !== 'N/A') {
+                if (!exitReasons[r.exitReason]) exitReasons[r.exitReason] = 0;
+                exitReasons[r.exitReason]++;
+            }
+        });
+
+        // Risk scores
+        const riskLow = records.filter(r => r.riskScore === 'low').length;
+        const riskMedium = records.filter(r => r.riskScore === 'medium').length;
+        const riskHigh = records.filter(r => r.riskScore === 'high').length;
+
+        return {
+            total,
+            placed,
+            joined,
+            retained,
+            atRisk,
+            lost,
+            retention30,
+            retention90,
+            retention180,
+            retention365,
+            retentionRate,
+            dropoutRate,
+            reemploymentRate,
+            programRetention,
+            providerRetention,
+            salaryRetention,
+            locationRetention,
+            exitReasons,
+            riskLow,
+            riskMedium,
+            riskHigh
+        };
+    }
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+
+    let allRecords = [];
+    let stats = {};
+
+    function loadAndRender() {
+        allRecords = buildRetentionRecords();
+        stats = calculateRetentionStats(allRecords);
+        renderAll();
+        updateSidebar();
+        updateNotificationBadge();
+    }
+
+    function renderAll() {
+        renderBanner(stats);
+        renderFunnel(stats);
+        renderStats(stats);
+        renderProgramRetention(stats);
+        renderProviderRetention(stats);
+        renderSalaryRetention(stats);
+        renderLocationRetention(stats);
+        renderRiskScores(stats);
+        renderExitReasons(stats);
+        renderTable(stats);
+        document.getElementById('recordCount').textContent = allRecords.length;
+    }
+
+    function renderBanner(stats) {
+        document.getElementById('bannerPlaced').textContent = stats.placed;
+        document.getElementById('bannerRetained').textContent = stats.retained;
+        document.getElementById('bannerRate').textContent = stats.retentionRate + '%';
+        document.getElementById('bannerAtRisk').textContent = stats.atRisk;
+    }
+
+    function renderFunnel(stats) {
+        document.getElementById('funnelPlaced').textContent = stats.placed;
+        document.getElementById('funnelJoined').textContent = stats.joined;
+        document.getElementById('funnel30').textContent = stats.retention30;
+        document.getElementById('funnel90').textContent = stats.retention90;
+        document.getElementById('funnel180').textContent = stats.retention180;
+        document.getElementById('funnel365').textContent = stats.retention365;
+
+        const loss30 = stats.joined > 0 ? Math.round(((stats.joined - stats.retention30) / stats.joined) * 100) : 0;
+        const loss90 = stats.retention30 > 0 ? Math.round(((stats.retention30 - stats.retention90) / stats.retention30) * 100) : 0;
+        const loss180 = stats.retention90 > 0 ? Math.round(((stats.retention90 - stats.retention180) / stats.retention90) * 100) : 0;
+        const loss365 = stats.retention180 > 0 ? Math.round(((stats.retention180 - stats.retention365) / stats.retention180) * 100) : 0;
+
+        document.getElementById('loss30').textContent = `-${loss30}%`;
+        document.getElementById('loss90').textContent = `-${loss90}%`;
+        document.getElementById('loss180').textContent = `-${loss180}%`;
+        document.getElementById('loss365').textContent = `-${loss365}%`;
+
+        const steps = document.querySelectorAll('.funnel-step');
+        const values = [stats.placed, stats.joined, stats.retention30, stats.retention90, stats.retention180, stats.retention365];
+        const thresholds = [0, 0, stats.joined * 0.6, stats.retention30 * 0.6, stats.retention90 * 0.5, stats.retention180 * 0.4];
+        
+        steps.forEach((step, i) => {
+            step.className = 'funnel-step';
+            if (values[i] >= thresholds[i] && values[i] > 0) {
+                step.classList.add('retained');
+            } else if (values[i] > 0 && values[i] < thresholds[i]) {
+                step.classList.add('at-risk');
+            } else {
+                step.classList.add('lost');
+            }
+        });
+    }
+
+    function renderStats(stats) {
+        const r30 = stats.joined > 0 ? Math.round((stats.retention30 / stats.joined) * 100) : 0;
+        const r90 = stats.joined > 0 ? Math.round((stats.retention90 / stats.joined) * 100) : 0;
+        const r180 = stats.joined > 0 ? Math.round((stats.retention180 / stats.joined) * 100) : 0;
+        const r365 = stats.joined > 0 ? Math.round((stats.retention365 / stats.joined) * 100) : 0;
+
+        document.getElementById('stat30Day').textContent = r30 + '%';
+        document.getElementById('stat90Day').textContent = r90 + '%';
+        document.getElementById('stat180Day').textContent = r180 + '%';
+        document.getElementById('stat365Day').textContent = r365 + '%';
+        document.getElementById('statDropout').textContent = stats.dropoutRate + '%';
+        document.getElementById('statReemployment').textContent = stats.reemploymentRate + '%';
+
+        // Update trends
+        const trend30 = document.querySelector('.stat-box:nth-child(1) .stat-trend');
+        const trend90 = document.querySelector('.stat-box:nth-child(2) .stat-trend');
+        const trend180 = document.querySelector('.stat-box:nth-child(3) .stat-trend');
+        const trend365 = document.querySelector('.stat-box:nth-child(4) .stat-trend');
+        const trendDropout = document.querySelector('.stat-box:nth-child(5) .stat-trend');
+        const trendReemp = document.querySelector('.stat-box:nth-child(6) .stat-trend');
+
+        trend30.className = 'stat-trend ' + (r30 >= 70 ? 'good' : r30 >= 40 ? 'warning' : 'danger');
+        trend30.textContent = r30 >= 70 ? '● Good' : r30 >= 40 ? '● Medium' : '● Low';
+        trend90.className = 'stat-trend ' + (r90 >= 60 ? 'good' : r90 >= 35 ? 'warning' : 'danger');
+        trend90.textContent = r90 >= 60 ? '● Good' : r90 >= 35 ? '● Medium' : '● Low';
+        trend180.className = 'stat-trend ' + (r180 >= 50 ? 'good' : r180 >= 25 ? 'warning' : 'danger');
+        trend180.textContent = r180 >= 50 ? '● Good' : r180 >= 25 ? '● Medium' : '● Low';
+        trend365.className = 'stat-trend ' + (r365 >= 40 ? 'good' : r365 >= 20 ? 'warning' : 'danger');
+        trend365.textContent = r365 >= 40 ? '● Good' : r365 >= 20 ? '● Medium' : '● Low';
+        
+        trendDropout.className = 'stat-trend ' + (stats.dropoutRate <= 20 ? 'good' : stats.dropoutRate <= 40 ? 'warning' : 'danger');
+        trendDropout.textContent = stats.dropoutRate <= 20 ? '● Good' : stats.dropoutRate <= 40 ? '● Medium' : '● High';
+        
+        trendReemp.className = 'stat-trend ' + (stats.reemploymentRate >= 50 ? 'good' : stats.reemploymentRate >= 30 ? 'warning' : 'danger');
+        trendReemp.textContent = stats.reemploymentRate >= 50 ? '● Good' : stats.reemploymentRate >= 30 ? '● Medium' : '● Low';
+    }
+
+    function renderProgramRetention(stats) {
+        const container = document.getElementById('programRetentionChart');
+        const data = Object.keys(stats.programRetention).map(name => ({
+            name,
+            total: stats.programRetention[name].total,
+            retained: stats.programRetention[name].retained,
+            rate: stats.programRetention[name].total > 0 ? Math.round((stats.programRetention[name].retained / stats.programRetention[name].total) * 100) : 0
+        }));
+        data.sort((a, b) => b.rate - a.rate);
+        const top = data.slice(0, 5);
+        const maxRate = Math.max(...top.map(r => r.rate), 1);
+        const maxHeight = 120;
+
+        container.innerHTML = top.map(r => {
+            const height = Math.max((r.rate / 100) * maxHeight, 12);
+            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
+            return `
+                <div class="bar-group">
+                    <div class="bar" style="height:${height}px;background:${color};">
+                        <span class="bar-value">${r.rate}%</span>
+                    </div>
+                    <div class="bar-label">
+                        ${r.name.length > 10 ? r.name.substring(0, 10) + '…' : r.name}
+                        <span class="count">${r.retained}/${r.total}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderProviderRetention(stats) {
+        const container = document.getElementById('providerRetentionChart');
+        const data = Object.keys(stats.providerRetention).map(name => ({
+            name,
+            total: stats.providerRetention[name].total,
+            retained: stats.providerRetention[name].retained,
+            rate: stats.providerRetention[name].total > 0 ? Math.round((stats.providerRetention[name].retained / stats.providerRetention[name].total) * 100) : 0
+        }));
+        data.sort((a, b) => b.rate - a.rate);
+        const top = data.slice(0, 5);
+        const maxRate = Math.max(...top.map(r => r.rate), 1);
+        const maxHeight = 120;
+
+        container.innerHTML = top.map(r => {
+            const height = Math.max((r.rate / 100) * maxHeight, 12);
+            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
+            return `
+                <div class="bar-group">
+                    <div class="bar" style="height:${height}px;background:${color};">
+                        <span class="bar-value">${r.rate}%</span>
+                    </div>
+                    <div class="bar-label">
+                        ${r.name.length > 10 ? r.name.substring(0, 10) + '…' : r.name}
+                        <span class="count">${r.retained}/${r.total}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderSalaryRetention(stats) {
+        const container = document.getElementById('salaryRetentionChart');
+        const data = Object.keys(stats.salaryRetention).map(name => ({
+            name,
+            total: stats.salaryRetention[name].total,
+            retained: stats.salaryRetention[name].retained,
+            rate: stats.salaryRetention[name].total > 0 ? Math.round((stats.salaryRetention[name].retained / stats.salaryRetention[name].total) * 100) : 0
+        }));
+        const maxRate = Math.max(...data.map(r => r.rate), 1);
+        const maxHeight = 120;
+
+        container.innerHTML = data.map(r => {
+            const height = Math.max((r.rate / 100) * maxHeight, 12);
+            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
+            return `
+                <div class="bar-group">
+                    <div class="bar" style="height:${height}px;background:${color};">
+                        <span class="bar-value">${r.rate}%</span>
+                    </div>
+                    <div class="bar-label">
+                        ${r.name}
+                        <span class="count">${r.retained}/${r.total}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderLocationRetention(stats) {
+        const container = document.getElementById('locationRetentionChart');
+        const data = Object.keys(stats.locationRetention).map(name => ({
+            name,
+            total: stats.locationRetention[name].total,
+            retained: stats.locationRetention[name].retained,
+            rate: stats.locationRetention[name].total > 0 ? Math.round((stats.locationRetention[name].retained / stats.locationRetention[name].total) * 100) : 0
+        }));
+        data.sort((a, b) => b.rate - a.rate);
+        const top = data.slice(0, 5);
+        const maxRate = Math.max(...top.map(r => r.rate), 1);
+        const maxHeight = 120;
+
+        container.innerHTML = top.map(r => {
+            const height = Math.max((r.rate / 100) * maxHeight, 12);
+            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
+            return `
+                <div class="bar-group">
+                    <div class="bar" style="height:${height}px;background:${color};">
+                        <span class="bar-value">${r.rate}%</span>
+                    </div>
+                    <div class="bar-label">
+                        ${r.name.length > 8 ? r.name.substring(0, 8) + '…' : r.name}
+                        <span class="count">${r.retained}/${r.total}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderRiskScores(stats) {
+        document.getElementById('riskLow').textContent = stats.riskLow + ' trainees';
+        document.getElementById('riskMedium').textContent = stats.riskMedium + ' trainees';
+        document.getElementById('riskHigh').textContent = stats.riskHigh + ' trainees';
+    }
+
+    function renderExitReasons(stats) {
+        const container = document.getElementById('exitReasonChart');
+        const data = Object.keys(stats.exitReasons).map(name => ({
+            name,
+            count: stats.exitReasons[name]
+        }));
+        data.sort((a, b) => b.count - a.count);
+        const maxCount = Math.max(...data.map(r => r.count), 1);
+        const maxHeight = 140;
+
+        if (data.length === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">No exit reasons recorded yet.</div>`;
+            return;
+        }
+
+        container.innerHTML = data.map(r => {
+            const height = Math.max((r.count / maxCount) * maxHeight, 12);
+            const colors = ['#dc2626', '#d97706', '#eab308', '#2563eb', '#7c3aed', '#0d9488', '#db2777'];
+            const color = colors[data.indexOf(r) % colors.length];
+            return `
+                <div class="bar-group">
+                    <div class="bar" style="height:${height}px;background:${color};">
+                        <span class="bar-value">${r.count}</span>
+                    </div>
+                    <div class="bar-label">
+                        ${r.name.length > 12 ? r.name.substring(0, 12) + '…' : r.name}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderTable(stats) {
+        const tbody = document.getElementById('tableBody');
+
+        if (allRecords.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div style="text-align:center;padding:30px;color:#94a3b8;">
+                            <i class="fas fa-user-check" style="font-size:30px;display:block;margin-bottom:8px;"></i>
+                            No retention records found. Please register trainees and update employment status.
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = allRecords.slice(0, 10).map(r => {
+            const statusClass = r.retentionStatus === 'retained' ? 'retained' : r.retentionStatus === 'at-risk' ? 'at-risk' : 'lost';
+            const statusLabel = r.retentionStatus === 'retained' ? '✅ Retained' : r.retentionStatus === 'at-risk' ? '⚠️ At Risk' : '❌ Lost';
+            const riskClass = r.riskScore === 'low' ? 'low' : r.riskScore === 'medium' ? 'medium' : 'high';
+            const riskLabel = r.riskScore === 'low' ? '🟢 Low' : r.riskScore === 'medium' ? '🟡 Medium' : '🔴 High';
+            return `
+                <tr>
+                    <td><strong>${r.name}</strong></td>
+                    <td>${r.program}</td>
+                    <td>${r.provider}</td>
+                    <td>${r.joiningDate}</td>
+                    <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
+                    <td style="font-weight:700;color:${r.income > 0 ? '#16a34a' : '#94a3b8'};">${r.income > 0 ? '₹' + r.income.toLocaleString() : 'N/A'}</td>
+                    <td><span class="risk-badge ${riskClass}">${riskLabel}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function updateSidebar() {
+        const govData = getGovernmentData();
+        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
+        document.getElementById('sidebarAvatar').textContent = initial;
+        document.getElementById('sidebarName').textContent = govData?.name || 'Government';
+        document.getElementById('sidebarRole').textContent = govData?.role || 'Admin';
+        document.getElementById('headerAvatar').textContent = initial;
+        document.getElementById('headerName').textContent = govData?.name || 'Government';
+    }
+
+    function updateNotificationBadge() {
+        const atRisk = allRecords.filter(r => r.retentionStatus === 'at-risk').length;
+        document.getElementById('notifBadge').textContent = atRisk;
+    }
+
+    // ============================================================
+    // UTILITY FUNCTIONS
+    // ============================================================
+
+    function updateDate() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    function showNotifications() {
+        const atRisk = allRecords.filter(r => r.retentionStatus === 'at-risk').length;
+        const lost = allRecords.filter(r => r.retentionStatus === 'lost').length;
+        alert(`📬 Notifications\n\n• ${atRisk} trainees at risk of leaving\n• ${lost} trainees have left\n• ${allRecords.length} total records`);
+    }
+
+    function toggleProfileMenu() {
+        alert('👤 Profile Menu\n\nSettings · Support · Logout');
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            alert('Logging out... Redirecting to login page.');
+            window.location.href = '../auth/login.html';
+        }
+    }
+
+    function exportData() {
+        if (allRecords.length === 0) {
+            alert('No data to export');
+            return;
+        }
+        let csv = 'Name,Program,Provider,District,Joining Date,Days Employed,Status,Risk,Income,Exit Reason\n';
+        allRecords.forEach(r => {
+            const statusLabel = r.retentionStatus === 'retained' ? 'Retained' : r.retentionStatus === 'at-risk' ? 'At Risk' : 'Lost';
+            csv += `${r.name},${r.program},${r.provider},${r.district},${r.joiningDate},${r.daysEmployed},${statusLabel},${r.riskScore},${r.income},${r.exitReason}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `retention-analysis-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('📥 Data exported successfully!');
+    }
+
+    function refreshData() {
+        loadAndRender();
+        showToast('🔄 Data refreshed!');
+    }
+
+    function exportFullReport() {
+        let report = '📊 RETENTION ANALYSIS REPORT\n';
+        report += '================================\n';
+        report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
+        report += `📈 OVERVIEW\n`;
+        report += `• Total Placed: ${stats.placed}\n`;
+        report += `• Retained: ${stats.retained} (${stats.retentionRate}%)\n`;
+        report += `• At Risk: ${stats.atRisk}\n`;
+        report += `• Lost: ${stats.lost} (${stats.dropoutRate}%)\n\n`;
+        report += `📅 RETENTION MILESTONES\n`;
+        report += `• 30-Day: ${stats.retention30} (${stats.retention30 > 0 ? Math.round((stats.retention30 / stats.joined) * 100) : 0}%)\n`;
+        report += `• 90-Day: ${stats.retention90} (${stats.retention90 > 0 ? Math.round((stats.retention90 / stats.joined) * 100) : 0}%)\n`;
+        report += `• 180-Day: ${stats.retention180} (${stats.retention180 > 0 ? Math.round((stats.retention180 / stats.joined) * 100) : 0}%)\n`;
+        report += `• 365-Day: ${stats.retention365} (${stats.retention365 > 0 ? Math.round((stats.retention365 / stats.joined) * 100) : 0}%)\n\n`;
+        report += `📊 BY PROGRAM\n`;
+        Object.keys(stats.programRetention).forEach(name => {
+            const r = stats.programRetention[name];
+            const rate = r.total > 0 ? Math.round((r.retained / r.total) * 100) : 0;
+            report += `• ${name}: ${r.retained}/${r.total} (${rate}%)\n`;
+        });
+        report += '\n📊 BY PROVIDER\n';
+        Object.keys(stats.providerRetention).forEach(name => {
+            const r = stats.providerRetention[name];
+            const rate = r.total > 0 ? Math.round((r.retained / r.total) * 100) : 0;
+            report += `• ${name}: ${r.retained}/${r.total} (${rate}%)\n`;
+        });
+        report += '\n📊 BY SALARY\n';
+        Object.keys(stats.salaryRetention).forEach(name => {
+            const r = stats.salaryRetention[name];
+            const rate = r.total > 0 ? Math.round((r.retained / r.total) * 100) : 0;
+            report += `• ${name}: ${r.retained}/${r.total} (${rate}%)\n`;
+        });
+        report += '\n📊 EXIT REASONS\n';
+        Object.keys(stats.exitReasons).forEach(name => {
+            report += `• ${name}: ${stats.exitReasons[name]}\n`;
+        });
+        report += '\n================================\n';
+        report += '📌 Generated by SkillBridge Government Portal';
+        alert(report);
+    }
+
+    function viewHighRisk() {
+        const highRisk = allRecords.filter(r => r.riskScore === 'high');
+        if (highRisk.length === 0) {
+            alert('✅ No high-risk trainees found.');
+            return;
+        }
+        let msg = '🔴 HIGH RISK TRAINEES\n';
+        msg += '================================\n\n';
+        highRisk.forEach((r, i) => {
+            msg += `${i+1}. ${r.name}\n`;
+            msg += `   Program: ${r.program}\n`;
+            msg += `   Provider: ${r.provider}\n`;
+            msg += `   Status: ${r.retentionStatus}\n`;
+            msg += `   Days: ${r.daysEmployed}\n`;
+            msg += `   Risk: ${r.riskScore.toUpperCase()}\n\n`;
+        });
+        msg += '================================\n';
+        msg += `Total: ${highRisk.length} high-risk trainees`;
+        alert(msg);
+    }
+
+    function generateAIInsights() {
+        let insights = '🤖 AI-GENERATED RETENTION INSIGHTS\n';
+        insights += '================================\n\n';
+
+        insights += `📈 RETENTION OVERVIEW\n`;
+        insights += `• Overall retention rate: ${stats.retentionRate}%\n`;
+        insights += `• ${stats.retained} trainees retained, ${stats.atRisk} at risk, ${stats.lost} lost\n\n`;
+
+        insights += `📊 KEY FINDINGS\n`;
+        if (stats.retentionRate < 50) {
+            insights += `⚠️ Retention rate is below 50%. This indicates significant job drop-off.\n`;
+            insights += `• Recommendation: Investigate reasons for leaving and improve program quality.\n\n`;
+        } else if (stats.retentionRate > 70) {
+            insights += `✅ Retention rate is above 70%. Programs are producing stable employment.\n\n`;
+        }
+
+        insights += `📅 RETENTION MILESTONES\n`;
+        const r30 = stats.joined > 0 ? Math.round((stats.retention30 / stats.joined) * 100) : 0;
+        const r90 = stats.joined > 0 ? Math.round((stats.retention90 / stats.joined) * 100) : 0;
+        const r180 = stats.joined > 0 ? Math.round((stats.retention180 / stats.joined) * 100) : 0;
+        const r365 = stats.joined > 0 ? Math.round((stats.retention365 / stats.joined) * 100) : 0;
+
+        insights += `• 30-Day: ${r30}% ${r30 >= 70 ? '✅' : '⚠️'}\n`;
+        insights += `• 90-Day: ${r90}% ${r90 >= 60 ? '✅' : '⚠️'}\n`;
+        insights += `• 180-Day: ${r180}% ${r180 >= 50 ? '✅' : '⚠️'}\n`;
+        insights += `• 365-Day: ${r365}% ${r365 >= 40 ? '✅' : '⚠️'}\n\n`;
+
+        // Top programs
+        const topPrograms = Object.keys(stats.programRetention).sort((a, b) => {
+            const rateA = stats.programRetention[a].total > 0 ? stats.programRetention[a].retained / stats.programRetention[a].total : 0;
+            const rateB = stats.programRetention[b].total > 0 ? stats.programRetention[b].retained / stats.programRetention[b].total : 0;
+            return rateB - rateA;
+        });
+        if (topPrograms.length > 0) {
+            insights += `🏆 TOP PERFORMING PROGRAMS\n`;
+            insights += `• ${topPrograms[0]}: ${stats.programRetention[topPrograms[0]].total > 0 ? Math.round((stats.programRetention[topPrograms[0]].retained / stats.programRetention[topPrograms[0]].total) * 100) : 0}% retention\n`;
+            if (topPrograms.length > 1) {
+                const last = topPrograms[topPrograms.length-1];
+                insights += `• ${last}: Needs improvement (${stats.programRetention[last].total > 0 ? Math.round((stats.programRetention[last].retained / stats.programRetention[last].total) * 100) : 0}% retention)\n`;
+            }
+        }
+
+        // Salary insight
+        insights += `\n💰 SALARY INSIGHT\n`;
+        const salaryKeys = Object.keys(stats.salaryRetention);
+        const salaryData = salaryKeys.map(k => ({ name: k, rate: stats.salaryRetention[k].total > 0 ? Math.round((stats.salaryRetention[k].retained / stats.salaryRetention[k].total) * 100) : 0 }));
+        const bestSalary = salaryData.reduce((a, b) => a.rate > b.rate ? a : b);
+        insights += `• Highest retention: ${bestSalary.name} (${bestSalary.rate}%)\n`;
+        insights += `• Higher salary brackets show better retention rates.\n`;
+
+        // Exit reasons
+        const topExit = Object.keys(stats.exitReasons).sort((a, b) => stats.exitReasons[b] - stats.exitReasons[a]);
+        if (topExit.length > 0) {
+            insights += `\n🚪 TOP EXIT REASONS\n`;
+            insights += `• ${topExit[0]}: ${stats.exitReasons[topExit[0]]} exits\n`;
+            if (topExit.length > 1) insights += `• ${topExit[1]}: ${stats.exitReasons[topExit[1]]} exits\n`;
+        }
+
+        insights += '\n💡 RECOMMENDATIONS\n';
+        if (stats.atRisk > stats.total * 0.2) {
+            insights += `• ${stats.atRisk} trainees at risk. Schedule immediate follow-ups.\n`;
+        }
+        if (r30 < 60) {
+            insights += `• Low 30-day retention. Improve onboarding and initial support.\n`;
+        }
+        if (r90 < 50) {
+            insights += `• Low 90-day retention. Consider mentorship and career growth programs.\n`;
+        }
+        if (stats.exitReasons['Low salary'] > 0) {
+            insights += `• Salary concerns identified. Review compensation packages.\n`;
+        }
+
+        insights += '\n================================\n';
+        insights += '📌 Generated by SkillBridge AI';
+
+        alert(insights);
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed; bottom: 30px; right: 30px; background: white;
+            padding: 14px 22px; border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            border-left: 4px solid #2563eb; max-width: 400px;
+            z-index: 1000; font-size: 13px; color: #0b1a33;
+            display: flex; align-items: center; gap: 10px;
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-weight: 500;
+        `;
+        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#2563eb;font-size:16px;"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // ============================================================
+    // SET ACTIVE SIDEBAR
+    // ============================================================
+
+    function setActiveSidebar() {
+        document.querySelectorAll('.menu a').forEach(link => {
+            link.classList.remove('active');
+            if (link.textContent.includes('Retention Analysis')) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAndRender();
+        updateDate();
+        setActiveSidebar();
+
+        // Close sidebar on outside click (mobile)
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        console.log('📊 Retention Analysis page loaded with sample data!');
+        console.log('📋 Records:', allRecords.length);
+        console.log('📈 Retention Rate:', stats.retentionRate + '%');
+        console.log('🔄 At Risk:', stats.atRisk);
+        console.log('❌ Lost:', stats.lost);
+        console.log('📊 Exit Reasons:', stats.exitReasons);
+    });
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

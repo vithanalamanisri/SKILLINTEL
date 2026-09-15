@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SkillBridge · Trainee Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f4f7ff; color: #1e293b; display: flex; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1a56db, #0b1a33);
+            color: white;
+            padding: 25px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        .sidebar-brand {
+            padding: 0 25px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sidebar-brand i { font-size: 28px; }
+        .sidebar-brand span { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+        .sidebar-brand small { font-size: 11px; font-weight: 300; opacity: 0.7; display: block; }
+
+        .sidebar-user {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sidebar-user .avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 700;
+        }
+        .sidebar-user .info .name { font-size: 14px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 11px; opacity: 0.7; }
+
+        .sidebar-nav { padding: 0 12px; }
+        .sidebar-nav .nav-label {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.5; padding: 10px 15px 5px;
+        }
+        .sidebar-nav a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 18px; border-radius: 12px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: 0.2s;
+            margin-bottom: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+        }
+        .sidebar-nav a i { width: 20px; text-align: center; font-size: 16px; }
+
+        .sidebar-footer {
+            padding: 20px 20px 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 10px;
+        }
+        .sidebar-footer a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 18px; border-radius: 12px;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            transition: 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.1); color: white; }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .menu-toggle {
+            display: none;
+            background: none; border: none;
+            color: white; font-size: 24px; cursor: pointer;
+        }
+        .logo { font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        .logo i { font-size: 26px; }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        .header-right .user-name { font-weight: 600; font-size: 15px; }
+        .notification-icon { position: relative; font-size: 20px; cursor: pointer; }
+        .badge {
+            position: absolute; top: -8px; right: -10px;
+            background: #ef4444; color: white;
+            width: 20px; height: 20px; font-size: 11px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            padding: 8px 18px; border-radius: 30px; cursor: pointer;
+            font-size: 13px; font-weight: 600; transition: 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.25); }
+
+        /* ===== CONTAINER ===== */
+        .container { padding: 25px 30px 30px; max-width: 1400px; margin: auto; }
+
+        /* ===== WELCOME ===== */
+        .welcome {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 18px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+        }
+        .welcome h2 { margin-bottom: 8px; font-size: 26px; }
+        .welcome h2 i { margin-right: 10px; }
+        .welcome p { font-size: 15px; opacity: 0.9; }
+
+        /* ===== STATS ===== */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.07);
+            border-left: 5px solid #2563eb;
+        }
+        .stat-card:nth-child(2) { border-color: #7c3aed; }
+        .stat-card:nth-child(3) { border-color: #22c55e; }
+        .stat-card:nth-child(4) { border-color: #f59e0b; }
+        .stat-card h4 { color: #64748b; margin-bottom: 10px; font-size: 14px; }
+        .stat-card h2 { font-size: 28px; font-weight: 700; }
+        .stat-card .sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+        /* ===== CONTENT SECTIONS ===== */
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 5px 18px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0,0,0,0.12); }
+        .card h3 {
+            color: #2563eb;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eef2ff;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 18px;
+        }
+        .card h3 i { font-size: 20px; }
+        .card p {
+            margin: 10px 0; font-size: 14px;
+            display: flex; justify-content: space-between;
+            border-bottom: 1px dashed #f1f5f9;
+            padding-bottom: 8px;
+        }
+        .card p:last-child { border-bottom: none; }
+        .card p b { color: #475569; font-weight: 600; }
+        .card p span { color: #0b1a33; font-weight: 500; }
+
+        .profile { text-align: center; }
+        .profile-photo {
+            width: 100px; height: 100px; margin: 0 auto 15px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 45px; color: white; border: 5px solid #dbeafe;
+        }
+
+        .progress-container {
+            width: 100%; height: 14px;
+            background: #e2e8f0; border-radius: 20px; overflow: hidden; margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            border-radius: 20px; transition: width 0.5s ease;
+        }
+
+        .status-badge {
+            display: inline-block; padding: 6px 16px; border-radius: 20px;
+            font-size: 13px; font-weight: 600; margin-top: 8px;
+        }
+        .status-badge.success { background: #dcfce7; color: #15803d; }
+        .status-badge.warning { background: #fef3c7; color: #b45309; }
+        .status-badge.info { background: #dbeafe; color: #1d4ed8; }
+        .status-badge.primary { background: #eef2ff; color: #4f46e5; }
+
+        button {
+            border: none;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white; padding: 10px 18px; border-radius: 10px;
+            cursor: pointer; margin: 5px 3px; font-size: 14px; font-weight: 600;
+            transition: 0.3s; display: inline-flex; align-items: center; gap: 8px;
+        }
+        button:hover { transform: scale(1.03); box-shadow: 0 5px 15px rgba(37,99,235,0.3); }
+        button.btn-outline { background: transparent; color: #2563eb; border: 2px solid #2563eb; }
+        button.btn-outline:hover { background: #eef2ff; }
+        button.btn-success { background: #22c55e; }
+        button.btn-success:hover { background: #16a34a; }
+
+        .notification {
+            background: #f8faff; padding: 12px 15px; margin-bottom: 10px;
+            border-radius: 10px; border-left: 4px solid #7c3aed;
+            display: flex; align-items: center; gap: 10px; font-size: 14px;
+        }
+        .notification i { color: #7c3aed; }
+
+        .quick-actions {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+        .quick-actions button { margin: 0; justify-content: center; }
+
+        .achievement {
+            display: flex; align-items: center; gap: 15px;
+            padding: 12px 15px; background: #f8faff; border-radius: 10px; margin-bottom: 10px;
+        }
+        .achievement-icon { font-size: 28px; }
+        .achievement b { font-size: 15px; display: block; }
+        .achievement p { font-size: 13px; color: #64748b; margin: 0; border: none; padding: 0; }
+
+        .timeline-item {
+            border-left: 3px solid #2563eb;
+            padding-left: 15px; padding-bottom: 18px; margin-left: 8px;
+        }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-item b { display: block; font-size: 15px; }
+        .timeline-item p { font-size: 13px; color: #64748b; margin: 3px 0 0 0; border: none; padding: 0; }
+
+        .suggestion {
+            padding: 12px 15px; background: #eef2ff; border-radius: 10px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 10px; font-size: 14px;
+        }
+        .suggestion i { color: #2563eb; font-size: 18px; }
+
+        .document {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 15px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px;
+        }
+        .document span { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+        .document button { padding: 5px 15px; font-size: 12px; }
+
+        .followup-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;
+        }
+        .followup-item {
+            background: #f1f5f9; border-radius: 12px; padding: 12px; text-align: center;
+            border: 2px solid transparent;
+        }
+        .followup-item .days { font-size: 12px; color: #94a3b8; font-weight: 600; }
+        .followup-item .status-icon { font-size: 24px; margin-top: 5px; }
+        .followup-item.completed { background: #dcfce7; border-color: #22c55e; }
+        .followup-item.due { background: #fef3c7; border-color: #f59e0b; }
+
+        .no-data {
+            text-align: center; padding: 60px 20px;
+            background: white; border-radius: 18px; box-shadow: 0 5px 18px rgba(0,0,0,0.08);
+            margin: 20px;
+        }
+        .no-data i { font-size: 60px; color: #2563eb; margin-bottom: 20px; }
+        .no-data h2 { font-size: 24px; color: #0b1a33; margin-bottom: 10px; }
+        .no-data p { color: #64748b; font-size: 16px; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 15px 20px; }
+            .header-right .user-name { display: none; }
+            .container { padding: 15px; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: 1fr; }
+            .followup-grid { grid-template-columns: 1fr 1fr; }
+            .welcome h2 { font-size: 22px; }
+        }
+        @media (max-width: 480px) {
+            .stats { grid-template-columns: 1fr; }
+            .followup-grid { grid-template-columns: 1fr; }
+            .header-left .logo span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <i class="fas fa-brain"></i>
+        <div>
+            <span>MySkill<span style="font-weight:300;">Journey</span></span>
+            <small>Skill India · SIH26135</small>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">T</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Trainee</div>
+            <div class="role">Trainee</div>
+        </div>
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="nav-label">Main Menu</div>
+        <a class="active" href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="employment.html"><i class="fas fa-briefcase"></i> Employment</a>
+        <a href="follow-up.html"><i class="fas fa-calendar-check"></i> Follow-up</a>
+        <a href="history.html"><i class="fas fa-history"></i> Outcome History</a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <span>Skill<span style="font-weight:300;">Training Platoform</span></span>
+            </div>
+        </div>
+        <div class="header-right">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+      <i class="fas fa-moon"></i>
+    </button>
+            <span class="user-name" id="headerUserName">Trainee</span>
+            <div class="notification-icon" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <div class="badge" id="notificationBadge">0</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== CONTAINER ===== -->
+    <div class="container">
+
+        <!-- WELCOME -->
+        <div class="welcome" id="welcomeBanner">
+            <h2 id="welcomeTitle"><i class="fas fa-hand-peace"></i> Welcome Back! 🎉</h2>
+            <p id="welcomeSub">Track your training, certification, employment and career growth in one place.</p>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats" id="statsGrid">
+            <div class="stat-card">
+                <h4>📚 Training Progress</h4>
+                <h2 id="statTraining">-</h2>
+                <div class="sub" id="statTrainingSub">Loading...</div>
+            </div>
+            <div class="stat-card">
+                <h4>🎓 Certification</h4>
+                <h2 id="statCertification">-</h2>
+                <div class="sub" id="statCertSub">Loading...</div>
+            </div>
+            <div class="stat-card">
+                <h4>💼 Employment</h4>
+                <h2 id="statEmployment">-</h2>
+                <div class="sub" id="statEmploySub">Loading...</div>
+            </div>
+            <div class="stat-card">
+                <h4>💰 Monthly Income</h4>
+                <h2 id="statIncome">-</h2>
+                <div class="sub" id="statIncomeSub">Loading...</div>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div id="contentContainer">
+            <!-- Rendered by JavaScript -->
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ===== LOAD ALL DATA =====
+    function loadAllData() {
+    // ✅ Get currently logged-in trainee email
+    const currentEmail = localStorage.getItem('currentTraineeEmail') || 
+                         (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
+    
+    // ✅ Get ALL trainees and find current one
+    const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+    let traineeData = allTrainees.find(t => t.email === currentEmail);
+    
+    // ✅ Fallback to old single-object storage
+    if (!traineeData) {
+        traineeData = JSON.parse(localStorage.getItem('traineeData') || '{}');
+    }
+
+    // ✅ Get employment data for THIS trainee
+    const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+    let employmentData = allEmployment.find(e => e.traineeEmail === currentEmail);
+    if (!employmentData) {
+        employmentData = JSON.parse(localStorage.getItem('employmentData') || '{}');
+    }
+
+    // ✅ Get followup data for THIS trainee
+    const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
+    let followupData = allFollowups.find(f => f.traineeEmail === currentEmail);
+    if (!followupData) {
+        followupData = JSON.parse(localStorage.getItem('followupData') || '{}');
+    }
+
+    return { traineeData, employmentData, followupData };
+}
+
+    // ===== RENDER DASHBOARD =====
+    function renderDashboard() {
+        const { traineeData, employmentData, followupData } = loadAllData();
+
+        if (!traineeData || !traineeData.fullName) {
+            document.getElementById('contentContainer').innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-user-graduate"></i>
+                    <h2>No Trainee Data Found</h2>
+                    <p>Please complete your registration first.</p>
+                    <br>
+                    <a href="../../auth/trainee-register.html" style="display:inline-block; background:linear-gradient(135deg,#2563eb,#7c3aed); color:white; padding:12px 30px; border-radius:12px; text-decoration:none; font-weight:600;">
+                        <i class="fas fa-user-plus"></i> Go to Registration
+                    </a>
+                </div>
+            `;
+            return;
+        }
+
+        // ---- UPDATE HEADER ----
+        const initial = traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T';
+        document.getElementById('sidebarAvatar').textContent = initial;
+        document.getElementById('sidebarName').textContent = traineeData.fullName || 'Trainee';
+        document.getElementById('headerUserName').textContent = traineeData.fullName || 'Trainee';
+
+        // ---- UPDATE WELCOME ----
+        document.getElementById('welcomeTitle').innerHTML = `<i class="fas fa-hand-peace"></i> Welcome Back, ${traineeData.fullName || 'Trainee'}! 🎉`;
+        document.getElementById('welcomeSub').textContent = 'Track your training, certification, employment and career growth in one place.';
+
+        // ---- UPDATE STATS ----
+        const trainingProgress = traineeData.trainingProgress || 75;
+        document.getElementById('statTraining').textContent = trainingProgress + '%';
+        document.getElementById('statTrainingSub').textContent = `${traineeData.completedModules || 8}/${traineeData.totalModules || 10} modules`;
+
+        document.getElementById('statCertification').textContent = traineeData.certificationStatus || 'Certified';
+        document.getElementById('statCertSub').textContent = traineeData.certificateName || 'Full Stack Developer';
+
+        // Get employment data
+        const empStatus = employmentData.status || traineeData.employmentStatusDisplay || 'Not Updated';
+        document.getElementById('statEmployment').textContent = empStatus;
+        document.getElementById('statEmploySub').textContent = employmentData.companyName || traineeData.currentEmployer || 'No company';
+
+        // Get income from employment data or trainee data
+        const currentIncome = parseInt(employmentData.currentIncome) || traineeData.currentIncome || 25000;
+        document.getElementById('statIncome').textContent = '₹' + currentIncome.toLocaleString();
+        const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 5000;
+        const growth = prevIncome > 0 ? Math.round(((currentIncome - prevIncome) / prevIncome) * 100) : 0;
+        document.getElementById('statIncomeSub').textContent = `⬆ ${growth}% growth`;
+
+        // ---- NOTIFICATION BADGE ----
+        const notifCount = followupData.notifications || 4;
+        document.getElementById('notificationBadge').textContent = notifCount;
+
+        // ---- RENDER OVERVIEW ----
+        renderOverview(traineeData, employmentData, followupData);
+    }
+
+    // ===== RENDER OVERVIEW =====
+    function renderOverview(traineeData, employmentData, followupData) {
+        const currentIncome = parseInt(employmentData.currentIncome) || traineeData.currentIncome || 25000;
+        const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 5000;
+        const growth = prevIncome > 0 ? Math.round(((currentIncome - prevIncome) / prevIncome) * 100) : 0;
+
+        const html = `
+            <div class="content-section active" id="section-overview">
+                <div class="dashboard-grid">
+                    <!-- Profile Card -->
+                    <div class="card profile">
+                        <div class="profile-photo">${traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : '👤'}</div>
+                        <h3><i class="fas fa-user-circle"></i> Profile Card</h3>
+                        <p><b>Trainee Name:</b> <span>${traineeData.fullName || 'N/A'}</span></p>
+                        <p><b>Trainee ID:</b> <span>${traineeData.traineeId || 'N/A'}</span></p>
+                        <p><b>Mobile Number:</b> <span>${traineeData.mobile || 'N/A'}</span></p>
+                        <p><b>Email:</b> <span>${traineeData.email || 'N/A'}</span></p>
+                        <p><b>Training Program:</b> <span>${traineeData.skillTrade || 'N/A'}</span></p>
+                        <p><b>Training Provider:</b> <span>${traineeData.trainingProvider || 'N/A'}</span></p>
+                        <p><b>Batch Details:</b> <span>${traineeData.batchId || 'N/A'}</span></p>
+                        <p><b>Profile Completion:</b> <span>${traineeData.profileCompletion || 90}%</span></p>
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width:${traineeData.profileCompletion || 90}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Employment Status (from employment.html data) -->
+                    <div class="card">
+                        <h3><i class="fas fa-briefcase"></i> Employment Status</h3>
+                        <p><b>Status:</b> <span class="status-badge ${employmentData.status === 'Employed' ? 'success' : 'warning'}">${employmentData.status || traineeData.employmentStatusDisplay || 'Not Updated'}</span></p>
+                        <p><b>Company:</b> <span>${employmentData.companyName || traineeData.currentEmployer || 'N/A'}</span></p>
+                        <p><b>Job Role:</b> <span>${employmentData.jobRole || traineeData.currentJobRole || 'N/A'}</span></p>
+                        <p><b>Employment Type:</b> <span>${employmentData.employmentType || traineeData.employmentType || 'N/A'}</span></p>
+                        <p><b>Joining Date:</b> <span>${employmentData.joiningDate || traineeData.joiningDate || 'N/A'}</span></p>
+                        <p><b>Location:</b> <span>${employmentData.jobCity || traineeData.location || 'N/A'}</span></p>
+                        <a href="employment.html" style="margin-top:10px; display:inline-block; text-decoration:none;">
+                            <button class="btn-outline" style="font-size:12px; padding:6px 16px;"><i class="fas fa-edit"></i> Update Employment</button>
+                        </a>
+                    </div>
+
+                    <!-- Income (from employment.html data) -->
+                    <div class="card">
+                        <h3><i class="fas fa-chart-line"></i> Current Income</h3>
+                        <p><b>Monthly Salary:</b> <span style="font-size:22px; font-weight:700; color:#1a56db;">₹${currentIncome.toLocaleString()}</span></p>
+                        <p><b>Previous Income:</b> <span>₹${prevIncome.toLocaleString()}</span></p>
+                        <p><b>Income Growth:</b> <span class="status-badge ${growth > 0 ? 'success' : 'warning'}">📈 ${growth}%</span></p>
+                        <div style="background:#f1f5f9;border-radius:12px;padding:12px;margin:10px 0;display:flex;justify-content:space-around;align-items:center;">
+                            <div style="text-align:center;"><div style="font-size:11px;color:#94a3b8;">Before</div><div style="font-weight:700;">₹${prevIncome.toLocaleString()}</div></div>
+                            <div><i class="fas fa-arrow-right" style="color:#1a56db;"></i></div>
+                            <div style="text-align:center;"><div style="font-size:11px;color:#94a3b8;">After</div><div style="font-weight:700;color:#10b981;">₹${currentIncome.toLocaleString()}</div></div>
+                        </div>
+                        <a href="employment.html" style="text-decoration:none;">
+                            <button class="btn-outline" style="font-size:12px; padding:6px 16px;"><i class="fas fa-edit"></i> Update Income</button>
+                        </a>
+                    </div>
+
+                    <!-- Follow-up Status (from follow-up.html data) -->
+                    <div class="card">
+                        <h3><i class="fas fa-calendar-check"></i> Next Follow-up</h3>
+                        <div class="followup-grid">
+                            <div class="followup-item ${followupData.status === 'Completed' ? 'completed' : (followupData.status === 'In Progress' ? 'due' : '')}">
+                                <div class="days">${followupData.period || '90'} Days</div>
+                                <div class="status-icon">${followupData.status === 'Completed' ? '✅' : (followupData.status === 'In Progress' ? '⏳' : '📅')}</div>
+                            </div>
+                            <div class="followup-item completed">
+                                <div class="days">30 Days</div>
+                                <div class="status-icon">✅</div>
+                            </div>
+                            <div class="followup-item due">
+                                <div class="days">180 Days</div>
+                                <div class="status-icon">⏳</div>
+                            </div>
+                            <div class="followup-item">
+                                <div class="days">365 Days</div>
+                                <div class="status-icon">🔒</div>
+                            </div>
+                        </div>
+                        <p><b>Next Date:</b> <span>${followupData.date || '20 Sep 2026'}</span></p>
+                        <p><b>Status:</b> <span class="status-badge ${followupData.status === 'Completed' ? 'success' : 'warning'}">${followupData.status || 'Pending'}</span></p>
+                        <a href="follow-up.html" style="text-decoration:none;">
+                            <button class="btn-success" style="font-size:12px; padding:6px 16px;"><i class="fas fa-pen"></i> Complete Follow-up</button>
+                        </a>
+                    </div>
+
+                    <!-- Career Journey -->
+                    <div class="card">
+                        <h3><i class="fas fa-road"></i> Career Journey</h3>
+                        <div class="timeline-item">
+                            <b>👤 Registration</b>
+                            <p>Successfully Registered on ${traineeData.registrationDate || '01 Jan 2026'}</p>
+                        </div>
+                        <div class="timeline-item">
+                            <b>📚 Training</b>
+                            <p>${traineeData.skillTrade || 'Training'} · ${traineeData.trainingProgress || 75}% completed</p>
+                        </div>
+                        <div class="timeline-item">
+                            <b>💼 Employment</b>
+                            <p>${employmentData.status || traineeData.employmentStatusDisplay || 'Not employed yet'}</p>
+                        </div>
+                        <div class="timeline-item">
+                            <b>📅 Follow-up</b>
+                            <p>${followupData.status || 'Pending'} · ${followupData.period || '90'} Days</p>
+                        </div>
+                        <div class="timeline-item">
+                            <b>🚀 Career Growth</b>
+                            <p>${growth > 0 ? growth + '% income growth' : 'Tracking progress'}</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <h3><i class="fas fa-pen"></i> Quick Actions</h3>
+                        <p style="border:none; padding:0; margin-bottom:12px; font-size:14px; color:#64748b;">Update your latest career information.</p>
+                        <div class="quick-actions">
+                            <a href="employment.html" style="text-decoration:none; width:100%;">
+                                <button style="width:100%; justify-content:center;"><i class="fas fa-briefcase"></i> Update Employment</button>
+                            </a>
+                            <a href="follow-up.html" style="text-decoration:none; width:100%;">
+                                <button style="width:100%; justify-content:center;"><i class="fas fa-calendar"></i> Update Follow-up</button>
+                            </a>
+                            <a href="history.html" style="text-decoration:none; width:100%;">
+                                <button style="width:100%; justify-content:center;"><i class="fas fa-history"></i> View History</button>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('contentContainer').innerHTML = html;
+    }
+
+    // ===== SIDEBAR NAVIGATION =====
+    function setupSidebarNavigation() {
+        // Sidebar links already have href attributes pointing to actual files
+        // No need for JavaScript navigation - just use regular links
+        console.log('Sidebar links configured for navigation');
+    }
+
+    // ===== TOGGLE SIDEBAR =====
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // ===== SHOW NOTIFICATIONS =====
+    function showNotifications() {
+        const { followupData } = loadAllData();
+        let msg = '📬 Notifications:\n\n';
+        if (followupData) {
+            msg += `• Follow-up Status: ${followupData.status || 'Pending'}\n`;
+            msg += `• Next Follow-up: ${followupData.period || '90'} Days\n`;
+        } else {
+            msg += '• No new notifications.\n';
+        }
+        alert(msg);
+    }
+
+    // ===== LOGOUT =====
+// ===== LOGOUT =====
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        alert('Logging out... Redirecting to login page.');
+        window.location.href = '../auth/login.html';
+    }
+}
+
+    // ===== INITIALIZE =====
+    document.addEventListener('DOMContentLoaded', function() {
+        renderDashboard();
+
+        // Close sidebar on outside click (mobile)
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+    });
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerTrack · My Employment</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Master theme -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        /* ===== PAGE-SPECIFIC STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-page, #f4f7ff);
+            color: var(--t-primary, #1e293b);
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: linear-gradient(180deg, #0f172a, #172554, #312e81);
+            padding: 25px 18px;
+            color: white;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        .sidebar .logo,
+        .sidebar .sidebar-brand {
+            font-size: 22px;
+            font-weight: 700;
+            padding: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .sidebar .logo i,
+        .sidebar .sidebar-brand .brand-mark {
+            font-size: 28px;
+            color: #38bdf8;
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+        }
+
+        .sidebar .logo span { color: #38bdf8; }
+
+        .menu-title {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 12px 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #cbd5e1;
+            padding: 13px 14px;
+            margin: 5px 0;
+            border-radius: 12px;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+
+        .menu a.active {
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            color: white;
+            box-shadow: 0 10px 25px rgba(37,99,235,0.25);
+        }
+
+        .menu a i { width: 20px; text-align: center; font-size: 16px; }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 18px;
+            right: 18px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #cbd5e1;
+            padding: 12px 14px;
+            border-radius: 12px;
+            transition: 0.3s;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.08); color: white; }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            margin-left: 260px;
+            padding: 25px 35px 120px;
+            min-height: 100vh;
+        }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-title h1 {
+            color: var(--t-primary, #172554);
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .page-title p {
+            color: var(--t-muted, #64748b);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bell {
+            background: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.3s;
+            border: none;
+        }
+
+        .bell:hover { transform: scale(1.05); }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* ===== THEME TOGGLE ===== */
+        .theme-toggle {
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            background: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #475569;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg) scale(1.05);
+            color: #06b6d4;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            background: linear-gradient(120deg, #172554, #2563eb, #7c3aed);
+            color: white;
+            padding: 32px;
+            border-radius: 24px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            top: -100px;
+            right: -50px;
+        }
+
+        .hero h2 { margin-bottom: 8px; font-size: 26px; color: white; }
+        .hero p { opacity: 0.9; max-width: 650px; font-size: 15px; color: white; }
+
+        /* ===== OVERVIEW ===== */
+        .overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .overview-card {
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(15,23,42,0.07);
+            border: 1px solid #eef2ff;
+            transition: 0.3s;
+        }
+
+        .overview-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.1);
+        }
+
+        .overview-card h4 {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .overview-card h2 { color: #172554; font-size: 26px; }
+
+        .overview-card .change { font-size: 12px; margin-top: 5px; }
+        .overview-card .change.positive { color: #10b981; }
+        .overview-card .change.negative { color: #ef4444; }
+
+        /* ===== FORM SECTIONS ===== */
+        .form-section {
+            background: white;
+            border-radius: 22px;
+            padding: 25px;
+            margin-bottom: 22px;
+            box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+            border: 1px solid #eef2ff;
+            transition: 0.3s;
+        }
+
+        .form-section:hover { box-shadow: 0 12px 35px rgba(37,99,235,0.08); }
+
+        .section-title {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            background: linear-gradient(135deg, #dbeafe, #ede9fe);
+            flex-shrink: 0;
+        }
+
+        .section-title h3 { color: #172554; font-size: 18px; }
+        .section-title p { color: #64748b; font-size: 12px; }
+
+        /* ===== FORM GRID ===== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .field { display: flex; flex-direction: column; }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 7px;
+        }
+
+        .field label .required { color: #ef4444; }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            outline: none;
+            background: #f8fafc;
+            font-size: 14px;
+            transition: 0.3s;
+            color: #0b1a33;
+            font-family: inherit;
+        }
+
+        .field textarea { min-height: 100px; resize: vertical; }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            background: white;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+        }
+
+        .field input[readonly] {
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .field .helper-text {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+
+        .full { grid-column: 1 / -1; }
+
+        /* ===== UPLOAD BOX ===== */
+        .upload-box {
+            border: 2px dashed #93c5fd;
+            background: #f8fbff;
+            padding: 22px;
+            border-radius: 16px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .upload-box:hover { border-color: #2563eb; background: #eff6ff; }
+
+        .upload-box label {
+            font-weight: 600;
+            color: #475569;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .upload-box input { display: block; margin: 0 auto; }
+
+        /* ===== BUTTONS ===== */
+        .actions {
+            position: fixed;
+            bottom: 0;
+            left: 260px;
+            right: 0;
+            background: rgba(255,255,255,0.97);
+            padding: 15px 35px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            border-top: 1px solid #e2e8f0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn {
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+
+        .btn-clear { background: #f1f5f9; color: #475569; }
+        .btn-clear:hover { background: #e2e8f0; }
+
+        .btn-save {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            box-shadow: 0 8px 18px rgba(37,99,235,0.25);
+        }
+
+        .btn-save:hover { box-shadow: 0 12px 25px rgba(37,99,235,0.35); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .overview { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+
+            .main { margin-left: 0; padding: 20px 15px 120px; }
+
+            .actions {
+                left: 0;
+                padding: 12px 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .overview { grid-template-columns: 1fr; }
+
+            .topbar { flex-direction: column; align-items: flex-start; }
+
+            .menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: #172554;
+                font-size: 24px;
+                cursor: pointer;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero { padding: 20px; }
+            .hero h2 { font-size: 20px; }
+            .page-title h1 { font-size: 22px; }
+            .overview-card h2 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar" id="sidebar">
+    <div class="logo">
+        <i class="fas fa-brain"></i>
+        Career<span>Track</span>
+    </div>
+
+    <div class="menu">
+        <div class="menu-title">Main Menu</div>
+        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="employment.html" class="active"><i class="fas fa-briefcase"></i> Employment &amp; Livelihood</a>
+        <a href="follow-up.html"><i class="fas fa-calendar-check"></i> Follow-up</a>
+        <a href="history.html"><i class="fas fa-history"></i> Outcome History</a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main">
+
+    <!-- ===== TOPBAR ===== -->
+    <div class="topbar">
+        <div class="page-title">
+            <h1>Employment &amp; Livelihood <i class="fas fa-briefcase" style="color:#2563eb; font-size:24px;"></i></h1>
+            <p>Build, update and track your career journey.</p>
+        </div>
+        <div class="profile">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <div class="bell" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="avatar" id="userAvatar">H</div>
+        </div>
+    </div>
+
+    <!-- ===== HERO ===== -->
+    <div class="hero">
+        <h2>Your Career Journey 🚀</h2>
+        <p>
+            Keep your employment, livelihood, income and career
+            information updated to track your post-training outcomes.
+        </p>
+    </div>
+
+    <!-- ===== OVERVIEW ===== -->
+    <div class="overview">
+        <div class="overview-card">
+            <h4>💼 Employment Status</h4>
+            <h2 id="statusText">Not Updated</h2>
+            <div class="change" id="statusChange">—</div>
+        </div>
+        <div class="overview-card">
+            <h4>💰 Current Income</h4>
+            <h2 id="incomeText">₹0</h2>
+            <div class="change positive" id="incomeChange">—</div>
+        </div>
+        <div class="overview-card">
+            <h4>📈 Income Growth</h4>
+            <h2 id="growthText">0%</h2>
+            <div class="change" id="growthChange">—</div>
+        </div>
+        <div class="overview-card">
+            <h4>🎯 Career Progress</h4>
+            <h2 id="careerProgress">70%</h2>
+            <div class="change positive" id="careerChange">⬆ On Track</div>
+        </div>
+    </div>
+
+    <!-- ===== FORM ===== -->
+    <form id="employmentForm" onsubmit="return false;">
+
+        <!-- EMPLOYMENT STATUS -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">💼</div>
+                <div>
+                    <h3>Employment Status</h3>
+                    <p>Tell us about your current work status.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Current Employment Status <span class="required">*</span></label>
+                    <select id="employmentStatus" required>
+                        <option value="">Select Status</option>
+                        <option value="Employed">Employed</option>
+                        <option value="Unemployed">Unemployed</option>
+                        <option value="Self-Employed">Self-Employed</option>
+                        <option value="Apprenticeship">Apprenticeship</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Looking for Job">Looking for Job</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Employment Start Date</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="field">
+                    <label>Employment Category</label>
+                    <select id="employmentCategory">
+                        <option value="">Select Category</option>
+                        <option value="Private Sector">Private Sector</option>
+                        <option value="Government">Government</option>
+                        <option value="NGO">NGO</option>
+                        <option value="Startup">Startup</option>
+                        <option value="Freelancing">Freelancing</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Work Experience</label>
+                    <input type="text" id="workExperience" placeholder="Example: 6 Months">
+                </div>
+            </div>
+        </div>
+
+        <!-- JOB DETAILS -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">🏢</div>
+                <div>
+                    <h3>Job &amp; Organization Details</h3>
+                    <p>Enter your current employment information.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Company / Organization Name <span class="required">*</span></label>
+                    <input type="text" id="companyName" placeholder="Enter company name">
+                </div>
+                <div class="field">
+                    <label>Organization Type</label>
+                    <select id="orgType">
+                        <option value="">Select Type</option>
+                        <option value="Private Company">Private Company</option>
+                        <option value="Government Organization">Government Organization</option>
+                        <option value="Startup">Startup</option>
+                        <option value="NGO">NGO</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Industry / Sector</label>
+                    <input type="text" id="industry" placeholder="Example: IT">
+                </div>
+                <div class="field">
+                    <label>Department</label>
+                    <input type="text" id="department" placeholder="Example: Development">
+                </div>
+                <div class="field">
+                    <label>Employee ID</label>
+                    <input type="text" id="employeeId" placeholder="Enter employee ID">
+                </div>
+                <div class="field">
+                    <label>Job Role <span class="required">*</span></label>
+                    <input type="text" id="jobRole" placeholder="Example: Software Developer">
+                </div>
+                <div class="field">
+                    <label>Supervisor / HR Name</label>
+                    <input type="text" id="supervisorName" placeholder="Enter name">
+                </div>
+                <div class="field">
+                    <label>Employment Type</label>
+                    <select id="employmentType">
+                        <option value="">Select Type</option>
+                        <option value="Full Time">Full Time</option>
+                        <option value="Part Time">Part Time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Temporary">Temporary</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Joining Date</label>
+                    <input type="date" id="joiningDate">
+                </div>
+                <div class="field">
+                    <label>Working Hours Per Day</label>
+                    <input type="number" id="workingHours" placeholder="Example: 8" min="0" max="24">
+                </div>
+                <div class="field">
+                    <label>Working Days Per Week</label>
+                    <select id="workingDays">
+                        <option value="">Select Days</option>
+                        <option value="5 Days">5 Days</option>
+                        <option value="6 Days">6 Days</option>
+                        <option value="7 Days">7 Days</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Work Mode</label>
+                    <select id="workMode">
+                        <option value="">Select Mode</option>
+                        <option value="On-site">On-site</option>
+                        <option value="Remote">Remote</option>
+                        <option value="Hybrid">Hybrid</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOCATION -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">📍</div>
+                <div>
+                    <h3>Job Location Details</h3>
+                    <p>Enter your work location information.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>State</label>
+                    <input type="text" id="jobState" placeholder="Enter state">
+                </div>
+                <div class="field">
+                    <label>District</label>
+                    <input type="text" id="jobDistrict" placeholder="Enter district">
+                </div>
+                <div class="field">
+                    <label>City / Town</label>
+                    <input type="text" id="jobCity" placeholder="Enter city">
+                </div>
+                <div class="field">
+                    <label>Pincode</label>
+                    <input type="number" id="jobPincode" placeholder="Enter pincode">
+                </div>
+                <div class="field">
+                    <label>Relocated for Job?</label>
+                    <select id="relocated">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- SALARY -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">💰</div>
+                <div>
+                    <h3>Salary &amp; Benefits</h3>
+                    <p>Update your salary and employment benefits.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Previous Monthly Income (₹)</label>
+                    <input type="number" id="previousIncome" placeholder="Enter previous income" oninput="calculateIncome()">
+                </div>
+                <div class="field">
+                    <label>Current Monthly Income (₹) <span class="required">*</span></label>
+                    <input type="number" id="currentIncome" placeholder="Enter current income" oninput="calculateIncome()">
+                </div>
+                <div class="field">
+                    <label>Annual Salary (₹)</label>
+                    <input type="number" id="annualSalary" placeholder="Enter annual salary">
+                </div>
+                <div class="field">
+                    <label>Salary Type</label>
+                    <select id="salaryType">
+                        <option value="">Select Type</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Daily">Daily</option>
+                        <option value="Hourly">Hourly</option>
+                        <option value="Project Based">Project Based</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>PF Available?</label>
+                    <select id="pfAvailable">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>ESI Available?</label>
+                    <select id="esiAvailable">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Incentives / Bonus</label>
+                    <input type="text" id="incentives" placeholder="Enter details">
+                </div>
+                <div class="field">
+                    <label>Salary Payment Mode</label>
+                    <select id="paymentMode">
+                        <option value="">Select Mode</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Income Growth</label>
+                    <input type="text" id="incomeGrowth" placeholder="Automatically calculated" readonly>
+                    <span class="helper-text">Automatically calculated based on previous and current income</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SELF EMPLOYMENT -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">🚀</div>
+                <div>
+                    <h3>Self-Employment / Business Details</h3>
+                    <p>Fill this section if you run your own business.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Business Name</label>
+                    <input type="text" id="businessName" placeholder="Enter business name">
+                </div>
+                <div class="field">
+                    <label>Business Category</label>
+                    <input type="text" id="businessCategory" placeholder="Example: Retail">
+                </div>
+                <div class="field">
+                    <label>Business Type</label>
+                    <input type="text" id="businessType" placeholder="Example: Shop / Service">
+                </div>
+                <div class="field">
+                    <label>Registration Status</label>
+                    <select id="businessRegistration">
+                        <option value="">Select Status</option>
+                        <option value="Registered">Registered</option>
+                        <option value="Not Registered">Not Registered</option>
+                        <option value="In Process">In Process</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Business Start Date</label>
+                    <input type="date" id="businessStartDate">
+                </div>
+                <div class="field">
+                    <label>Initial Investment (₹)</label>
+                    <input type="number" id="initialInvestment" placeholder="Enter amount">
+                </div>
+                <div class="field">
+                    <label>Monthly Revenue (₹)</label>
+                    <input type="number" id="monthlyRevenue" placeholder="Enter revenue">
+                </div>
+                <div class="field">
+                    <label>Monthly Profit (₹)</label>
+                    <input type="number" id="monthlyProfit" placeholder="Enter profit">
+                </div>
+                <div class="field">
+                    <label>Number of Employees</label>
+                    <input type="number" id="employeeCount" placeholder="Enter number">
+                </div>
+                <div class="field full">
+                    <label>Business Challenges</label>
+                    <textarea id="businessChallenges" placeholder="Describe challenges if any"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- INTERNSHIP -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">🎓</div>
+                <div>
+                    <h3>Apprenticeship / Internship</h3>
+                    <p>Update your internship or apprenticeship details.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Organization Name</label>
+                    <input type="text" id="internshipOrg" placeholder="Enter organization">
+                </div>
+                <div class="field">
+                    <label>Role</label>
+                    <input type="text" id="internshipRole" placeholder="Enter role">
+                </div>
+                <div class="field">
+                    <label>Sector</label>
+                    <input type="text" id="internshipSector" placeholder="Enter sector">
+                </div>
+                <div class="field">
+                    <label>Start Date</label>
+                    <input type="date" id="internshipStart">
+                </div>
+                <div class="field">
+                    <label>End Date</label>
+                    <input type="date" id="internshipEnd">
+                </div>
+                <div class="field">
+                    <label>Monthly Stipend (₹)</label>
+                    <input type="number" id="internshipStipend" placeholder="Enter stipend">
+                </div>
+                <div class="field">
+                    <label>Completion Status</label>
+                    <select id="internshipStatus">
+                        <option value="">Select Status</option>
+                        <option value="Ongoing">Ongoing</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Discontinued">Discontinued</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Certificate Received?</label>
+                    <select id="internshipCertificate">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                        <option value="Pending">Pending</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Skills Learned</label>
+                    <textarea id="internshipSkills" placeholder="Enter skills learned"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- SKILLS -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">🧠</div>
+                <div>
+                    <h3>Career &amp; Skill Development</h3>
+                    <p>Track your professional growth and skill needs.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Current Skills</label>
+                    <input type="text" id="currentSkills" placeholder="Example: Java, Python">
+                </div>
+                <div class="field">
+                    <label>Skills Used in Job</label>
+                    <input type="text" id="skillsUsed" placeholder="Enter skills">
+                </div>
+                <div class="field">
+                    <label>New Skills Learned</label>
+                    <input type="text" id="newSkills" placeholder="Enter new skills">
+                </div>
+                <div class="field">
+                    <label>Skills Need Improvement</label>
+                    <input type="text" id="skillsImprovement" placeholder="Enter skills">
+                </div>
+                <div class="field">
+                    <label>Training Required</label>
+                    <input type="text" id="trainingRequired" placeholder="Enter required training">
+                </div>
+                <div class="field">
+                    <label>Target Role</label>
+                    <input type="text" id="targetRole" placeholder="Your future role">
+                </div>
+                <div class="field">
+                    <label>Target Salary (₹)</label>
+                    <input type="number" id="targetSalary" placeholder="Enter target salary">
+                </div>
+                <div class="field">
+                    <label>Career Goal Timeline</label>
+                    <select id="careerTimeline">
+                        <option value="">Select Timeline</option>
+                        <option value="6 Months">6 Months</option>
+                        <option value="1 Year">1 Year</option>
+                        <option value="2 Years">2 Years</option>
+                        <option value="3+ Years">3+ Years</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- JOB SATISFACTION -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">😊</div>
+                <div>
+                    <h3>Job Satisfaction &amp; Feedback</h3>
+                    <p>Share your experience with your current job.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Salary Satisfaction</label>
+                    <select id="salarySatisfaction">
+                        <option value="">Select Rating</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Average">Average</option>
+                        <option value="Poor">Poor</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Work Environment</label>
+                    <select id="workEnvironment">
+                        <option value="">Select Rating</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Average">Average</option>
+                        <option value="Poor">Poor</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Career Growth</label>
+                    <select id="careerGrowthRating">
+                        <option value="">Select Rating</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Average">Average</option>
+                        <option value="Poor">Poor</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Overall Job Satisfaction</label>
+                    <select id="overallSatisfaction">
+                        <option value="">Select Rating</option>
+                        <option value="Very Satisfied">Very Satisfied</option>
+                        <option value="Satisfied">Satisfied</option>
+                        <option value="Neutral">Neutral</option>
+                        <option value="Not Satisfied">Not Satisfied</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHALLENGES -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">⚠️</div>
+                <div>
+                    <h3>Employment Challenges</h3>
+                    <p>Tell us about any challenges you are facing.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Main Challenge</label>
+                    <select id="mainChallenge">
+                        <option value="">Select Challenge</option>
+                        <option value="Low Salary">Low Salary</option>
+                        <option value="Skill Gap">Skill Gap</option>
+                        <option value="Long Distance">Long Distance</option>
+                        <option value="Work Pressure">Work Pressure</option>
+                        <option value="Communication Problem">Communication Problem</option>
+                        <option value="No Career Growth">No Career Growth</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Support Required</label>
+                    <input type="text" id="supportRequired" placeholder="What support do you need?">
+                </div>
+                <div class="field full">
+                    <label>Additional Comments</label>
+                    <textarea id="challengeComments" placeholder="Describe your challenges"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- JOB CHANGE -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">🔄</div>
+                <div>
+                    <h3>Job Change History</h3>
+                    <p>Update details if you changed your job.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Previous Company</label>
+                    <input type="text" id="prevCompany" placeholder="Enter company">
+                </div>
+                <div class="field">
+                    <label>Previous Role</label>
+                    <input type="text" id="prevRole" placeholder="Enter role">
+                </div>
+                <div class="field">
+                    <label>Previous Salary (₹)</label>
+                    <input type="number" id="prevSalary" placeholder="Enter salary">
+                </div>
+                <div class="field">
+                    <label>Leaving Date</label>
+                    <input type="date" id="leavingDate">
+                </div>
+                <div class="field">
+                    <label>Reason for Leaving</label>
+                    <select id="leavingReason">
+                        <option value="">Select Reason</option>
+                        <option value="Better Salary">Better Salary</option>
+                        <option value="Career Growth">Career Growth</option>
+                        <option value="Location Change">Location Change</option>
+                        <option value="Personal Reasons">Personal Reasons</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>New Company</label>
+                    <input type="text" id="newCompany" placeholder="Enter company">
+                </div>
+                <div class="field">
+                    <label>New Role</label>
+                    <input type="text" id="newRole" placeholder="Enter role">
+                </div>
+                <div class="field">
+                    <label>New Salary (₹)</label>
+                    <input type="number" id="newSalary" placeholder="Enter salary">
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENTS -->
+        <div class="form-section">
+            <div class="section-title">
+                <div class="icon-box">📄</div>
+                <div>
+                    <h3>Employment Documents</h3>
+                    <p>Upload documents for employment verification.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <div class="upload-box">
+                        <label><i class="fas fa-file-pdf"></i> 📄 Offer Letter</label>
+                        <input type="file" id="offerLetter" accept=".pdf,.doc,.docx,.jpg,.png">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="upload-box">
+                        <label><i class="fas fa-file-alt"></i> 📋 Appointment Letter</label>
+                        <input type="file" id="appointmentLetter" accept=".pdf,.doc,.docx,.jpg,.png">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="upload-box">
+                        <label><i class="fas fa-id-card"></i> 🪪 Employee ID</label>
+                        <input type="file" id="employeeIdDoc" accept=".pdf,.doc,.docx,.jpg,.png">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="upload-box">
+                        <label><i class="fas fa-file-invoice"></i> 📑 Salary Slip</label>
+                        <input type="file" id="salarySlip" accept=".pdf,.doc,.docx,.jpg,.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<!-- ===== FIXED ACTION BUTTONS ===== -->
+<div class="actions">
+    <button class="btn btn-clear" onclick="clearForm()">
+        <i class="fas fa-undo"></i> Clear All
+    </button>
+    <button class="btn btn-save" onclick="saveEmployment()">
+        <i class="fas fa-save"></i> Save Employment Details
+    </button>
+</div>
+
+<script>
+    // ============================================================
+    // LOAD USER DATA
+    // ============================================================
+    function loadUserData() {
+        const currentEmail = localStorage.getItem('currentTraineeEmail') ||
+                             (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
+
+        const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+        let userData = allTrainees.find(t => t.email === currentEmail);
+
+        if (!userData) {
+            const storedData = localStorage.getItem('traineeData');
+            if (storedData) {
+                try { userData = JSON.parse(storedData); } catch(e) {}
+            }
+        }
+
+        if (userData) {
+            if (userData.fullName) {
+                document.getElementById('userAvatar').textContent = userData.fullName.charAt(0).toUpperCase();
+            }
+            console.log('👋 Welcome, ' + (userData.fullName || userData.email));
+        }
+    }
+
+    // ============================================================
+    // CALCULATE INCOME GROWTH
+    // ============================================================
+    function calculateIncome() {
+        const previous = parseFloat(document.getElementById('previousIncome').value) || 0;
+        const current = parseFloat(document.getElementById('currentIncome').value) || 0;
+
+        let growth = 0;
+        let growthText = '';
+
+        if (previous > 0 && current > 0) {
+            growth = ((current - previous) / previous) * 100;
+            growth = Math.round(growth);
+
+            if (growth > 0) {
+                growthText = '⬆ ' + growth + '% growth';
+            } else if (growth < 0) {
+                growthText = '⬇ ' + Math.abs(growth) + '% decrease';
+            } else {
+                growthText = '➡ No change';
+            }
+        } else if (current > 0 && previous === 0) {
+            growthText = '⬆ New income recorded';
+        } else {
+            growthText = 'Enter both incomes to calculate';
+        }
+
+        document.getElementById('incomeGrowth').value = growthText;
+
+        document.getElementById('incomeText').textContent = current > 0 ? '₹' + current.toLocaleString() : '₹0';
+        document.getElementById('growthText').textContent = growth > 0 ? growth + '%' : (growth < 0 ? growth + '%' : '0%');
+
+        const changeElement = document.getElementById('incomeChange');
+        if (growth > 0) {
+            changeElement.textContent = '⬆ ' + growth + '% increase';
+            changeElement.className = 'change positive';
+        } else if (growth < 0) {
+            changeElement.textContent = '⬇ ' + Math.abs(growth) + '% decrease';
+            changeElement.className = 'change negative';
+        } else {
+            changeElement.textContent = '➡ No change';
+            changeElement.className = 'change';
+        }
+    }
+
+    // ============================================================
+    // UPDATE OVERVIEW
+    // ============================================================
+    function updateOverview() {
+        const status = document.getElementById('employmentStatus').value;
+        const statusText = document.getElementById('statusText');
+        const statusChange = document.getElementById('statusChange');
+
+        if (status) {
+            statusText.textContent = status;
+            const emojis = {
+                'Employed': '💼',
+                'Unemployed': '🔍',
+                'Self-Employed': '🚀',
+                'Apprenticeship': '🎓',
+                'Internship': '📚',
+                'Looking for Job': '🔎'
+            };
+            statusChange.textContent = emojis[status] || '✅ Updated';
+            statusChange.className = 'change positive';
+        } else {
+            statusText.textContent = 'Not Updated';
+            statusChange.textContent = '—';
+            statusChange.className = 'change';
+        }
+
+        const progress = document.getElementById('careerProgress');
+        const careerChange = document.getElementById('careerChange');
+        const hasData = document.getElementById('companyName').value ||
+                       document.getElementById('jobRole').value ||
+                       document.getElementById('currentIncome').value;
+
+        if (hasData) {
+            progress.textContent = '85%';
+            careerChange.textContent = '⬆ Progressing';
+            careerChange.className = 'change positive';
+        } else {
+            progress.textContent = '70%';
+            careerChange.textContent = '⏳ Incomplete';
+            careerChange.className = 'change';
+        }
+    }
+
+    // ============================================================
+    // SAVE EMPLOYMENT DATA
+    // ============================================================
+    function saveEmployment() {
+        const currentEmail = localStorage.getItem('currentTraineeEmail') ||
+                             (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
+
+        if (!currentEmail) {
+            alert('⚠️ No trainee logged in. Please login first.');
+            return;
+        }
+
+        const employmentData = {
+            traineeEmail: currentEmail,
+            status: document.getElementById('employmentStatus').value,
+            startDate: document.getElementById('startDate').value,
+            category: document.getElementById('employmentCategory').value,
+            experience: document.getElementById('workExperience').value,
+
+            companyName: document.getElementById('companyName').value,
+            orgType: document.getElementById('orgType').value,
+            industry: document.getElementById('industry').value,
+            department: document.getElementById('department').value,
+            employeeId: document.getElementById('employeeId').value,
+            jobRole: document.getElementById('jobRole').value,
+            supervisor: document.getElementById('supervisorName').value,
+            employmentType: document.getElementById('employmentType').value,
+            joiningDate: document.getElementById('joiningDate').value,
+            workingHours: document.getElementById('workingHours').value,
+            workingDays: document.getElementById('workingDays').value,
+            workMode: document.getElementById('workMode').value,
+
+            jobState: document.getElementById('jobState').value,
+            jobDistrict: document.getElementById('jobDistrict').value,
+            jobCity: document.getElementById('jobCity').value,
+            jobPincode: document.getElementById('jobPincode').value,
+            relocated: document.getElementById('relocated').value,
+
+            previousIncome: document.getElementById('previousIncome').value,
+            currentIncome: document.getElementById('currentIncome').value,
+            annualSalary: document.getElementById('annualSalary').value,
+            salaryType: document.getElementById('salaryType').value,
+            pfAvailable: document.getElementById('pfAvailable').value,
+            esiAvailable: document.getElementById('esiAvailable').value,
+            incentives: document.getElementById('incentives').value,
+            paymentMode: document.getElementById('paymentMode').value,
+
+            businessName: document.getElementById('businessName').value,
+            businessCategory: document.getElementById('businessCategory').value,
+            businessType: document.getElementById('businessType').value,
+            businessRegistration: document.getElementById('businessRegistration').value,
+            businessStartDate: document.getElementById('businessStartDate').value,
+            initialInvestment: document.getElementById('initialInvestment').value,
+            monthlyRevenue: document.getElementById('monthlyRevenue').value,
+            monthlyProfit: document.getElementById('monthlyProfit').value,
+            employeeCount: document.getElementById('employeeCount').value,
+            businessChallenges: document.getElementById('businessChallenges').value,
+
+            internshipOrg: document.getElementById('internshipOrg').value,
+            internshipRole: document.getElementById('internshipRole').value,
+            internshipSector: document.getElementById('internshipSector').value,
+            internshipStart: document.getElementById('internshipStart').value,
+            internshipEnd: document.getElementById('internshipEnd').value,
+            internshipStipend: document.getElementById('internshipStipend').value,
+            internshipStatus: document.getElementById('internshipStatus').value,
+            internshipCertificate: document.getElementById('internshipCertificate').value,
+            internshipSkills: document.getElementById('internshipSkills').value,
+
+            currentSkills: document.getElementById('currentSkills').value,
+            skillsUsed: document.getElementById('skillsUsed').value,
+            newSkills: document.getElementById('newSkills').value,
+            skillsImprovement: document.getElementById('skillsImprovement').value,
+            trainingRequired: document.getElementById('trainingRequired').value,
+            targetRole: document.getElementById('targetRole').value,
+            targetSalary: document.getElementById('targetSalary').value,
+            careerTimeline: document.getElementById('careerTimeline').value,
+
+            salarySatisfaction: document.getElementById('salarySatisfaction').value,
+            workEnvironment: document.getElementById('workEnvironment').value,
+            careerGrowthRating: document.getElementById('careerGrowthRating').value,
+            overallSatisfaction: document.getElementById('overallSatisfaction').value,
+
+            mainChallenge: document.getElementById('mainChallenge').value,
+            supportRequired: document.getElementById('supportRequired').value,
+            challengeComments: document.getElementById('challengeComments').value,
+
+            prevCompany: document.getElementById('prevCompany').value,
+            prevRole: document.getElementById('prevRole').value,
+            prevSalary: document.getElementById('prevSalary').value,
+            leavingDate: document.getElementById('leavingDate').value,
+            leavingReason: document.getElementById('leavingReason').value,
+            newCompany: document.getElementById('newCompany').value,
+            newRole: document.getElementById('newRole').value,
+            newSalary: document.getElementById('newSalary').value,
+
+            savedDate: new Date().toISOString(),
+            incomeGrowth: document.getElementById('incomeGrowth').value
+        };
+
+        try {
+            let allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+
+            const existingIndex = allEmployment.findIndex(e => e.traineeEmail === currentEmail);
+            if (existingIndex !== -1) {
+                allEmployment[existingIndex] = { ...allEmployment[existingIndex], ...employmentData };
+            } else {
+                allEmployment.push(employmentData);
+            }
+
+            localStorage.setItem('allEmployment', JSON.stringify(allEmployment));
+            localStorage.setItem('employmentData', JSON.stringify(employmentData));
+
+            alert('✅ Employment details saved successfully!');
+            console.log('📋 Saved employment. Total records:', allEmployment.length);
+
+            updateOverview();
+        } catch (e) {
+            alert('❌ Error saving data. Please try again.');
+            console.error('Error:', e);
+        }
+    }
+
+    // ============================================================
+    // CLEAR FORM
+    // ============================================================
+    function clearForm() {
+        if (confirm('Are you sure you want to clear all fields?')) {
+            document.getElementById('employmentForm').reset();
+            document.getElementById('incomeGrowth').value = '';
+            document.getElementById('incomeText').textContent = '₹0';
+            document.getElementById('growthText').textContent = '0%';
+            document.getElementById('statusText').textContent = 'Not Updated';
+            document.getElementById('statusChange').textContent = '—';
+            document.getElementById('incomeChange').textContent = '—';
+            document.getElementById('careerProgress').textContent = '70%';
+            document.getElementById('careerChange').textContent = '⏳ Incomplete';
+            alert('✅ Form cleared successfully!');
+        }
+    }
+
+    // ============================================================
+    // SHOW NOTIFICATIONS
+    // ============================================================
+    function showNotifications() {
+        alert('📬 No new notifications.');
+    }
+
+    // ============================================================
+    // LOGOUT
+    // ============================================================
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            localStorage.removeItem('currentTraineeEmail');
+            localStorage.removeItem('currentTraineeId');
+            alert('Logging out... Redirecting to login page.');
+            window.location.href = '../../auth/login.html';
+        }
+    }
+
+    // ============================================================
+    // MOBILE SIDEBAR TOGGLE
+    // ============================================================
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUserData();
+        calculateIncome();
+        updateOverview();
+
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.id === 'employmentStatus' || this.id === 'companyName' ||
+                    this.id === 'jobRole' || this.id === 'currentIncome') {
+                    updateOverview();
+                }
+            });
+        });
+
+        const currentEmail = localStorage.getItem('currentTraineeEmail');
+        const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+        const savedData = allEmployment.find(e => e.traineeEmail === currentEmail);
+
+        if (savedData) {
+            try {
+                Object.keys(savedData).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element && savedData[key] !== undefined && savedData[key] !== '') {
+                        element.value = savedData[key];
+                    }
+                });
+                calculateIncome();
+                updateOverview();
+                console.log('📂 Loaded saved employment data for:', currentEmail);
+            } catch (e) {
+                console.error('Error loading saved data:', e);
+            }
+        } else {
+            const oldData = localStorage.getItem('employmentData');
+            if (oldData) {
+                try {
+                    const data = JSON.parse(oldData);
+                    Object.keys(data).forEach(key => {
+                        const element = document.getElementById(key);
+                        if (element && data[key]) {
+                            element.value = data[key];
+                        }
+                    });
+                    calculateIncome();
+                    updateOverview();
+                } catch (e) {
+                    console.error('Error loading old data:', e);
+                }
+            }
+        }
+    });
+
+    // ============================================================
+    // MOBILE MENU BUTTON (auto-insert)
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.getElementById('sidebar');
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+        toggleBtn.style.cssText = `
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 200;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(37,99,235,0.3);
+        `;
+        toggleBtn.id = 'menuToggle';
+        document.body.appendChild(toggleBtn);
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+
+        if (window.innerWidth <= 768) {
+            toggleBtn.style.display = 'block';
+        }
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 768) {
+                toggleBtn.style.display = 'block';
+            } else {
+                toggleBtn.style.display = 'none';
+                sidebar.classList.remove('open');
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+    });
+</script>
+
+<script src="../js/script.js"></script>
+</body>
+</html>

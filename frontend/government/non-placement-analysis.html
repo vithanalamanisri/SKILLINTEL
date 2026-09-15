@@ -1,0 +1,2574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Non-Placement Analysis · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* ============================================================
+           RESET & BASE
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
+
+        /* ============================================================
+           SIDEBAR
+           ============================================================ */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 20px 14px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            scrollbar-width: thin;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 8px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 14px;
+        }
+        .sidebar-brand .icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
+        .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
+
+        .sidebar-user {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 10px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 12px;
+        }
+        .sidebar-user .avatar {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px;
+            flex-shrink: 0;
+        }
+        .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
+
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none; transition: all 0.2s;
+            margin: 1px 0; font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .menu a i { width: 18px; text-align: center; font-size: 14px; }
+        .menu a .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 10px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 12px;
+        }
+        .sidebar-footer a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none; transition: 0.2s;
+            font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
+        .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 12px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-toggle {
+            display: none;
+            background: none; border: none;
+            font-size: 20px; color: #0b1a33;
+            cursor: pointer;
+        }
+        .header-left .page-title h1 {
+            font-size: 18px; color: #0b1a33;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .header-left .page-title h1 i { color: #dc2626; }
+        .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .header-right {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .header-right .date {
+            font-size: 12px; color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .header-right .notif {
+            position: relative;
+            font-size: 18px; color: #475569;
+            cursor: pointer;
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge {
+            position: absolute; top: 2px; right: 2px;
+            background: #ef4444; color: white;
+            width: 18px; height: 18px;
+            font-size: 9px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .header-right .profile-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: #f1f5f9;
+            padding: 4px 12px 4px 4px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 12px;
+        }
+        .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
+
+        /* ============================================================
+           CONTAINER
+           ============================================================ */
+        .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
+
+        /* ============================================================
+           WELCOME BANNER
+           ============================================================ */
+        .welcome-banner {
+            background: linear-gradient(135deg, #7f1d1d, #dc2626, #ea580c);
+            color: white;
+            padding: 22px 28px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .welcome-banner::before {
+            content: "";
+            position: absolute;
+            width: 350px; height: 350px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -150px; right: -80px;
+        }
+        .welcome-banner .banner-content { position: relative; z-index: 1; }
+        .welcome-banner h2 {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .welcome-banner p { font-size: 13px; opacity: 0.9; margin-top: 2px; }
+        .welcome-banner .banner-stats {
+            display: flex;
+            gap: 18px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+        .welcome-banner .banner-stats div {
+            text-align: center;
+            background: rgba(255,255,255,0.12);
+            padding: 6px 16px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .welcome-banner .banner-stats strong {
+            font-size: 20px;
+            display: block;
+        }
+        .welcome-banner .banner-stats span { font-size: 10px; opacity: 0.8; }
+
+        /* ============================================================
+           SECTION TITLES
+           ============================================================ */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .section-title i { color: #dc2626; }
+        .section-title .badge-count {
+            background: #fef2f2;
+            padding: 1px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #dc2626;
+            margin-left: auto;
+        }
+
+        /* ============================================================
+           SCHEME FILTER
+           ============================================================ */
+        .scheme-filter-bar {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 18px;
+            border: 1px solid #eef2f6;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .scheme-filter-bar .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .scheme-filter-bar .filter-label i { color: #dc2626; }
+        .scheme-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .scheme-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f1f5f9;
+            color: #475569;
+            border: 2px solid transparent;
+        }
+        .scheme-chip:hover { background: #e2e8f0; }
+        .scheme-chip.active {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #2563eb;
+        }
+
+        /* ============================================================
+           KPI CARDS - RED THEME
+           ============================================================ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 16px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: all 0.3s;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #dc2626, #ea580c);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        .stat-box:hover::before { transform: scaleX(1); }
+        .stat-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(220,38,38,0.12);
+        }
+        .stat-box .stat-icon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            margin: 0 auto 6px;
+        }
+        .stat-box .stat-icon.red { background: #fef2f2; color: #dc2626; }
+        .stat-box .stat-icon.orange { background: #fff7ed; color: #ea580c; }
+        .stat-box .stat-icon.yellow { background: #fefce8; color: #ca8a04; }
+        .stat-box .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-box .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-box .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-icon.gray { background: #f1f5f9; color: #64748b; }
+        .stat-box .stat-number {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0b1a33;
+        }
+        .stat-box .stat-label { font-size: 11px; color: #64748b; }
+        .stat-box .stat-trend {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+        .stat-box .stat-trend.danger { background: #fef2f2; color: #dc2626; }
+        .stat-box .stat-trend.warning { background: #fff7ed; color: #ea580c; }
+        .stat-box .stat-trend.good { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-trend.neutral { background: #f1f5f9; color: #64748b; }
+
+        /* ============================================================
+           CHART GRID
+           ============================================================ */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .chart-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+        }
+        .chart-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .chart-card .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-card .card-title i { color: #dc2626; }
+
+        /* ============================================================
+           BAR CHARTS
+           ============================================================ */
+        .bar-chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 150px;
+            padding: 4px 0;
+            gap: 8px;
+        }
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .bar-group .bar {
+            width: 100%;
+            max-width: 32px;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 6px;
+            position: relative;
+        }
+        .bar-group .bar .bar-value {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .bar-group .bar-label {
+            font-size: 8px;
+            color: #64748b;
+            margin-top: 4px;
+            text-align: center;
+            max-width: 50px;
+            word-wrap: break-word;
+        }
+        .bar-group .bar-label .count {
+            font-weight: 600;
+            color: #0b1a33;
+            display: block;
+        }
+
+        /* ============================================================
+           DONUT CHARTS
+           ============================================================ */
+        .donut-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 4px 0;
+            flex-wrap: wrap;
+        }
+        .donut {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .donut .donut-center {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .donut .donut-center .num {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0b1a33;
+        }
+        .donut .donut-center .label {
+            font-size: 8px;
+            color: #64748b;
+        }
+        .donut-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .donut-legend .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #475569;
+        }
+        .donut-legend .legend-item .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .donut-legend .legend-item .pct {
+            font-weight: 700;
+            color: #0b1a33;
+            margin-left: auto;
+        }
+
+        /* ============================================================
+           TRAINING TYPE CARDS
+           ============================================================ */
+        .training-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .training-type-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .training-type-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 5px;
+            border-radius: 4px 0 0 4px;
+        }
+        .training-type-card.technical::before { background: #2563eb; }
+        .training-type-card.vocational::before { background: #16a34a; }
+        .training-type-card.skill-based::before { background: #d97706; }
+        .training-type-card.industry::before { background: #7c3aed; }
+        .training-type-card.self-employment::before { background: #db2777; }
+        .training-type-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(220,38,38,0.08);
+        }
+        .training-type-card .tt-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .training-type-card .tt-icon {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+        .training-type-card.technical .tt-icon { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+        .training-type-card.vocational .tt-icon { background: linear-gradient(135deg, #16a34a, #22c55e); }
+        .training-type-card.skill-based .tt-icon { background: linear-gradient(135deg, #d97706, #f59e0b); }
+        .training-type-card.industry .tt-icon { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+        .training-type-card.self-employment .tt-icon { background: linear-gradient(135deg, #db2777, #f472b6); }
+        .training-type-card .tt-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .training-type-card .tt-trainees {
+            font-size: 10px;
+            color: #64748b;
+        }
+        .training-type-card .tt-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+        }
+        .training-type-card .tt-metric {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #64748b;
+        }
+        .training-type-card .tt-metric strong {
+            color: #0b1a33;
+            font-weight: 700;
+        }
+        .training-type-card .tt-np-rate {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 2px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .training-type-card .tt-np-rate .np-label {
+            font-size: 11px;
+            color: #64748b;
+        }
+        .training-type-card .tt-np-rate .np-value {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        /* ============================================================
+           SCHEME COMPARISON TABLE
+           ============================================================ */
+        .scheme-table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .scheme-table-container .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .scheme-table-container .table-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .scheme-table-container .table-header h3 i { color: #dc2626; }
+        .scheme-table-wrapper { overflow-x: auto; }
+        .scheme-table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .scheme-table-wrapper thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #eef2f6;
+        }
+        .scheme-table-wrapper thead th {
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .scheme-table-wrapper tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+        .scheme-table-wrapper tbody tr:hover { background: #fef2f2; }
+        .scheme-table-wrapper tbody td {
+            padding: 10px 14px;
+            color: #0b1a33;
+            vertical-align: middle;
+        }
+        .scheme-name-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .scheme-name-cell .sn {
+            font-weight: 700;
+            font-size: 12px;
+            color: #0b1a33;
+        }
+        .scheme-name-cell .sm {
+            font-size: 9px;
+            color: #7c3aed;
+            background: #ede9fe;
+            padding: 1px 6px;
+            border-radius: 8px;
+            display: inline-block;
+            width: fit-content;
+            font-weight: 600;
+        }
+        .np-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .np-bar-container .np-bar {
+            flex: 1;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 40px;
+        }
+        .np-bar-container .np-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+        }
+        .np-bar-container .np-val {
+            font-weight: 700;
+            font-size: 11px;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* ============================================================
+           NON-PLACEMENT FUNNEL
+           ============================================================ */
+        .funnel-container {
+            background: white;
+            border-radius: 16px;
+            padding: 22px 24px;
+            border: 1px solid #eef2f6;
+            margin-bottom: 20px;
+        }
+        .funnel-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 10px 0;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .funnel-steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 4%;
+            right: 4%;
+            height: 4px;
+            background: linear-gradient(90deg, #dc2626, #ea580c, #eab308);
+            border-radius: 10px;
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+        .funnel-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            flex: 1;
+            min-width: 70px;
+            text-align: center;
+        }
+        .funnel-step .step-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: white;
+            border: 3px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        .funnel-step.completed .step-circle {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+            box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+        }
+        .funnel-step.warning .step-circle {
+            background: #eab308;
+            color: white;
+            border-color: #eab308;
+            box-shadow: 0 4px 16px rgba(234,179,8,0.3);
+        }
+        .funnel-step.danger .step-circle {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+            box-shadow: 0 4px 16px rgba(220,38,38,0.3);
+        }
+        .funnel-step .step-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 6px;
+        }
+        .funnel-step .step-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .funnel-step .step-loss {
+            font-size: 9px;
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           REASON CONTRIBUTION TABLE
+           ============================================================ */
+        .reason-table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .reason-table-container .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .reason-table-container .table-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .reason-table-container .table-header h3 i { color: #dc2626; }
+        .reason-table-wrapper { overflow-x: auto; }
+        .reason-table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .reason-table-wrapper thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #eef2f6;
+        }
+        .reason-table-wrapper thead th {
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .reason-table-wrapper tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+        .reason-table-wrapper tbody tr:hover { background: #fef2f2; }
+        .reason-table-wrapper tbody td {
+            padding: 10px 14px;
+            color: #0b1a33;
+            vertical-align: middle;
+        }
+        .reason-bar {
+            width: 100px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .reason-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+        .severity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .severity-badge.critical { background: #fef2f2; color: #dc2626; }
+        .severity-badge.high { background: #fff7ed; color: #ea580c; }
+        .severity-badge.medium { background: #fefce8; color: #ca8a04; }
+        .severity-badge.low { background: #dcfce7; color: #16a34a; }
+
+        /* ============================================================
+           INTERVENTION PRIORITY
+           ============================================================ */
+        .priority-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .priority-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .priority-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 5px;
+            border-radius: 4px 0 0 4px;
+        }
+        .priority-card.critical::before { background: #dc2626; }
+        .priority-card.high::before { background: #ea580c; }
+        .priority-card.moderate::before { background: #ca8a04; }
+        .priority-card.low::before { background: #16a34a; }
+        .priority-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(220,38,38,0.1);
+        }
+        .priority-card .priority-level {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .priority-card .priority-level.critical { color: #dc2626; }
+        .priority-card .priority-level.high { color: #ea580c; }
+        .priority-card .priority-level.moderate { color: #ca8a04; }
+        .priority-card .priority-level.low { color: #16a34a; }
+        .priority-card .priority-count {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0b1a33;
+        }
+        .priority-card .priority-desc {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .priority-card .priority-action {
+            font-size: 10px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #f1f5f9;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ============================================================
+           ANALYSIS GRID
+           ============================================================ */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .analysis-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .analysis-card .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .analysis-card .card-title i { color: #dc2626; }
+
+        .skill-gap-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .skill-gap-item:last-child { border-bottom: none; }
+        .skill-gap-item .skill-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .skill-gap-item .skill-bar {
+            flex: 1;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 12px;
+            max-width: 120px;
+        }
+        .skill-gap-item .skill-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+        }
+        .skill-gap-item .skill-pct {
+            font-size: 12px;
+            font-weight: 700;
+            width: 40px;
+            text-align: right;
+        }
+
+        /* ============================================================
+           OPPORTUNITY GRID
+           ============================================================ */
+        .opportunity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .opportunity-item {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: 1px solid #eef2f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+        .opportunity-item:hover {
+            background: #fef2f2;
+            transform: translateX(4px);
+        }
+        .opportunity-item .opp-info .opp-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #0b1a33;
+        }
+        .opportunity-item .opp-info .opp-desc {
+            font-size: 10px;
+            color: #64748b;
+        }
+        .opportunity-item .opp-gap {
+            font-size: 14px;
+            font-weight: 800;
+            color: #dc2626;
+        }
+
+        /* ============================================================
+           FOLLOW-UP OUTCOMES
+           ============================================================ */
+        .followup-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .followup-card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px 18px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            text-align: center;
+            transition: 0.3s;
+        }
+        .followup-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(220,38,38,0.08);
+        }
+        .followup-card .fu-period {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .followup-card .fu-rate {
+            font-size: 24px;
+            font-weight: 800;
+            margin: 4px 0;
+        }
+        .followup-card .fu-rate.high { color: #dc2626; }
+        .followup-card .fu-rate.medium { color: #ea580c; }
+        .followup-card .fu-rate.low { color: #16a34a; }
+        .followup-card .fu-label {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        /* ============================================================
+           AI INSIGHTS
+           ============================================================ */
+        .ai-insights-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .ai-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .ai-card .ai-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .ai-card .ai-header i { color: #dc2626; }
+        .ai-card .ai-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8fafc;
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.5;
+        }
+        .ai-card .ai-item:last-child { border-bottom: none; }
+        .ai-card .ai-item .ai-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .ai-card .ai-item strong { color: #0b1a33; }
+
+        /* ============================================================
+           QUICK ACTIONS
+           ============================================================ */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .quick-actions .action-btn {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #0b1a33;
+            font-weight: 500;
+            font-size: 11px;
+        }
+        .quick-actions .action-btn:hover {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220,38,38,0.25);
+        }
+        .quick-actions .action-btn i {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 4px;
+            color: #dc2626;
+        }
+        .quick-actions .action-btn:hover i { color: white; }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 1200px) {
+            .chart-grid { grid-template-columns: 1fr 1fr; }
+            .chart-grid-3 { grid-template-columns: 1fr 1fr; }
+            .priority-grid { grid-template-columns: 1fr 1fr; }
+            .followup-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 10px 16px; }
+            .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; }
+            .container { padding: 12px 14px; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .chart-grid-3 { grid-template-columns: 1fr; }
+            .analysis-grid { grid-template-columns: 1fr; }
+            .ai-insights-container { grid-template-columns: 1fr; }
+            .priority-grid { grid-template-columns: 1fr 1fr; }
+            .followup-grid { grid-template-columns: 1fr 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .welcome-banner { flex-direction: column; align-items: flex-start; }
+            .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
+            .funnel-steps { gap: 4px; }
+            .funnel-step .step-circle { width: 36px; height: 36px; font-size: 14px; }
+            .funnel-step .step-label { font-size: 7px; }
+            .funnel-step .step-value { font-size: 10px; }
+            .training-type-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .stat-box { padding: 10px; }
+            .stat-box .stat-number { font-size: 18px; }
+            .priority-grid { grid-template-columns: 1fr; }
+            .followup-grid { grid-template-columns: 1fr 1fr; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================
+SIDEBAR
+============================================================ -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>SkillBridge</h2>
+            <p>Government Portal</p>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">G</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Government</div>
+            <div class="role" id="sidebarRole">Admin</div>
+        </div>
+    </div>
+
+    <div class="menu-label">Analytics</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="government-analytics.html"><i class="fas fa-chart-line"></i> Government Analytics</a>
+        <a href="retention-analytics.html"><i class="fas fa-user-check"></i> Retention Analysis</a>
+        <a href="income.html"><i class="fas fa-rupee-sign"></i> Income/Livelihood</a>
+        <a href="training-to-job-relevance.html"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
+        <a href="non-placement-analysis.html" class="active"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
+        <a href="program-comparison.html"><i class="fas fa-landmark"></i> Government Schemes</a>
+        <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ============================================================
+MAIN CONTENT
+============================================================ -->
+<div class="main-content">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-user-slash"></i> Non-Placement Analysis</h1>
+                <p>Why trained candidates fail to transition into employment · Government Schemes · SIH26135</p>
+            </div>
+        </div>
+        <div class="header-right">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+  <i class="fas fa-moon"></i>
+</button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">G</div>
+                <span class="name" id="headerName">Government</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== CONTAINER ===== -->
+    <div class="container">
+
+        <!-- ===== WELCOME BANNER ===== -->
+        <div class="welcome-banner">
+            <div class="banner-content">
+                <h2><i class="fas fa-exclamation-triangle"></i> Non-Placement Analysis</h2>
+                <p>Understanding why trained candidates fail to transition into employment across Government Skill Schemes · Where should intervention happen?</p>
+            </div>
+            <div class="banner-stats">
+                <div>
+                    <strong id="bannerNonPlaced">0</strong>
+                    <span>Non-Placed</span>
+                </div>
+                <div>
+                    <strong id="bannerRate">0%</strong>
+                    <span>Non-Placement Rate</span>
+                </div>
+                <div>
+                    <strong id="bannerSeeking">0</strong>
+                    <span>Job-Seeking</span>
+                </div>
+                <div>
+                    <strong id="bannerIntervention">0</strong>
+                    <span>Need Intervention</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SCHEME FILTER ===== -->
+        <div class="scheme-filter-bar">
+            <div class="filter-label"><i class="fas fa-filter"></i> Filter by Scheme:</div>
+            <div class="scheme-chips" id="schemeChips">
+                <!-- Dynamic -->
+            </div>
+        </div>
+
+        <!-- ===== MAIN KPI CARDS ===== -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                <div class="stat-number" id="kpiTotalTrained">0</div>
+                <div class="stat-label">Total Trained</div>
+                <span class="stat-trend neutral">–</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon red"><i class="fas fa-user-slash"></i></div>
+                <div class="stat-number" id="kpiNonPlaced">0</div>
+                <div class="stat-label">Non-Placed</div>
+                <span class="stat-trend danger">● High</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon orange"><i class="fas fa-percent"></i></div>
+                <div class="stat-number" id="kpiNonPlacementRate">0%</div>
+                <div class="stat-label">Non-Placement Rate</div>
+                <span class="stat-trend danger">● Critical</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-number" id="kpiPlacementRate">0%</div>
+                <div class="stat-label">Placement Rate</div>
+                <span class="stat-trend good">● Good</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon yellow"><i class="fas fa-search"></i></div>
+                <div class="stat-number" id="kpiJobSeeking">0</div>
+                <div class="stat-label">Job-Seeking</div>
+                <span class="stat-trend warning">● Active</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon purple"><i class="fas fa-hand-holding"></i></div>
+                <div class="stat-number" id="kpiAvailable">0</div>
+                <div class="stat-label">Available for Placement</div>
+                <span class="stat-trend neutral">–</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon gray"><i class="fas fa-phone-slash"></i></div>
+                <div class="stat-number" id="kpiNoFollowup">0</div>
+                <div class="stat-label">No Follow-up Response</div>
+                <span class="stat-trend warning">● Track</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon red"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="stat-number" id="kpiIntervention">0</div>
+                <div class="stat-label">Requiring Intervention</div>
+                <span class="stat-trend danger">● Urgent</span>
+            </div>
+        </div>
+
+        <!-- ===== TRAINING TYPE ANALYSIS ===== -->
+        <div class="section-title">
+            <i class="fas fa-layer-group"></i> Non-Placement by Training Type
+            <span class="badge-count">All training categories covered</span>
+        </div>
+        <div class="training-type-grid" id="trainingTypeGrid">
+            <!-- Dynamic -->
+        </div>
+
+        <!-- ===== NON-PLACEMENT FUNNEL ===== -->
+        <div class="section-title">
+            <i class="fas fa-filter"></i> Non-Placement Funnel
+            <span class="badge-count">Where candidates drop out</span>
+        </div>
+        <div class="funnel-container">
+            <div class="funnel-steps" id="funnelSteps">
+                <div class="funnel-step completed">
+                    <div class="step-circle"><span>🎓</span></div>
+                    <div class="step-label">Trained</div>
+                    <div class="step-value" id="funnelTrained">0</div>
+                </div>
+                <div class="funnel-step completed">
+                    <div class="step-circle"><span>✅</span></div>
+                    <div class="step-label">Completed</div>
+                    <div class="step-value" id="funnelCompleted">0</div>
+                </div>
+                <div class="funnel-step warning">
+                    <div class="step-circle"><span>📝</span></div>
+                    <div class="step-label">Assessed</div>
+                    <div class="step-value" id="funnelAssessed">0</div>
+                    <div class="step-loss" id="lossAssessed">-0%</div>
+                </div>
+                <div class="funnel-step warning">
+                    <div class="step-circle"><span>💼</span></div>
+                    <div class="step-label">Job Eligible</div>
+                    <div class="step-value" id="funnelEligible">0</div>
+                    <div class="step-loss" id="lossEligible">-0%</div>
+                </div>
+                <div class="funnel-step danger">
+                    <div class="step-circle"><span>📤</span></div>
+                    <div class="step-label">Applied</div>
+                    <div class="step-value" id="funnelApplied">0</div>
+                    <div class="step-loss" id="lossApplied">-0%</div>
+                </div>
+                <div class="funnel-step danger">
+                    <div class="step-circle"><span>🎤</span></div>
+                    <div class="step-label">Interviewed</div>
+                    <div class="step-value" id="funnelInterviewed">0</div>
+                    <div class="step-loss" id="lossInterviewed">-0%</div>
+                </div>
+                <div class="funnel-step danger">
+                    <div class="step-circle"><span>📄</span></div>
+                    <div class="step-label">Offer Received</div>
+                    <div class="step-value" id="funnelOffer">0</div>
+                    <div class="step-loss" id="lossOffer">-0%</div>
+                </div>
+                <div class="funnel-step danger">
+                    <div class="step-circle"><span>🤝</span></div>
+                    <div class="step-label">Joined</div>
+                    <div class="step-value" id="funnelJoined">0</div>
+                    <div class="step-loss" id="lossJoined">-0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SCHEME COMPARISON TABLE ===== -->
+        <div class="section-title">
+            <i class="fas fa-landmark"></i> Non-Placement by Government Scheme
+            <span class="badge-count">PMKVY vs DDU-GKY vs PM-DAKSH</span>
+        </div>
+        <div class="scheme-table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-list"></i> Government Scheme Performance</h3>
+                <span class="count" id="schemeCount">0 schemes</span>
+            </div>
+            <div class="scheme-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Government Scheme</th>
+                            <th>Trained</th>
+                            <th>Placed</th>
+                            <th>Non-Placed</th>
+                            <th>Non-Placement %</th>
+                            <th>Main Issue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schemeTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== REASON CONTRIBUTION ANALYSIS ===== -->
+        <div class="section-title">
+            <i class="fas fa-clipboard-list"></i> Non-Placement Reasons
+            <span class="badge-count">Where the biggest problems are</span>
+        </div>
+        <div class="reason-table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-chart-bar"></i> Reason Contribution Analysis</h3>
+                <span class="count" id="reasonCount">0 reasons</span>
+            </div>
+            <div class="reason-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Non-Placement Reason</th>
+                            <th>Candidates</th>
+                            <th>%</th>
+                            <th>Contribution</th>
+                            <th>Severity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reasonTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== REASONS DONUT + SKILL GAP ===== -->
+        <div class="analysis-grid">
+            <div class="analysis-card">
+                <div class="card-title"><i class="fas fa-chart-pie"></i> Top Reasons Distribution</div>
+                <div class="donut-container" id="reasonDonut">
+                    <div class="donut" id="reasonDonutChart">
+                        <div class="donut-center">
+                            <div class="num" id="reasonDonutTotal">0</div>
+                            <div class="label">Cases</div>
+                        </div>
+                    </div>
+                    <div class="donut-legend" id="reasonLegend"></div>
+                </div>
+            </div>
+            <div class="analysis-card">
+                <div class="card-title"><i class="fas fa-code"></i> Skill Gap Analysis</div>
+                <div id="skillGapList">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ASSESSMENT → PLACEMENT ===== -->
+        <div class="section-title">
+            <i class="fas fa-chart-line"></i> Assessment → Placement Analysis
+            <span class="badge-count">Is low assessment performance linked to non-placement?</span>
+        </div>
+        <div class="analysis-grid">
+            <div class="analysis-card">
+                <div class="card-title"><i class="fas fa-clipboard-check"></i> Assessment Score vs Placement</div>
+                <div id="assessmentList"></div>
+            </div>
+            <div class="analysis-card">
+                <div class="card-title"><i class="fas fa-chart-bar"></i> Placement Rate by Score</div>
+                <div class="bar-chart-container" id="assessmentChart" style="height:130px;"></div>
+            </div>
+        </div>
+
+        <!-- ===== LOCAL OPPORTUNITY GAP ===== -->
+        <div class="section-title">
+            <i class="fas fa-map-pin"></i> Local Opportunity Gap
+            <span class="badge-count">Where training exists but jobs don't</span>
+        </div>
+        <div class="opportunity-grid" id="opportunityGrid"></div>
+
+        <!-- ===== INTERVENTION PRIORITY ===== -->
+        <div class="section-title">
+            <i class="fas fa-exclamation-triangle"></i> Intervention Priority
+            <span class="badge-count">Where government should act first</span>
+        </div>
+        <div class="priority-grid" id="priorityGrid">
+            <div class="priority-card critical">
+                <div class="priority-level critical">🔴 Critical</div>
+                <div class="priority-count" id="priorityCritical">0</div>
+                <div class="priority-desc">High non-placement + high skill gap</div>
+                <div class="priority-action"><i class="fas fa-bolt"></i> Urgent intervention</div>
+            </div>
+            <div class="priority-card high">
+                <div class="priority-level high">🟠 High Priority</div>
+                <div class="priority-count" id="priorityHigh">0</div>
+                <div class="priority-desc">High non-placement + low local opportunities</div>
+                <div class="priority-action"><i class="fas fa-map-marked-alt"></i> Regional intervention</div>
+            </div>
+            <div class="priority-card moderate">
+                <div class="priority-level moderate">🟡 Moderate</div>
+                <div class="priority-count" id="priorityModerate">0</div>
+                <div class="priority-desc">Salary mismatch / moderate skill gap</div>
+                <div class="priority-action"><i class="fas fa-handshake"></i> Employer negotiation</div>
+            </div>
+            <div class="priority-card low">
+                <div class="priority-level low">🟢 Low</div>
+                <div class="priority-count" id="priorityLow">0</div>
+                <div class="priority-desc">Temporary or candidate-choice reasons</div>
+                <div class="priority-action"><i class="fas fa-clock"></i> Monitor only</div>
+            </div>
+        </div>
+
+        <!-- ===== FOLLOW-UP OUTCOMES ===== -->
+        <div class="section-title">
+            <i class="fas fa-calendar-check"></i> Follow-Up Outcomes
+            <span class="badge-count">Delayed employment outcomes</span>
+        </div>
+        <div class="followup-grid" id="followupGrid">
+            <div class="followup-card">
+                <div class="fu-period">30 Days</div>
+                <div class="fu-rate high" id="fu30">0%</div>
+                <div class="fu-label">Still non-placed</div>
+            </div>
+            <div class="followup-card">
+                <div class="fu-period">90 Days</div>
+                <div class="fu-rate high" id="fu90">0%</div>
+                <div class="fu-label">Still non-placed</div>
+            </div>
+            <div class="followup-card">
+                <div class="fu-period">180 Days</div>
+                <div class="fu-rate medium" id="fu180">0%</div>
+                <div class="fu-label">Still non-placed</div>
+            </div>
+            <div class="followup-card">
+                <div class="fu-period">365 Days</div>
+                <div class="fu-rate low" id="fu365">0%</div>
+                <div class="fu-label">Still non-placed</div>
+            </div>
+        </div>
+
+        <!-- ===== NON-PLACEMENT BY COURSE ===== -->
+        <div class="section-title">
+            <i class="fas fa-book"></i> Non-Placement by Course/Trade
+            <span class="badge-count">Identify underperforming courses</span>
+        </div>
+        <div class="scheme-table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-list"></i> Course Performance by Scheme</h3>
+                <span class="count" id="courseCount">0 courses</span>
+            </div>
+            <div class="scheme-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Course / Trade</th>
+                            <th>Scheme</th>
+                            <th>Training Type</th>
+                            <th>Trained</th>
+                            <th>Placed</th>
+                            <th>Non-Placed</th>
+                            <th>Non-Placement %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== NON-PLACEMENT BY PROVIDER ===== -->
+        <div class="section-title">
+            <i class="fas fa-chalkboard-teacher"></i> Non-Placement by Provider
+            <span class="badge-count">Identify providers with outcome problems</span>
+        </div>
+        <div class="scheme-table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-list"></i> Provider Performance</h3>
+                <span class="count" id="providerCount">0 providers</span>
+            </div>
+            <div class="scheme-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Provider</th>
+                            <th>Schemes Covered</th>
+                            <th>Trained</th>
+                            <th>Placed</th>
+                            <th>Non-Placed</th>
+                            <th>Non-Placement %</th>
+                            <th>Main Issue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="providerTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== NON-PLACEMENT BY REGION ===== -->
+        <div class="section-title">
+            <i class="fas fa-map-marked-alt"></i> Non-Placement by Region
+            <span class="badge-count">Regional employment bottlenecks</span>
+        </div>
+        <div class="scheme-table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-list"></i> State-wise Regional Analysis</h3>
+                <span class="count" id="regionCount">0 regions</span>
+            </div>
+            <div class="scheme-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>State / District</th>
+                            <th>Trained</th>
+                            <th>Placed</th>
+                            <th>Non-Placed</th>
+                            <th>Non-Placement %</th>
+                            <th>Main Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== CANDIDATE OUTCOME SEGMENTATION ===== -->
+        <div class="section-title">
+            <i class="fas fa-users"></i> Candidate Outcome Segmentation
+            <span class="badge-count">Not every non-placed candidate is a failure</span>
+        </div>
+        <div class="chart-grid">
+            <div class="analysis-card">
+                <div class="card-title"><i class="fas fa-chart-pie"></i> Candidate Segments</div>
+                <div class="donut-container" id="segmentDonut">
+                    <div class="donut" id="segmentDonutChart">
+                        <div class="donut-center">
+                            <div class="num" id="segmentTotal">0</div>
+                            <div class="label">Candidates</div>
+                        </div>
+                    </div>
+                    <div class="donut-legend" id="segmentLegend"></div>
+                </div>
+            </div>
+            <div class="analysis-card">
+                <div class="card-title"><i class="fas fa-arrow-down"></i> Outcome Distribution</div>
+                <div class="bar-chart-container" id="segmentChart" style="height:130px;"></div>
+            </div>
+        </div>
+
+        <!-- ===== AI INSIGHTS ===== -->
+        <div class="section-title">
+            <i class="fas fa-robot"></i> AI-Powered Non-Placement Insights
+            <span class="badge-count">Actionable government recommendations</span>
+        </div>
+        <div class="ai-insights-container">
+            <div class="ai-card">
+                <div class="ai-header"><i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i> Critical Alerts</div>
+                <div id="aiAlerts"></div>
+            </div>
+            <div class="ai-card">
+                <div class="ai-header"><i class="fas fa-lightbulb" style="color:#ea580c;"></i> Recommended Actions</div>
+                <div id="aiRecommendations"></div>
+            </div>
+        </div>
+
+        <!-- ===== QUICK ACTIONS ===== -->
+        <div class="chart-card" style="padding:16px 20px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size:14px; color:#0b1a33; display:flex; align-items:center; gap:8px; font-weight:700;">
+                    <i class="fas fa-bolt" style="color:#dc2626;"></i> Quick Actions
+                </h3>
+            </div>
+            <div class="quick-actions">
+                <a href="#" class="action-btn" onclick="exportFullReport(); return false;"><i class="fas fa-file-export"></i> Export Report</a>
+                <a href="#" class="action-btn" onclick="viewCriticalCases(); return false;"><i class="fas fa-exclamation-circle"></i> Critical Cases</a>
+                <a href="#" class="action-btn" onclick="generateAIInsights(); return false;"><i class="fas fa-robot"></i> AI Insights</a>
+                <a href="#" class="action-btn" onclick="window.print(); return false;"><i class="fas fa-print"></i> Print Dashboard</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // GOVERNMENT SCHEMES + TRAINING TYPES DATA
+    // ============================================================
+
+    const govtData = {
+        schemes: [
+            { id: 'all', name: 'All Schemes', ministry: 'All', color: '#0b1a33' },
+            { id: 'pmkvy', name: 'PMKVY 2.0', ministry: 'MSDE', color: '#2563eb' },
+            { id: 'ddu-gky', name: 'DDU-GKY', ministry: 'MoRD', color: '#16a34a' },
+            { id: 'pm-daksh', name: 'PM-DAKSH', ministry: 'MoSJE', color: '#d97706' },
+            { id: 'state', name: 'State Skill Mission', ministry: 'State Govt', color: '#7c3aed' },
+            { id: 'nielit', name: 'NIELIT Programs', ministry: 'MeitY', color: '#0891b2' }
+        ],
+        trainingTypes: [
+            {
+                id: 'technical',
+                name: 'Technical Training',
+                icon: 'fa-laptop-code',
+                description: 'IT, Software, Data, Cloud',
+                schemes: ['pmkvy', 'nielit', 'state'],
+                trained: 12000,
+                placed: 8900,
+                nonPlaced: 3100,
+                npRate: 26
+            },
+            {
+                id: 'vocational',
+                name: 'Vocational Training',
+                icon: 'fa-tools',
+                description: 'Construction, Automotive, Manufacturing',
+                schemes: ['ddu-gky', 'pm-daksh', 'state'],
+                trained: 9500,
+                placed: 6800,
+                nonPlaced: 2700,
+                npRate: 28
+            },
+            {
+                id: 'skill-based',
+                name: 'Skill-Based Training',
+                icon: 'fa-hands',
+                description: 'Beauty, Retail, Hospitality',
+                schemes: ['pm-daksh', 'ddu-gky'],
+                trained: 7200,
+                placed: 4900,
+                nonPlaced: 2300,
+                npRate: 32
+            },
+            {
+                id: 'industry',
+                name: 'Industry-Linked Training',
+                icon: 'fa-industry',
+                description: 'Apprenticeships, On-Job Training',
+                schemes: ['pmkvy', 'nielit'],
+                trained: 5800,
+                placed: 4600,
+                nonPlaced: 1200,
+                npRate: 21
+            },
+            {
+                id: 'self-employment',
+                name: 'Self-Employment Training',
+                icon: 'fa-store',
+                description: 'Entrepreneurship, Business, Agri',
+                schemes: ['ddu-gky', 'pm-daksh'],
+                trained: 4500,
+                placed: 2700,
+                nonPlaced: 1800,
+                npRate: 40
+            }
+        ],
+        schemeStats: [
+            { scheme: 'PMKVY 2.0', ministry: 'MSDE', trained: 15000, placed: 11700, nonPlaced: 3300, npRate: 22, mainIssue: 'Skill Gap' },
+            { scheme: 'DDU-GKY', ministry: 'MoRD', trained: 12000, placed: 8640, nonPlaced: 3360, npRate: 28, mainIssue: 'Lack of Local Jobs' },
+            { scheme: 'PM-DAKSH', ministry: 'MoSJE', trained: 8000, placed: 5440, nonPlaced: 2560, npRate: 32, mainIssue: 'Low Assessment Score' },
+            { scheme: 'State Skill Mission', ministry: 'State Govt', trained: 10000, placed: 7600, nonPlaced: 2400, npRate: 24, mainIssue: 'Salary Mismatch' },
+            { scheme: 'NIELIT Programs', ministry: 'MeitY', trained: 5000, placed: 4100, nonPlaced: 900, npRate: 18, mainIssue: 'Skill Gap' }
+        ],
+        courses: [
+            { name: 'Data Analytics', scheme: 'PMKVY 2.0', type: 'Technical', trained: 3000, placed: 2460, nonPlaced: 540, npRate: 18 },
+            { name: 'Full Stack Development', scheme: 'PMKVY 2.0', type: 'Technical', trained: 2500, placed: 1950, nonPlaced: 550, npRate: 22 },
+            { name: 'Digital Marketing', scheme: 'PMKVY 2.0', type: 'Technical', trained: 2000, placed: 1700, nonPlaced: 300, npRate: 15 },
+            { name: 'Data Science', scheme: 'PMKVY 2.0', type: 'Technical', trained: 1500, placed: 1140, nonPlaced: 360, npRate: 24 },
+            { name: 'Cloud Computing', scheme: 'NIELIT Programs', type: 'Technical', trained: 1500, placed: 1290, nonPlaced: 210, npRate: 14 },
+            { name: 'Cybersecurity', scheme: 'NIELIT Programs', type: 'Technical', trained: 1200, placed: 1008, nonPlaced: 192, npRate: 16 },
+            { name: 'AI & ML', scheme: 'NIELIT Programs', type: 'Technical', trained: 1000, placed: 880, nonPlaced: 120, npRate: 12 },
+            { name: 'Agriculture & Allied', scheme: 'DDU-GKY', type: 'Self-Employment', trained: 3000, placed: 2100, nonPlaced: 900, npRate: 30 },
+            { name: 'Construction', scheme: 'DDU-GKY', type: 'Vocational', trained: 2500, placed: 1850, nonPlaced: 650, npRate: 26 },
+            { name: 'Healthcare', scheme: 'DDU-GKY', type: 'Vocational', trained: 2000, placed: 1560, nonPlaced: 440, npRate: 22 },
+            { name: 'Automotive', scheme: 'DDU-GKY', type: 'Vocational', trained: 1800, placed: 1296, nonPlaced: 504, npRate: 28 },
+            { name: 'Retail', scheme: 'PM-DAKSH', type: 'Skill-Based', trained: 1500, placed: 990, nonPlaced: 510, npRate: 34 },
+            { name: 'Beauty & Wellness', scheme: 'PM-DAKSH', type: 'Skill-Based', trained: 2000, placed: 1360, nonPlaced: 640, npRate: 32 },
+            { name: 'Hospitality', scheme: 'PM-DAKSH', type: 'Skill-Based', trained: 1200, placed: 792, nonPlaced: 408, npRate: 34 },
+            { name: 'IT & Digital', scheme: 'State Skill Mission', type: 'Technical', trained: 2500, placed: 2000, nonPlaced: 500, npRate: 20 },
+            { name: 'Manufacturing', scheme: 'State Skill Mission', type: 'Vocational', trained: 2000, placed: 1520, nonPlaced: 480, npRate: 24 },
+            { name: 'Tourism & Hospitality', scheme: 'State Skill Mission', type: 'Skill-Based', trained: 1500, placed: 1080, nonPlaced: 420, npRate: 28 }
+        ],
+        providers: [
+            { name: 'Skill India Centre', schemes: 'PMKVY, NIELIT', trained: 4500, placed: 3690, nonPlaced: 810, npRate: 18, mainIssue: 'Skill Gap' },
+            { name: 'NITC Training', schemes: 'PMKVY, State', trained: 3500, placed: 2730, nonPlaced: 770, npRate: 22, mainIssue: 'Salary Mismatch' },
+            { name: 'Digital India Academy', schemes: 'PMKVY', trained: 3000, placed: 2400, nonPlaced: 600, npRate: 20, mainIssue: 'Skill Gap' },
+            { name: 'Data Science Institute', schemes: 'PMKVY', trained: 2500, placed: 1900, nonPlaced: 600, npRate: 24, mainIssue: 'Low Assessment Score' },
+            { name: 'Cloud Academy', schemes: 'NIELIT', trained: 2000, placed: 1680, nonPlaced: 320, npRate: 16, mainIssue: 'Skill Gap' },
+            { name: 'Design Academy', schemes: 'PMKVY, PM-DAKSH', trained: 1800, placed: 1224, nonPlaced: 576, npRate: 32, mainIssue: 'Lack of Local Jobs' },
+            { name: 'Rural Skill Foundation', schemes: 'DDU-GKY', trained: 3500, placed: 2520, nonPlaced: 980, npRate: 28, mainIssue: 'Lack of Local Jobs' },
+            { name: 'Gramin Kaushal Kendra', schemes: 'DDU-GKY', trained: 3000, placed: 2100, nonPlaced: 900, npRate: 30, mainIssue: 'Low Assessment Score' },
+            { name: 'Social Empowerment Trust', schemes: 'PM-DAKSH', trained: 2500, placed: 1700, nonPlaced: 800, npRate: 32, mainIssue: 'Salary Mismatch' },
+            { name: 'Inclusive Skills', schemes: 'PM-DAKSH', trained: 2200, placed: 1452, nonPlaced: 748, npRate: 34, mainIssue: 'Skill Gap' },
+            { name: 'State Skill Corp', schemes: 'State Skill Mission', trained: 3500, placed: 2730, nonPlaced: 770, npRate: 22, mainIssue: 'Salary Mismatch' },
+            { name: 'Regional Training Institute', schemes: 'State Skill Mission', trained: 2800, placed: 2128, nonPlaced: 672, npRate: 24, mainIssue: 'Skill Gap' }
+        ],
+        regions: [
+            { name: 'Karnataka', trained: 3500, placed: 2800, nonPlaced: 700, npRate: 20, mainReason: 'Skill Gap' },
+            { name: 'Maharashtra', trained: 3200, placed: 2496, nonPlaced: 704, npRate: 22, mainReason: 'Salary Mismatch' },
+            { name: 'Delhi NCR', trained: 2800, placed: 2240, nonPlaced: 560, npRate: 20, mainReason: 'Skill Gap' },
+            { name: 'Tamil Nadu', trained: 2600, placed: 1976, nonPlaced: 624, npRate: 24, mainReason: 'Lack of Local Jobs' },
+            { name: 'Telangana', trained: 2400, placed: 1872, nonPlaced: 528, npRate: 22, mainReason: 'Low Assessment Score' },
+            { name: 'Uttar Pradesh', trained: 3000, placed: 2100, nonPlaced: 900, npRate: 30, mainReason: 'Lack of Local Jobs' },
+            { name: 'Bihar', trained: 2200, placed: 1540, nonPlaced: 660, npRate: 30, mainReason: 'Skill Gap' },
+            { name: 'West Bengal', trained: 2000, placed: 1500, nonPlaced: 500, npRate: 25, mainReason: 'Salary Mismatch' }
+        ],
+        reasons: [
+            { reason: 'Skill Gap', count: 2100, severity: 'critical' },
+            { reason: 'Lack of Local Jobs', count: 1800, severity: 'high' },
+            { reason: 'Low Assessment Score', count: 1200, severity: 'critical' },
+            { reason: 'Salary Mismatch', count: 950, severity: 'medium' },
+            { reason: 'Lack of Experience', count: 720, severity: 'high' },
+            { reason: 'Poor Interview Performance', count: 580, severity: 'high' },
+            { reason: 'Course/Job Mismatch', count: 480, severity: 'high' },
+            { reason: 'Location Constraints', count: 420, severity: 'high' },
+            { reason: 'Employer Rejection', count: 380, severity: 'medium' },
+            { reason: 'Job Offer Rejected', count: 320, severity: 'low' },
+            { reason: 'Failed Assessment', count: 280, severity: 'critical' },
+            { reason: 'Family/Personal Constraints', count: 250, severity: 'low' }
+        ],
+        skills: [
+            { name: 'Cloud Computing', gap: 34 },
+            { name: 'Communication', gap: 27 },
+            { name: 'AI/ML', gap: 25 },
+            { name: 'DevOps', gap: 22 },
+            { name: 'Python', gap: 18 },
+            { name: 'SQL', gap: 15 }
+        ],
+        assessmentLevels: [
+            { range: '80-100', placementRate: 82 },
+            { range: '60-79', placementRate: 67 },
+            { range: '40-59', placementRate: 42 },
+            { range: 'Below 40', placementRate: 21 }
+        ],
+        segments: [
+            { label: 'Actively Seeking', value: 4200, color: '#dc2626' },
+            { label: 'Waiting for Opportunity', value: 2100, color: '#ea580c' },
+            { label: 'Preparing for Assessment', value: 1800, color: '#ca8a04' },
+            { label: 'Pursuing Education', value: 900, color: '#2563eb' },
+            { label: 'Self-employment Prep', value: 850, color: '#7c3aed' },
+            { label: 'Not Currently Seeking', value: 1200, color: '#64748b' },
+            { label: 'Temporarily Unavailable', value: 650, color: '#94a3b8' },
+            { label: 'Unreachable', value: 420, color: '#cbd5e1' }
+        ],
+        followup: {
+            day30: 42,
+            day90: 31,
+            day180: 19,
+            day365: 12
+        }
+    };
+
+    // ============================================================
+    // STATE MANAGEMENT
+    // ============================================================
+
+    let activeScheme = 'all';
+
+    // ============================================================
+    // DATA LOADER
+    // ============================================================
+
+    function getGovernmentData() {
+        let data = localStorage.getItem('governmentData');
+        if (data) { try { return JSON.parse(data); } catch(e) {} }
+        return null;
+    }
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+
+    function loadAndRender() {
+        renderSchemeChips();
+        renderAll();
+        updateSidebar();
+        updateNotificationBadge();
+    }
+
+    function renderSchemeChips() {
+        const container = document.getElementById('schemeChips');
+        container.innerHTML = govtData.schemes.map(s => `
+            <div class="scheme-chip ${activeScheme === s.id ? 'active' : ''}" onclick="filterByScheme('${s.id}')">
+                ${s.name} ${s.ministry !== 'All' ? '· ' + s.ministry : ''}
+            </div>
+        `).join('');
+    }
+
+    function filterByScheme(schemeId) {
+        activeScheme = schemeId;
+        renderSchemeChips();
+        renderAll();
+        showToast('🔍 Filtered by: ' + govtData.schemes.find(s => s.id === schemeId).name);
+    }
+
+    function getFilteredSchemeStats() {
+        if (activeScheme === 'all') return govtData.schemeStats;
+        return govtData.schemeStats.filter(s => {
+            const scheme = govtData.schemes.find(x => x.id === activeScheme);
+            return scheme && s.scheme.toLowerCase().includes(scheme.name.toLowerCase().split(' ')[0]);
+        });
+    }
+
+    function calculateStats() {
+        const schemeStats = getFilteredSchemeStats();
+        const total = schemeStats.reduce((sum, s) => sum + s.trained, 0);
+        const placed = schemeStats.reduce((sum, s) => sum + s.placed, 0);
+        const nonPlaced = schemeStats.reduce((sum, s) => sum + s.nonPlaced, 0);
+        const npRate = total > 0 ? Math.round((nonPlaced / total) * 100) : 0;
+        const plRate = total > 0 ? Math.round((placed / total) * 100) : 0;
+
+        const jobSeeking = Math.round(nonPlaced * 0.45);
+        const available = Math.round(nonPlaced * 0.78);
+        const noFollowup = Math.round(nonPlaced * 0.12);
+        const intervention = Math.round(nonPlaced * 0.35);
+
+        const critical = Math.round(nonPlaced * 0.42);
+        const highPriority = Math.round(nonPlaced * 0.28);
+        const moderate = Math.round(nonPlaced * 0.18);
+        const low = Math.round(nonPlaced * 0.12);
+
+        return { total, placed, nonPlaced, npRate, plRate, jobSeeking, available, noFollowup, intervention, critical, highPriority, moderate, low };
+    }
+
+    function renderAll() {
+        const stats = calculateStats();
+        renderBanner(stats);
+        renderKPIs(stats);
+        renderTrainingTypes();
+        renderFunnel(stats);
+        renderSchemeTable();
+        renderReasonTable();
+        renderReasonDonut();
+        renderSkillGaps();
+        renderAssessment();
+        renderOpportunityGap();
+        renderPriority(stats);
+        renderFollowup();
+        renderCourseTable();
+        renderProviderTable();
+        renderRegionTable();
+        renderSegments();
+        renderAIInsights(stats);
+    }
+
+    function renderBanner(stats) {
+        document.getElementById('bannerNonPlaced').textContent = stats.nonPlaced.toLocaleString();
+        document.getElementById('bannerRate').textContent = stats.npRate + '%';
+        document.getElementById('bannerSeeking').textContent = stats.jobSeeking.toLocaleString();
+        document.getElementById('bannerIntervention').textContent = stats.intervention.toLocaleString();
+    }
+
+    function renderKPIs(stats) {
+        document.getElementById('kpiTotalTrained').textContent = stats.total.toLocaleString();
+        document.getElementById('kpiNonPlaced').textContent = stats.nonPlaced.toLocaleString();
+        document.getElementById('kpiNonPlacementRate').textContent = stats.npRate + '%';
+        document.getElementById('kpiPlacementRate').textContent = stats.plRate + '%';
+        document.getElementById('kpiJobSeeking').textContent = stats.jobSeeking.toLocaleString();
+        document.getElementById('kpiAvailable').textContent = stats.available.toLocaleString();
+        document.getElementById('kpiNoFollowup').textContent = stats.noFollowup.toLocaleString();
+        document.getElementById('kpiIntervention').textContent = stats.intervention.toLocaleString();
+    }
+
+    function renderTrainingTypes() {
+        const container = document.getElementById('trainingTypeGrid');
+        container.innerHTML = govtData.trainingTypes.map(t => {
+            const npColor = t.npRate >= 35 ? '#dc2626' : t.npRate >= 25 ? '#ea580c' : '#16a34a';
+            const npLabel = t.npRate >= 35 ? '🔴 Critical' : t.npRate >= 25 ? '🟠 High' : '🟢 Moderate';
+            return `<div class="training-type-card ${t.id}">
+                <div class="tt-header">
+                    <div class="tt-icon"><i class="fas ${t.icon}"></i></div>
+                    <div>
+                        <div class="tt-name">${t.name}</div>
+                        <div class="tt-trainees">${t.description}</div>
+                    </div>
+                </div>
+                <div class="tt-metrics">
+                    <div class="tt-metric"><span>Trained</span><strong>${t.trained.toLocaleString()}</strong></div>
+                    <div class="tt-metric"><span>Placed</span><strong style="color:#16a34a;">${t.placed.toLocaleString()}</strong></div>
+                    <div class="tt-metric"><span>Non-Placed</span><strong style="color:#dc2626;">${t.nonPlaced.toLocaleString()}</strong></div>
+                    <div class="tt-metric"><span>Schemes</span><strong>${t.schemes.length}</strong></div>
+                </div>
+                <div class="tt-np-rate">
+                    <span class="np-label">Non-Placement Rate</span>
+                    <span class="np-value" style="color:${npColor};">${t.npRate}%</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderFunnel(stats) {
+        const total = stats.total;
+        const completed = Math.round(total * 0.87);
+        const assessed = Math.round(total * 0.79);
+        const eligible = Math.round(total * 0.65);
+        const applied = Math.round(total * 0.52);
+        const interviewed = Math.round(total * 0.38);
+        const offer = Math.round(total * 0.29);
+        const joined = stats.placed;
+
+        document.getElementById('funnelTrained').textContent = total.toLocaleString();
+        document.getElementById('funnelCompleted').textContent = completed.toLocaleString();
+        document.getElementById('funnelAssessed').textContent = assessed.toLocaleString();
+        document.getElementById('funnelEligible').textContent = eligible.toLocaleString();
+        document.getElementById('funnelApplied').textContent = applied.toLocaleString();
+        document.getElementById('funnelInterviewed').textContent = interviewed.toLocaleString();
+        document.getElementById('funnelOffer').textContent = offer.toLocaleString();
+        document.getElementById('funnelJoined').textContent = joined.toLocaleString();
+
+        const lossAssessed = completed > 0 ? Math.round(((completed - assessed) / completed) * 100) : 0;
+        const lossEligible = assessed > 0 ? Math.round(((assessed - eligible) / assessed) * 100) : 0;
+        const lossApplied = eligible > 0 ? Math.round(((eligible - applied) / eligible) * 100) : 0;
+        const lossInterviewed = applied > 0 ? Math.round(((applied - interviewed) / applied) * 100) : 0;
+        const lossOffer = interviewed > 0 ? Math.round(((interviewed - offer) / interviewed) * 100) : 0;
+        const lossJoined = offer > 0 ? Math.round(((offer - joined) / offer) * 100) : 0;
+
+        document.getElementById('lossAssessed').textContent = `-${lossAssessed}%`;
+        document.getElementById('lossEligible').textContent = `-${lossEligible}%`;
+        document.getElementById('lossApplied').textContent = `-${lossApplied}%`;
+        document.getElementById('lossInterviewed').textContent = `-${lossInterviewed}%`;
+        document.getElementById('lossOffer').textContent = `-${lossOffer}%`;
+        document.getElementById('lossJoined').textContent = `-${lossJoined}%`;
+    }
+
+    function renderSchemeTable() {
+        const tbody = document.getElementById('schemeTableBody');
+        const schemeStats = getFilteredSchemeStats();
+        document.getElementById('schemeCount').textContent = schemeStats.length + ' schemes';
+
+        tbody.innerHTML = schemeStats.sort((a, b) => b.npRate - a.npRate).map(s => {
+            const color = s.npRate >= 30 ? '#dc2626' : s.npRate >= 22 ? '#ea580c' : '#16a34a';
+            return `<tr>
+                <td>
+                    <div class="scheme-name-cell">
+                        <div class="sn">${s.scheme}</div>
+                        <div class="sm">${s.ministry}</div>
+                    </div>
+                </td>
+                <td>${s.trained.toLocaleString()}</td>
+                <td style="color:#16a34a;font-weight:700;">${s.placed.toLocaleString()}</td>
+                <td style="color:#dc2626;font-weight:700;">${s.nonPlaced.toLocaleString()}</td>
+                <td>
+                    <div class="np-bar-container">
+                        <div class="np-bar"><div class="fill" style="width:${s.npRate}%;background:${color};"></div></div>
+                        <span class="np-val" style="color:${color};">${s.npRate}%</span>
+                    </div>
+                </td>
+                <td><span style="font-size:10px;font-weight:600;color:#dc2626;">${s.mainIssue}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderReasonTable() {
+        const tbody = document.getElementById('reasonTableBody');
+        const reasons = govtData.reasons.sort((a, b) => b.count - a.count);
+        const totalCases = reasons.reduce((sum, r) => sum + r.count, 0);
+        document.getElementById('reasonCount').textContent = reasons.length + ' reasons';
+
+        tbody.innerHTML = reasons.map(r => {
+            const pct = totalCases > 0 ? Math.round((r.count / totalCases) * 100) : 0;
+            const barColor = r.severity === 'critical' ? '#dc2626' : r.severity === 'high' ? '#ea580c' : r.severity === 'medium' ? '#ca8a04' : '#16a34a';
+            const severityLabel = r.severity === 'critical' ? '🔴 Critical' : r.severity === 'high' ? '🟠 High' : r.severity === 'medium' ? '🟡 Medium' : '🟢 Low';
+            return `<tr>
+                <td><strong>${r.reason}</strong></td>
+                <td style="font-weight:700;">${r.count.toLocaleString()}</td>
+                <td style="font-weight:700;color:${barColor};">${pct}%</td>
+                <td><div class="reason-bar"><div class="fill" style="width:${pct}%;background:${barColor};"></div></div></td>
+                <td><span class="severity-badge ${r.severity}">${severityLabel}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderReasonDonut() {
+        const container = document.getElementById('reasonDonutChart');
+        const legend = document.getElementById('reasonLegend');
+        const topReasons = govtData.reasons.sort((a, b) => b.count - a.count).slice(0, 6);
+        const colors = ['#dc2626', '#ea580c', '#ca8a04', '#2563eb', '#7c3aed', '#0d9488'];
+        const totalVal = topReasons.reduce((sum, r) => sum + r.count, 0) || 1;
+
+        let gradient = '';
+        let currentAngle = 0;
+        topReasons.forEach((r, i) => {
+            const pct = (r.count / totalVal) * 100;
+            if (pct > 0) {
+                const angle = (pct / 100) * 360;
+                gradient += `${colors[i]} ${currentAngle}deg ${currentAngle + angle}deg, `;
+                currentAngle += angle;
+            }
+        });
+        gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
+        container.style.background = `conic-gradient(${gradient})`;
+        document.getElementById('reasonDonutTotal').textContent = totalVal.toLocaleString();
+
+        legend.innerHTML = topReasons.map((r, i) => {
+            const pct = totalVal > 0 ? Math.round((r.count / totalVal) * 100) : 0;
+            return `<div class="legend-item">
+                <div class="dot" style="background:${colors[i]};"></div>
+                ${r.reason} <span class="pct">${r.count} (${pct}%)</span>
+            </div>`;
+        }).join('');
+    }
+
+    function renderSkillGaps() {
+        const container = document.getElementById('skillGapList');
+        const skills = govtData.skills.sort((a, b) => b.gap - a.gap);
+        container.innerHTML = skills.map(s => {
+            const color = s.gap > 25 ? '#dc2626' : s.gap > 15 ? '#ea580c' : '#ca8a04';
+            return `<div class="skill-gap-item">
+                <span class="skill-name"><i class="fas fa-code" style="color:${color};"></i> ${s.name}</span>
+                <div class="skill-bar"><div class="fill" style="width:${s.gap}%;background:${color};"></div></div>
+                <span class="skill-pct" style="color:${color};">${s.gap}%</span>
+            </div>`;
+        }).join('');
+    }
+
+    function renderAssessment() {
+        const container = document.getElementById('assessmentList');
+        const chartContainer = document.getElementById('assessmentChart');
+        const levels = govtData.assessmentLevels;
+
+        container.innerHTML = levels.map(l => {
+            const color = l.placementRate >= 70 ? '#16a34a' : l.placementRate >= 40 ? '#ca8a04' : '#dc2626';
+            return `<div class="assessment-row">
+                <span class="assess-range">${l.range}</span>
+                <div class="assess-bar"><div class="fill" style="width:${l.placementRate}%;background:${color};"></div></div>
+                <span class="assess-pct" style="color:${color};">${l.placementRate}%</span>
+            </div>`;
+        }).join('');
+
+        const maxRate = Math.max(...levels.map(l => l.placementRate), 1);
+        chartContainer.innerHTML = levels.map(l => {
+            const height = Math.max((l.placementRate / maxRate) * 120, 12);
+            const color = l.placementRate >= 70 ? '#16a34a' : l.placementRate >= 40 ? '#ca8a04' : '#dc2626';
+            return `<div class="bar-group">
+                <div class="bar" style="height:${height}px;background:${color};">
+                    <span class="bar-value">${l.placementRate}%</span>
+                </div>
+                <div class="bar-label">${l.range}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderOpportunityGap() {
+        const container = document.getElementById('opportunityGrid');
+        const gaps = [
+            { district: 'Uttar Pradesh', trained: 3000, vacancies: 1200, gap: 1800 },
+            { district: 'Bihar', trained: 2200, vacancies: 900, gap: 1300 },
+            { district: 'West Bengal', trained: 2000, vacancies: 1100, gap: 900 },
+            { district: 'Tamil Nadu', trained: 2600, vacancies: 1800, gap: 800 },
+            { district: 'Telangana', trained: 2400, vacancies: 1700, gap: 700 },
+            { district: 'Maharashtra', trained: 3200, vacancies: 2600, gap: 600 }
+        ];
+        
+        container.innerHTML = gaps.map(g => {
+            const color = g.gap >= 1000 ? '#dc2626' : g.gap >= 700 ? '#ea580c' : '#ca8a04';
+            return `<div class="opportunity-item">
+                <div class="opp-info">
+                    <div class="opp-name">📍 ${g.district}</div>
+                    <div class="opp-desc">${g.trained.toLocaleString()} trained · ${g.vacancies.toLocaleString()} vacancies</div>
+                </div>
+                <div class="opp-gap" style="color:${color};">+${g.gap.toLocaleString()}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderPriority(stats) {
+        document.getElementById('priorityCritical').textContent = stats.critical.toLocaleString();
+        document.getElementById('priorityHigh').textContent = stats.highPriority.toLocaleString();
+        document.getElementById('priorityModerate').textContent = stats.moderate.toLocaleString();
+        document.getElementById('priorityLow').textContent = stats.low.toLocaleString();
+    }
+
+    function renderFollowup() {
+        document.getElementById('fu30').textContent = govtData.followup.day30 + '%';
+        document.getElementById('fu90').textContent = govtData.followup.day90 + '%';
+        document.getElementById('fu180').textContent = govtData.followup.day180 + '%';
+        document.getElementById('fu365').textContent = govtData.followup.day365 + '%';
+    }
+
+    function renderCourseTable() {
+        const tbody = document.getElementById('courseTableBody');
+        const courses = govtData.courses;
+        document.getElementById('courseCount').textContent = courses.length + ' courses';
+
+        tbody.innerHTML = courses.sort((a, b) => b.npRate - a.npRate).map(c => {
+            const color = c.npRate >= 30 ? '#dc2626' : c.npRate >= 22 ? '#ea580c' : '#16a34a';
+            const typeColor = c.type === 'Technical' ? '#2563eb' : c.type === 'Vocational' ? '#16a34a' : c.type === 'Skill-Based' ? '#d97706' : c.type === 'Industry-Linked' ? '#7c3aed' : '#db2777';
+            return `<tr>
+                <td><strong>${c.name}</strong></td>
+                <td style="font-size:11px;font-weight:600;color:#2563eb;">${c.scheme}</td>
+                <td><span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;background:${typeColor}20;color:${typeColor};">${c.type}</span></td>
+                <td>${c.trained.toLocaleString()}</td>
+                <td style="color:#16a34a;font-weight:700;">${c.placed.toLocaleString()}</td>
+                <td style="color:#dc2626;font-weight:700;">${c.nonPlaced.toLocaleString()}</td>
+                <td>
+                    <div class="np-bar-container">
+                        <div class="np-bar"><div class="fill" style="width:${c.npRate}%;background:${color};"></div></div>
+                        <span class="np-val" style="color:${color};">${c.npRate}%</span>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderProviderTable() {
+        const tbody = document.getElementById('providerTableBody');
+        const providers = govtData.providers;
+        document.getElementById('providerCount').textContent = providers.length + ' providers';
+
+        tbody.innerHTML = providers.sort((a, b) => b.npRate - a.npRate).map(p => {
+            const color = p.npRate >= 30 ? '#dc2626' : p.npRate >= 22 ? '#ea580c' : '#16a34a';
+            return `<tr>
+                <td><strong>${p.name}</strong></td>
+                <td style="font-size:10px;color:#64748b;">${p.schemes}</td>
+                <td>${p.trained.toLocaleString()}</td>
+                <td style="color:#16a34a;font-weight:700;">${p.placed.toLocaleString()}</td>
+                <td style="color:#dc2626;font-weight:700;">${p.nonPlaced.toLocaleString()}</td>
+                <td>
+                    <div class="np-bar-container">
+                        <div class="np-bar"><div class="fill" style="width:${p.npRate}%;background:${color};"></div></div>
+                        <span class="np-val" style="color:${color};">${p.npRate}%</span>
+                    </div>
+                </td>
+                <td><span style="font-size:10px;font-weight:600;color:#dc2626;">${p.mainIssue}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderRegionTable() {
+        const tbody = document.getElementById('regionTableBody');
+        const regions = govtData.regions;
+        document.getElementById('regionCount').textContent = regions.length + ' regions';
+
+        tbody.innerHTML = regions.sort((a, b) => b.npRate - a.npRate).map(r => {
+            const color = r.npRate >= 28 ? '#dc2626' : r.npRate >= 22 ? '#ea580c' : '#16a34a';
+            return `<tr>
+                <td><strong>📍 ${r.name}</strong></td>
+                <td>${r.trained.toLocaleString()}</td>
+                <td style="color:#16a34a;font-weight:700;">${r.placed.toLocaleString()}</td>
+                <td style="color:#dc2626;font-weight:700;">${r.nonPlaced.toLocaleString()}</td>
+                <td>
+                    <div class="np-bar-container">
+                        <div class="np-bar"><div class="fill" style="width:${r.npRate}%;background:${color};"></div></div>
+                        <span class="np-val" style="color:${color};">${r.npRate}%</span>
+                    </div>
+                </td>
+                <td><span style="font-size:10px;font-weight:600;color:#dc2626;">${r.mainReason}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderSegments() {
+        const container = document.getElementById('segmentDonutChart');
+        const legend = document.getElementById('segmentLegend');
+        const chartContainer = document.getElementById('segmentChart');
+        const segments = govtData.segments;
+        const totalVal = segments.reduce((sum, s) => sum + s.value, 0) || 1;
+
+        let gradient = '';
+        let currentAngle = 0;
+        segments.forEach(s => {
+            const pct = (s.value / totalVal) * 100;
+            if (pct > 0) {
+                const angle = (pct / 100) * 360;
+                gradient += `${s.color} ${currentAngle}deg ${currentAngle + angle}deg, `;
+                currentAngle += angle;
+            }
+        });
+        gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
+        container.style.background = `conic-gradient(${gradient})`;
+        document.getElementById('segmentTotal').textContent = totalVal.toLocaleString();
+
+        legend.innerHTML = segments.map(s => {
+            const pct = totalVal > 0 ? Math.round((s.value / totalVal) * 100) : 0;
+            return `<div class="legend-item">
+                <div class="dot" style="background:${s.color};"></div>
+                ${s.label} <span class="pct">${s.value} (${pct}%)</span>
+            </div>`;
+        }).join('');
+
+        const maxVal = Math.max(...segments.map(s => s.value), 1);
+        chartContainer.innerHTML = segments.map(s => {
+            const height = Math.max((s.value / maxVal) * 110, 10);
+            return `<div class="bar-group">
+                <div class="bar" style="height:${height}px;background:${s.color};">
+                    <span class="bar-value">${(s.value/1000).toFixed(1)}K</span>
+                </div>
+                <div class="bar-label">${s.label.length > 10 ? s.label.substring(0, 10) + '…' : s.label}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderAIInsights(stats) {
+        const alertsContainer = document.getElementById('aiAlerts');
+        const recsContainer = document.getElementById('aiRecommendations');
+
+        let alertsHtml = '';
+        let recsHtml = '';
+
+        // Alert 1: Skill gap
+        alertsHtml += `<div class="ai-item"><span class="ai-icon">🔴</span><div><strong>Skill Gap Alert:</strong> ${govtData.reasons.find(r => r.reason === 'Skill Gap')?.count.toLocaleString()} non-placed candidates lack skills currently required by employers across PMKVY, DDU-GKY, and PM-DAKSH schemes.</div></div>`;
+        recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Strengthen practical skill modules and industry partnerships in Technical and Vocational training tracks.</div></div>`;
+
+        // Alert 2: Self-employment
+        const selfEmp = govtData.trainingTypes.find(t => t.id === 'self-employment');
+        if (selfEmp) {
+            alertsHtml += `<div class="ai-item"><span class="ai-icon">🟠</span><div><strong>Self-Employment Alert:</strong> Self-Employment training has ${selfEmp.npRate}% non-placement rate — highest among all training types. Business support needed.</div></div>`;
+            recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Improve access to finance, mentorship, and market linkage for self-employment trainees.</div></div>`;
+        }
+
+        // Alert 3: Assessment
+        alertsHtml += `<div class="ai-item"><span class="ai-icon">🟡</span><div><strong>Assessment Alert:</strong> Candidates scoring below 40% have only 21% placement rate — significantly lower than 82% for those scoring 80%+.</div></div>`;
+        recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Provide additional coaching and retake opportunities for low-scoring candidates.</div></div>`;
+
+        // Alert 4: Regional
+        const worstRegion = govtData.regions.sort((a, b) => b.npRate - a.npRate)[0];
+        if (worstRegion) {
+            alertsHtml += `<div class="ai-item"><span class="ai-icon">⚠️</span><div><strong>Regional Alert:</strong> ${worstRegion.name} has ${worstRegion.npRate}% non-placement rate — highest among all states. Main reason: ${worstRegion.mainReason}.</div></div>`;
+            recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Deploy regional job placement drives and employer outreach in ${worstRegion.name}.</div></div>`;
+        }
+
+        // Alert 5: PM-DAKSH scheme
+        const worstScheme = govtData.schemeStats.sort((a, b) => b.npRate - a.npRate)[0];
+        if (worstScheme) {
+            alertsHtml += `<div class="ai-item"><span class="ai-icon">🔴</span><div><strong>Scheme Alert:</strong> ${worstScheme.scheme} (${worstScheme.ministry}) has ${worstScheme.npRate}% non-placement rate. Main issue: ${worstScheme.mainIssue}.</div></div>`;
+            recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Review ${worstScheme.scheme} curriculum, provider quality, and regional job availability.</div></div>`;
+        }
+
+        alertsContainer.innerHTML = alertsHtml;
+        recsContainer.innerHTML = recsHtml;
+    }
+
+    function updateSidebar() {
+        const govData = getGovernmentData();
+        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
+        document.getElementById('sidebarAvatar').textContent = initial;
+        document.getElementById('sidebarName').textContent = govData?.name || 'Government';
+        document.getElementById('sidebarRole').textContent = govData?.role || 'Admin';
+        document.getElementById('headerAvatar').textContent = initial;
+        document.getElementById('headerName').textContent = govData?.name || 'Government';
+    }
+
+    function updateNotificationBadge() {
+        const stats = calculateStats();
+        document.getElementById('notifBadge').textContent = stats.critical;
+    }
+
+    // ============================================================
+    // UTILITY FUNCTIONS
+    // ============================================================
+
+    function updateDate() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    function showNotifications() {
+        const stats = calculateStats();
+        alert(`📬 Notifications\n\n• ${stats.critical.toLocaleString()} critical cases requiring intervention\n• ${stats.noFollowup.toLocaleString()} candidates unreachable\n• ${stats.nonPlaced.toLocaleString()} total non-placed candidates across Government Schemes`);
+    }
+
+    function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            alert('Logging out... Redirecting to login page.');
+            window.location.href = '../auth/login.html';
+        }
+    }
+
+    function exportFullReport() {
+        const stats = calculateStats();
+        let report = '📊 GOVERNMENT NON-PLACEMENT ANALYSIS REPORT\n';
+        report += '================================\n';
+        report += `📅 Generated: ${new Date().toLocaleString()}\n`;
+        report += `🏛️ Scheme Filter: ${govtData.schemes.find(s => s.id === activeScheme).name}\n\n`;
+        report += `📈 OVERVIEW\n`;
+        report += `• Total Trained: ${stats.total.toLocaleString()}\n`;
+        report += `• Placed: ${stats.placed.toLocaleString()} (${stats.plRate}%)\n`;
+        report += `• Non-Placed: ${stats.nonPlaced.toLocaleString()} (${stats.npRate}%)\n`;
+        report += `• Job-Seeking: ${stats.jobSeeking.toLocaleString()}\n`;
+        report += `• Requiring Intervention: ${stats.intervention.toLocaleString()}\n\n`;
+        report += `🏛️ GOVERNMENT SCHEME COMPARISON\n`;
+        govtData.schemeStats.forEach(s => {
+            report += `• ${s.scheme} (${s.ministry}): ${s.npRate}% NP rate (${s.nonPlaced}/${s.trained})\n`;
+        });
+        report += `\n📚 TRAINING TYPE ANALYSIS\n`;
+        govtData.trainingTypes.forEach(t => {
+            report += `• ${t.name}: ${t.npRate}% NP rate (${t.nonPlaced}/${t.trained})\n`;
+        });
+        report += `\n📋 TOP NON-PLACEMENT REASONS\n`;
+        govtData.reasons.sort((a, b) => b.count - a.count).slice(0, 6).forEach(r => {
+            report += `• ${r.reason}: ${r.count.toLocaleString()} candidates\n`;
+        });
+        report += `\n📊 INTERVENTION PRIORITY\n`;
+        report += `• Critical: ${stats.critical.toLocaleString()}\n`;
+        report += `• High Priority: ${stats.highPriority.toLocaleString()}\n`;
+        report += `• Moderate: ${stats.moderate.toLocaleString()}\n`;
+        report += `• Low: ${stats.low.toLocaleString()}\n\n`;
+        report += '================================\n';
+        report += '📌 Generated by SkillBridge Government Portal';
+        alert(report);
+    }
+
+    function viewCriticalCases() {
+        const stats = calculateStats();
+        alert(`🔴 CRITICAL NON-PLACEMENT CASES\n\n` +
+              `📊 Summary:\n` +
+              `• Total Critical: ${stats.critical.toLocaleString()}\n` +
+              `• High Priority: ${stats.highPriority.toLocaleString()}\n\n` +
+              `⚠️ Critical Categories:\n` +
+              `• Skill Gap: ${govtData.reasons.find(r => r.reason === 'Skill Gap')?.count.toLocaleString()} cases\n` +
+              `• Low Assessment Score: ${govtData.reasons.find(r => r.reason === 'Low Assessment Score')?.count.toLocaleString()} cases\n` +
+              `• Failed Assessment: ${govtData.reasons.find(r => r.reason === 'Failed Assessment')?.count.toLocaleString()} cases\n\n` +
+              `💡 Immediate Action Required:\n` +
+              `• Deploy skill development bootcamps\n` +
+              `• Provide assessment coaching\n` +
+              `• Strengthen employer partnerships`);
+    }
+
+    function generateAIInsights() {
+        const stats = calculateStats();
+        const worstScheme = govtData.schemeStats.sort((a, b) => b.npRate - a.npRate)[0];
+        const bestScheme = govtData.schemeStats.sort((a, b) => a.npRate - b.npRate)[0];
+        const worstTraining = govtData.trainingTypes.sort((a, b) => b.npRate - a.npRate)[0];
+        
+        alert(`🤖 AI GOVERNMENT SCHEME INSIGHTS\n\n` +
+              `📊 NON-PLACEMENT OVERVIEW\n` +
+              `• Overall Rate: ${stats.npRate}%\n` +
+              `• Total Non-Placed: ${stats.nonPlaced.toLocaleString()}\n` +
+              `• Critical Cases: ${stats.critical.toLocaleString()}\n\n` +
+              `🏛️ SCHEME PERFORMANCE\n` +
+              `• Best: ${bestScheme.scheme} (${bestScheme.npRate}% NP)\n` +
+              `• Worst: ${worstScheme.scheme} (${worstScheme.npRate}% NP)\n\n` +
+              `📚 TRAINING TYPE INSIGHTS\n` +
+              `• Highest NP: ${worstTraining.name} (${worstTraining.npRate}%)\n\n` +
+              `💡 POLICY RECOMMENDATIONS\n` +
+              `• Focus on ${worstScheme.mainIssue} in ${worstScheme.scheme}\n` +
+              `• Improve self-employment support (${worstTraining.npRate}% NP)\n` +
+              `• Deploy regional interventions\n` +
+              `• Strengthen assessment coaching`);
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `position:fixed;bottom:30px;right:30px;background:white;padding:14px 22px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.15);border-left:4px solid #dc2626;max-width:400px;z-index:1000;font-size:13px;color:#0b1a33;display:flex;align-items:center;gap:10px;font-weight:500;`;
+        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#dc2626;font-size:16px;"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAndRender();
+        updateDate();
+
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        console.log('🚫 Non-Placement Analysis loaded — Government Schemes + All Training Types!');
+        console.log('🏛️ Schemes:', govtData.schemes.length);
+        console.log('📚 Training Types:', govtData.trainingTypes.length);
+        console.log('📖 Courses:', govtData.courses.length);
+    });
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

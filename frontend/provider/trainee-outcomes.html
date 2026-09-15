@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trainee Outcomes · SkillBridge</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+    body {
+      background: #f0f4f9;
+      display: flex;
+      min-height: 100vh;
+    }
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 275px;
+      background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+      color: white;
+      padding: 24px 16px;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 18px;
+    }
+    .sidebar-brand .icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+    }
+    .sidebar-brand h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+    .sidebar-brand p { font-size: 10px; opacity: 0.5; font-weight: 500; margin-top: 2px; }
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 12px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 16px;
+    }
+    .sidebar-user .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .sidebar-user .info .name { font-size: 14px; font-weight: 600; }
+    .sidebar-user .info .role { font-size: 11px; opacity: 0.5; }
+    .menu-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.35;
+      padding: 12px 12px 6px;
+      font-weight: 700;
+    }
+    .menu a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: rgba(255,255,255,0.65);
+      text-decoration: none;
+      transition: all 0.2s;
+      margin: 2px 0;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+    .menu a.active {
+      background: rgba(255,255,255,0.12);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .menu a i { width: 20px; text-align: center; font-size: 15px; }
+    .menu a .badge {
+      margin-left: auto;
+      background: #ef4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 20px;
+    }
+    .sidebar-footer {
+      padding: 20px 12px 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin-top: 16px;
+    }
+    .sidebar-footer a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      transition: 0.2s;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+    /* ===== MAIN ===== */
+    .main-content {
+      margin-left: 275px;
+      flex: 1;
+      padding: 0;
+      min-height: 100vh;
+    }
+    /* ===== HEADER ===== */
+    .header {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(16px);
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(226,232,240,0.6);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 22px;
+      color: #0b1a33;
+      cursor: pointer;
+    }
+    .header-left .page-title h1 {
+      font-size: 20px;
+      color: #0b1a33;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-left .page-title h1 i { color: #2563eb; }
+    .header-left .page-title p {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 1px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-right .date {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+      background: #f1f5f9;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+    .header-right .notif {
+      position: relative;
+      font-size: 20px;
+      color: #475569;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+    }
+    .header-right .notif:hover { background: #f1f5f9; }
+    .header-right .notif .badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: #ef4444;
+      color: white;
+      width: 20px;
+      height: 20px;
+      font-size: 10px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    .header-right .profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f1f5f9;
+      padding: 5px 14px 5px 5px;
+      border-radius: 30px;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+    }
+    .header-right .profile-btn:hover { background: #e2e8f0; }
+    .header-right .profile-btn .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
+    .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+    /* ===== CONTAINER ===== */
+    .container {
+      padding: 24px 32px 32px;
+      max-width: 1440px;
+      margin: auto;
+    }
+    /* ===== WELCOME ===== */
+    .welcome {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+      color: white;
+      padding: 28px 32px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .welcome::before {
+      content: "";
+      position: absolute;
+      width: 350px;
+      height: 350px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      top: -130px;
+      right: -80px;
+    }
+    .welcome-content { position: relative; z-index: 1; }
+    .welcome h2 {
+      font-size: 26px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .welcome p { font-size: 15px; opacity: 0.85; }
+    .welcome .welcome-stats {
+      display: flex;
+      gap: 30px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .welcome .welcome-stats div { font-size: 13px; }
+    .welcome .welcome-stats strong { font-size: 20px; display: block; }
+    /* ===== STATS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: white;
+      padding: 18px 20px;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      border: 1px solid #eef2f6;
+      transition: all 0.3s;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(37,99,235,0.08);
+    }
+    .stat-card .stat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .stat-card .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .stat-card .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-card .stat-icon.green { background: #dcfce7; color: #16a34a; }
+    .stat-card .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+    .stat-card .stat-icon.orange { background: #fef3c7; color: #d97706; }
+    .stat-card .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
+    .stat-icon.rose { background: #fce7f3; color: #db2777; }
+    .stat-card .stat-change {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+    .stat-change.up { background: #dcfce7; color: #16a34a; }
+    .stat-change.down { background: #fee2e2; color: #dc2626; }
+    .stat-change.neutral { background: #f1f5f9; color: #64748b; }
+    .stat-card h3 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #0b1a33;
+    }
+    .stat-card p {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    /* ===== TWO COLUMN ===== */
+    .two-column {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 1024px) {
+      .two-column { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 22px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      border: 1px solid #eef2f6;
+      transition: 0.3s;
+    }
+    .card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .card-header h3 {
+      font-size: 16px;
+      color: #0b1a33;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+    }
+    .card-header h3 i { color: #2563eb; }
+    .card-header .view-all {
+      font-size: 12px;
+      color: #2563eb;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .card-header .view-all:hover { text-decoration: underline; }
+    /* ===== TRAINEE ITEM ===== */
+    .trainee-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+      transition: 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .trainee-item:last-child { border-bottom: none; }
+    .trainee-item:hover { background: #f8fafc; margin: 0 -12px; padding: 10px 12px; border-radius: 10px; }
+    .trainee-item .info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .trainee-item .info .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: white;
+      flex-shrink: 0;
+    }
+    .trainee-item .info .details .name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #0b1a33;
+    }
+    .trainee-item .info .details .sub {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .trainee-item .right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .trainee-item .status {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 12px;
+      border-radius: 20px;
+    }
+    .trainee-item .view-btn {
+      padding: 5px 12px;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: 0.2s;
+    }
+    .trainee-item .view-btn:hover {
+      background: #dbeafe;
+      transform: scale(1.05);
+    }
+    .status.employed { background: #dcfce7; color: #16a34a; }
+    .status.self-employed { background: #dbeafe; color: #2563eb; }
+    .status.unemployed { background: #fee2e2; color: #dc2626; }
+    .status.other { background: #fef3c7; color: #d97706; }
+    /* ===== EMPLOYMENT DETAILS ===== */
+    .emp-detail {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed #f1f5f9;
+    }
+    .emp-detail:last-child { border-bottom: none; }
+    .emp-detail .label {
+      font-size: 13px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .emp-detail .label i { color: #2563eb; font-size: 12px; }
+    .emp-detail .value {
+      font-weight: 600;
+      color: #0b1a33;
+      font-size: 14px;
+    }
+    .emp-detail .value.positive { color: #16a34a; }
+    .emp-detail .value.highlight { color: #2563eb; }
+    /* ===== SKILLS ===== */
+    .skill-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .skill-item:last-child { border-bottom: none; }
+    .skill-item .skill-name {
+      font-weight: 500;
+      font-size: 13px;
+      flex: 1;
+      color: #0b1a33;
+    }
+    .skill-item .skill-bar {
+      flex: 2;
+      height: 7px;
+      background: #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .skill-item .skill-bar .fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.8s ease;
+    }
+    .fill.high { background: #22c55e; }
+    .fill.medium { background: #eab308; }
+    .fill.low { background: #ef4444; }
+    .skill-item .skill-pct { font-size: 12px; font-weight: 600; color: #475569; width: 38px; text-align: right; }
+    /* ===== QUICK ACTIONS ===== */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .quick-actions .action-btn {
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      color: #0b1a33;
+      font-weight: 500;
+      font-size: 12px;
+    }
+    .quick-actions .action-btn:hover {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+    }
+    .quick-actions .action-btn i {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 4px;
+      color: #2563eb;
+    }
+    .quick-actions .action-btn:hover i { color: white; }
+    /* ===== CHART ===== */
+    .chart-bars {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 120px;
+      margin: 16px 0 8px;
+      gap: 12px;
+    }
+    .chart-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+    }
+    .chart-bar .bar {
+      width: 100%;
+      max-width: 48px;
+      border-radius: 6px 6px 0 0;
+      transition: height 0.6s ease;
+      min-height: 8px;
+    }
+    .chart-bar .bar.employed { background: #22c55e; }
+    .chart-bar .bar.self { background: #2563eb; }
+    .chart-bar .bar.unemployed { background: #ef4444; }
+    .chart-bar .bar-label {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 6px;
+      font-weight: 500;
+      text-align: center;
+    }
+    .chart-bar .bar-value {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0b1a33;
+      margin-bottom: 4px;
+    }
+    .trend-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 8px;
+      justify-content: center;
+    }
+    .trend-indicator i.up { color: #22c55e; }
+    .trend-indicator i.down { color: #ef4444; }
+
+    /* Empty state */
+    .empty-box {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94a3b8;
+    }
+    .empty-box i {
+      font-size: 48px;
+      color: #c7d2fe;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .empty-box h4 { color: #475569; font-size: 15px; margin-bottom: 4px; }
+    .empty-box p { font-size: 13px; }
+
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .menu-toggle { display: block; }
+      .header { padding: 12px 18px; flex-wrap: wrap; gap: 8px; }
+      .header-left .page-title h1 { font-size: 17px; }
+      .header-right .date { display: none; }
+      .container { padding: 16px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .stat-card { padding: 14px 16px; }
+      .stat-card h3 { font-size: 22px; }
+      .welcome { padding: 20px; }
+      .welcome h2 { font-size: 20px; }
+      .welcome .welcome-stats { gap: 16px; }
+      .two-column { grid-template-columns: 1fr; }
+      .quick-actions { grid-template-columns: 1fr; }
+      .chart-bars { height: 90px; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .header-right .profile-btn .name { display: none; }
+      .header-left .page-title p { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="icon"><i class="fas fa-brain"></i></div>
+    <div>
+      <h2>SkillBridge</h2>
+      <p>Provider Portal</p>
+    </div>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar" id="sidebarAvatar">P</div>
+    <div class="info">
+      <div class="name" id="sidebarName">Provider</div>
+      <div class="role" id="sidebarRole">Training Partner</div>
+    </div>
+  </div>
+  <div class="menu-label">Main</div>
+  <div class="menu">
+    <a href="dashboard.html"><i class="fas fa-chart-pie"></i> Overview</a>
+    <a class="active" href="trainee-outcomes.html"><i class="fas fa-users"></i> Trainee Outcomes</a>
+    <a href="employment&retention.html"><i class="fas fa-briefcase"></i> Employment & Retention</a>
+    <a href="employer-feedback.html"><i class="fas fa-comment"></i> Employer Feedback</a>
+    <a href="skill-gaps.html"><i class="fas fa-arrow-up"></i> Skills Gaps</a>
+  </div>
+  <div class="sidebar-footer">
+    <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="page-title">
+        <h1><i class="fas fa-users"></i> Trainee Outcomes</h1>
+        <p>Employed · Self‑employed · Unemployed · Insights</p>
+      </div>
+    </div>
+    <div class="header-right">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+      <i class="fas fa-moon"></i>
+    </button>
+      <span class="date" id="dateDisplay"></span>
+      <div class="notif">
+        <i class="fas fa-bell"></i>
+        <span class="badge" id="notifBadge">0</span>
+      </div>
+      <button class="profile-btn">
+        <div class="avatar" id="headerAvatar">P</div>
+        <span class="name" id="headerName">Provider</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- WELCOME -->
+    <div class="welcome">
+      <div class="welcome-content">
+        <h2><i class="fas fa-hand-peace"></i> Outcomes at a Glance</h2>
+        <p>Real‑time snapshot of trainee employment status across all programs.</p>
+        <div class="welcome-stats">
+          <div><strong id="totalTrainees">0</strong> Total Trainees</div>
+          <div><strong id="employedCount">0</strong> Employed</div>
+          <div><strong id="selfEmployedCount">0</strong> Self‑employed</div>
+          <div><strong id="unemployedCount">0</strong> Unemployed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon green"><i class="fas fa-briefcase"></i></div>
+          <span class="stat-change up" id="employedPct">—</span>
+        </div>
+        <h3 id="statEmployed">0</h3>
+        <p>Employed</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon blue"><i class="fas fa-user-tie"></i></div>
+          <span class="stat-change up" id="selfPct">—</span>
+        </div>
+        <h3 id="statSelfEmployed">0</h3>
+        <p>Self‑employed</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon rose"><i class="fas fa-user-slash"></i></div>
+          <span class="stat-change down" id="unemployedPct">—</span>
+        </div>
+        <h3 id="statUnemployed">0</h3>
+        <p>Unemployed</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon purple"><i class="fas fa-percent"></i></div>
+          <span class="stat-change up" id="rateChange">—</span>
+        </div>
+        <h3 id="statPlacementRate">0%</h3>
+        <p>Placement Rate</p>
+      </div>
+    </div>
+
+    <!-- TWO COLUMN -->
+    <div class="two-column">
+
+      <!-- LEFT -->
+      <div>
+
+        <!-- CHART CARD -->
+        <div class="card" style="margin-bottom:22px;">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-bar"></i> Outcome Distribution</h3>
+            <span class="view-all">Trend: <span id="trendText" style="color:#22c55e;">—</span></span>
+          </div>
+          <div class="chart-bars" id="chartBars">
+            <div class="chart-bar">
+              <div class="bar-value" id="chartEmployedVal">0</div>
+              <div class="bar employed" id="chartEmployed" style="height:0px;"></div>
+              <div class="bar-label">Employed</div>
+            </div>
+            <div class="chart-bar">
+              <div class="bar-value" id="chartSelfVal">0</div>
+              <div class="bar self" id="chartSelf" style="height:0px;"></div>
+              <div class="bar-label">Self‑emp.</div>
+            </div>
+            <div class="chart-bar">
+              <div class="bar-value" id="chartUnemployedVal">0</div>
+              <div class="bar unemployed" id="chartUnemployed" style="height:0px;"></div>
+              <div class="bar-label">Unemployed</div>
+            </div>
+          </div>
+          <div class="trend-indicator">
+            <i class="fas fa-arrow-up up"></i> Employment growth <strong id="growthRate">—</strong>
+          </div>
+        </div>
+
+        <!-- TRAINEE LIST -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-list-ul"></i> Registered Trainees</h3>
+            <span class="view-all" id="traineeListCount">0</span>
+          </div>
+          <div id="traineeList"></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+
+        <!-- EMPLOYMENT SUMMARY -->
+        <div class="card" style="margin-bottom:22px;">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-bar"></i> Employment Summary</h3>
+          </div>
+          <div id="employmentSummary"></div>
+        </div>
+
+        <!-- SKILL GAP -->
+        <div class="card" style="margin-bottom:22px;">
+          <div class="card-header">
+            <h3><i class="fas fa-sliders-h"></i> Aggregate Skill Profile</h3>
+          </div>
+          <div id="skillGap"></div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+          </div>
+          <div class="quick-actions">
+            <a href="skill-gaps.html" class="action-btn"><i class="fas fa-arrow-up"></i> Skill Gaps</a>
+            <a href="employment&retention.html" class="action-btn"><i class="fas fa-briefcase"></i> Retention</a>
+            <a href="employer-feedback.html" class="action-btn"><i class="fas fa-comment"></i> Feedback</a>
+            <a href="#" class="action-btn" onclick="exportData();return false;"><i class="fas fa-file-export"></i> Export</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // ✅ REAL DATA — Same localStorage keys as employer & government
+  //    allTrainees    → master trainee records
+  //    allEmployment  → employment outcome records
+  //    allFollowups   → follow-up records
+  // ============================================================
+
+  function loadAllTrainees() {
+    const allTrainees   = JSON.parse(localStorage.getItem('allTrainees')   || '[]');
+    const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+    const allFollowups  = JSON.parse(localStorage.getItem('allFollowups')  || '[]');
+
+    console.log('🔍 Provider loading trainees:');
+    console.log('   allTrainees:', allTrainees.length);
+    console.log('   allEmployment:', allEmployment.length);
+    console.log('   allFollowups:', allFollowups.length);
+
+    return allTrainees.map((t, index) => {
+      const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
+      const fol = allFollowups.find(f => f.traineeEmail === t.email) || {};
+
+      // Determine employment status
+      let status = 'other';
+      const empStatus = (emp.status || t.employmentStatus || '').toLowerCase();
+      if (empStatus.includes('self'))             status = 'self-employed';
+      else if (empStatus.includes('employ'))      status = 'employed';
+      else if (empStatus.includes('unemploy'))    status = 'unemployed';
+      else if (empStatus.includes('looking'))     status = 'unemployed';
+      else if (empStatus.includes('intern'))      status = 'other';
+      else if (empStatus.includes('apprentice'))  status = 'other';
+
+      return {
+        id: t.traineeId || t.id || 'TRN' + (index + 1),
+        name: t.fullName || t.name || 'Unnamed Trainee',
+        email: t.email || '',
+        course: t.skillTrade || t.course || 'N/A',
+        provider: t.trainingProvider || t.provider || 'N/A',
+        status: status,
+        avatar: (t.fullName || t.name || 'T').charAt(0).toUpperCase(),
+        color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626'][index % 5],
+        company: emp.companyName || t.currentEmployer || '',
+        jobRole: emp.jobRole || t.currentJobRole || '',
+        joiningDate: emp.joiningDate || '',
+        salary: parseInt(emp.currentIncome) || 0,
+        previousSalary: parseInt(emp.previousIncome) || 0,
+        followupStatus: fol.status || '',
+        followupDate: fol.date || '',
+        skills: t.skills || []
+      };
+    });
+  }
+
+  // ============================================================
+  // STATS
+  // ============================================================
+  function calculateStats(trainees) {
+    const total = trainees.length;
+    const employed = trainees.filter(t => t.status === 'employed').length;
+    const selfEmployed = trainees.filter(t => t.status === 'self-employed').length;
+    const unemployed = trainees.filter(t => t.status === 'unemployed').length;
+    const other = trainees.filter(t => t.status === 'other').length;
+    const placed = employed + selfEmployed;
+    const placementRate = total > 0 ? Math.round((placed / total) * 100) : 0;
+
+    const salaries = trainees.filter(t => t.salary > 0).map(t => t.salary);
+    const avgSalary = salaries.length > 0
+      ? Math.round(salaries.reduce((a, b) => a + b, 0) / salaries.length)
+      : 0;
+
+    const sectors = trainees.filter(t => t.company).map(t => t.company);
+    const sectorCount = {};
+    sectors.forEach(s => { sectorCount[s] = (sectorCount[s] || 0) + 1; });
+    let topSector = 'N/A';
+    let maxCount = 0;
+    for (const [sector, count] of Object.entries(sectorCount)) {
+      if (count > maxCount) { maxCount = count; topSector = sector; }
+    }
+
+    return { total, employed, selfEmployed, unemployed, other, placed, placementRate, avgSalary, topSector };
+  }
+
+  // ============================================================
+  // AGGREGATE SKILLS (from real trainee records)
+  // ============================================================
+  function buildAggregateSkills(trainees) {
+    const skillCount = {};
+    trainees.forEach(t => {
+      (t.skills || []).forEach(s => {
+        if (!s) return;
+        skillCount[s] = (skillCount[s] || 0) + 1;
+      });
+    });
+
+    const total = trainees.length || 1;
+    return Object.entries(skillCount)
+      .map(([name, count]) => {
+        const pct = Math.round((count / total) * 100);
+        let level = 'low';
+        if (pct >= 60) level = 'high';
+        else if (pct >= 30) level = 'medium';
+        return { name, score: pct, level };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6);
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  let allTrainees = [];
+  let stats = {};
+  let skills = [];
+
+  function loadAndRender() {
+    allTrainees = loadAllTrainees();
+    stats = calculateStats(allTrainees);
+    skills = buildAggregateSkills(allTrainees);
+
+    renderAll();
+    updateSidebar();
+  }
+
+  function renderAll() {
+    renderStats();
+    renderChart();
+    renderTrainees();
+    renderEmploymentSummary();
+    renderSkillGap();
+    updateNotifBadge();
+  }
+
+  function updateNotifBadge() {
+    document.getElementById('notifBadge').textContent = allTrainees.length;
+  }
+
+  function renderStats() {
+    const { total, employed, selfEmployed, unemployed, placementRate } = stats;
+
+    document.getElementById('totalTrainees').textContent = total;
+    document.getElementById('employedCount').textContent = employed;
+    document.getElementById('selfEmployedCount').textContent = selfEmployed;
+    document.getElementById('unemployedCount').textContent = unemployed;
+
+    document.getElementById('statEmployed').textContent = employed;
+    document.getElementById('statSelfEmployed').textContent = selfEmployed;
+    document.getElementById('statUnemployed').textContent = unemployed;
+    document.getElementById('statPlacementRate').textContent = placementRate + '%';
+
+    // Real percentages
+    document.getElementById('employedPct').textContent = total > 0
+      ? Math.round((employed / total) * 100) + '%' : '—';
+    document.getElementById('selfPct').textContent = total > 0
+      ? Math.round((selfEmployed / total) * 100) + '%' : '—';
+    document.getElementById('unemployedPct').textContent = total > 0
+      ? Math.round((unemployed / total) * 100) + '%' : '—';
+    document.getElementById('rateChange').textContent = placementRate + '%';
+  }
+
+  function renderChart() {
+    const { employed, selfEmployed, unemployed } = stats;
+    const maxVal = Math.max(employed, selfEmployed, unemployed, 1);
+    const maxHeight = 80;
+
+    document.getElementById('chartEmployedVal').textContent = employed;
+    document.getElementById('chartEmployed').style.height =
+      Math.round((employed / maxVal) * maxHeight) + 'px';
+
+    document.getElementById('chartSelfVal').textContent = selfEmployed;
+    document.getElementById('chartSelf').style.height =
+      Math.round((selfEmployed / maxVal) * maxHeight) + 'px';
+
+    document.getElementById('chartUnemployedVal').textContent = unemployed;
+    document.getElementById('chartUnemployed').style.height =
+      Math.round((unemployed / maxVal) * maxHeight) + 'px';
+
+    const growth = stats.placementRate;
+    document.getElementById('growthRate').textContent = growth + '% placed';
+    document.getElementById('trendText').innerHTML = growth + '%';
+    document.getElementById('trendText').style.color = growth >= 50 ? '#22c55e' : '#eab308';
+  }
+
+  function renderTrainees() {
+    const container = document.getElementById('traineeList');
+    document.getElementById('traineeListCount').textContent = allTrainees.length;
+
+    const statusMap = {
+      'employed':      { label: 'Employed',      class: 'employed' },
+      'self-employed': { label: 'Self-Employed', class: 'self-employed' },
+      'unemployed':    { label: 'Unemployed',    class: 'unemployed' },
+      'other':         { label: 'Other',         class: 'other' }
+    };
+
+    if (allTrainees.length === 0) {
+      container.innerHTML = `
+        <div class="empty-box">
+          <i class="fas fa-user-graduate"></i>
+          <h4>No Trainees Registered Yet</h4>
+          <p>Trainee records will appear here once they register.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Show all trainees (scrollable)
+    container.style.maxHeight = '420px';
+    container.style.overflowY = 'auto';
+
+    container.innerHTML = allTrainees.map(t => {
+      const status = statusMap[t.status] || statusMap['other'];
+      const profileUrl = `trainee-profile.html?traineeId=${encodeURIComponent(t.id)}`;
+      return `
+        <div class="trainee-item">
+          <div class="info">
+            <div class="avatar" style="background:${t.color}">${escapeHtml(t.avatar)}</div>
+            <div class="details">
+              <div class="name">${escapeHtml(t.name)}</div>
+              <div class="sub">${escapeHtml(t.course)} · ${escapeHtml(t.company || 'Not placed')}</div>
+            </div>
+          </div>
+          <div class="right">
+            <span class="status ${status.class}">${status.label}</span>
+            <a class="view-btn" href="${profileUrl}">
+              <i class="fas fa-eye"></i> View
+            </a>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderEmploymentSummary() {
+    const container = document.getElementById('employmentSummary');
+    const { total, employed, selfEmployed, unemployed, placed, placementRate, avgSalary, topSector } = stats;
+
+    if (total === 0) {
+      container.innerHTML = `
+        <div class="empty-box" style="padding:20px;">
+          <p style="font-size:13px;">No data available yet.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="emp-detail"><span class="label"><i class="fas fa-users"></i> Total Trainees</span><span class="value">${total}</span></div>
+      <div class="emp-detail"><span class="label"><i class="fas fa-briefcase"></i> Employed</span><span class="value positive">${employed}</span></div>
+      <div class="emp-detail"><span class="label"><i class="fas fa-user-tie"></i> Self‑employed</span><span class="value highlight">${selfEmployed}</span></div>
+      <div class="emp-detail"><span class="label"><i class="fas fa-user-slash"></i> Unemployed</span><span class="value" style="color:#dc2626;">${unemployed}</span></div>
+      <div class="emp-detail"><span class="label"><i class="fas fa-percent"></i> Placement Rate</span><span class="value positive">${placementRate}%</span></div>
+      <div class="emp-detail"><span class="label"><i class="fas fa-rupee-sign"></i> Avg. Salary</span><span class="value highlight">${avgSalary > 0 ? '₹' + avgSalary.toLocaleString() : '—'}</span></div>
+      <div class="emp-detail"><span class="label"><i class="fas fa-building"></i> Top Employer</span><span class="value">${escapeHtml(topSector)}</span></div>
+    `;
+  }
+
+  function renderSkillGap() {
+    const container = document.getElementById('skillGap');
+
+    if (skills.length === 0) {
+      container.innerHTML = `
+        <div class="empty-box" style="padding:20px;">
+          <p style="font-size:13px;">No skill data recorded yet.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = skills.map(s => `
+      <div class="skill-item">
+        <span class="skill-name">${escapeHtml(s.name)}</span>
+        <div class="skill-bar">
+          <div class="fill ${s.level}" style="width:${s.score}%"></div>
+        </div>
+        <span class="skill-pct">${s.score}%</span>
+      </div>
+    `).join('');
+  }
+
+  function updateSidebar() {
+    const currentEmail = localStorage.getItem('currentProviderEmail');
+    const allProviders = JSON.parse(localStorage.getItem('allProviders') || '[]');
+    let providerData = allProviders.find(p => p.email === currentEmail);
+
+    if (!providerData) {
+      providerData = JSON.parse(localStorage.getItem('providerData') || '{}');
+    }
+
+    const name = providerData.contactPerson || providerData.orgName || 'Provider';
+    const initial = name.charAt(0).toUpperCase();
+
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('sidebarRole').textContent = providerData.orgName || 'Training Partner';
+    document.getElementById('headerAvatar').textContent = initial;
+    document.getElementById('headerName').textContent = name;
+  }
+
+  // ============================================================
+  // UTILS
+  // ============================================================
+  function escapeHtml(str) {
+    if (str === undefined || str === null) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function updateDate() {
+    const now = new Date();
+    document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+      weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+    });
+  }
+
+  function exportData() {
+    if (allTrainees.length === 0) {
+      alert('Nothing to export.');
+      return;
+    }
+    let csv = 'ID,Name,Email,Course,Status,Company,Role,Income\n';
+    allTrainees.forEach(t => {
+      csv += `${t.id},"${t.name}",${t.email},"${t.course}",${t.status},"${t.company}","${t.jobRole}",${t.salary}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trainee-outcomes-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  }
+
+  function logout() {
+    if (confirm('Logout?')) {
+      localStorage.removeItem('currentProviderEmail');
+      window.location.href = '../auth/login.html';
+    }
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  document.addEventListener('DOMContentLoaded', function() {
+    updateDate();
+    loadAndRender();
+
+    document.addEventListener('click', function(e) {
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.querySelector('.menu-toggle');
+      if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+        if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+        }
+      }
+    });
+
+    console.log('✅ Provider Trainee Outcomes loaded with', allTrainees.length, 'real trainees');
+  });
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

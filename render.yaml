@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: skillintel-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: COOKIE_SECURE
+        value: "1"
+    # If you add a persistent disk, uncomment these two lines:
+    # disk:
+    #   name: skillintel-data
+    #   mountPath: /data
+    #   sizeGB: 1
+    # And add this env var:
+    #   - key: DATA_DIR
+    #     value: /data

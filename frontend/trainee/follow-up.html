@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge · Follow-up Tracker</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Master theme -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f4f7ff;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: linear-gradient(180deg, #0f172a, #172554, #312e81);
+            padding: 25px 18px;
+            color: white;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px 30px;
+        }
+
+        .brand-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 22px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed, #06b6d4);
+        }
+
+        .brand h2 { font-size: 18px; color: white; }
+        .brand p { font-size: 11px; color: #94a3b8; }
+
+        .menu-title {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 12px 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #cbd5e1;
+            padding: 13px 14px;
+            border-radius: 14px;
+            margin: 6px 0;
+            transition: .3s;
+            font-size: 14px;
+        }
+
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+
+        .menu a.active {
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            color: white;
+            box-shadow: 0 10px 25px rgba(37,99,235,0.25);
+        }
+
+        .menu a i { width: 20px; text-align: center; }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 18px;
+            right: 18px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #cbd5e1;
+            padding: 12px 14px;
+            border-radius: 12px;
+            transition: 0.3s;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.08); color: white; }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            margin-left: 260px;
+            padding: 25px 35px 120px;
+            min-height: 100vh;
+        }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .title h1 { font-size: 28px; color: #172554; }
+        .title p { color: #64748b; font-size: 13px; margin-top: 5px; }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            width: 46px;
+            height: 46px;
+            border: none;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 5px 20px rgba(15,23,42,0.08);
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
+        .icon-btn:hover { transform: scale(1.05); }
+
+        .theme-toggle {
+            width: 46px;
+            height: 46px;
+            border: none;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 5px 20px rgba(15,23,42,0.08);
+            cursor: pointer;
+            font-size: 18px;
+            color: #475569;
+            transition: 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg) scale(1.05);
+            color: #06b6d4;
+        }
+
+        .user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px 6px 6px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(15,23,42,0.08);
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+        }
+
+        .user h4 { font-size: 13px; }
+        .user p { font-size: 10px; color: #64748b; }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 32px;
+            border-radius: 26px;
+            color: white;
+            margin-bottom: 25px;
+            background: linear-gradient(120deg, #172554, #2563eb, #7c3aed, #0891b2);
+            box-shadow: 0 18px 40px rgba(37,99,235,0.25);
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            top: -100px;
+            right: -50px;
+        }
+
+        .hero-content { position: relative; z-index: 1; }
+
+        .hero h2 { font-size: 26px; margin-bottom: 8px; color: white; }
+        .hero p { max-width: 600px; font-size: 14px; opacity: .9; color: white; }
+
+        .hero-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .hero-tag {
+            padding: 8px 13px;
+            border-radius: 20px;
+            font-size: 11px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        /* ===== STATS ===== */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #e8edf5;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.05);
+            transition: .3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 18px 35px rgba(37,99,235,0.12);
+        }
+
+        .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 20px;
+        }
+
+        .blue-bg { background: #eff6ff; }
+        .purple-bg { background: #f5f3ff; }
+        .green-bg { background: #ecfdf5; }
+        .orange-bg { background: #fff7ed; }
+
+        .stat-card h3 { font-size: 23px; color: #172554; }
+        .stat-card p { color: #64748b; font-size: 12px; margin-top: 3px; }
+
+        .status-badge {
+            padding: 5px 9px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .status-badge.blue { color: #2563eb; background: #dbeafe; }
+        .status-badge.green { color: #059669; background: #d1fae5; }
+        .status-badge.orange { color: #d97706; background: #fef3c7; }
+
+        /* ===== GRID ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 22px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 22px;
+            padding: 24px;
+            border: 1px solid #e8edf5;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #dbeafe, #ede9fe, #cffafe);
+        }
+
+        .card h3 { color: #172554; font-size: 16px; }
+        .card-subtitle { font-size: 11px; color: #64748b; }
+
+        /* ===== TIMELINE ===== */
+        .timeline {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            height: 4px;
+            background: #e2e8f0;
+            top: 35px;
+            left: 12%;
+            right: 12%;
+            border-radius: 10px;
+            z-index: 0;
+        }
+
+        .timeline-step {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .step-circle {
+            width: 70px;
+            height: 70px;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: white;
+            border: 5px solid #e2e8f0;
+            font-size: 22px;
+        }
+
+        .timeline-step.completed .step-circle {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .timeline-step.active .step-circle {
+            border-color: #2563eb;
+            background: #eff6ff;
+            box-shadow: 0 0 0 8px #dbeafe;
+        }
+
+        .timeline-step.locked .step-circle {
+            border-color: #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .step-name {
+            font-weight: 700;
+            font-size: 13px;
+            margin-top: 12px;
+            color: #172554;
+        }
+
+        .step-status { font-size: 10px; color: #64748b; margin-top: 4px; }
+
+        /* ===== SCORE ===== */
+        .score-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .score-ring {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: conic-gradient(#2563eb 0deg 306deg, #e2e8f0 306deg);
+        }
+
+        .score-inner {
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #172554;
+        }
+
+        .score-info h4 { font-size: 14px; color: #172554; }
+        .score-info p { font-size: 11px; color: #64748b; margin: 6px 0; }
+
+        .score-list { list-style: none; }
+
+        .score-list li {
+            font-size: 11px;
+            margin: 7px 0;
+            color: #475569;
+        }
+
+        /* ===== REMINDER ===== */
+        .reminder {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 17px;
+            margin-top: 18px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #fff7ed, #fffbeb);
+            border: 1px solid #fed7aa;
+        }
+
+        .reminder-icon { font-size: 22px; }
+
+        .reminder h4 { font-size: 13px; color: #c2410c; }
+        .reminder p { font-size: 11px; color: #78716c; margin-top: 4px; }
+
+        /* ===== FORM ===== */
+        .section {
+            background: white;
+            border-radius: 22px;
+            padding: 25px;
+            margin-bottom: 22px;
+            border: 1px solid #e8edf5;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 22px;
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            font-size: 21px;
+            background: linear-gradient(135deg, #eff6ff, #f5f3ff, #ecfeff);
+        }
+
+        .section-header h3 { font-size: 16px; color: #172554; }
+        .section-header p { font-size: 11px; color: #64748b; margin-top: 3px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .field { display: flex; flex-direction: column; }
+
+        .field label {
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 7px;
+        }
+
+        .field label .required { color: #ef4444; }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 13px;
+            padding: 13px 14px;
+            background: #fafcff;
+            color: #334155;
+            outline: none;
+            transition: .25s;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .field textarea {
+            min-height: 105px;
+            resize: vertical;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            background: white;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.09);
+        }
+
+        .field input[readonly] {
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .field .helper-text {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+
+        .full { grid-column: 1 / -1; }
+
+        /* ===== BUTTONS ===== */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 260px;
+            right: 0;
+            padding: 15px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.94);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid #e2e8f0;
+            z-index: 50;
+        }
+
+        .auto-save {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .auto-save span { color: #10b981; }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            border: none;
+            padding: 12px 18px;
+            border-radius: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .25s;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+
+        .draft {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .clear {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .save {
+            color: white;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            box-shadow: 0 10px 22px rgba(79,70,229,0.25);
+        }
+
+        .save:hover { box-shadow: 0 14px 30px rgba(79,70,229,0.35); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1100px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+
+            .main { margin-left: 0; padding: 20px 15px 120px; }
+
+            .bottom-bar {
+                left: 0;
+                padding: 12px 15px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: 1fr; }
+
+            .timeline {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 25px;
+            }
+
+            .timeline::before { display: none; }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: #172554;
+                font-size: 24px;
+                cursor: pointer;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero { padding: 20px; }
+            .hero h2 { font-size: 20px; }
+            .title h1 { font-size: 22px; }
+            .stat-card h3 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar" id="sidebar">
+    <div class="brand">
+        <div class="brand-icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>Trainee Portal</h2>
+            <p>Career Outcome System</p>
+        </div>
+    </div>
+
+    <div class="menu">
+        <div class="menu-title">Main Menu</div>
+        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="employment.html"><i class="fas fa-briefcase"></i> Employment &amp; Livelihood</a>
+        <a href="follow-up.html" class="active"><i class="fas fa-calendar-check"></i> Follow-up</a>
+        <a href="history.html"><i class="fas fa-history"></i> Outcome History</a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main">
+
+    <!-- ===== TOPBAR ===== -->
+    <div class="topbar">
+        <div class="title">
+            <h1>Follow-up Center <i class="fas fa-calendar-check" style="color:#2563eb; font-size:24px;"></i></h1>
+            <p>Track your career journey and keep your outcome information updated.</p>
+        </div>
+        <div class="top-actions">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="icon-btn" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="user">
+                <div class="user-avatar" id="userAvatar">H</div>
+                <div>
+                    <h4 id="userName">Trainee</h4>
+                    <p>Trainee</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== HERO ===== -->
+    <div class="hero">
+        <div class="hero-content">
+            <h2>Your Career Journey 🚀</h2>
+            <p>
+                Regular follow-ups help track your employment, income growth,
+                career development and the support you may need.
+            </p>
+            <div class="hero-tags">
+                <div class="hero-tag" id="nextFollowupTag">📅 Next Follow-up: 90 Days</div>
+                <div class="hero-tag">⭐ Health Score: Good</div>
+                <div class="hero-tag">🔔 Reminder Active</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STATS ===== -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon blue-bg">📅</div>
+                <span class="status-badge blue" id="nextPeriodStatus">Upcoming</span>
+            </div>
+            <h3 id="nextPeriodDays">90 Days</h3>
+            <p>Next Follow-up Period</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon orange-bg">⏳</div>
+                <span class="status-badge orange">Reminder</span>
+            </div>
+            <h3 id="daysRemaining">12 Days</h3>
+            <p>Days Remaining</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon green-bg">✅</div>
+                <span class="status-badge green" id="completedStatus">Updated</span>
+            </div>
+            <h3 id="completedCount">1 / 4</h3>
+            <p>Follow-ups Completed</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon purple-bg">⭐</div>
+                <span class="status-badge blue" id="healthStatus">Good</span>
+            </div>
+            <h3 id="healthScore">85%</h3>
+            <p>Follow-up Health Score</p>
+        </div>
+    </div>
+
+    <!-- ===== DASHBOARD GRID ===== -->
+    <div class="dashboard-grid">
+
+        <!-- TIMELINE CARD -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">🗓️</div>
+                    <div>
+                        <h3>Follow-up Journey</h3>
+                        <p class="card-subtitle">Complete all stages of your career outcome journey</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline" id="timelineContainer">
+                <div class="timeline-step completed">
+                    <div class="step-circle">✅</div>
+                    <div class="step-name">30 Days</div>
+                    <div class="step-status">Completed</div>
+                </div>
+                <div class="timeline-step active">
+                    <div class="step-circle">📅</div>
+                    <div class="step-name">90 Days</div>
+                    <div class="step-status">Upcoming</div>
+                </div>
+                <div class="timeline-step locked">
+                    <div class="step-circle">🔒</div>
+                    <div class="step-name">180 Days</div>
+                    <div class="step-status">Pending</div>
+                </div>
+                <div class="timeline-step locked">
+                    <div class="step-circle">🏁</div>
+                    <div class="step-name">365 Days</div>
+                    <div class="step-status">Final Stage</div>
+                </div>
+            </div>
+
+            <div class="reminder">
+                <div class="reminder-icon">🔔</div>
+                <div>
+                    <h4>Upcoming Follow-up</h4>
+                    <p id="reminderText">
+                        Your 90-day follow-up is scheduled soon.
+                        Please update your latest employment and income details.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- HEALTH SCORE -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">💚</div>
+                    <div>
+                        <h3>Follow-up Health</h3>
+                        <p class="card-subtitle">Your current outcome status</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="score-content">
+                <div class="score-ring">
+                    <div class="score-inner" id="scoreInner">85%</div>
+                </div>
+                <div class="score-info">
+                    <h4 id="healthTitle">Good Progress 🎉</h4>
+                    <p id="healthDescription">
+                        Your employment and follow-up information
+                        is mostly up to date.
+                    </p>
+                    <ul class="score-list" id="scoreList">
+                        <li id="item1">✅ Employment Updated</li>
+                        <li id="item2">✅ Income Updated</li>
+                        <li id="item3">🔵 Follow-up Upcoming</li>
+                        <li id="item4">⚠️ Feedback Pending</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FORM ===== -->
+    <form id="followupForm" onsubmit="return false;">
+
+        <!-- BASIC FOLLOW UP -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">📅</div>
+                <div>
+                    <h3>Follow-up Details</h3>
+                    <p>Select your follow-up period and update status.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Follow-up Period <span class="required">*</span></label>
+                    <select id="followupPeriod" required>
+                        <option value="">Select Follow-up Period</option>
+                        <option value="30 Days">30 Days</option>
+                        <option value="90 Days" selected>90 Days</option>
+                        <option value="180 Days">180 Days</option>
+                        <option value="365 Days">365 Days</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Follow-up Date <span class="required">*</span></label>
+                    <input type="date" id="followupDate" required>
+                </div>
+                <div class="field">
+                    <label>Follow-up Status</label>
+                    <select id="followupStatus">
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Preferred Contact Method</label>
+                    <select id="contactMethod">
+                        <option value="Phone Call">Phone Call</option>
+                        <option value="Email">Email</option>
+                        <option value="SMS">SMS</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Follow-up Notes</label>
+                    <textarea id="followupNotes" placeholder="Add any follow-up notes or observations"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- EMPLOYMENT UPDATE -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">💼</div>
+                <div>
+                    <h3>Employment Update</h3>
+                    <p>Keep your latest employment information updated.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Current Employment Status</label>
+                    <select id="empStatus">
+                        <option value="">Select Status</option>
+                        <option value="Employed">Employed</option>
+                        <option value="Self-Employed">Self-Employed</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Apprenticeship">Apprenticeship</option>
+                        <option value="Unemployed">Unemployed</option>
+                        <option value="Looking for Job">Looking for Job</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Retention Status</label>
+                    <select id="retentionStatus">
+                        <option value="">Select Status</option>
+                        <option value="Retained">Retained</option>
+                        <option value="Changed Job">Changed Job</option>
+                        <option value="Left Job">Left Job</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Company / Organization</label>
+                    <input type="text" id="companyName" placeholder="Enter company name">
+                </div>
+                <div class="field">
+                    <label>Current Job Role</label>
+                    <input type="text" id="jobRole" placeholder="Enter job role">
+                </div>
+                <div class="field">
+                    <label>Employment Start Date</label>
+                    <input type="date" id="empStartDate">
+                </div>
+                <div class="field">
+                    <label>Employment Type</label>
+                    <select id="empType">
+                        <option value="">Select Type</option>
+                        <option value="Full Time">Full Time</option>
+                        <option value="Part Time">Part Time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Temporary">Temporary</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- INCOME UPDATE -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">💰</div>
+                <div>
+                    <h3>Income &amp; Livelihood Update</h3>
+                    <p>Track your income progress after completing training.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Previous Monthly Income (₹)</label>
+                    <input type="number" id="prevIncome" placeholder="Enter previous income" oninput="calculateIncome()">
+                </div>
+                <div class="field">
+                    <label>Current Monthly Income (₹)</label>
+                    <input type="number" id="currIncome" placeholder="Enter current income" oninput="calculateIncome()">
+                </div>
+                <div class="field">
+                    <label>Income Source</label>
+                    <select id="incomeSource">
+                        <option value="">Select Source</option>
+                        <option value="Salary">Salary</option>
+                        <option value="Business">Business</option>
+                        <option value="Freelancing">Freelancing</option>
+                        <option value="Daily Wage">Daily Wage</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Income Stability</label>
+                    <select id="incomeStability">
+                        <option value="">Select</option>
+                        <option value="Stable">Stable</option>
+                        <option value="Growing">Growing</option>
+                        <option value="Decreasing">Decreasing</option>
+                        <option value="Irregular">Irregular</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Income Growth</label>
+                    <input type="text" id="incomeGrowth" placeholder="Automatically calculated" readonly>
+                    <span class="helper-text">Automatically calculated based on previous and current income</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAREER FEEDBACK -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">🚀</div>
+                <div>
+                    <h3>Career Feedback</h3>
+                    <p>Share your career progress and any support needed.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Career Progress Rating</label>
+                    <select id="careerRating">
+                        <option value="">Select Rating</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Average">Average</option>
+                        <option value="Needs Improvement">Needs Improvement</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Skills Improved</label>
+                    <input type="text" id="skillsImproved" placeholder="Skills you have improved">
+                </div>
+                <div class="field full">
+                    <label>Additional Feedback</label>
+                    <textarea id="careerFeedback" placeholder="Any additional feedback about your career journey"></textarea>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<!-- ===== FIXED BOTTOM BAR ===== -->
+<div class="bottom-bar">
+    <div class="auto-save">
+        <i class="fas fa-sync-alt"></i> <span>Auto-save</span> enabled
+    </div>
+    <div class="buttons">
+        <button class="btn clear" onclick="clearForm()">
+            <i class="fas fa-undo"></i> Clear
+        </button>
+        <button class="btn draft" onclick="saveDraft()">
+            <i class="fas fa-pen"></i> Draft
+        </button>
+        <button class="btn save" onclick="saveFollowup()">
+            <i class="fas fa-save"></i> Save Follow-up
+        </button>
+    </div>
+</div>
+
+<script>
+    // ===== LOAD USER DATA =====
+    function loadUserData() {
+        const storedData = localStorage.getItem('traineeData');
+        if (storedData) {
+            try {
+                const data = JSON.parse(storedData);
+                if (data.fullName) {
+                    document.getElementById('userAvatar').textContent = data.fullName.charAt(0).toUpperCase();
+                    document.getElementById('userName').textContent = data.fullName;
+                }
+                console.log('👋 Welcome, ' + data.fullName);
+            } catch (e) {
+                console.error('Error loading user data:', e);
+            }
+        }
+    }
+
+    // ===== CALCULATE INCOME GROWTH =====
+    function calculateIncome() {
+        const previous = parseFloat(document.getElementById('prevIncome').value) || 0;
+        const current = parseFloat(document.getElementById('currIncome').value) || 0;
+
+        let growthText = '';
+        let growthPercent = 0;
+
+        if (previous > 0 && current > 0) {
+            growthPercent = ((current - previous) / previous) * 100;
+            growthPercent = Math.round(growthPercent);
+
+            if (growthPercent > 0) {
+                growthText = '⬆ ' + growthPercent + '% growth';
+            } else if (growthPercent < 0) {
+                growthText = '⬇ ' + Math.abs(growthPercent) + '% decrease';
+            } else {
+                growthText = '➡ No change';
+            }
+        } else if (current > 0 && previous === 0) {
+            growthText = '⬆ New income recorded';
+        } else {
+            growthText = 'Enter both incomes to calculate';
+        }
+
+        document.getElementById('incomeGrowth').value = growthText;
+    }
+
+    // ===== SAVE FOLLOW-UP =====
+    function saveFollowup() {
+        const currentEmail = localStorage.getItem('currentTraineeEmail') ||
+                             (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
+
+        const followupData = {
+            traineeEmail: currentEmail,
+            period: document.getElementById('followupPeriod').value,
+            date: document.getElementById('followupDate').value,
+            status: document.getElementById('followupStatus').value,
+            contactMethod: document.getElementById('contactMethod').value,
+            notes: document.getElementById('followupNotes').value,
+
+            empStatus: document.getElementById('empStatus').value,
+            retentionStatus: document.getElementById('retentionStatus').value,
+            companyName: document.getElementById('companyName').value,
+            jobRole: document.getElementById('jobRole').value,
+            empStartDate: document.getElementById('empStartDate').value,
+            empType: document.getElementById('empType').value,
+
+            prevIncome: document.getElementById('prevIncome').value,
+            currIncome: document.getElementById('currIncome').value,
+            incomeSource: document.getElementById('incomeSource').value,
+            incomeStability: document.getElementById('incomeStability').value,
+            incomeGrowth: document.getElementById('incomeGrowth').value,
+
+            careerRating: document.getElementById('careerRating').value,
+            skillsImproved: document.getElementById('skillsImproved').value,
+            careerFeedback: document.getElementById('careerFeedback').value,
+
+            savedDate: new Date().toISOString()
+        };
+
+        try {
+            let allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
+
+            const existingIndex = allFollowups.findIndex(f => f.traineeEmail === currentEmail);
+            if (existingIndex !== -1) {
+                allFollowups[existingIndex] = { ...allFollowups[existingIndex], ...followupData };
+            } else {
+                allFollowups.push(followupData);
+            }
+
+            localStorage.setItem('allFollowups', JSON.stringify(allFollowups));
+            localStorage.setItem('followupData', JSON.stringify(followupData));
+
+            alert('✅ Follow-up details saved successfully!');
+            console.log('📋 Total follow-ups:', allFollowups.length);
+
+            updateDashboard(followupData);
+        } catch (e) {
+            alert('❌ Error saving data. Please try again.');
+            console.error('Error:', e);
+        }
+    }
+
+    // ===== SAVE DRAFT =====
+    function saveDraft() {
+        const followupData = {
+            period: document.getElementById('followupPeriod').value,
+            date: document.getElementById('followupDate').value,
+            status: document.getElementById('followupStatus').value,
+            contactMethod: document.getElementById('contactMethod').value,
+            notes: document.getElementById('followupNotes').value,
+            empStatus: document.getElementById('empStatus').value,
+            retentionStatus: document.getElementById('retentionStatus').value,
+            companyName: document.getElementById('companyName').value,
+            jobRole: document.getElementById('jobRole').value,
+            empStartDate: document.getElementById('empStartDate').value,
+            empType: document.getElementById('empType').value,
+            prevIncome: document.getElementById('prevIncome').value,
+            currIncome: document.getElementById('currIncome').value,
+            incomeSource: document.getElementById('incomeSource').value,
+            incomeStability: document.getElementById('incomeStability').value,
+            careerRating: document.getElementById('careerRating').value,
+            skillsImproved: document.getElementById('skillsImproved').value,
+            careerFeedback: document.getElementById('careerFeedback').value,
+            isDraft: true,
+            savedDate: new Date().toISOString()
+        };
+
+        try {
+            localStorage.setItem('followupDraft', JSON.stringify(followupData));
+            alert('📝 Draft saved successfully!');
+        } catch (e) {
+            alert('❌ Error saving draft.');
+        }
+    }
+
+    // ===== CLEAR FORM =====
+    function clearForm() {
+        if (confirm('Are you sure you want to clear all fields?')) {
+            document.getElementById('followupForm').reset();
+            document.getElementById('incomeGrowth').value = '';
+            alert('✅ Form cleared successfully!');
+        }
+    }
+
+    // ===== UPDATE DASHBOARD =====
+    function updateDashboard(data) {
+        if (data) {
+            if (data.period) {
+                document.getElementById('nextPeriodDays').textContent = data.period;
+                document.getElementById('nextFollowupTag').textContent = '📅 Next Follow-up: ' + data.period;
+            }
+            if (data.status) {
+                document.getElementById('nextPeriodStatus').textContent = data.status;
+            }
+
+            const hasEmployment = data.empStatus || data.companyName;
+            const hasIncome = data.currIncome > 0;
+            const hasFeedback = data.careerFeedback;
+
+            let score = 0;
+
+            if (hasEmployment) {
+                score += 35;
+                document.getElementById('item1').textContent = '✅ Employment Updated';
+            } else {
+                document.getElementById('item1').textContent = '⚠️ Employment Pending';
+            }
+
+            if (hasIncome) {
+                score += 30;
+                document.getElementById('item2').textContent = '✅ Income Updated';
+            } else {
+                document.getElementById('item2').textContent = '⚠️ Income Pending';
+            }
+
+            if (data.status === 'Completed') {
+                score += 20;
+                document.getElementById('item3').textContent = '✅ Follow-up Completed';
+            } else if (data.status === 'In Progress') {
+                score += 10;
+                document.getElementById('item3').textContent = '🔄 Follow-up In Progress';
+            } else {
+                document.getElementById('item3').textContent = '🔵 Follow-up Pending';
+            }
+
+            if (hasFeedback) {
+                score += 15;
+                document.getElementById('item4').textContent = '✅ Feedback Provided';
+            } else {
+                document.getElementById('item4').textContent = '⚠️ Feedback Pending';
+            }
+
+            document.getElementById('healthScore').textContent = score + '%';
+            document.getElementById('scoreInner').textContent = score + '%';
+
+            if (score >= 80) {
+                document.getElementById('healthStatus').textContent = 'Excellent';
+                document.getElementById('healthTitle').textContent = 'Excellent Progress 🎉';
+                document.getElementById('healthDescription').textContent = 'Your follow-up information is fully up to date!';
+            } else if (score >= 60) {
+                document.getElementById('healthStatus').textContent = 'Good';
+                document.getElementById('healthTitle').textContent = 'Good Progress 📈';
+                document.getElementById('healthDescription').textContent = 'Your employment and follow-up information is mostly up to date.';
+            } else if (score >= 40) {
+                document.getElementById('healthStatus').textContent = 'Average';
+                document.getElementById('healthTitle').textContent = 'Needs Attention ⚠️';
+                document.getElementById('healthDescription').textContent = 'Please update your employment and income details.';
+            } else {
+                document.getElementById('healthStatus').textContent = 'Needs Update';
+                document.getElementById('healthTitle').textContent = 'Action Required 🔴';
+                document.getElementById('healthDescription').textContent = 'Please complete your follow-up information.';
+            }
+
+            const completed = document.querySelectorAll('.timeline-step.completed').length;
+            document.getElementById('completedCount').textContent = completed + ' / 4';
+        }
+    }
+
+    // ===== SHOW NOTIFICATIONS =====
+    function showNotifications() {
+        alert('📬 No new notifications.');
+    }
+
+    // ===== LOGOUT =====
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            alert('Logging out... Redirecting to login page.');
+            window.location.href = '../../auth/login.html';
+        }
+    }
+
+    // ===== LOAD SAVED DATA =====
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUserData();
+        calculateIncome();
+
+        const savedData = localStorage.getItem('followupData');
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                Object.keys(data).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element && data[key]) {
+                        element.value = data[key];
+                    }
+                });
+                calculateIncome();
+                updateDashboard(data);
+                console.log('📂 Loaded saved follow-up data');
+            } catch (e) {
+                console.error('Error loading saved data:', e);
+            }
+        }
+
+        const draftData = localStorage.getItem('followupDraft');
+        if (draftData && !savedData) {
+            try {
+                const data = JSON.parse(draftData);
+                Object.keys(data).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element && data[key] && key !== 'isDraft' && key !== 'savedDate') {
+                        element.value = data[key];
+                    }
+                });
+                calculateIncome();
+                console.log('📝 Loaded draft data');
+            } catch (e) {
+                console.error('Error loading draft:', e);
+            }
+        }
+    });
+
+    // ===== MOBILE SIDEBAR TOGGLE =====
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.getElementById('sidebar');
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+        toggleBtn.style.cssText = `
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 200;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(37,99,235,0.3);
+        `;
+        toggleBtn.id = 'menuToggle';
+        document.body.appendChild(toggleBtn);
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+
+        if (window.innerWidth <= 768) {
+            toggleBtn.style.display = 'block';
+        }
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 768) {
+                toggleBtn.style.display = 'block';
+            } else {
+                toggleBtn.style.display = 'none';
+                sidebar.classList.remove('open');
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+    });
+</script>
+
+<script src="../js/script.js"></script>
+</body>
+</html>

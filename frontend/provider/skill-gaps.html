@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Skill Gaps · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 275px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 24px 16px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 12px;
+            padding: 8px 10px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 18px;
+        }
+        .sidebar-brand .icon {
+            width: 44px; height: 44px; border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+        .sidebar-brand p { font-size: 10px; opacity: 0.5; font-weight: 500; margin-top: 2px; }
+        .sidebar-user {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 16px;
+        }
+        .sidebar-user .avatar {
+            width: 44px; height: 44px; border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px;
+            flex-shrink: 0;
+        }
+        .sidebar-user .info .name { font-size: 14px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 11px; opacity: 0.5; }
+        .menu-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.35; padding: 12px 12px 6px; font-weight: 700; }
+        .menu a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: 12px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none; transition: all 0.2s;
+            margin: 2px 0; font-size: 14px; font-weight: 500;
+            cursor: pointer;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active { background: rgba(255,255,255,0.12); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .menu a i { width: 20px; text-align: center; font-size: 15px; }
+        .menu a .badge { margin-left: auto; background: #ef4444; color: white; font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+        .sidebar-footer { padding: 20px 12px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 16px; }
+        .sidebar-footer a { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; color: rgba(255,255,255,0.5); text-decoration: none; transition: 0.2s; font-size: 14px; font-weight: 500; cursor: pointer; }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+        .main-content { margin-left: 275px; flex: 1; padding: 0; min-height: 100vh; }
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .menu-toggle { display: none; background: none; border: none; font-size: 22px; color: #0b1a33; cursor: pointer; }
+        .header-left .page-title h1 { font-size: 20px; color: #0b1a33; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .header-left .page-title h1 i { color: #2563eb; }
+        .header-left .page-title p { font-size: 12px; color: #64748b; margin-top: 1px; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .date { font-size: 13px; color: #64748b; font-weight: 500; background: #f1f5f9; padding: 6px 14px; border-radius: 20px; }
+        .header-right .notif { position: relative; font-size: 20px; color: #475569; cursor: pointer; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; width: 20px; height: 20px; font-size: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .header-right .profile-btn { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 5px 14px 5px 5px; border-radius: 30px; cursor: pointer; border: none; transition: 0.2s; }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+        .container { padding: 24px 32px 32px; max-width: 1440px; margin: auto; }
+        .welcome {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+            color: white;
+            padding: 28px 32px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome::before { content: ""; position: absolute; width: 350px; height: 350px; border-radius: 50%; background: rgba(255,255,255,0.05); top: -130px; right: -80px; }
+        .welcome-content { position: relative; z-index: 1; }
+        .welcome h2 { font-size: 26px; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+        .welcome p { font-size: 15px; opacity: 0.85; }
+        .welcome .welcome-stats { display: flex; gap: 30px; margin-top: 16px; flex-wrap: wrap; }
+        .welcome .welcome-stats div { font-size: 13px; }
+        .welcome .welcome-stats strong { font-size: 20px; display: block; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            padding: 18px 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid #eef2f6;
+            transition: all 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(37,99,235,0.08); }
+        .stat-card .stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .stat-card .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .stat-card .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-card .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-card .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-card .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-card .stat-number { font-size: 28px; font-weight: 800; color: #0b1a33; }
+        .stat-card .stat-label { font-size: 13px; color: #64748b; margin-top: 2px; }
+        .stat-card .stat-change { font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
+        .stat-change.up { background: #dcfce7; color: #16a34a; }
+        .stat-change.down { background: #fee2e2; color: #dc2626; }
+        .stat-change.neutral { background: #f1f5f9; color: #64748b; }
+        .radar-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .radar-card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+        }
+        .radar-card:hover { box-shadow: 0 8px 25px rgba(37,99,235,0.06); }
+        .radar-card .card-title {
+            font-size: 14px; font-weight: 600; color: #64748b;
+            margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+        .radar-card .card-title i { color: #2563eb; }
+        .radar-container {
+            display: flex; justify-content: center; align-items: center;
+            padding: 10px 0;
+        }
+        .radar {
+            position: relative;
+            width: 280px;
+            height: 280px;
+        }
+        .radar svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+        .radar .axis { fill: none; stroke: #e2e8f0; stroke-width: 1.5; }
+        .radar .axis-label { font-size: 9px; fill: #64748b; font-weight: 600; }
+        .radar .skill-area { fill: rgba(37, 99, 235, 0.12); stroke: #2563eb; stroke-width: 2.5; transition: all 0.5s ease; }
+        .radar .skill-point { fill: #2563eb; r: 5; transition: 0.3s; cursor: pointer; }
+        .radar .skill-point:hover { r: 8; fill: #7c3aed; }
+        .radar .skill-point.high { fill: #22c55e; }
+        .radar .skill-point.medium { fill: #eab308; }
+        .radar .skill-point.low { fill: #ef4444; }
+        .skill-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .skill-summary-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            display: flex; align-items: center; gap: 12px;
+            transition: 0.2s;
+        }
+        .skill-summary-item:hover { background: #f1f5f9; transform: scale(1.02); }
+        .skill-summary-item .icon {
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+        .skill-summary-item .icon.high { background: #dcfce7; color: #16a34a; }
+        .skill-summary-item .icon.medium { background: #fef3c7; color: #d97706; }
+        .skill-summary-item .icon.low { background: #fee2e2; color: #dc2626; }
+        .skill-summary-item .info .name { font-weight: 600; font-size: 13px; color: #0b1a33; }
+        .skill-summary-item .info .desc { font-size: 11px; color: #64748b; }
+        .skill-summary-item .score { font-weight: 700; font-size: 16px; margin-left: auto; }
+        .skill-summary-item .score.high { color: #16a34a; }
+        .skill-summary-item .score.medium { color: #d97706; }
+        .skill-summary-item .score.low { color: #dc2626; }
+        .skill-grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .skill-category-card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px 22px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: all 0.3s;
+        }
+        .skill-category-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(37,99,235,0.08); }
+        .skill-category-card .cat-title {
+            font-size: 14px; font-weight: 700; color: #0b1a33;
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .skill-category-card .cat-title i { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; color: white; }
+        .skill-category-card .cat-title .blue-bg { background: #2563eb; }
+        .skill-category-card .cat-title .teal-bg { background: #0d9488; }
+        .skill-category-card .cat-title .purple-bg { background: #7c3aed; }
+        .skill-category-card .cat-title .badge {
+            margin-left: auto;
+            font-size: 10px; font-weight: 600;
+            padding: 2px 12px; border-radius: 20px;
+        }
+        .skill-category-card .cat-title .badge.excellent { background: #dcfce7; color: #16a34a; }
+        .skill-category-card .cat-title .badge.good { background: #dbeafe; color: #2563eb; }
+        .skill-category-card .cat-title .badge.average { background: #fef3c7; color: #d97706; }
+        .skill-category-card .cat-title .badge.poor { background: #fee2e2; color: #dc2626; }
+        .mini-skill-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 0; border-bottom: 1px solid #f8fafc;
+        }
+        .mini-skill-item:last-child { border-bottom: none; }
+        .mini-skill-item .dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .mini-skill-item .dot.high { background: #22c55e; }
+        .mini-skill-item .dot.medium { background: #eab308; }
+        .mini-skill-item .dot.low { background: #ef4444; }
+        .mini-skill-item .m-name { font-size: 12px; font-weight: 500; color: #0b1a33; flex: 1; }
+        .mini-skill-item .m-score { font-size: 12px; font-weight: 700; }
+        .mini-skill-item .m-score.high { color: #16a34a; }
+        .mini-skill-item .m-score.medium { color: #d97706; }
+        .mini-skill-item .m-score.low { color: #dc2626; }
+        .gap-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .gap-card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px 24px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+        }
+        .gap-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .gap-card .card-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 14px;
+        }
+        .gap-card .card-header h3 {
+            font-size: 15px; color: #0b1a33;
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700;
+        }
+        .gap-card .card-header h3 i { color: #2563eb; }
+        .gap-list-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 8px 0; border-bottom: 1px solid #f1f5f9;
+        }
+        .gap-list-item:last-child { border-bottom: none; }
+        .gap-list-item .priority {
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 700; flex-shrink: 0;
+        }
+        .gap-list-item .priority.high { background: #fee2e2; color: #dc2626; }
+        .gap-list-item .priority.medium { background: #fef3c7; color: #d97706; }
+        .gap-list-item .priority.low { background: #dbeafe; color: #2563eb; }
+        .gap-list-item .gap-info { flex: 1; }
+        .gap-list-item .gap-info .title { font-weight: 600; font-size: 13px; color: #0b1a33; }
+        .gap-list-item .gap-info .desc { font-size: 11px; color: #64748b; }
+        .gap-list-item .gap-info .tags { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
+        .gap-list-item .gap-info .tags .tag { font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+        .tag.skill { background: #dbeafe; color: #2563eb; }
+        .tag.urgent { background: #fee2e2; color: #dc2626; }
+        .tag.training { background: #dcfce7; color: #16a34a; }
+        .gap-reason {
+            font-size: 11px; color: #dc2626;
+            margin-top: 2px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .gap-reason i { font-size: 12px; }
+        .gap-insight-box {
+            background: linear-gradient(135deg, #fef3c7, #fffbeb);
+            border: 1px solid #fcd34d;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-top: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .gap-insight-box i { color: #d97706; font-size: 18px; margin-top: 2px; }
+        .gap-insight-box .insight-text { font-size: 12px; color: #92400e; line-height: 1.5; }
+        .gap-insight-box .insight-text strong { color: #78350f; }
+        .rec-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+        }
+        .rec-item:last-child { border-bottom: none; }
+        .rec-item .rec-icon {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; flex-shrink: 0;
+        }
+        .rec-item .rec-icon.high { background: #fee2e2; color: #dc2626; }
+        .rec-item .rec-icon.medium { background: #fef3c7; color: #d97706; }
+        .rec-item .rec-icon.low { background: #dbeafe; color: #2563eb; }
+        .rec-item .rec-info { flex: 1; }
+        .rec-item .rec-info .title { font-weight: 600; font-size: 13px; color: #0b1a33; }
+        .rec-item .rec-info .desc { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .rec-item .rec-info .rec-tags { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .quick-actions .action-btn {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #0b1a33;
+            font-weight: 500;
+            font-size: 11px;
+        }
+        .quick-actions .action-btn:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+        }
+        .quick-actions .action-btn i { display: block; font-size: 18px; margin-bottom: 4px; color: #2563eb; }
+        .quick-actions .action-btn:hover i { color: white; }
+        .connect-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 8px;
+            background: #eef2ff; color: #2563eb;
+            font-size: 11px; font-weight: 600;
+            text-decoration: none; transition: 0.2s;
+        }
+        .connect-btn:hover { background: #dbeafe; transform: scale(1.05); }
+        .empty-state {
+            text-align: center; padding: 60px 20px;
+            color: #94a3b8;
+            background: white;
+            border-radius: 18px;
+            border: 1px solid #eef2f6;
+        }
+        .empty-state i { font-size: 60px; color: #c7d2fe; margin-bottom: 16px; display: block; }
+        .empty-state h3 { color: #475569; margin-bottom: 6px; font-size: 20px; }
+        .empty-state p { font-size: 14px; }
+        .empty-state .btn-link {
+            display: inline-block; margin-top: 16px;
+            padding: 10px 24px; border-radius: 10px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white; text-decoration: none; font-weight: 600;
+            transition: 0.3s;
+        }
+        .empty-state .btn-link:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(37,99,235,0.3); }
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .radar-section { grid-template-columns: 1fr; }
+            .skill-grid-container { grid-template-columns: 1fr 1fr; }
+            .gap-section { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: 1fr 1fr; }
+            .skill-summary { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 12px 18px; flex-wrap: wrap; gap: 8px; }
+            .header-left .page-title h1 { font-size: 17px; }
+            .header-right .date { display: none; }
+            .container { padding: 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .stat-card { padding: 14px; }
+            .stat-card .stat-number { font-size: 22px; }
+            .welcome { padding: 20px; }
+            .welcome h2 { font-size: 20px; }
+            .welcome .welcome-stats { gap: 16px; }
+            .skill-grid-container { grid-template-columns: 1fr; }
+            .gap-section { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: 1fr; }
+            .radar { width: 200px; height: 200px; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>SkillBridge</h2>
+            <p>Provider Portal</p>
+        </div>
+    </div>
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">P</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Provider</div>
+            <div class="role" id="sidebarRole">Training Provider</div>
+        </div>
+    </div>
+    <div class="menu-label">Main</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-chart-pie"></i> Overview</a>
+        <a href="trainee-outcomes.html"><i class="fas fa-users"></i> Trainee Outcomes</a>
+        <a href="employment&retention.html"><i class="fas fa-briefcase"></i> Employment & Retention</a>
+        <a href="employer-feedback.html"><i class="fas fa-comment"></i> Employer Feedback</a>
+        <a class="active" href="skill-gaps.html"><i class="fas fa-arrow-up"></i> Skills Gaps</a>
+    </div>
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<div class="main-content">
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-arrow-up"></i> Skills Gap Analysis</h1>
+                <p>Identify technical, practical, and soft skills gaps with actionable recommendations</p>
+            </div>
+        </div>
+        <div class="header-right">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+      <i class="fas fa-moon"></i>
+    </button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">3</span>
+            </div>
+            <button class="profile-btn">
+                <div class="avatar" id="headerAvatar">P</div>
+                <span class="name" id="headerName">Provider</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="welcome">
+            <div class="welcome-content">
+                <h2><i class="fas fa-hand-peace"></i> Skills Gap Overview</h2>
+                <p>Comprehensive analysis of skill gaps across technical, practical, and soft skills categories.</p>
+                <div class="welcome-stats">
+                    <div><strong id="totalSkills">18</strong> Total Skills</div>
+                    <div><strong id="strongSkills">8</strong> Strong Skills</div>
+                    <div><strong id="gapSkills">4</strong> Skill Gaps</div>
+                    <div><strong id="overallReadiness">44%</strong> Overall Readiness</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon blue"><i class="fas fa-code"></i></div>
+                    <span class="stat-change neutral">–</span>
+                </div>
+                <div class="stat-number" id="technicalAvg">72%</div>
+                <div class="stat-label">Technical Skills</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon teal"><i class="fas fa-tools"></i></div>
+                    <span class="stat-change neutral">–</span>
+                </div>
+                <div class="stat-number" id="practicalAvg">65%</div>
+                <div class="stat-label">Practical Skills</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+                    <span class="stat-change neutral">–</span>
+                </div>
+                <div class="stat-number" id="softSkillsAvg">58%</div>
+                <div class="stat-label">Soft Skills</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon orange"><i class="fas fa-bullseye"></i></div>
+                    <span class="stat-change neutral">–</span>
+                </div>
+                <div class="stat-number" id="jobReadiness">44%</div>
+                <div class="stat-label">Job Readiness</div>
+            </div>
+        </div>
+
+        <!-- ===== MAIN CONTENT WITH VISUAL ELEMENTS ===== -->
+        <div id="mainContent">
+            <!-- RADAR + SUMMARY SECTION -->
+            <div class="radar-section">
+                <div class="radar-card">
+                    <div class="card-title"><i class="fas fa-chart-radar"></i> Skill Radar Chart</div>
+                    <div class="radar-container">
+                        <div class="radar" id="radarChart">
+                            <svg viewBox="0 0 300 300"></svg>
+                        </div>
+                    </div>
+                    <div style="text-align:center; font-size:11px; color:#94a3b8; margin-top:4px;">
+                        <span style="color:#22c55e;">●</span> High (≥80%) &nbsp;
+                        <span style="color:#eab308;">●</span> Medium (60-79%) &nbsp;
+                        <span style="color:#ef4444;">●</span> Low (&lt;60%)
+                    </div>
+                </div>
+                <div class="radar-card">
+                    <div class="card-title"><i class="fas fa-list"></i> Skills at a Glance</div>
+                    <div class="skill-summary" id="skillSummary"></div>
+                    <div style="margin-top:12px; padding-top:12px; border-top:1px solid #f1f5f9; display:flex; justify-content:space-between; font-size:12px; color:#64748b;">
+                        <span>✅ Strong: <strong id="strongCount">8</strong></span>
+                        <span>📊 Moderate: <strong id="moderateCount">6</strong></span>
+                        <span>⚠️ Gaps: <strong id="gapCountSummary">4</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SKILL CATEGORY CARDS -->
+            <div class="skill-grid-container">
+                <div class="skill-category-card">
+                    <div class="cat-title">
+                        <i class="fas fa-code blue-bg"></i> Technical Skills
+                        <span class="badge good" id="techBadge">Good (72%)</span>
+                    </div>
+                    <div id="technicalSkills"></div>
+                </div>
+                <div class="skill-category-card">
+                    <div class="cat-title">
+                        <i class="fas fa-tools teal-bg"></i> Practical Skills
+                        <span class="badge good" id="pracBadge">Good (65%)</span>
+                    </div>
+                    <div id="practicalSkills"></div>
+                </div>
+                <div class="skill-category-card">
+                    <div class="cat-title">
+                        <i class="fas fa-users purple-bg"></i> Soft Skills
+                        <span class="badge average" id="softBadge">Average (58%)</span>
+                    </div>
+                    <div id="softSkills"></div>
+                </div>
+            </div>
+
+            <!-- GAPS & RECOMMENDATIONS -->
+            <div class="gap-section">
+                <div class="gap-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i> Skill Gaps</h3>
+                        <span id="gapCount">4 gaps</span>
+                    </div>
+                    <div id="skillGapList"></div>
+                    <div id="gapInsightBox"></div>
+                </div>
+                <div class="gap-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-lightbulb" style="color:#2563eb;"></i> Recommendations</h3>
+                        <span id="recCount">4 actions</span>
+                    </div>
+                    <div id="recommendationList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="skill-category-card" style="padding:20px 24px; grid-column: 1/-1;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-size:15px; color:#0b1a33; display:flex; align-items:center; gap:10px; font-weight:700;">
+                    <i class="fas fa-bolt" style="color:#2563eb;"></i> Quick Actions
+                </h3>
+                <a href="trainee-outcomes.html" class="connect-btn"><i class="fas fa-users"></i> View Trainees</a>
+            </div>
+            <div class="quick-actions">
+                <a href="#" class="action-btn" onclick="exportGapReport(); return false;"><i class="fas fa-file-export"></i> Export Report</a>
+                <a href="#" class="action-btn" onclick="viewDetailedAnalysis(); return false;"><i class="fas fa-chart-line"></i> Analysis</a>
+                <a href="employer-feedback.html" class="action-btn"><i class="fas fa-comment"></i> Feedback</a>
+                <a href="#" class="action-btn" onclick="viewTrainingPlan(); return false;"><i class="fas fa-graduation-cap"></i> Training Plan</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // SAMPLE SKILL DATA FOR DEMONSTRATION
+    // ============================================================
+
+    const sampleSkills = {
+        all: [
+            { name: 'Programming Languages', score: 85, level: 'high', importance: 'Critical', icon: 'fa-code', category: 'Technical' },
+            { name: 'Database Management', score: 82, level: 'high', importance: 'High', icon: 'fa-database', category: 'Technical' },
+            { name: 'Web Development', score: 78, level: 'medium', importance: 'High', icon: 'fa-globe', category: 'Technical' },
+            { name: 'Cloud Computing', score: 55, level: 'low', importance: 'Critical', icon: 'fa-cloud', category: 'Technical' },
+            { name: 'Data Analysis', score: 88, level: 'high', importance: 'Critical', icon: 'fa-chart-bar', category: 'Technical' },
+            { name: 'Cybersecurity', score: 48, level: 'low', importance: 'Critical', icon: 'fa-shield-alt', category: 'Technical' },
+            
+            { name: 'Project Management', score: 70, level: 'medium', importance: 'High', icon: 'fa-tasks', category: 'Practical' },
+            { name: 'Problem Solving', score: 76, level: 'medium', importance: 'Critical', icon: 'fa-lightbulb', category: 'Practical' },
+            { name: 'Critical Thinking', score: 72, level: 'medium', importance: 'High', icon: 'fa-brain', category: 'Practical' },
+            { name: 'Time Management', score: 80, level: 'high', importance: 'High', icon: 'fa-clock', category: 'Practical' },
+            { name: 'Decision Making', score: 62, level: 'medium', importance: 'High', icon: 'fa-check-double', category: 'Practical' },
+            { name: 'Research Skills', score: 58, level: 'low', importance: 'Medium', icon: 'fa-search', category: 'Practical' },
+            
+            { name: 'Communication', score: 70, level: 'medium', importance: 'Critical', icon: 'fa-comments', category: 'Soft' },
+            { name: 'Teamwork', score: 82, level: 'high', importance: 'High', icon: 'fa-users', category: 'Soft' },
+            { name: 'Leadership', score: 55, level: 'low', importance: 'High', icon: 'fa-user-tie', category: 'Soft' },
+            { name: 'Adaptability', score: 68, level: 'medium', importance: 'High', icon: 'fa-sync-alt', category: 'Soft' },
+            { name: 'Emotional Intelligence', score: 60, level: 'medium', importance: 'High', icon: 'fa-heart', category: 'Soft' },
+            { name: 'Conflict Resolution', score: 45, level: 'low', importance: 'Medium', icon: 'fa-handshake', category: 'Soft' }
+        ],
+        technical: [],
+        practical: [],
+        soft: []
+    };
+
+    // Categorize skills
+    sampleSkills.technical = sampleSkills.all.filter(s => s.category === 'Technical');
+    sampleSkills.practical = sampleSkills.all.filter(s => s.category === 'Practical');
+    sampleSkills.soft = sampleSkills.all.filter(s => s.category === 'Soft');
+
+    // ============================================================
+    // CALCULATE STATS
+    // ============================================================
+
+    function calculateStats(skills) {
+        const allSkills = skills.all;
+        const total = allSkills.length;
+        const strong = allSkills.filter(s => s.score >= 80).length;
+        const moderate = allSkills.filter(s => s.score >= 60 && s.score < 80).length;
+        const gaps = allSkills.filter(s => s.score < 60).length;
+        const ready = Math.round((strong / total) * 100);
+
+        const techAvg = Math.round(skills.technical.reduce((a,b) => a + b.score, 0) / skills.technical.length);
+        const pracAvg = Math.round(skills.practical.reduce((a,b) => a + b.score, 0) / skills.practical.length);
+        const softAvg = Math.round(skills.soft.reduce((a,b) => a + b.score, 0) / skills.soft.length);
+
+        return { total, strong, moderate, gaps, ready, techAvg, pracAvg, softAvg };
+    }
+
+    // ============================================================
+    // GENERATE REASONS & RECOMMENDATIONS
+    // ============================================================
+
+    function getGapReasons(skillName, score) {
+        const reasons = {
+            'Cloud Computing': { reason: 'No practical experience with cloud platforms', solution: 'Hands-on labs with AWS/Azure/GCP' },
+            'Cybersecurity': { reason: 'Lack of practical security implementation', solution: 'Security labs and vulnerability assessments' },
+            'Research Skills': { reason: 'Limited practice in structured research', solution: 'Assign research projects with clear objectives' },
+            'Leadership': { reason: 'No opportunity to lead teams or projects', solution: 'Leadership roles in group activities' },
+            'Conflict Resolution': { reason: 'No practice in handling disagreements', solution: 'Role-play exercises and conflict management training' }
+        };
+        return reasons[skillName] || { reason: 'Insufficient practical exposure', solution: 'More hands-on practice and real-world application' };
+    }
+
+    function generateRecommendations(skills) {
+        const recs = [];
+        const gaps = skills.all.filter(s => s.score < 60).sort((a,b) => a.score - b.score);
+
+        gaps.forEach(s => {
+            const reason = getGapReasons(s.name, s.score);
+            recs.push({
+                skill: s.name,
+                priority: s.score < 50 ? 'high' : 'medium',
+                action: s.score < 50 ? '🚨 Urgent Training Required' : '📚 Focused Improvement Needed',
+                description: `Score ${s.score}% - ${s.score < 50 ? 'Critical gap needs immediate attention.' : 'Needs focused improvement.'}`,
+                reason: reason.reason,
+                solution: reason.solution,
+                importance: s.importance,
+                icon: s.score < 50 ? 'high' : 'medium'
+            });
+        });
+
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        recs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+        return recs;
+    }
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+
+    let skillsData = sampleSkills;
+    let stats = calculateStats(skillsData);
+    let recommendations = generateRecommendations(skillsData);
+
+    function renderAll() {
+        renderStats();
+        renderRadarChart(skillsData);
+        renderSkillSummary(skillsData);
+        renderSkillCategory('technicalSkills', 'Technical Skills', skillsData.technical, 'techBadge');
+        renderSkillCategory('practicalSkills', 'Practical Skills', skillsData.practical, 'pracBadge');
+        renderSkillCategory('softSkills', 'Soft Skills', skillsData.soft, 'softBadge');
+        renderSkillGaps();
+        renderRecommendations();
+        renderGapInsight();
+        updateSidebar();
+        updateNotificationBadge();
+    }
+
+    function renderStats() {
+        document.getElementById('totalSkills').textContent = stats.total;
+        document.getElementById('strongSkills').textContent = stats.strong;
+        document.getElementById('gapSkills').textContent = stats.gaps;
+        document.getElementById('overallReadiness').textContent = stats.ready + '%';
+
+        document.getElementById('technicalAvg').textContent = stats.techAvg + '%';
+        document.getElementById('practicalAvg').textContent = stats.pracAvg + '%';
+        document.getElementById('softSkillsAvg').textContent = stats.softAvg + '%';
+        document.getElementById('jobReadiness').textContent = stats.ready + '%';
+
+        document.getElementById('gapCount').textContent = stats.gaps + ' gaps';
+        document.getElementById('recCount').textContent = recommendations.length + ' actions';
+        document.getElementById('strongCount').textContent = stats.strong;
+        document.getElementById('moderateCount').textContent = stats.moderate;
+        document.getElementById('gapCountSummary').textContent = stats.gaps;
+    }
+
+    function updateNotificationBadge() {
+        document.getElementById('notifBadge').textContent = stats.gaps;
+    }
+
+    function renderRadarChart(skills) {
+        const container = document.getElementById('radarChart');
+        if (!container) return;
+        
+        const svg = container.querySelector('svg');
+        if (!svg) return;
+
+        const allSkills = skills.all;
+        const cx = 150, cy = 150, radius = 100;
+        const categories = allSkills.map(s => s.name);
+        const scores = allSkills.map(s => s.score);
+        const angleStep = (2 * Math.PI) / categories.length;
+
+        let svgContent = '';
+
+        categories.forEach((_, i) => {
+            const angle = -Math.PI / 2 + i * angleStep;
+            const x = cx + radius * Math.cos(angle);
+            const y = cy + radius * Math.sin(angle);
+            svgContent += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" class="axis" />`;
+        });
+
+        for (let ring = 1; ring <= 4; ring++) {
+            const r = (radius / 4) * ring;
+            let points = '';
+            categories.forEach((_, i) => {
+                const angle = -Math.PI / 2 + i * angleStep;
+                const x = cx + r * Math.cos(angle);
+                const y = cy + r * Math.sin(angle);
+                points += `${x},${y} `;
+            });
+            svgContent += `<polygon points="${points}" class="axis" />`;
+        }
+
+        let points = '';
+        scores.forEach((score, i) => {
+            const ratio = score / 100;
+            const r = ratio * radius;
+            const angle = -Math.PI / 2 + i * angleStep;
+            const x = cx + r * Math.cos(angle);
+            const y = cy + r * Math.sin(angle);
+            points += `${x},${y} `;
+        });
+        svgContent += `<polygon points="${points}" class="skill-area" />`;
+
+        scores.forEach((score, i) => {
+            const ratio = score / 100;
+            const r = ratio * radius;
+            const angle = -Math.PI / 2 + i * angleStep;
+            const x = cx + r * Math.cos(angle);
+            const y = cy + r * Math.sin(angle);
+            const level = score >= 80 ? 'high' : score >= 60 ? 'medium' : 'low';
+            svgContent += `<circle cx="${x}" cy="${y}" class="skill-point ${level}" />`;
+            
+            const labelR = radius + 28;
+            const lx = cx + labelR * Math.cos(angle);
+            const ly = cy + labelR * Math.sin(angle);
+            const label = categories[i].length > 12 ? categories[i].substring(0, 10) + '…' : categories[i];
+            svgContent += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" class="axis-label">${label}</text>`;
+        });
+
+        svg.innerHTML = svgContent;
+    }
+
+    function renderSkillSummary(skills) {
+        const container = document.getElementById('skillSummary');
+        if (!container) return;
+        
+        const allSkills = skills.all;
+        const topSkills = allSkills.sort((a,b) => b.score - a.score).slice(0, 6);
+
+        container.innerHTML = topSkills.map(s => {
+            const levelClass = s.level === 'high' ? 'high' : s.level === 'medium' ? 'medium' : 'low';
+            const emoji = s.level === 'high' ? '✅' : s.level === 'medium' ? '📊' : '⚠️';
+            return `
+                <div class="skill-summary-item">
+                    <div class="icon ${levelClass}"><i class="fas ${s.icon}"></i></div>
+                    <div class="info">
+                        <div class="name">${s.name}</div>
+                        <div class="desc">${emoji} ${s.level === 'high' ? 'Strong' : s.level === 'medium' ? 'Moderate' : 'Gap'} · ⭐${s.importance}</div>
+                    </div>
+                    <div class="score ${levelClass}">${s.score}%</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderSkillCategory(id, title, skills, badgeId) {
+        const container = document.getElementById(id);
+        const badge = document.getElementById(badgeId);
+        if (!container || !badge) return;
+
+        container.innerHTML = skills.map(s => {
+            const levelClass = s.level === 'high' ? 'high' : s.level === 'medium' ? 'medium' : 'low';
+            return `
+                <div class="mini-skill-item">
+                    <div class="dot ${levelClass}"></div>
+                    <span class="m-name">${s.name} <span style="font-size:9px;color:#94a3b8;">⭐${s.importance}</span></span>
+                    <span class="m-score ${levelClass}">${s.score}%</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderSkillGaps() {
+        const container = document.getElementById('skillGapList');
+        if (!container) return;
+        
+        const gaps = skillsData.all.filter(s => s.score < 60).sort((a,b) => a.score - b.score);
+
+        if (gaps.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center;padding:20px;color:#16a34a;">
+                    <i class="fas fa-check-circle" style="font-size:30px;display:block;margin-bottom:8px;"></i>
+                    No skill gaps detected!
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = gaps.map(s => {
+            const reason = getGapReasons(s.name, s.score);
+            return `
+                <div class="gap-list-item">
+                    <div class="priority ${s.score < 50 ? 'high' : 'medium'}">${s.score < 50 ? '!' : 'i'}</div>
+                    <div class="gap-info">
+                        <div class="title">${s.name} <span style="font-size:10px;color:#94a3b8;font-weight:400;">⭐ ${s.importance}</span></div>
+                        <div class="desc">Score: ${s.score}% - ${s.score < 50 ? 'Critical gap' : 'Needs improvement'}</div>
+                        <div class="gap-reason">
+                            <i class="fas fa-info-circle"></i> ${reason.reason}
+                        </div>
+                        <div class="tags">
+                            <span class="tag ${s.score < 50 ? 'urgent' : 'training'}">${s.score < 50 ? '🚨 Urgent' : '📚 Training'}</span>
+                            <span class="tag skill">${s.score < 50 ? 'Critical' : 'Moderate'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderGapInsight() {
+        const container = document.getElementById('gapInsightBox');
+        if (!container) return;
+
+        const gaps = skillsData.all.filter(s => s.score < 60);
+
+        if (gaps.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const gapCategories = {};
+        gaps.forEach(s => {
+            if (!gapCategories[s.category]) gapCategories[s.category] = [];
+            gapCategories[s.category].push(s);
+        });
+
+        let insightHtml = `
+            <div class="gap-insight-box">
+                <i class="fas fa-lightbulb"></i>
+                <div class="insight-text">
+                    <strong>🔍 Why Skill Gaps Are Rising:</strong><br>
+        `;
+
+        const categoryNames = { 'Technical': '💻 Technical', 'Practical': '🛠️ Practical', 'Soft': '🤝 Soft' };
+
+        Object.keys(gapCategories).forEach(cat => {
+            const skills = gapCategories[cat];
+            insightHtml += `• <strong>${categoryNames[cat] || cat}:</strong> ${skills.length} gap(s). `;
+            const avgScore = Math.round(skills.reduce((a,b) => a + b.score, 0) / skills.length);
+            insightHtml += `Avg: ${avgScore}%. ${avgScore < 50 ? '⚠️ Critical!' : '📊 Needs focus.'}<br>`;
+        });
+
+        insightHtml += `
+                    <br><strong>💡 Action Plan:</strong><br>
+                    • Prioritize skills below 50%<br>
+                    • Hands-on practice for practical skills<br>
+                    • Monthly progress tracking
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = insightHtml;
+    }
+
+    function renderRecommendations() {
+        const container = document.getElementById('recommendationList');
+        if (!container) return;
+
+        if (recommendations.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center;padding:20px;color:#16a34a;">
+                    <i class="fas fa-check-circle" style="font-size:30px;display:block;margin-bottom:8px;"></i>
+                    No recommendations needed.
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = recommendations.map(r => `
+            <div class="rec-item">
+                <div class="rec-icon ${r.icon}">
+                    <i class="fas ${r.icon === 'high' ? 'fa-exclamation' : r.icon === 'medium' ? 'fa-minus' : 'fa-check'}"></i>
+                </div>
+                <div class="rec-info">
+                    <div class="title">${r.action} <span style="font-size:10px;color:#94a3b8;font-weight:400;">⭐ ${r.importance}</span></div>
+                    <div class="desc">${r.description}</div>
+                    <div style="font-size:11px;color:#475569;margin-top:4px;">
+                        <strong>📌 Reason:</strong> ${r.reason}
+                    </div>
+                    <div style="font-size:11px;color:#16a34a;margin-top:2px;">
+                        <strong>💡 Solution:</strong> ${r.solution}
+                    </div>
+                    <div class="rec-tags">
+                        <span class="tag ${r.icon}">${r.icon === 'high' ? '🔥 High Priority' : r.icon === 'medium' ? '📊 Medium Priority' : '✅ Low Priority'}</span>
+                        <span class="tag skill">${r.skill}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateSidebar() {
+        const employerData = localStorage.getItem('employerData');
+        if (employerData) {
+            try {
+                const data = JSON.parse(employerData);
+                if (data && data.contactPerson) {
+                    const initial = data.contactPerson.charAt(0).toUpperCase();
+                    document.getElementById('sidebarAvatar').textContent = initial;
+                    document.getElementById('sidebarName').textContent = data.contactPerson;
+                    document.getElementById('sidebarRole').textContent = data.orgName || 'Provider';
+                    document.getElementById('headerAvatar').textContent = initial;
+                    document.getElementById('headerName').textContent = data.contactPerson;
+                }
+            } catch(e) {}
+        }
+    }
+
+    // ============================================================
+    // QUICK ACTIONS
+    // ============================================================
+
+    function exportGapReport() {
+        let report = '📊 SKILL GAP ANALYSIS REPORT\n';
+        report += '================================\n';
+        report += `📅 Generated: ${new Date().toLocaleDateString()}\n\n`;
+        report += `📈 OVERVIEW\n`;
+        report += `• Total Skills: ${stats.total}\n`;
+        report += `• Strong Skills: ${stats.strong}\n`;
+        report += `• Skill Gaps: ${stats.gaps}\n`;
+        report += `• Overall Readiness: ${stats.ready}%\n\n`;
+        report += `📊 CATEGORY AVERAGES\n`;
+        report += `• Technical Skills: ${stats.techAvg}%\n`;
+        report += `• Practical Skills: ${stats.pracAvg}%\n`;
+        report += `• Soft Skills: ${stats.softAvg}%\n\n`;
+        report += `📋 DETAILED SKILLS\n`;
+        report += '================================\n';
+
+        const categories = ['Technical', 'Practical', 'Soft'];
+        const skillsByCat = [skillsData.technical, skillsData.practical, skillsData.soft];
+
+        categories.forEach((cat, idx) => {
+            report += `\n${cat} Skills:\n`;
+            skillsByCat[idx].forEach(s => {
+                const status = s.score >= 80 ? '✅ Strong' : s.score >= 60 ? '📊 Moderate' : '⚠️ Gap';
+                const reason = getGapReasons(s.name, s.score);
+                report += `  • ${s.name}: ${s.score}% (${status})\n`;
+                report += `    ⭐ Importance: ${s.importance}\n`;
+                if (s.score < 60) {
+                    report += `    ↳ Reason: ${reason.reason}\n`;
+                    report += `    ↳ Solution: ${reason.solution}\n`;
+                }
+            });
+        });
+
+        report += '\n================================\n';
+        report += `💡 RECOMMENDATIONS (${recommendations.length})\n`;
+        recommendations.forEach((r, i) => {
+            report += `\n${i+1}. ${r.action}\n`;
+            report += `   Priority: ${r.priority.toUpperCase()}\n`;
+            report += `   ${r.description}\n`;
+            report += `   Reason: ${r.reason}\n`;
+            report += `   Solution: ${r.solution}\n`;
+        });
+
+        report += '\n================================\n';
+        report += '📌 Generated by SkillBridge Platform';
+
+        alert(report);
+    }
+
+    function viewDetailedAnalysis() {
+        const strong = skillsData.all.filter(s => s.score >= 80);
+        const moderate = skillsData.all.filter(s => s.score >= 60 && s.score < 80);
+        const weak = skillsData.all.filter(s => s.score < 60);
+
+        let weakDetails = weak.map(s => {
+            const reason = getGapReasons(s.name, s.score);
+            return `  • ${s.name}: ${s.score}% ⚠️\n    ⭐ Importance: ${s.importance}\n    ↳ ${reason.reason}`;
+        }).join('\n') || '  None';
+
+        alert(`📊 DETAILED SKILL ANALYSIS\n\n` +
+              `📈 DISTRIBUTION\n` +
+              `• ✅ Strong Skills: ${strong.length} (${Math.round(strong.length/stats.total*100)}%)\n` +
+              `• 📊 Moderate Skills: ${moderate.length} (${Math.round(moderate.length/stats.total*100)}%)\n` +
+              `• ⚠️ Skill Gaps: ${weak.length} (${Math.round(weak.length/stats.total*100)}%)\n\n` +
+              `💪 STRONG SKILLS\n${strong.map(s => `  • ${s.name}: ${s.score}% ✅`).join('\n') || '  None'}\n\n` +
+              `⚠️ SKILL GAPS\n${weakDetails}\n\n` +
+              `💡 RECOMMENDATIONS\n${recommendations.map((r,i) => `  ${i+1}. ${r.action}`).join('\n') || '  No recommendations needed'}`);
+    }
+
+    function viewTrainingPlan() {
+        const gaps = skillsData.all.filter(s => s.score < 60);
+        
+        if (gaps.length === 0) {
+            alert('✅ No training needed!');
+            return;
+        }
+
+        let plan = '📋 TRAINING PLAN\n';
+        plan += '================================\n\n';
+
+        gaps.forEach((s, i) => {
+            const priority = s.score < 50 ? '🔴 HIGH' : '🟡 MEDIUM';
+            const reason = getGapReasons(s.name, s.score);
+            plan += `${i+1}. ${s.name} (${priority})\n`;
+            plan += `   Score: ${s.score}% → Target: ${Math.min(s.score + 30, 85)}%\n`;
+            plan += `   ${reason.solution}\n`;
+            plan += `   Duration: ${s.score < 50 ? '2-3 weeks' : '1-2 weeks'}\n\n`;
+        });
+
+        plan += '================================\n';
+        plan += `📅 Start: ${new Date(Date.now() + 7*24*60*60*1000).toLocaleDateString()}`;
+
+        alert(plan);
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            alert('Logging out...');
+            window.location.href = '../../auth/login.html';
+        }
+    }
+
+    // ============================================================
+    // UTILITY
+    // ============================================================
+
+    function updateDate() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDate();
+        renderAll();
+
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        console.log('📊 Skill Gaps page loaded with sample data!');
+        console.log('📋 Skills:', skillsData.all.length);
+        console.log('📊 Stats:', stats);
+    });
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

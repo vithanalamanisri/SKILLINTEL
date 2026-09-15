@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theme Test · SKILLINTEL</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #F4F7FC;
+    --card: #FFFFFF;
+    --text: #0B1220;
+    --muted: #64748B;
+    --border: #E2E8F0;
+  }
+  html[data-theme="dark"] {
+    --bg: #0B1220;
+    --card: #151E32;
+    --text: #F1F5F9;
+    --muted: #94A3B8;
+    --border: rgba(255,255,255,0.10);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    transition: background 0.3s, color 0.3s;
+  }
+  .box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    max-width: 500px;
+  }
+  h1 { font-size: 24px; margin-bottom: 12px; }
+  p { color: var(--muted); margin-bottom: 24px; }
+  .theme-toggle {
+    width: 60px; height: 60px;
+    border-radius: 16px;
+    background: #2563EB;
+    color: white;
+    font-size: 22px;
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .theme-toggle:hover { transform: scale(1.1) rotate(15deg); }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h1>Theme Test</h1>
+  <p>Click the button below. If the colors flip, everything works.</p>
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <i class="fas fa-moon"></i>
+  </button>
+</div>
+
+<script>
+  // Simple, self-contained theme toggle — no external file
+  (function () {
+    var saved = 'light';
+    try { saved = localStorage.getItem('skillintel-theme') || 'light'; } catch (e) {}
+    document.documentElement.setAttribute('data-theme', saved);
+    updateIcon(saved);
+  })();
+
+  function toggleTheme() {
+    var current = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+    updateIcon(next);
+  }
+
+  function updateIcon(theme) {
+    var icon = document.querySelector('.theme-toggle i');
+    if (icon) icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+  }
+</script>
+
+</body>
+</html>

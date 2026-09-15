@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Submit Feedback · SkillBridge</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body {
+            background: #f0f4f9;
+            display: flex;
+            min-height: 100vh;
+        }
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 24px 18px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 18px;
+        }
+        .sidebar-brand .icon {
+            width: 46px; height: 46px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+        .sidebar-brand p { font-size: 10px; opacity: 0.5; font-weight: 500; margin-top: 2px; }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 14px;
+        }
+        .sidebar-user .avatar {
+            width: 48px; height: 48px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 20px;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .sidebar-user .avatar .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            background: #22c55e;
+            border-radius: 50%;
+            border: 2px solid #0f172a;
+        }
+        .sidebar-user .info .name { font-size: 15px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 11px; opacity: 0.5; }
+        .sidebar-user .info .company { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+
+        .menu-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.35;
+            padding: 12px 12px 6px;
+            font-weight: 700;
+        }
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 12px;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            transition: all 0.2s;
+            margin: 2px 0;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .menu a.active::before {
+            content: '';
+            position: absolute;
+            left: -18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #2563eb, #7c3aed);
+            border-radius: 0 4px 4px 0;
+        }
+        .menu a i { width: 20px; text-align: center; font-size: 15px; }
+        .menu a .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 20px 12px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 12px;
+        }
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 12px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            transition: 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ===== MAIN ===== */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .menu-toggle {
+            display: none;
+            background: none; border: none;
+            font-size: 22px; color: #0b1a33;
+            cursor: pointer;
+        }
+        .header-left .page-title h1 {
+            font-size: 20px; color: #0b1a33;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .header-left .page-title h1 i { color: #2563eb; }
+        .header-left .page-title p {
+            font-size: 12px; color: #64748b;
+            margin-top: 1px;
+        }
+        .header-right {
+            display: flex; align-items: center; gap: 16px;
+        }
+        .header-right .date {
+            font-size: 13px; color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .header-right .notif {
+            position: relative;
+            font-size: 20px; color: #475569;
+            cursor: pointer;
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge {
+            position: absolute; top: 2px; right: 2px;
+            background: #ef4444; color: white;
+            width: 20px; height: 20px;
+            font-size: 10px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .header-right .profile-btn {
+            display: flex; align-items: center; gap: 10px;
+            background: #f1f5f9;
+            padding: 5px 14px 5px 5px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px;
+        }
+        .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+
+        /* Theme toggle (self-contained fallback) */
+        .theme-toggle {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: grid; place-items: center;
+            color: #475569;
+            font-size: 16px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover {
+            background: #f1f5f9;
+            color: #06b6d4;
+            transform: rotate(15deg);
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            padding: 24px 32px 32px;
+            max-width: 1440px;
+            margin: auto;
+        }
+
+        /* ===== WELCOME ===== */
+        .welcome {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+            color: white;
+            padding: 28px 32px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome::before {
+            content: "";
+            position: absolute;
+            width: 350px; height: 350px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -130px; right: -80px;
+        }
+        .welcome-content { position: relative; z-index: 1; }
+        .welcome h2 {
+            font-size: 26px; margin-bottom: 4px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .welcome p { font-size: 15px; opacity: 0.85; }
+        .welcome .welcome-stats {
+            display: flex; gap: 30px;
+            margin-top: 12px; flex-wrap: wrap;
+        }
+        .welcome .welcome-stats div { font-size: 12px; }
+        .welcome .welcome-stats strong { font-size: 20px; display: block; }
+
+        /* ===== FORM ===== */
+        .form-section {
+            background: white;
+            border-radius: 18px;
+            padding: 28px 30px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+            transition: all 0.3s;
+        }
+        .form-section:hover {
+            box-shadow: 0 8px 25px rgba(37,99,235,0.06);
+        }
+        .form-section .section-title {
+            font-size: 16px; font-weight: 700;
+            color: #0b1a33;
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .form-section .section-title i { color: #2563eb; }
+        .form-section .section-title .section-badge {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: 600;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 2px 12px;
+            border-radius: 20px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+        .form-grid .full-width { grid-column: 1 / -1; }
+        .form-group {
+            display: flex; flex-direction: column;
+            gap: 4px;
+        }
+        .form-group label {
+            font-weight: 600; font-size: 13px;
+            color: #334155;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .form-group label i { color: #2563eb; }
+        .form-group label .required { color: #ef4444; }
+        .form-group label .optional { color: #94a3b8; font-weight: 400; font-size: 11px; }
+        .form-group .helper-text {
+            font-size: 11px; color: #94a3b8;
+            margin-top: 2px;
+        }
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .input-wrap:hover { border-color: #cbd5e1; }
+        .input-wrap:focus-within {
+            border-color: #2563eb;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+        }
+        .input-wrap input, .input-wrap select, .input-wrap textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: none; background: transparent;
+            font-size: 14px; font-weight: 500;
+            color: #0b1a33; outline: none;
+            border-radius: 10px;
+        }
+        .input-wrap textarea {
+            resize: vertical; min-height: 100px;
+            font-weight: 400;
+        }
+        .input-wrap input::placeholder, .input-wrap textarea::placeholder {
+            color: #94a3b8; font-weight: 400;
+        }
+        .input-wrap select { appearance: none; cursor: pointer; padding-right: 36px; }
+        .input-wrap .select-arrow {
+            position: absolute; right: 14px;
+            color: #94a3b8; pointer-events: none;
+        }
+        .error-text {
+            font-size: 12px; color: #ef4444;
+            display: none; margin-top: 2px;
+        }
+        .error-text.show { display: block; }
+        .input-wrap.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.08);
+        }
+
+        /* ===== STAR RATING ===== */
+        .star-rating-container {
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .star-rating {
+            display: flex; gap: 6px;
+            padding: 8px 0;
+        }
+        .star-rating .star {
+            font-size: 36px;
+            cursor: pointer;
+            color: #d1d5db;
+            transition: all 0.2s;
+        }
+        .star-rating .star:hover,
+        .star-rating .star.active {
+            color: #eab308;
+            transform: scale(1.15);
+        }
+        .star-rating .star:hover ~ .star {
+            color: #d1d5db;
+        }
+        .rating-emoji {
+            font-size: 28px; margin-left: 12px;
+        }
+        .rating-label-text {
+            font-size: 14px; font-weight: 500; color: #475569;
+        }
+
+        /* ===== COMPETENCY SLIDERS ===== */
+        .competency-slider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .competency-slider:last-child { border-bottom: none; }
+        .competency-slider .comp-label {
+            font-size: 13px; color: #475569;
+            width: 130px; flex-shrink: 0;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .competency-slider .comp-label i { font-size: 14px; }
+        .competency-slider input[type="range"] {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #e2e8f0;
+            border-radius: 10px;
+            outline: none;
+        }
+        .competency-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+            transition: 0.2s;
+        }
+        .competency-slider input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.4);
+        }
+        .competency-slider .comp-value {
+            font-weight: 700; font-size: 14px;
+            color: #0b1a33;
+            width: 40px; text-align: right;
+        }
+        .competency-slider .comp-status {
+            font-size: 10px; font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 12px;
+            min-width: 50px;
+            text-align: center;
+        }
+        .comp-status.excellent { background: #dcfce7; color: #16a34a; }
+        .comp-status.good { background: #dbeafe; color: #2563eb; }
+        .comp-status.average { background: #fef3c7; color: #d97706; }
+        .comp-status.needs { background: #fee2e2; color: #dc2626; }
+
+        /* ===== EMOJI PICKER ===== */
+        .emoji-grid {
+            display: flex; gap: 8px; flex-wrap: wrap;
+            padding: 4px 0;
+        }
+        .emoji-grid .emoji-option {
+            font-size: 28px; cursor: pointer;
+            padding: 4px 8px; border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+        .emoji-grid .emoji-option:hover {
+            transform: scale(1.15);
+            background: #eef2ff;
+        }
+        .emoji-grid .emoji-option.selected {
+            border-color: #2563eb;
+            background: #dbeafe;
+        }
+
+        /* ===== BUTTONS ===== */
+        .form-actions {
+            display: flex; gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid #f1f5f9;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            box-shadow: 0 6px 20px -8px rgba(37,99,235,0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px -10px rgba(37,99,235,0.5);
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid #e2e8f0;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #059669;
+            color: white;
+            box-shadow: 0 6px 20px -8px rgba(5,150,105,0.35);
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px -10px rgba(5,150,105,0.45);
+        }
+        .btn-outline {
+            background: transparent;
+            color: #2563eb;
+            border: 2px solid #2563eb;
+        }
+        .btn-outline:hover {
+            background: #eff6ff;
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ===== ALERT ===== */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: flex-start;
+            gap: 12px;
+            border-left: 4px solid;
+        }
+        .alert.success {
+            display: flex;
+            background: #ecfdf5;
+            color: #065f46;
+            border-left-color: #10b981;
+        }
+        .alert.error {
+            display: flex;
+            background: #fef2f2;
+            color: #991b1b;
+            border-left-color: #ef4444;
+        }
+        .alert.info {
+            display: flex;
+            background: #eff6ff;
+            color: #1e40af;
+            border-left-color: #2563eb;
+        }
+        .alert i { font-size: 18px; margin-top: 2px; flex-shrink: 0; }
+        .alert .alert-msg { line-height: 1.5; }
+        .alert .alert-msg strong { color: inherit; }
+
+        /* ===== PROGRESS BAR ===== */
+        .form-progress {
+            display: flex; gap: 8px;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #eef2f6;
+        }
+        .form-progress .progress-step {
+            display: flex; align-items: center; gap: 8px;
+            flex: 1;
+        }
+        .form-progress .progress-step .step-circle {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 12px;
+            background: #e2e8f0; color: #94a3b8;
+            transition: 0.3s;
+        }
+        .form-progress .progress-step .step-circle.active {
+            background: #2563eb; color: white;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+        }
+        .form-progress .progress-step .step-circle.completed {
+            background: #22c55e; color: white;
+        }
+        .form-progress .progress-step .step-label {
+            font-size: 11px; font-weight: 600;
+            color: #94a3b8;
+        }
+        .form-progress .progress-step .step-label.active {
+            color: #2563eb;
+        }
+        .form-progress .progress-step .step-label.completed {
+            color: #22c55e;
+        }
+        .form-progress .progress-line {
+            flex: 0.5; height: 2px;
+            background: #e2e8f0;
+            align-self: center;
+        }
+        .form-progress .progress-line.completed {
+            background: #22c55e;
+        }
+
+        /* ===== TAG OPTION ===== */
+        .tag-option {
+            padding: 4px 14px;
+            border-radius: 20px;
+            background: #f1f5f9;
+            border: 2px solid transparent;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tag-option:hover {
+            background: #e2e8f0;
+            transform: scale(1.05);
+        }
+        .tag-option.selected {
+            background: #dbeafe;
+            border-color: #2563eb;
+            color: #1a56db;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 12px 18px; flex-wrap: wrap; gap: 8px; }
+            .header-left .page-title h1 { font-size: 17px; }
+            .header-right .date { display: none; }
+            .container { padding: 16px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-section { padding: 20px; }
+            .form-actions { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            .competency-slider .comp-label { width: 90px; font-size: 12px; }
+            .form-progress { flex-wrap: wrap; }
+            .form-progress .progress-step { flex: 1 1 45%; }
+            .form-progress .progress-line { display: none; }
+        }
+        @media (max-width: 480px) {
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+            .star-rating .star { font-size: 28px; }
+            .form-progress .progress-step { flex: 1 1 100%; }
+            .welcome .welcome-stats { gap: 12px; }
+            .welcome .welcome-stats div { width: 45%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>SkillBridge</h2>
+            <p>Employer Portal</p>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">E</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Employer</div>
+            <div class="company" id="sidebarCompany">Company Name</div>
+            <div class="role">Employer</div>
+        </div>
+    </div>
+
+    <div class="menu">
+        <div class="menu-label">Main Menu</div>
+        <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees</a>
+        <a href="employment-details.html"><i class="fas fa-briefcase"></i> Employment Details</a>
+        <a class="active" href="employer-feedback-form.html"><i class="fas fa-star"></i> Submit Feedback</a>
+        <a href="feedback&skillsgap.html"><i class="fas fa-chart-bar"></i> Feedback & Skill Gap</a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-star"></i> Submit Feedback</h1>
+                <p>Provide comprehensive feedback on trainee performance</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+  <i class="fas fa-moon"></i>
+</button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">E</div>
+                <span class="name" id="headerName">Employer</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== CONTAINER ===== -->
+    <div class="container">
+
+        <!-- WELCOME -->
+        <div class="welcome">
+            <div class="welcome-content">
+                <h2><i class="fas fa-hand-peace"></i> Share Your Feedback</h2>
+                <p>Help improve training programs by providing valuable feedback on trainee performance, competencies, and overall satisfaction.</p>
+                <div class="welcome-stats">
+                    <div><strong id="totalFeedback">0</strong> Total Feedback</div>
+                    <div><strong id="avgRating">0.0</strong> ⭐ Avg Rating</div>
+                    <div><strong id="feedbackStatus">Ready</strong> Status</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALERT -->
+        <div class="alert" id="alertBox">
+            <i class="fas fa-check-circle" id="alertIcon"></i>
+            <div class="alert-msg" id="alertMessage">Feedback submitted successfully!</div>
+        </div>
+
+        <!-- FORM PROGRESS -->
+        <div class="form-progress" id="formProgress">
+            <div class="progress-step">
+                <div class="step-circle active" id="step1Circle">1</div>
+                <span class="step-label active" id="step1Label">Details</span>
+            </div>
+            <div class="progress-line" id="line1"></div>
+            <div class="progress-step">
+                <div class="step-circle" id="step2Circle">2</div>
+                <span class="step-label" id="step2Label">Rating</span>
+            </div>
+            <div class="progress-line" id="line2"></div>
+            <div class="progress-step">
+                <div class="step-circle" id="step3Circle">3</div>
+                <span class="step-label" id="step3Label">Competencies</span>
+            </div>
+            <div class="progress-line" id="line3"></div>
+            <div class="progress-step">
+                <div class="step-circle" id="step4Circle">4</div>
+                <span class="step-label" id="step4Label">Feedback</span>
+            </div>
+        </div>
+
+        <!-- ===== FEEDBACK FORM ===== -->
+        <form id="feedbackForm" onsubmit="return false;">
+
+            <!-- STEP 1: EMPLOYER & TRAINEE DETAILS -->
+            <div class="form-section" id="section1">
+                <div class="section-title">
+                    <i class="fas fa-user"></i>
+                    Employer & Trainee Details
+                    <span class="section-badge">Step 1 of 4</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-building"></i> Your Organization <span class="required">*</span></label>
+                        <div class="input-wrap" id="wrapOrg">
+                            <input type="text" id="employerOrg" placeholder="Enter your organization name" />
+                        </div>
+                        <div class="error-text" id="errOrg">Please enter organization name</div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Your Name <span class="required">*</span></label>
+                        <div class="input-wrap" id="wrapName">
+                            <input type="text" id="employerName" placeholder="Enter your full name" />
+                        </div>
+                        <div class="error-text" id="errName">Please enter your name</div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Your Email <span class="required">*</span></label>
+                        <div class="input-wrap" id="wrapEmail">
+                            <input type="email" id="employerEmail" placeholder="you@company.com" />
+                        </div>
+                        <div class="error-text" id="errEmail">Please enter a valid email</div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> Your Phone <span class="optional">(Optional)</span></label>
+                        <div class="input-wrap">
+                            <input type="tel" id="employerPhone" placeholder="+91 98765 43210" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-user-graduate"></i> Trainee Name <span class="required">*</span></label>
+                        <div class="input-wrap" id="wrapTrainee">
+                            <input type="text" id="traineeName" placeholder="Enter trainee's full name" />
+                        </div>
+                        <div class="error-text" id="errTrainee">Please enter trainee name</div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-id-badge"></i> Trainee ID <span class="optional">(Optional)</span></label>
+                        <div class="input-wrap">
+                            <input type="text" id="traineeId" placeholder="e.g. TRN2026001" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar-alt"></i> Feedback Date</label>
+                        <div class="input-wrap">
+                            <input type="date" id="feedbackDate" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-tag"></i> Program/Scheme <span class="optional">(Optional)</span></label>
+                        <div class="input-wrap">
+                            <select id="programScheme">
+                                <option value="">Select Program</option>
+                                <option value="PMKVY">PMKVY</option>
+                                <option value="NSDC">NSDC</option>
+                                <option value="DDU-GKY">DDU-GKY</option>
+                                <option value="PMYY">PMYY</option>
+                                <option value="State Skill Mission">State Skill Mission</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <i class="fas fa-chevron-down select-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+                    <button type="button" class="btn btn-primary" onclick="goToStep(2)">
+                        Next: Rating <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: RATING SECTION -->
+            <div class="form-section" id="section2" style="display:none;">
+                <div class="section-title">
+                    <i class="fas fa-star"></i>
+                    Overall Rating
+                    <span class="section-badge">Step 2 of 4</span>
+                </div>
+                <div class="star-rating-container">
+                    <label style="font-weight:600; font-size:14px; color:#334155;">
+                        How would you rate this trainee's overall performance? <span class="required">*</span>
+                    </label>
+                    <div class="star-rating" id="starRating">
+                        <span class="star" data-value="1">☆</span>
+                        <span class="star" data-value="2">☆</span>
+                        <span class="star" data-value="3">☆</span>
+                        <span class="star" data-value="4">☆</span>
+                        <span class="star" data-value="5">☆</span>
+                    </div>
+                    <div class="error-text" id="errRating" style="display:none;">Please select a rating</div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span class="rating-label-text" id="ratingLabel">Click a star to rate</span>
+                        <span class="rating-emoji" id="ratingEmoji">😐</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; padding-top:16px; border-top:1px solid #f1f5f9;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check"></i> Employment Duration</label>
+                            <div class="input-wrap">
+                                <select id="employmentDuration">
+                                    <option value="">Select Duration</option>
+                                    <option value="Less than 1 month">Less than 1 month</option>
+                                    <option value="1-3 months">1-3 months</option>
+                                    <option value="3-6 months">3-6 months</option>
+                                    <option value="6-12 months">6-12 months</option>
+                                    <option value="More than 1 year">More than 1 year</option>
+                                </select>
+                                <i class="fas fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-clock"></i> Overall Work Experience</label>
+                            <div class="input-wrap">
+                                <select id="overallExperience">
+                                    <option value="">Select Experience</option>
+                                    <option value="Fresher">Fresher (No experience)</option>
+                                    <option value="0-1 year">0-1 year</option>
+                                    <option value="1-2 years">1-2 years</option>
+                                    <option value="2-5 years">2-5 years</option>
+                                    <option value="5+ years">5+ years</option>
+                                </select>
+                                <i class="fas fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; margin-top:16px;">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(1)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(3)">
+                        Next: Competencies <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: COMPETENCY RATINGS -->
+            <div class="form-section" id="section3" style="display:none;">
+                <div class="section-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Competency Ratings
+                    <span class="section-badge">Step 3 of 4</span>
+                </div>
+                <div style="margin-bottom:12px; font-size:13px; color:#64748b;">
+                    <i class="fas fa-info-circle"></i> Rate each competency from 0 to 100%
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div class="competency-slider">
+                        <span class="comp-label"><i class="fas fa-code"></i> Technical Skills</span>
+                        <input type="range" min="0" max="100" value="75" id="compTechnical" />
+                        <span class="comp-value" id="compTechnicalVal">75%</span>
+                        <span class="comp-status good" id="compTechnicalStatus">Good</span>
+                    </div>
+                    <div class="competency-slider">
+                        <span class="comp-label"><i class="fas fa-comments"></i> Communication</span>
+                        <input type="range" min="0" max="100" value="70" id="compCommunication" />
+                        <span class="comp-value" id="compCommunicationVal">70%</span>
+                        <span class="comp-status average" id="compCommunicationStatus">Average</span>
+                    </div>
+                    <div class="competency-slider">
+                        <span class="comp-label"><i class="fas fa-lightbulb"></i> Problem Solving</span>
+                        <input type="range" min="0" max="100" value="72" id="compProblemSolving" />
+                        <span class="comp-value" id="compProblemSolvingVal">72%</span>
+                        <span class="comp-status average" id="compProblemSolvingStatus">Average</span>
+                    </div>
+                    <div class="competency-slider">
+                        <span class="comp-label"><i class="fas fa-users"></i> Teamwork</span>
+                        <input type="range" min="0" max="100" value="78" id="compTeamwork" />
+                        <span class="comp-value" id="compTeamworkVal">78%</span>
+                        <span class="comp-status good" id="compTeamworkStatus">Good</span>
+                    </div>
+                    <div class="competency-slider">
+                        <span class="comp-label"><i class="fas fa-award"></i> Work Ethic</span>
+                        <input type="range" min="0" max="100" value="80" id="compWorkEthic" />
+                        <span class="comp-value" id="compWorkEthicVal">80%</span>
+                        <span class="comp-status good" id="compWorkEthicStatus">Good</span>
+                    </div>
+                    <div class="competency-slider">
+                        <span class="comp-label"><i class="fas fa-sync-alt"></i> Adaptability</span>
+                        <input type="range" min="0" max="100" value="68" id="compAdaptability" />
+                        <span class="comp-value" id="compAdaptabilityVal">68%</span>
+                        <span class="comp-status average" id="compAdaptabilityStatus">Average</span>
+                    </div>
+                    <div class="competency-slider">
+                        <span class="comp-label"><i class="fas fa-users-cog"></i> Leadership</span>
+                        <input type="range" min="0" max="100" value="60" id="compLeadership" />
+                        <span class="comp-value" id="compLeadershipVal">60%</span>
+                        <span class="comp-status average" id="compLeadershipStatus">Average</span>
+                    </div>
+                    <div class="competency-slider">
+                        <span class="comp-label"><i class="fas fa-clock"></i> Time Management</span>
+                        <input type="range" min="0" max="100" value="72" id="compTimeManagement" />
+                        <span class="comp-value" id="compTimeManagementVal">72%</span>
+                        <span class="comp-status average" id="compTimeManagementStatus">Average</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; margin-top:16px;">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(2)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(4)">
+                        Next: Feedback <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 4: FEEDBACK TEXT -->
+            <div class="form-section" id="section4" style="display:none;">
+                <div class="section-title">
+                    <i class="fas fa-comment-dots"></i>
+                    Detailed Feedback
+                    <span class="section-badge">Step 4 of 4</span>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-comment"></i> What did the trainee do well? <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapFeedback">
+                        <textarea id="feedbackText" placeholder="Describe the trainee's strengths, achievements, and positive contributions..."></textarea>
+                    </div>
+                    <div class="error-text" id="errFeedback">Please provide detailed feedback</div>
+                    <span class="helper-text"><i class="fas fa-info-circle"></i> Minimum 10 characters</span>
+                </div>
+
+                <div class="form-group" style="margin-top:12px;">
+                    <label><i class="fas fa-tools"></i> Areas for Improvement</label>
+                    <div class="input-wrap">
+                        <textarea id="improvementAreas" placeholder="Suggest areas where the trainee could improve or grow..."></textarea>
+                    </div>
+                    <span class="helper-text"><i class="fas fa-info-circle"></i> Constructive feedback is valuable for growth</span>
+                </div>
+
+                <!-- Quick Feedback Tags -->
+                <div style="margin-top:16px;">
+                    <label style="font-weight:600; font-size:13px; color:#334155; display:block; margin-bottom:8px;">
+                        <i class="fas fa-tags"></i> Quick Feedback Tags
+                    </label>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        <span class="tag-option" data-tag="Punctual" onclick="toggleTag(this)">⏰ Punctual</span>
+                        <span class="tag-option" data-tag="Hardworking" onclick="toggleTag(this)">💪 Hardworking</span>
+                        <span class="tag-option" data-tag="Team Player" onclick="toggleTag(this)">🤝 Team Player</span>
+                        <span class="tag-option" data-tag="Quick Learner" onclick="toggleTag(this)">🚀 Quick Learner</span>
+                        <span class="tag-option" data-tag="Creative" onclick="toggleTag(this)">🎨 Creative</span>
+                        <span class="tag-option" data-tag="Reliable" onclick="toggleTag(this)">✅ Reliable</span>
+                        <span class="tag-option" data-tag="Good Communicator" onclick="toggleTag(this)">💬 Good Communicator</span>
+                        <span class="tag-option" data-tag="Needs Guidance" onclick="toggleTag(this)">📖 Needs Guidance</span>
+                        <span class="tag-option" data-tag="Highly Skilled" onclick="toggleTag(this)">⭐ Highly Skilled</span>
+                        <span class="tag-option" data-tag="Motivated" onclick="toggleTag(this)">🔥 Motivated</span>
+                    </div>
+                    <div style="margin-top:8px; font-size:12px; color:#94a3b8;">
+                        Selected tags: <span id="selectedTags">None</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; margin-top:16px;">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(3)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="submit" class="btn btn-success" onclick="submitFeedback()" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> Submit Feedback
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // DATA LOADER
+    // ============================================================
+    function getEmployerData() {
+        let data = localStorage.getItem('employerData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing employerData:', e); }
+        }
+        return null;
+    }
+
+    function getFeedbackData() {
+        let data = localStorage.getItem('employerFeedbackData');
+        if (data) {
+            try { return JSON.parse(data); }
+            catch(e) { console.error('Error parsing feedback data:', e); }
+        }
+        return [];
+    }
+
+    // ============================================================
+    // UPDATE SIDEBAR
+    // ============================================================
+    function updateSidebar() {
+        const employerData = getEmployerData();
+        if (employerData && employerData.contactPerson) {
+            const initial = employerData.contactPerson.charAt(0).toUpperCase();
+            document.getElementById('sidebarAvatar').textContent = initial;
+            document.getElementById('sidebarName').textContent = employerData.contactPerson;
+            document.getElementById('sidebarCompany').textContent = employerData.orgName || 'Company';
+            document.getElementById('headerAvatar').textContent = initial;
+            document.getElementById('headerName').textContent = employerData.contactPerson;
+        }
+    }
+
+    // ============================================================
+    // STEP NAVIGATION
+    // ============================================================
+    let currentStep = 1;
+    const totalSteps = 4;
+    let selectedTags = [];
+
+    function goToStep(step) {
+        if (step > currentStep) {
+            if (currentStep === 1 && !validateStep1()) return;
+            if (currentStep === 2 && !validateStep2()) return;
+            if (currentStep === 3 && !validateStep3()) return;
+        }
+
+        currentStep = step;
+        updateSteps();
+    }
+
+    function updateSteps() {
+        for (let i = 1; i <= totalSteps; i++) {
+            const section = document.getElementById('section' + i);
+            if (section) {
+                section.style.display = (i === currentStep) ? 'block' : 'none';
+            }
+        }
+
+        for (let i = 1; i <= totalSteps; i++) {
+            const circle = document.getElementById('step' + i + 'Circle');
+            const label = document.getElementById('step' + i + 'Label');
+            if (circle) {
+                circle.classList.remove('active', 'completed');
+                if (i === currentStep) circle.classList.add('active');
+                else if (i < currentStep) circle.classList.add('completed');
+            }
+            if (label) {
+                label.classList.remove('active', 'completed');
+                if (i === currentStep) label.classList.add('active');
+                else if (i < currentStep) label.classList.add('completed');
+            }
+        }
+
+        for (let i = 1; i < totalSteps; i++) {
+            const line = document.getElementById('line' + i);
+            if (line) {
+                line.classList.toggle('completed', i < currentStep);
+            }
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ============================================================
+    // VALIDATION
+    // ============================================================
+    function setError(wrapId, errId, show) {
+        const wrap = document.getElementById(wrapId);
+        const err = document.getElementById(errId);
+        if (wrap) wrap.classList.toggle('error', show);
+        if (err) err.classList.toggle('show', show);
+    }
+
+    function validateStep1() {
+        let valid = true;
+        const employerOrg = document.getElementById('employerOrg').value.trim();
+        const employerName = document.getElementById('employerName').value.trim();
+        const employerEmail = document.getElementById('employerEmail').value.trim();
+        const traineeName = document.getElementById('traineeName').value.trim();
+
+        if (!employerOrg) { setError('wrapOrg', 'errOrg', true); valid = false; }
+        else { setError('wrapOrg', 'errOrg', false); }
+
+        if (!employerName) { setError('wrapName', 'errName', true); valid = false; }
+        else { setError('wrapName', 'errName', false); }
+
+        if (!employerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(employerEmail)) {
+            setError('wrapEmail', 'errEmail', true);
+            valid = false;
+        } else {
+            setError('wrapEmail', 'errEmail', false);
+        }
+
+        if (!traineeName) { setError('wrapTrainee', 'errTrainee', true); valid = false; }
+        else { setError('wrapTrainee', 'errTrainee', false); }
+
+        if (!valid) {
+            showAlert('Please fill all required fields in <strong>Employer & Trainee Details</strong>.', 'error');
+        }
+        return valid;
+    }
+
+    function validateStep2() {
+        if (selectedRating === 0) {
+            document.getElementById('errRating').style.display = 'block';
+            showAlert('Please select a <strong>rating</strong> for the trainee.', 'error');
+            return false;
+        }
+        document.getElementById('errRating').style.display = 'none';
+        return true;
+    }
+
+    function validateStep3() {
+        return true;
+    }
+
+    // ============================================================
+    // STAR RATING
+    // ============================================================
+    let selectedRating = 0;
+    const stars = document.querySelectorAll('.star');
+    const ratingLabel = document.getElementById('ratingLabel');
+    const ratingEmoji = document.getElementById('ratingEmoji');
+
+    const ratingEmojis = { 1: '😞', 2: '😕', 3: '😐', 4: '😊', 5: '🌟' };
+
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.value);
+            updateStars(selectedRating);
+            document.getElementById('errRating').style.display = 'none';
+        });
+
+        star.addEventListener('mouseenter', function() {
+            const value = parseInt(this.dataset.value);
+            updateStarsHover(value);
+        });
+
+        star.addEventListener('mouseleave', function() {
+            updateStars(selectedRating);
+        });
+    });
+
+    function updateStars(count) {
+        stars.forEach((star, index) => {
+            if (index < count) {
+                star.textContent = '★';
+                star.classList.add('active');
+            } else {
+                star.textContent = '☆';
+                star.classList.remove('active');
+            }
+        });
+        const labels = {
+            1: 'Poor - Needs significant improvement',
+            2: 'Fair - Some improvement needed',
+            3: 'Good - Meets expectations',
+            4: 'Very Good - Exceeds expectations',
+            5: 'Excellent - Outstanding performance'
+        };
+        ratingLabel.textContent = count > 0 ? labels[count] : 'Click a star to rate';
+        ratingEmoji.textContent = count > 0 ? ratingEmojis[count] || '😐' : '😐';
+    }
+
+    function updateStarsHover(count) {
+        stars.forEach((star, index) => {
+            if (index < count) {
+                star.textContent = '★';
+                star.classList.add('active');
+            } else {
+                star.textContent = '☆';
+                star.classList.remove('active');
+            }
+        });
+    }
+
+    // ============================================================
+    // COMPETENCY SLIDERS
+    // ============================================================
+    document.querySelectorAll('.competency-slider input[type="range"]').forEach(slider => {
+        slider.addEventListener('input', function() {
+            const id = this.id;
+            const val = parseInt(this.value);
+            document.getElementById(id + 'Val').textContent = val + '%';
+
+            const statusEl = document.getElementById(id + 'Status');
+            if (statusEl) {
+                statusEl.className = 'comp-status';
+                if (val >= 85) {
+                    statusEl.textContent = 'Excellent';
+                    statusEl.classList.add('excellent');
+                } else if (val >= 70) {
+                    statusEl.textContent = 'Good';
+                    statusEl.classList.add('good');
+                } else if (val >= 50) {
+                    statusEl.textContent = 'Average';
+                    statusEl.classList.add('average');
+                } else {
+                    statusEl.textContent = 'Needs Improvement';
+                    statusEl.classList.add('needs');
+                }
+            }
+        });
+    });
+
+    // ============================================================
+    // QUICK FEEDBACK TAGS
+    // ============================================================
+    function toggleTag(el) {
+        el.classList.toggle('selected');
+        const tag = el.dataset.tag;
+        if (el.classList.contains('selected')) {
+            if (!selectedTags.includes(tag)) selectedTags.push(tag);
+        } else {
+            selectedTags = selectedTags.filter(t => t !== tag);
+        }
+        document.getElementById('selectedTags').textContent = selectedTags.length > 0 ? selectedTags.join(', ') : 'None';
+    }
+
+    // ============================================================
+    // DATE DISPLAY
+    // ============================================================
+    function updateDate() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+        document.getElementById('feedbackDate').value = now.toISOString().split('T')[0];
+    }
+    updateDate();
+
+    // ============================================================
+    // NOTIFICATIONS / PROFILE / LOGOUT
+    // ============================================================
+    function showNotifications() {
+        const feedback = getFeedbackData();
+        alert(`📬 Notifications\n\n• ${feedback.length} feedback entries submitted\n• ${feedback.filter(f => f.rating >= 4).length} positive ratings\n• ${feedback.filter(f => f.rating < 3).length} low ratings`);
+    }
+
+    function toggleProfileMenu() {
+        alert('👤 Profile Menu\n\nSettings · Support · Logout');
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            alert('Logging out... Redirecting to login page.');
+            window.location.href = '../../auth/login.html';
+        }
+    }
+
+    // ============================================================
+    // ALERT
+    // ============================================================
+    function showAlert(message, type = 'success') {
+        const alertBox = document.getElementById('alertBox');
+        const alertMsg = document.getElementById('alertMessage');
+        const alertIcon = document.getElementById('alertIcon');
+
+        alertBox.className = 'alert ' + type;
+        alertIcon.className = type === 'success' ? 'fas fa-check-circle' :
+                              type === 'info' ? 'fas fa-info-circle' : 'fas fa-exclamation-circle';
+        alertMsg.innerHTML = message;
+        alertBox.style.display = 'flex';
+
+        clearTimeout(window.alertTimeout);
+        window.alertTimeout = setTimeout(() => {
+            alertBox.style.display = 'none';
+        }, 6000);
+    }
+
+    // ============================================================
+    // FORM SUBMISSION
+    // ============================================================
+    function submitFeedback() {
+        if (!validateStep1()) { goToStep(1); return; }
+        if (!validateStep2()) { goToStep(2); return; }
+        if (!validateStep3()) { goToStep(3); return; }
+
+        const feedbackText = document.getElementById('feedbackText').value.trim();
+        if (!feedbackText || feedbackText.length < 10) {
+            setError('wrapFeedback', 'errFeedback', true);
+            showAlert('Please provide <strong>detailed feedback</strong> (minimum 10 characters).', 'error');
+            goToStep(4);
+            return;
+        } else {
+            setError('wrapFeedback', 'errFeedback', false);
+        }
+
+        const competencies = [
+            { name: 'Technical Skills', score: parseInt(document.getElementById('compTechnical').value) },
+            { name: 'Communication', score: parseInt(document.getElementById('compCommunication').value) },
+            { name: 'Problem Solving', score: parseInt(document.getElementById('compProblemSolving').value) },
+            { name: 'Teamwork', score: parseInt(document.getElementById('compTeamwork').value) },
+            { name: 'Work Ethic', score: parseInt(document.getElementById('compWorkEthic').value) },
+            { name: 'Adaptability', score: parseInt(document.getElementById('compAdaptability').value) },
+            { name: 'Leadership', score: parseInt(document.getElementById('compLeadership').value) },
+            { name: 'Time Management', score: parseInt(document.getElementById('compTimeManagement').value) }
+        ];
+
+        const feedbackData = {
+            id: 'FB' + Date.now().toString().slice(-6),
+            employerOrg: document.getElementById('employerOrg').value.trim(),
+            employerName: document.getElementById('employerName').value.trim(),
+            employerEmail: document.getElementById('employerEmail').value.trim(),
+            employerPhone: document.getElementById('employerPhone').value.trim() || '',
+            traineeName: document.getElementById('traineeName').value.trim(),
+            traineeId: document.getElementById('traineeId').value.trim() || 'TRN' + Date.now().toString().slice(-4),
+            programScheme: document.getElementById('programScheme').value || '',
+            employmentDuration: document.getElementById('employmentDuration').value || '',
+            overallExperience: document.getElementById('overallExperience').value || '',
+            feedbackDate: document.getElementById('feedbackDate').value || new Date().toISOString().split('T')[0],
+            rating: selectedRating,
+            text: feedbackText,
+            improvementAreas: document.getElementById('improvementAreas').value.trim() || '',
+            tags: selectedTags,
+            competencies: competencies,
+            avatar: document.getElementById('traineeName').value.trim().charAt(0).toUpperCase() || 'T',
+            color: '#2563eb',
+            timestamp: new Date().toISOString()
+        };
+
+        try {
+            let allFeedback = JSON.parse(localStorage.getItem('employerFeedbackData') || '[]');
+            allFeedback.push(feedbackData);
+            localStorage.setItem('employerFeedbackData', JSON.stringify(allFeedback));
+
+            console.log('✅ Feedback saved:', feedbackData);
+            showAlert(`
+                <strong>✅ Feedback Submitted Successfully!</strong><br>
+                Trainee: ${feedbackData.traineeName} · Rating: ${'★'.repeat(feedbackData.rating)}${'☆'.repeat(5-feedbackData.rating)}<br>
+                Thank you for your valuable feedback!
+            `, 'success');
+
+            document.getElementById('notifBadge').textContent = allFeedback.length;
+            updateWelcomeStats();
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+            setTimeout(() => {
+                resetForm();
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
+                goToStep(1);
+            }, 3000);
+
+        } catch (e) {
+            console.error('Error saving feedback:', e);
+            showAlert('Error saving feedback. Please try again.', 'error');
+        }
+    }
+
+    function updateWelcomeStats() {
+        const feedback = getFeedbackData();
+        document.getElementById('totalFeedback').textContent = feedback.length;
+        const avg = feedback.length > 0 ? (feedback.reduce((a,b) => a + b.rating, 0) / feedback.length) : 0;
+        document.getElementById('avgRating').textContent = avg.toFixed(1);
+        document.getElementById('feedbackStatus').textContent = feedback.length > 0 ? '✅ Active' : 'Ready';
+    }
+
+    function resetForm() {
+        document.getElementById('feedbackForm').reset();
+        selectedRating = 0;
+        updateStars(0);
+        document.getElementById('ratingLabel').textContent = 'Click a star to rate';
+        document.getElementById('ratingEmoji').textContent = '😐';
+        selectedTags = [];
+        document.getElementById('selectedTags').textContent = 'None';
+        document.querySelectorAll('.tag-option').forEach(el => el.classList.remove('selected'));
+
+        const defaults = {
+            compTechnical: 75,
+            compCommunication: 70,
+            compProblemSolving: 72,
+            compTeamwork: 78,
+            compWorkEthic: 80,
+            compAdaptability: 68,
+            compLeadership: 60,
+            compTimeManagement: 72
+        };
+        Object.keys(defaults).forEach(key => {
+            const el = document.getElementById(key);
+            if (el) {
+                el.value = defaults[key];
+                document.getElementById(key + 'Val').textContent = defaults[key] + '%';
+                const statusEl = document.getElementById(key + 'Status');
+                if (statusEl) {
+                    statusEl.className = 'comp-status';
+                    const val = defaults[key];
+                    if (val >= 85) { statusEl.textContent = 'Excellent'; statusEl.classList.add('excellent'); }
+                    else if (val >= 70) { statusEl.textContent = 'Good'; statusEl.classList.add('good'); }
+                    else if (val >= 50) { statusEl.textContent = 'Average'; statusEl.classList.add('average'); }
+                    else { statusEl.textContent = 'Needs Improvement'; statusEl.classList.add('needs'); }
+                }
+            }
+        });
+
+        document.querySelectorAll('.error-text').forEach(el => el.classList.remove('show'));
+        document.querySelectorAll('.input-wrap').forEach(el => el.classList.remove('error'));
+        document.getElementById('errRating').style.display = 'none';
+        document.getElementById('alertBox').style.display = 'none';
+
+        autoFillEmployerData();
+    }
+
+    function autoFillEmployerData() {
+        const employerData = getEmployerData();
+        if (employerData) {
+            if (employerData.orgName) document.getElementById('employerOrg').value = employerData.orgName;
+            if (employerData.contactPerson) document.getElementById('employerName').value = employerData.contactPerson;
+            if (employerData.email) document.getElementById('employerEmail').value = employerData.email;
+        }
+        updateWelcomeStats();
+    }
+
+    // ============================================================
+    // SET ACTIVE SIDEBAR
+    // ============================================================
+    function setActiveSidebar() {
+        const currentPage = window.location.pathname.split('/').pop() || 'employer-feedback-form.html';
+        const pageMap = {
+            'employer-feedback-form.html': 'feedback-form',
+            'dashboard.html': 'overview',
+            'verify-trainee.html': 'verify',
+            'employment-details.html': 'employment',
+            'feedback&skillsgap.html': 'skills'
+        };
+        const currentId = pageMap[currentPage] || 'feedback-form';
+
+        document.querySelectorAll('.menu a').forEach(link => {
+            link.classList.remove('active');
+            const href = link.getAttribute('href');
+            if (href) {
+                const page = href.split('/').pop();
+                const pageId = pageMap[page] || '';
+                if (pageId === currentId) {
+                    link.classList.add('active');
+                }
+            }
+        });
+    }
+
+    // ============================================================
+    // KEYBOARD SHORTCUTS
+    // ============================================================
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            if (currentStep === totalSteps) {
+                submitFeedback();
+            } else {
+                goToStep(currentStep + 1);
+            }
+        }
+        if (e.key === 'Escape') {
+            if (confirm('Are you sure you want to clear the form?')) {
+                resetForm();
+                goToStep(1);
+            }
+        }
+    });
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        updateSidebar();
+        setActiveSidebar();
+        autoFillEmployerData();
+        updateSteps();
+
+        const feedback = getFeedbackData();
+        document.getElementById('notifBadge').textContent = feedback.length;
+
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        console.log('📝 Enhanced Employer Feedback Form loaded!');
+        console.log('📋 Existing feedback:', feedback.length);
+        console.log('💡 Keyboard shortcuts: Ctrl+Enter to submit, Escape to clear');
+        console.log('📂 Location: frontend/employer/');
+    });
+</script>
+
+<script src="../js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>TalentBridge · Employer Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+    <style>
+        /* ===== RESET ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+
+        /* ===== BODY ===== */
+        body {
+            background: #f0f4f9;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 24px 18px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 18px;
+        }
+        .sidebar-brand .icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+        .sidebar-brand p { font-size: 10px; opacity: 0.5; font-weight: 500; margin-top: 2px; }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 14px;
+        }
+        .sidebar-user .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .sidebar-user .avatar .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            background: #22c55e;
+            border-radius: 50%;
+            border: 2px solid #0f172a;
+        }
+        .sidebar-user .info .name { font-size: 15px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 11px; opacity: 0.5; }
+        .sidebar-user .info .company { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+
+        .menu-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.35;
+            padding: 12px 12px 6px;
+            font-weight: 700;
+        }
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 12px;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            transition: all 0.2s;
+            margin: 2px 0;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .menu a.active::before {
+            content: '';
+            position: absolute;
+            left: -18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #2563eb, #7c3aed);
+            border-radius: 0 4px 4px 0;
+        }
+        .menu a i { width: 20px; text-align: center; font-size: 15px; }
+        .menu a .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 20px;
+            animation: pulse-badge 2s infinite;
+        }
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .sidebar-footer {
+            padding: 20px 12px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 12px;
+        }
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 12px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            transition: 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ===== MAIN ===== */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #0b1a33;
+            cursor: pointer;
+        }
+        .header-left .page-title h1 {
+            font-size: 20px;
+            color: #0b1a33;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-left .page-title h1 i {
+            color: #2563eb;
+            background: #dbeafe;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        .header-left .page-title p {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 1px;
+        }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .date {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .header-right .notif {
+            position: relative;
+            font-size: 20px;
+            color: #475569;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ef4444;
+            color: white;
+            width: 20px;
+            height: 20px;
+            font-size: 10px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        .header-right .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f1f5f9;
+            padding: 5px 14px 5px 5px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            padding: 24px 32px 32px;
+            max-width: 1440px;
+            margin: auto;
+        }
+
+        /* ===== WELCOME ===== */
+        .welcome {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+            color: white;
+            padding: 28px 32px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome::before {
+            content: "";
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -130px;
+            right: -80px;
+        }
+        .welcome::after {
+            content: "";
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            bottom: -80px;
+            left: 30%;
+        }
+        .welcome-content { position: relative; z-index: 1; }
+        .welcome h2 {
+            font-size: 26px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .welcome p { font-size: 15px; opacity: 0.85; }
+        .welcome .welcome-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .welcome .welcome-stats div { font-size: 13px; }
+        .welcome .welcome-stats strong { font-size: 20px; display: block; }
+
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            padding: 18px 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid #eef2f6;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
+        }
+        .stat-card .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .stat-card .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-card .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-card .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-card .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-card .stat-change {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        .stat-card .stat-change.up { background: #dcfce7; color: #16a34a; }
+        .stat-card .stat-change.down { background: #fee2e2; color: #dc2626; }
+        .stat-card .stat-change.neutral { background: #f1f5f9; color: #64748b; }
+        .stat-card h3 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .stat-card p {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* ===== TWO COLUMN ===== */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 22px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1024px) {
+            .two-column { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid #eef2f6;
+            transition: 0.3s;
+        }
+        .card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-header h3 {
+            font-size: 16px;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+        .card-header h3 i { color: #2563eb; }
+        .card-header .view-all {
+            font-size: 12px;
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .card-header .view-all:hover { text-decoration: underline; }
+
+        /* ===== PROFILE CARD ===== */
+        .profile-card {
+            text-align: center;
+            padding: 20px 24px 24px;
+        }
+        .profile-card .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0 auto 14px;
+            border: 4px solid #dbeafe;
+            box-shadow: 0 8px 24px rgba(37,99,235,0.2);
+        }
+        .profile-card h3 { font-size: 18px; color: #0b1a33; }
+        .profile-card .profile-company {
+            font-size: 14px;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .profile-card .profile-detail {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .profile-card .profile-badge {
+            display: inline-block;
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .profile-card .profile-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .profile-card .profile-stats div { text-align: center; }
+        .profile-card .profile-stats .num {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .profile-card .profile-stats .label {
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        /* ===== TRAINEE LIST ===== */
+        .trainee-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+        .trainee-item:last-child { border-bottom: none; }
+        .trainee-item:hover { background: #f8fafc; margin: 0 -12px; padding: 10px 12px; border-radius: 10px; }
+        .trainee-item .info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .trainee-item .info .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: white;
+            flex-shrink: 0;
+        }
+        .trainee-item .info .details .name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #0b1a33;
+        }
+        .trainee-item .info .details .sub {
+            font-size: 12px;
+            color: #64748b;
+        }
+        .trainee-item .status {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 12px;
+            border-radius: 20px;
+        }
+        .trainee-item .status.verified { background: #dcfce7; color: #16a34a; }
+        .trainee-item .status.pending { background: #fef3c7; color: #d97706; }
+        .trainee-item .status.interview { background: #dbeafe; color: #2563eb; }
+        .trainee-item .status.rejected { background: #fee2e2; color: #dc2626; }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: #94a3b8;
+        }
+        .empty-state i {
+            font-size: 40px;
+            color: #c7d2fe;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .empty-state p { font-size: 13px; }
+
+        /* ===== EMPLOYMENT DETAILS ===== */
+        .emp-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #f1f5f9;
+        }
+        .emp-detail:last-child { border-bottom: none; }
+        .emp-detail .label {
+            font-size: 13px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .emp-detail .label i { color: #2563eb; font-size: 12px; }
+        .emp-detail .value {
+            font-weight: 600;
+            color: #0b1a33;
+            font-size: 14px;
+        }
+        .emp-detail .value.positive { color: #16a34a; }
+        .emp-detail .value.highlight { color: #2563eb; }
+
+        /* ===== SKILLS ===== */
+        .skill-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .skill-item:last-child { border-bottom: none; }
+        .skill-item .skill-name {
+            font-weight: 500;
+            font-size: 13px;
+            flex: 1;
+            color: #0b1a33;
+        }
+        .skill-item .skill-bar {
+            flex: 2;
+            height: 7px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .skill-item .skill-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+        .skill-item .skill-bar .fill.high { background: #22c55e; }
+        .skill-item .skill-bar .fill.medium { background: #eab308; }
+        .skill-item .skill-bar .fill.low { background: #ef4444; }
+        .skill-item .skill-pct {
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            width: 38px;
+            text-align: right;
+        }
+
+        /* ===== FEEDBACK ===== */
+        .feedback-item {
+            background: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #2563eb;
+        }
+        .feedback-item:last-child { margin-bottom: 0; }
+        .feedback-item .fb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+        .feedback-item .fb-header .fb-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: #0b1a33;
+        }
+        .feedback-item .fb-header .fb-date {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        .feedback-item .fb-text {
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.5;
+        }
+        .feedback-item .fb-rating {
+            display: flex;
+            gap: 2px;
+            margin-top: 4px;
+            color: #eab308;
+            font-size: 12px;
+        }
+
+        /* ===== QUICK ACTIONS ===== */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .quick-actions .action-btn {
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #0b1a33;
+            font-weight: 500;
+            font-size: 12px;
+        }
+        .quick-actions .action-btn:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+        }
+        .quick-actions .action-btn i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+            color: #2563eb;
+        }
+        .quick-actions .action-btn:hover i { color: white; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 12px 18px; flex-wrap: wrap; gap: 8px; }
+            .header-left .page-title h1 { font-size: 17px; }
+            .header-right .date { display: none; }
+            .container { padding: 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .stat-card { padding: 14px 16px; }
+            .stat-card h3 { font-size: 22px; }
+            .welcome { padding: 20px; }
+            .welcome h2 { font-size: 20px; }
+            .welcome .welcome-stats { gap: 16px; }
+            .two-column { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: 1fr; }
+            .profile-card .profile-stats { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>Talent Bridge</h2>
+            <p>Employer Portal</p>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">
+            E
+            <span class="online-dot"></span>
+        </div>
+        <div class="info">
+            <div class="name" id="sidebarName">Employer</div>
+            <div class="company" id="sidebarCompany">Company Name</div>
+            <div class="role">Employer · Admin</div>
+        </div>
+    </div>
+
+    <div class="menu">
+        <div class="menu-label">Main Menu</div>
+        <a class="active" href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees <span class="badge" id="pendingBadge">0</span></a>
+        <a href="employement-details.html"><i class="fas fa-briefcase"></i> Employment Details</a>
+        <a href="employer-feedback-form.html"><i class="fas fa-star"></i> Submit Feedback</a>
+        <a href="feedback&skillsgap.html"><i class="fas fa-chart-bar"></i> Feedback & Skill Gap</a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<div class="main-content">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-chart-pie"></i> Overview</h1>
+                <p id="headerSub">Manage your organization's trainee outcomes</p>
+            </div>
+        </div>
+        <div class="header-right">
+             <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+  <i class="fas fa-moon"></i>
+</button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">E</div>
+                <span class="name" id="headerName">Employer</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== CONTAINER ===== -->
+    <div class="container">
+
+        <!-- ===== WELCOME ===== -->
+        <div class="welcome">
+            <div class="welcome-content">
+                <h2><i class="fas fa-hand-peace"></i> Welcome back, <span id="welcomeName">Employer</span>!</h2>
+                <p id="welcomeSub">Track your trainees' employment outcomes, verify placements, and monitor skill development.</p>
+                <div class="welcome-stats">
+                    <div><strong id="totalTrainees">0</strong> Total Trainees</div>
+                    <div><strong id="verifiedCount">0</strong> Verified</div>
+                    <div><strong id="pendingCount">0</strong> Pending</div>
+                    <div><strong id="placementRate">0%</strong> Placement Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== STATS ===== -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                    <span class="stat-change up">↑ 12%</span>
+                </div>
+                <h3 id="statTotal">0</h3>
+                <p>Total Trainees</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                    <span class="stat-change up">↑ 8%</span>
+                </div>
+                <h3 id="statVerified">0</h3>
+                <p>Verified Employments</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                    <span class="stat-change neutral">–</span>
+                </div>
+                <h3 id="statPending">0</h3>
+                <p>Pending Verification</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon purple"><i class="fas fa-star"></i></div>
+                    <span class="stat-change up">↑ 5%</span>
+                </div>
+                <h3 id="statRating">0.0</h3>
+                <p>Avg. Trainee Rating</p>
+            </div>
+        </div>
+
+        <!-- ===== TWO COLUMN ===== -->
+        <div class="two-column">
+
+            <!-- LEFT -->
+            <div>
+
+                <!-- PROFILE CARD -->
+                <div class="card profile-card" style="margin-bottom:22px;">
+                    <div class="profile-avatar" id="profileAvatar">E</div>
+                    <h3 id="profileName">Employer Name</h3>
+                    <div class="profile-company" id="profileCompany">Company Name</div>
+                    <div class="profile-detail"><i class="fas fa-envelope"></i> <span id="profileEmail">email@company.com</span></div>
+                    <div class="profile-detail"><i class="fas fa-phone"></i> <span id="profilePhone">+91 9876543210</span></div>
+                    <div class="profile-badge" id="profileStatus">● Active</div>
+                    <div class="profile-stats">
+                        <div><div class="num" id="profileTrainees">0</div><div class="label">Trainees</div></div>
+                        <div><div class="num" id="profileVerified">0</div><div class="label">Verified</div></div>
+                        <div><div class="num" id="profileRating">0.0</div><div class="label">Rating</div></div>
+                    </div>
+                </div>
+
+                <!-- TRAINEES -->
+                <div class="card" style="margin-bottom:22px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-graduate"></i> Recent Trainees</h3>
+                        <a class="view-all" href="verify-trainee.html">View All <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div id="traineeList"></div>
+                </div>
+
+                <!-- SKILLS -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Skill Gap Analysis</h3>
+                        <a class="view-all" href="feedback&skillsgap.html">View All <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div id="skillList"></div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div>
+
+                <!-- EMPLOYMENT -->
+                <div class="card" style="margin-bottom:22px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-briefcase"></i> Employment Summary</h3>
+                        <a class="view-all" href="employement-details.html">View All <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div id="employmentDetails"></div>
+                </div>
+
+                <!-- FEEDBACK -->
+                <div class="card" style="margin-bottom:22px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-comment-dots"></i> Recent Feedback</h3>
+                        <a class="view-all" href="feedback&skillsgap.html">View All <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div id="feedbackList"></div>
+                </div>
+
+                <!-- QUICK ACTIONS -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    </div>
+                    <div class="quick-actions">
+                        <a href="verify-trainee.html" class="action-btn">
+                            <i class="fas fa-user-check"></i> Verify Trainees
+                        </a>
+                        <a href="employement-details.html" class="action-btn">
+                            <i class="fas fa-briefcase"></i> Employment Details
+                        </a>
+                        <a href="feedback&skillsgap.html" class="action-btn">
+                            <i class="fas fa-chart-bar"></i> Feedback & Skills
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // EMPLOYER DATA
+    // ============================================================
+
+    function getEmployerData() {
+        const currentEmail = localStorage.getItem('currentEmployerEmail');
+        const allEmployers = JSON.parse(localStorage.getItem('allEmployers') || '[]');
+        
+        // Find current employer from array
+        let data = null;
+        if (currentEmail) {
+            data = allEmployers.find(e => e.email === currentEmail);
+        }
+        
+        // Fallback to old single-object storage
+        if (!data) {
+            const oldData = localStorage.getItem('employerData');
+            if (oldData) {
+                try { data = JSON.parse(oldData); } catch(e) {}
+            }
+        }
+        
+        // Fallback to demo
+        if (!data) {
+            data = {
+                employerId: 'EMP2026-0000',
+                contactPerson: 'Rajesh Kumar',
+                email: 'hr@abctech.com',
+                mobile: '9876543210',
+                orgName: 'ABC Technologies Pvt Ltd',
+                industry: 'IT & Software',
+                orgSize: '51-200',
+                city: 'Bengaluru',
+                state: 'Karnataka',
+                status: 'Active'
+            };
+        }
+        
+        return data;
+    }
+
+    const employerData = getEmployerData();
+
+    // ============================================================
+    // ✅ LOAD ALL TRAINEES FROM ARRAY (This is the KEY fix)
+    // ============================================================
+
+    function loadAllTraineesForEmployer() {
+        // Load ALL trainees from array
+        const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+        const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+        const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
+
+        console.log('📊 Loading data for employer:');
+        console.log('  Trainees:', allTrainees.length);
+        console.log('  Employment:', allEmployment.length);
+        console.log('  Followups:', allFollowups.length);
+
+        // If no trainees registered yet, return empty (or sample data)
+        if (allTrainees.length === 0) {
+            console.log('⚠️ No trainees found. Using sample data for demo.');
+            return getSampleTrainees();
+        }
+
+        // ✅ Merge each trainee with their employment + followup data
+        return allTrainees.map((t, index) => {
+            const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
+            const fol = allFollowups.find(f => f.traineeEmail === t.email) || {};
+            
+            // Determine status
+            let status = 'pending';
+            if (t.verificationStatus === 'verified' || emp.verified) {
+                status = 'verified';
+            } else if (emp.status === 'Employed') {
+                status = 'interview';
+            }
+
+            return {
+                id: t.traineeId || 'TRN' + (index + 1),
+                name: t.fullName || 'Unknown Trainee',
+                email: t.email || '',
+                mobile: t.mobile || 'N/A',
+                course: t.skillTrade || 'N/A',
+                provider: t.trainingProvider || 'N/A',
+                batch: t.batchId || 'N/A',
+                registrationDate: t.registrationDate || t.registeredAt || 'N/A',
+                trainingProgress: t.trainingProgress || 0,
+                certificationStatus: t.certificationStatus || 'Pending',
+                
+                // Employment
+                employmentStatus: emp.status || 'Not Updated',
+                company: emp.companyName || 'N/A',
+                jobRole: emp.jobRole || 'N/A',
+                employmentType: emp.employmentType || 'N/A',
+                joiningDate: emp.joiningDate || 'N/A',
+                location: emp.jobCity || 'N/A',
+                currentIncome: parseInt(emp.currentIncome) || 0,
+                previousIncome: parseInt(emp.previousIncome) || 0,
+                
+                // Followup
+                followupStatus: fol.status || 'Pending',
+                followupPeriod: fol.period || '90 Days',
+                
+                // Verification
+                verificationStatus: status,
+                verified: t.verificationStatus === 'verified' || emp.verified || false,
+                
+                // Display
+                status: status,
+                avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
+                color: ['#2563eb', '#7c3aed', '#16a34a', '#d97706', '#dc2626'][index % 5]
+            };
+        });
+    }
+
+    // ============================================================
+    // SAMPLE DATA (Fallback only - shown when no registered trainees)
+    // ============================================================
+
+    function getSampleTrainees() {
+        return [
+            { id: 1, name: 'Priya Sharma', email: 'priya@email.com', course: 'Data Analytics', status: 'verified', avatar: 'P', color: '#2563eb', company: 'ABC Tech', jobRole: 'Data Analyst', currentIncome: 28000 },
+            { id: 2, name: 'Rahul Verma', email: 'rahul@email.com', course: 'Full Stack Development', status: 'pending', avatar: 'R', color: '#7c3aed', company: 'Tech Solutions', jobRole: 'Developer', currentIncome: 32000 },
+            { id: 3, name: 'Ananya Reddy', email: 'ananya@email.com', course: 'Digital Marketing', status: 'interview', avatar: 'A', color: '#16a34a', company: 'Growth Media', jobRole: 'Marketing Lead', currentIncome: 25000 },
+            { id: 4, name: 'Vikram Singh', email: 'vikram@email.com', course: 'Data Science', status: 'verified', avatar: 'V', color: '#d97706', company: 'AI Solutions', jobRole: 'Data Scientist', currentIncome: 35000 },
+        ];
+    }
+
+    // ============================================================
+    // ✅ GET ALL DATA FOR DASHBOARD
+    // ============================================================
+
+    let allTrainees = [];
+
+    function loadDashboardData() {
+        allTrainees = loadAllTraineesForEmployer();
+        console.log('✅ Total trainees loaded:', allTrainees.length);
+    }
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+
+    function renderProfile() {
+        const initial = (employerData.contactPerson || 'E').charAt(0).toUpperCase();
+
+        document.getElementById('sidebarAvatar').textContent = initial;
+        document.getElementById('sidebarName').textContent = employerData.contactPerson || 'Employer';
+        document.getElementById('sidebarCompany').textContent = employerData.orgName || 'Company';
+
+        document.getElementById('headerAvatar').textContent = initial;
+        document.getElementById('headerName').textContent = employerData.contactPerson || 'Employer';
+
+        document.getElementById('welcomeName').textContent = employerData.contactPerson || 'Employer';
+        document.getElementById('welcomeSub').textContent = `Manage ${employerData.orgName || 'your organization'}'s trainee outcomes.`;
+
+        document.getElementById('profileAvatar').textContent = initial;
+        document.getElementById('profileName').textContent = employerData.contactPerson || 'Employer Name';
+        document.getElementById('profileCompany').textContent = employerData.orgName || 'Company Name';
+        document.getElementById('profileEmail').textContent = employerData.email || 'email@company.com';
+        document.getElementById('profilePhone').textContent = '+91 ' + (employerData.mobile || '9876543210');
+        document.getElementById('profileStatus').textContent = '● ' + (employerData.status || 'Active');
+        document.getElementById('headerSub').textContent = employerData.orgName ? `Manage ${employerData.orgName}'s outcomes` : 'Manage your organization\'s trainee outcomes';
+    }
+
+    function renderStats() {
+        const total = allTrainees.length;
+        const verified = allTrainees.filter(t => t.status === 'verified').length;
+        const pending = allTrainees.filter(t => t.status === 'pending' || t.status === 'interview').length;
+        const rate = total > 0 ? Math.round((verified / total) * 100) : 0;
+
+        document.getElementById('totalTrainees').textContent = total;
+        document.getElementById('verifiedCount').textContent = verified;
+        document.getElementById('pendingCount').textContent = pending;
+        document.getElementById('placementRate').textContent = rate + '%';
+
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statVerified').textContent = verified;
+        document.getElementById('statPending').textContent = pending;
+
+        // Average rating from feedback (or default)
+        const avgRating = '4.5';
+        document.getElementById('statRating').textContent = avgRating;
+
+        document.getElementById('profileTrainees').textContent = total;
+        document.getElementById('profileVerified').textContent = verified;
+        document.getElementById('profileRating').textContent = avgRating;
+
+        const badge = document.getElementById('pendingBadge');
+        if (badge) {
+            badge.textContent = pending;
+            badge.style.display = pending > 0 ? 'inline-block' : 'none';
+        }
+        document.getElementById('notifBadge').textContent = pending;
+    }
+
+    function renderTrainees() {
+        const container = document.getElementById('traineeList');
+        
+        // ✅ Show recent 4 trainees from ALL registered trainees
+        const trainees = allTrainees.slice(0, 4);
+
+        if (trainees.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-user-plus"></i>
+                    <p>No trainees registered yet.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = trainees.map(t => `
+            <div class="trainee-item">
+                <div class="info">
+                    <div class="avatar" style="background:${t.color}">${t.avatar}</div>
+                    <div class="details">
+                        <div class="name">${t.name}</div>
+                        <div class="sub">${t.course} · ${t.email}</div>
+                    </div>
+                </div>
+                <span class="status ${t.status}">${t.status.charAt(0).toUpperCase() + t.status.slice(1)}</span>
+            </div>
+        `).join('');
+    }
+
+    function renderEmployment() {
+        const container = document.getElementById('employmentDetails');
+        
+        // Calculate stats from ALL trainees
+        const employed = allTrainees.filter(t => t.employmentStatus === 'Employed');
+        const totalPlacements = employed.length;
+        const avgSalary = employed.length > 0 
+            ? Math.round(employed.reduce((a, b) => a + (b.currentIncome || 0), 0) / employed.length) 
+            : 0;
+        
+        // Recent placements
+        const recentPlacements = employed.slice(0, 4);
+
+        container.innerHTML = `
+            <div class="emp-detail">
+                <span class="label"><i class="fas fa-users"></i> Total Placements</span>
+                <span class="value highlight">${totalPlacements}</span>
+            </div>
+            <div class="emp-detail">
+                <span class="label"><i class="fas fa-rupee-sign"></i> Avg. Salary</span>
+                <span class="value positive">₹${avgSalary.toLocaleString()}</span>
+            </div>
+            <div class="emp-detail">
+                <span class="label"><i class="fas fa-arrow-up"></i> Salary Growth</span>
+                <span class="value positive">↑ 18%</span>
+            </div>
+            <div class="emp-detail">
+                <span class="label"><i class="fas fa-trophy"></i> Retention Rate</span>
+                <span class="value positive">82%</span>
+            </div>
+            ${recentPlacements.length > 0 ? `
+                <div style="margin-top:12px; padding-top:12px; border-top:1px solid #f1f5f9;">
+                    <div style="font-size:11px; color:#94a3b8; font-weight:500; margin-bottom:6px;">RECENT PLACEMENTS</div>
+                    ${recentPlacements.map(p => `
+                        <div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0; color:#475569;">
+                            <span>${p.name}</span>
+                            <span style="font-weight:600; color:#0b1a33;">${p.jobRole}</span>
+                            <span style="color:#16a34a;">₹${(p.currentIncome || 0).toLocaleString()}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
+        `;
+    }
+
+    function renderSkills() {
+        const container = document.getElementById('skillList');
+        
+        // Aggregate skills from all trainees (or use default)
+        const skills = [
+            { name: 'Data Analysis', score: 85, level: 'high' },
+            { name: 'Python Programming', score: 72, level: 'medium' },
+            { name: 'SQL', score: 88, level: 'high' },
+            { name: 'Communication', score: 65, level: 'medium' },
+            { name: 'Teamwork', score: 78, level: 'high' },
+            { name: 'Project Management', score: 55, level: 'low' },
+        ];
+
+        if (allTrainees.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-chart-bar"></i>
+                    <p>No skill data available</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = skills.slice(0, 5).map(s => `
+            <div class="skill-item">
+                <span class="skill-name">${s.name}</span>
+                <div class="skill-bar">
+                    <div class="fill ${s.level}" style="width:${s.score}%"></div>
+                </div>
+                <span class="skill-pct">${s.score}%</span>
+            </div>
+        `).join('');
+
+        const lowSkills = skills.filter(s => s.level === 'low');
+        if (lowSkills.length > 0) {
+            container.innerHTML += `
+                <div style="margin-top:10px; padding:8px 12px; background:#fef3c7; border-radius:8px; font-size:11px; color:#92400e; display:flex; align-items:center; gap:6px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span><strong>Skill Gaps:</strong> ${lowSkills.map(s => s.name).join(', ')} need improvement</span>
+                </div>
+            `;
+        }
+    }
+
+    function renderFeedback() {
+        const container = document.getElementById('feedbackList');
+        
+        // Get feedback from all trainees (or use sample)
+        const feedbacks = [
+            { trainee: 'Priya Sharma', rating: 5, text: 'Excellent employee. Highly skilled in data analysis.', date: '2026-09-02' },
+            { trainee: 'Vikram Singh', rating: 4, text: 'Good problem solver. Needs improvement in presentation.', date: '2026-08-28' },
+            { trainee: 'Ananya Reddy', rating: 5, text: 'Outstanding marketing skills. Very proactive.', date: '2026-08-22' },
+        ];
+
+        if (allTrainees.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-comment-slash"></i>
+                    <p>No feedback available</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = feedbacks.slice(0, 3).map(f => `
+            <div class="feedback-item">
+                <div class="fb-header">
+                    <span class="fb-name">${f.trainee}</span>
+                    <span class="fb-date">${f.date}</span>
+                </div>
+                <div class="fb-rating">
+                    ${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}
+                </div>
+                <div class="fb-text">"${f.text}"</div>
+            </div>
+        `).join('');
+    }
+
+    // ============================================================
+    // SIDEBAR NAVIGATION
+    // ============================================================
+
+    function setActiveSidebar() {
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+        const pageMap = {
+            'dashboard.html': 'dashboard',
+            'verify-trainee.html': 'verify',
+            'employement-details.html': 'employement',
+            'feedback&skillsgap.html': 'feedback'
+        };
+        const currentId = pageMap[currentPage] || 'dashboard';
+
+        document.querySelectorAll('.menu a').forEach(link => {
+            link.classList.remove('active');
+            const href = link.getAttribute('href');
+            if (href) {
+                const page = href.split('/').pop();
+                const pageId = pageMap[page] || '';
+                if (pageId === currentId) {
+                    link.classList.add('active');
+                }
+            }
+        });
+    }
+
+    // ============================================================
+    // UTILITY FUNCTIONS
+    // ============================================================
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function showNotifications() {
+        const pending = allTrainees.filter(t => t.status === 'pending' || t.status === 'interview').length;
+        alert(`📬 Notifications\n\n• ${pending} trainees pending verification\n• 2 new feedback submissions\n• ${allTrainees.filter(t => t.status === 'verified').length} verified trainees`);
+    }
+
+    function toggleProfileMenu() {
+        alert('👤 Profile Menu\n\nSettings · Support · Logout');
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            localStorage.removeItem('currentEmployerEmail');
+            localStorage.removeItem('currentEmployerId');
+            window.location.href = '../auth/login.html';
+        }
+    }
+
+    function updateDate() {
+        const now = new Date();
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', options);
+    }
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDate();
+        loadDashboardData();  // ✅ Load ALL trainees first
+        renderProfile();
+        renderStats();
+        renderTrainees();
+        renderEmployment();
+        renderSkills();
+        renderFeedback();
+        setActiveSidebar();
+
+        console.log('✅ Employer Dashboard loaded!');
+        console.log('📊 Total trainees displayed:', allTrainees.length);
+
+        // Close sidebar on outside click (mobile)
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+    });
+</script>
+ <script src="../js/script.js"></script>
+<script src="../js/script.js"></script>\n</body>
+</html>

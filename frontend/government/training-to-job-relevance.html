@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Training-Job Relevance · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 20px 14px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            scrollbar-width: thin;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 8px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 14px;
+        }
+        .sidebar-brand .icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
+        .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
+
+        .sidebar-user {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 10px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 12px;
+        }
+        .sidebar-user .avatar {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px;
+            flex-shrink: 0;
+        }
+        .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
+
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none; transition: all 0.2s;
+            margin: 1px 0; font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .menu a i { width: 18px; text-align: center; font-size: 14px; }
+        .menu a .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 10px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 12px;
+        }
+        .sidebar-footer a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 10px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none; transition: 0.2s;
+            font-size: 13px; font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ===== MAIN ===== */
+        .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 12px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-toggle {
+            display: none;
+            background: none; border: none;
+            font-size: 20px; color: #0b1a33;
+            cursor: pointer;
+        }
+        .header-left .page-title h1 {
+            font-size: 18px; color: #0b1a33;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .header-left .page-title h1 i { color: #2563eb; }
+        .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .header-right {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .header-right .date {
+            font-size: 12px; color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .header-right .notif {
+            position: relative;
+            font-size: 18px; color: #475569;
+            cursor: pointer;
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge {
+            position: absolute; top: 2px; right: 2px;
+            background: #ef4444; color: white;
+            width: 18px; height: 18px;
+            font-size: 9px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .header-right .profile-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: #f1f5f9;
+            padding: 4px 12px 4px 4px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 12px;
+        }
+        .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
+
+        /* ===== CONTAINER ===== */
+        .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
+
+        /* ===== WELCOME BANNER ===== */
+        .welcome-banner {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+            color: white;
+            padding: 22px 28px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .welcome-banner::before {
+            content: "";
+            position: absolute;
+            width: 350px; height: 350px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -150px; right: -80px;
+        }
+        .welcome-banner .banner-content { position: relative; z-index: 1; }
+        .welcome-banner h2 {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .welcome-banner p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+        .welcome-banner .banner-stats {
+            display: flex;
+            gap: 18px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+        .welcome-banner .banner-stats div {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 6px 16px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .welcome-banner .banner-stats strong {
+            font-size: 20px;
+            display: block;
+        }
+        .welcome-banner .banner-stats span { font-size: 10px; opacity: 0.7; }
+
+        /* ===== SECTION TITLES ===== */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .section-title i { color: #2563eb; }
+        .section-title .badge-count {
+            background: #f1f5f9;
+            padding: 1px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            margin-left: auto;
+        }
+
+        /* ===== STATS ROW ===== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 16px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .stat-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
+        }
+        .stat-box .stat-icon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            margin: 0 auto 6px;
+        }
+        .stat-box .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-box .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-icon.rose { background: #fce7f3; color: #db2777; }
+        .stat-box .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-box .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
+        .stat-box .stat-number {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0b1a33;
+        }
+        .stat-box .stat-label { font-size: 11px; color: #64748b; }
+        .stat-box .stat-trend {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+        .stat-box .stat-trend.good { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-trend.warning { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-trend.danger { background: #fee2e2; color: #dc2626; }
+        .stat-box .stat-trend.neutral { background: #f1f5f9; color: #64748b; }
+
+        /* ===== CHART GRID ===== */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .chart-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: 0.3s;
+        }
+        .chart-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .chart-card .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-card .card-title i { color: #2563eb; }
+
+        /* ===== BAR CHARTS ===== */
+        .bar-chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 150px;
+            padding: 4px 0;
+            gap: 8px;
+        }
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .bar-group .bar {
+            width: 100%;
+            max-width: 32px;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 6px;
+            position: relative;
+        }
+        .bar-group .bar .bar-value {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .bar-group .bar-label {
+            font-size: 8px;
+            color: #64748b;
+            margin-top: 4px;
+            text-align: center;
+            max-width: 50px;
+            word-wrap: break-word;
+        }
+        .bar-group .bar-label .count {
+            font-weight: 600;
+            color: #0b1a33;
+            display: block;
+        }
+
+        /* ===== DONUT CHARTS ===== */
+        .donut-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 4px 0;
+            flex-wrap: wrap;
+        }
+        .donut {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .donut .donut-center {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .donut .donut-center .num {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0b1a33;
+        }
+        .donut .donut-center .label {
+            font-size: 8px;
+            color: #64748b;
+        }
+        .donut-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .donut-legend .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #475569;
+        }
+        .donut-legend .legend-item .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .donut-legend .legend-item .pct {
+            font-weight: 700;
+            color: #0b1a33;
+            margin-left: auto;
+        }
+
+        /* ===== TRAINING-TO-JOB CHAIN ===== */
+        .chain-container {
+            background: white;
+            border-radius: 16px;
+            padding: 22px 24px;
+            border: 1px solid #eef2f6;
+            margin-bottom: 20px;
+        }
+        .chain-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 10px 0;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .chain-steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 4%;
+            right: 4%;
+            height: 4px;
+            background: linear-gradient(90deg, #22c55e, #2563eb, #eab308, #dc2626);
+            border-radius: 10px;
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+        .chain-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            flex: 1;
+            min-width: 70px;
+            text-align: center;
+        }
+        .chain-step .step-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: white;
+            border: 3px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        .chain-step.completed .step-circle {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+            box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+        }
+        .chain-step.active .step-circle {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+        }
+        .chain-step.warning .step-circle {
+            background: #eab308;
+            color: white;
+            border-color: #eab308;
+            box-shadow: 0 4px 16px rgba(234,179,8,0.3);
+        }
+        .chain-step.danger .step-circle {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+            box-shadow: 0 4px 16px rgba(220,38,38,0.3);
+        }
+        .chain-step .step-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 6px;
+        }
+        .chain-step .step-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+        .chain-step .step-sub {
+            font-size: 9px;
+            color: #64748b;
+        }
+
+        /* ===== SKILL MATCH TABLE ===== */
+        .skill-table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .skill-table-container .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .skill-table-container .table-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .skill-table-container .table-header h3 i { color: #2563eb; }
+        .skill-table-wrapper { overflow-x: auto; }
+        .skill-table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .skill-table-wrapper thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #eef2f6;
+        }
+        .skill-table-wrapper thead th {
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .skill-table-wrapper tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+        .skill-table-wrapper tbody tr:hover { background: #f8fafc; }
+        .skill-table-wrapper tbody td {
+            padding: 10px 14px;
+            color: #0b1a33;
+            vertical-align: middle;
+        }
+        .gap-bar {
+            width: 60px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .gap-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+        .gap-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .gap-indicator.high { background: #fee2e2; color: #dc2626; }
+        .gap-indicator.medium { background: #fef3c7; color: #d97706; }
+        .gap-indicator.low { background: #dcfce7; color: #16a34a; }
+
+        /* ===== MISMATCH REASONS ===== */
+        .mismatch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mismatch-item {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid #eef2f6;
+            border-left: 4px solid #dc2626;
+            transition: 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mismatch-item:hover {
+            background: #f8fafc;
+            transform: translateX(4px);
+        }
+        .mismatch-item .mismatch-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mismatch-item .mismatch-count {
+            font-weight: 700;
+            font-size: 14px;
+            color: #dc2626;
+        }
+        .mismatch-item .mismatch-pct {
+            font-size: 11px;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        /* ===== PROGRAM EFFECTIVENESS TABLE ===== */
+        .program-table-container {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .program-table-container .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .program-table-container .table-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .program-table-container .table-header h3 i { color: #2563eb; }
+        .program-table-wrapper { overflow-x: auto; }
+        .program-table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .program-table-wrapper thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #eef2f6;
+        }
+        .program-table-wrapper thead th {
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .program-table-wrapper tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+        .program-table-wrapper tbody tr:hover { background: #f8fafc; }
+        .program-table-wrapper tbody td {
+            padding: 10px 14px;
+            color: #0b1a33;
+            vertical-align: middle;
+        }
+        .score-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .score-bar-container .score-bar {
+            flex: 1;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 40px;
+        }
+        .score-bar-container .score-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+        }
+        .score-bar-container .score-val {
+            font-weight: 700;
+            font-size: 11px;
+            min-width: 35px;
+            text-align: right;
+        }
+
+        /* ===== AI INSIGHTS ===== */
+        .ai-insights-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .ai-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .ai-card .ai-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .ai-card .ai-header i { color: #2563eb; }
+        .ai-card .ai-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8fafc;
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.5;
+        }
+        .ai-card .ai-item:last-child { border-bottom: none; }
+        .ai-card .ai-item .ai-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .ai-card .ai-item strong { color: #0b1a33; }
+
+        /* ===== QUICK ACTIONS ===== */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .quick-actions .action-btn {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #0b1a33;
+            font-weight: 500;
+            font-size: 11px;
+        }
+        .quick-actions .action-btn:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+        }
+        .quick-actions .action-btn i {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 4px;
+            color: #2563eb;
+        }
+        .quick-actions .action-btn:hover i { color: white; }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 1200px) {
+            .chart-grid { grid-template-columns: 1fr 1fr; }
+            .chart-grid-3 { grid-template-columns: 1fr 1fr; }
+            .ai-insights-container { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 10px 16px; }
+            .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; }
+            .container { padding: 12px 14px; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .chart-grid-3 { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .welcome-banner { flex-direction: column; align-items: flex-start; }
+            .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
+            .chain-steps { gap: 4px; }
+            .chain-step .step-circle { width: 36px; height: 36px; font-size: 14px; }
+            .chain-step .step-label { font-size: 7px; }
+            .chain-step .step-value { font-size: 10px; }
+            .mismatch-grid { grid-template-columns: 1fr; }
+            .ai-insights-container { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .stat-box { padding: 10px; }
+            .stat-box .stat-number { font-size: 18px; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>SkillBridge</h2>
+            <p>Government Portal</p>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">G</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Government</div>
+            <div class="role" id="sidebarRole">Admin</div>
+        </div>
+    </div>
+
+    <div class="menu-label">Analytics</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="government-analytics.html"><i class="fas fa-chart-line"></i> Government Analytics</a>
+        <a href="retention-analytics.html"><i class="fas fa-user-check"></i> Retention Analysis</a>
+        <a href="income.html"><i class="fas fa-rupee-sign"></i> Income/Livelihood</a>
+        <a href="training-to-job-relevance.html" class="active"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
+        <a href="non-placement-analysis.html"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
+        <a href="program-comparison.html"><i class="fas fa-graduation-cap"></i> Program Comparison</a>
+        <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-bullseye"></i> Training-to-Job Relevance</h1>
+                <p>Measure how well training translates into relevant employment · SIH26135</p>
+            </div>
+        </div>
+        <div class="header-right">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+  <i class="fas fa-moon"></i>
+</button>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">G</div>
+                <span class="name" id="headerName">Government</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== CONTAINER ===== -->
+    <div class="container">
+
+        <!-- ===== WELCOME BANNER ===== -->
+        <div class="welcome-banner">
+            <div class="banner-content">
+                <h2><i class="fas fa-bullseye"></i> Training-to-Job Relevance Analytics</h2>
+                <p>Is training translating into relevant employment? · Identify gaps, mismatches, and opportunities</p>
+            </div>
+            <div class="banner-stats">
+                <div>
+                    <strong id="bannerHigh">0%</strong>
+                    <span>High Relevance</span>
+                </div>
+                <div>
+                    <strong id="bannerScore">0</strong>
+                    <span>Match Score</span>
+                </div>
+                <div>
+                    <strong id="bannerMismatch">0%</strong>
+                    <span>Mismatch Rate</span>
+                </div>
+                <div>
+                    <strong id="bannerSalary">0%</strong>
+                    <span>Salary Match</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== OVERALL RELEVANCE KPIs ===== -->
+        <div class="section-title">
+            <i class="fas fa-chart-pie"></i> Overall Relevance
+            <span class="badge-count">Training-to-Job Match</span>
+        </div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-number" id="kpiHighRelevance">0%</div>
+                <div class="stat-label">High Relevance</div>
+                <span class="stat-trend good">● Good</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon blue"><i class="fas fa-minus-circle"></i></div>
+                <div class="stat-number" id="kpiMediumRelevance">0%</div>
+                <div class="stat-label">Medium Relevance</div>
+                <span class="stat-trend warning">● Medium</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon orange"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="stat-number" id="kpiLowRelevance">0%</div>
+                <div class="stat-label">Low Relevance</div>
+                <span class="stat-trend danger">● Low</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon rose"><i class="fas fa-times-circle"></i></div>
+                <div class="stat-number" id="kpiNotRelevant">0%</div>
+                <div class="stat-label">Not Relevant</div>
+                <span class="stat-trend danger">● Critical</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon purple"><i class="fas fa-bullseye"></i></div>
+                <div class="stat-number" id="kpiMatchScore">0</div>
+                <div class="stat-label">Match Score</div>
+                <span class="stat-trend good">/100</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon teal"><i class="fas fa-unlink"></i></div>
+                <div class="stat-number" id="kpiMismatchRate">0%</div>
+                <div class="stat-label">Job Mismatch Rate</div>
+                <span class="stat-trend danger">● High</span>
+            </div>
+        </div>
+
+        <!-- ===== RELEVANCE DISTRIBUTION + SALARY ALIGNMENT ===== -->
+        <div class="chart-grid">
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-chart-pie"></i> Relevance Distribution</div>
+                <div class="donut-container" id="relevanceDonut">
+                    <div class="donut" id="relevanceDonutChart">
+                        <div class="donut-center">
+                            <div class="num" id="relevanceTotal">0</div>
+                            <div class="label">Trainees</div>
+                        </div>
+                    </div>
+                    <div class="donut-legend" id="relevanceLegend"></div>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-rupee-sign"></i> Salary Alignment</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;padding:4px 0;">
+                    <div style="padding:10px;background:#f8fafc;border-radius:8px;">
+                        <div style="color:#64748b;font-size:10px;">Avg Expected Salary</div>
+                        <div style="font-weight:700;color:#0b1a33;font-size:16px;" id="salaryExpected">₹0</div>
+                    </div>
+                    <div style="padding:10px;background:#f8fafc;border-radius:8px;">
+                        <div style="color:#64748b;font-size:10px;">Avg Actual Salary</div>
+                        <div style="font-weight:700;color:#0b1a33;font-size:16px;" id="salaryActual">₹0</div>
+                    </div>
+                    <div style="padding:10px;background:#f8fafc;border-radius:8px;">
+                        <div style="color:#64748b;font-size:10px;">Salary Gap</div>
+                        <div style="font-weight:700;color:#dc2626;font-size:16px;" id="salaryGap">₹0</div>
+                    </div>
+                    <div style="padding:10px;background:#f8fafc;border-radius:8px;">
+                        <div style="color:#64748b;font-size:10px;">Salary Match %</div>
+                        <div style="font-weight:700;color:#16a34a;font-size:16px;" id="salaryMatchPct">0%</div>
+                    </div>
+                    <div style="padding:10px;background:#f8fafc;border-radius:8px;">
+                        <div style="color:#64748b;font-size:10px;">Above Expectation</div>
+                        <div style="font-weight:700;color:#16a34a;font-size:16px;" id="salaryAbove">0%</div>
+                    </div>
+                    <div style="padding:10px;background:#f8fafc;border-radius:8px;">
+                        <div style="color:#64748b;font-size:10px;">Below Expectation</div>
+                        <div style="font-weight:700;color:#dc2626;font-size:16px;" id="salaryBelow">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SKILL ALIGNMENT ===== -->
+        <div class="section-title">
+            <i class="fas fa-code"></i> Skill Alignment
+            <span class="badge-count">Training skills vs Employer requirements</span>
+        </div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-icon blue"><i class="fas fa-tasks"></i></div>
+                <div class="stat-number" id="kpiSkillMatch">0%</div>
+                <div class="stat-label">Avg Skill Match</div>
+                <span class="stat-trend warning">● Medium</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon green"><i class="fas fa-check-double"></i></div>
+                <div class="stat-number" id="kpiSkillsFullyMatched">0</div>
+                <div class="stat-label">Skills Fully Matched</div>
+                <span class="stat-trend good">● Good</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon orange"><i class="fas fa-adjust"></i></div>
+                <div class="stat-number" id="kpiSkillsPartial">0</div>
+                <div class="stat-label">Skills Partially Matched</div>
+                <span class="stat-trend warning">● Medium</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon rose"><i class="fas fa-times"></i></div>
+                <div class="stat-number" id="kpiSkillsMissing">0</div>
+                <div class="stat-label">Skills Missing</div>
+                <span class="stat-trend danger">● High</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon purple"><i class="fas fa-fire"></i></div>
+                <div class="stat-number" id="kpiTopGap">-</div>
+                <div class="stat-label">Top Skill Gap</div>
+                <span class="stat-trend danger">● Critical</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon teal"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-number" id="kpiTopDemand">-</div>
+                <div class="stat-label">Most In-Demand</div>
+                <span class="stat-trend good">● High</span>
+            </div>
+        </div>
+
+        <!-- ===== EMPLOYER DEMAND VS TRAINING SUPPLY ===== -->
+        <div class="skill-table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-balance-scale"></i> Employer Demand vs Training Supply</h3>
+                <span class="count" id="skillCount">0 skills</span>
+            </div>
+            <div class="skill-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Skill</th>
+                            <th>Employer Demand</th>
+                            <th>Training Coverage</th>
+                            <th>Gap Analysis</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="skillTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== JOB ROLE ALIGNMENT ===== -->
+        <div class="chart-grid">
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-user-tie"></i> Job Role Alignment</div>
+                <div class="donut-container" id="roleDonut">
+                    <div class="donut" id="roleDonutChart">
+                        <div class="donut-center">
+                            <div class="num" id="roleTotal">0</div>
+                            <div class="label">Trainees</div>
+                        </div>
+                    </div>
+                    <div class="donut-legend" id="roleLegend"></div>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-exchange-alt"></i> Training-to-Job Transitions</div>
+                <div id="transitionsList" style="font-size:12px;color:#475569;line-height:1.8;padding:4px 0;"></div>
+            </div>
+        </div>
+
+        <!-- ===== MISMATCH REASONS ===== -->
+        <div class="section-title">
+            <i class="fas fa-exclamation-triangle"></i> Mismatch Reasons
+            <span class="badge-count">Why training is not translating</span>
+        </div>
+        <div class="mismatch-grid" id="mismatchGrid">
+            <!-- Dynamic -->
+        </div>
+
+        <!-- ===== TRAINING → EMPLOYMENT → INCOME CHAIN ===== -->
+        <div class="section-title">
+            <i class="fas fa-link"></i> Training → Employment → Income Chain
+            <span class="badge-count">Where the system is failing</span>
+        </div>
+        <div class="chain-container">
+            <div class="chain-steps" id="chainSteps">
+                <div class="chain-step completed">
+                    <div class="step-circle"><span>🎓</span></div>
+                    <div class="step-label">Training</div>
+                    <div class="step-value" id="chainTraining">0%</div>
+                    <div class="step-sub">Completed</div>
+                </div>
+                <div class="chain-step completed">
+                    <div class="step-circle"><span>💼</span></div>
+                    <div class="step-label">Employment</div>
+                    <div class="step-value" id="chainEmployment">0%</div>
+                    <div class="step-sub">Obtained</div>
+                </div>
+                <div class="chain-step warning">
+                    <div class="step-circle"><span>🎯</span></div>
+                    <div class="step-label">Job Relevance</div>
+                    <div class="step-value" id="chainRelevance">0%</div>
+                    <div class="step-sub">High/Medium</div>
+                </div>
+                <div class="chain-step warning">
+                    <div class="step-circle"><span>🔧</span></div>
+                    <div class="step-label">Skill Match</div>
+                    <div class="step-value" id="chainSkillMatch">0%</div>
+                    <div class="step-sub">Fully/Partial</div>
+                </div>
+                <div class="chain-step danger">
+                    <div class="step-circle"><span>💰</span></div>
+                    <div class="step-label">Salary Outcome</div>
+                    <div class="step-value" id="chainSalary">0%</div>
+                    <div class="step-sub">Match</div>
+                </div>
+                <div class="chain-step danger">
+                    <div class="step-circle"><span>📈</span></div>
+                    <div class="step-label">Income Growth</div>
+                    <div class="step-value" id="chainIncomeGrowth">0%</div>
+                    <div class="step-sub">Positive</div>
+                </div>
+                <div class="chain-step active">
+                    <div class="step-circle"><span>🏆</span></div>
+                    <div class="step-label">Retention</div>
+                    <div class="step-value" id="chainRetention">0%</div>
+                    <div class="step-sub">365 Days</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PROGRAM EFFECTIVENESS ===== -->
+        <div class="section-title">
+            <i class="fas fa-graduation-cap"></i> Training Program Effectiveness
+            <span class="badge-count">Compare government-funded programs</span>
+        </div>
+        <div class="program-table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-list"></i> Program Performance</h3>
+                <span class="count" id="programCount">0 programs</span>
+            </div>
+            <div class="program-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Program</th>
+                            <th>Relevance</th>
+                            <th>Skill Match</th>
+                            <th>Salary Growth</th>
+                            <th>Employment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="programTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== PROVIDER PERFORMANCE ===== -->
+        <div class="section-title">
+            <i class="fas fa-chalkboard-teacher"></i> Provider Performance
+            <span class="badge-count">Based on provider-submitted data</span>
+        </div>
+        <div class="program-table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-list"></i> Provider Rankings</h3>
+                <span class="count" id="providerCount">0 providers</span>
+            </div>
+            <div class="program-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Provider</th>
+                            <th>Relevance Rate</th>
+                            <th>Skill Match</th>
+                            <th>Employment Rate</th>
+                            <th>Salary Growth</th>
+                            <th>Outcome Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="providerTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== AI GOVERNMENT INSIGHTS ===== -->
+        <div class="section-title">
+            <i class="fas fa-robot"></i> AI Government Insights
+            <span class="badge-count">Actionable intelligence</span>
+        </div>
+        <div class="ai-insights-container">
+            <div class="ai-card">
+                <div class="ai-header"><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i> Key Insights</div>
+                <div id="aiInsights">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+            <div class="ai-card">
+                <div class="ai-header"><i class="fas fa-lightbulb" style="color:#2563eb;"></i> Policy Recommendations</div>
+                <div id="aiRecommendations">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== QUICK ACTIONS ===== -->
+        <div class="chart-card" style="padding:16px 20px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size:14px; color:#0b1a33; display:flex; align-items:center; gap:8px; font-weight:700;">
+                    <i class="fas fa-bolt" style="color:#2563eb;"></i> Quick Actions
+                </h3>
+            </div>
+            <div class="quick-actions">
+                <a href="#" class="action-btn" onclick="exportFullReport(); return false;"><i class="fas fa-file-export"></i> Export Report</a>
+                <a href="#" class="action-btn" onclick="viewSkillGaps(); return false;"><i class="fas fa-code"></i> Skill Gaps</a>
+                <a href="#" class="action-btn" onclick="generateAIInsights(); return false;"><i class="fas fa-robot"></i> AI Insights</a>
+                <a href="#" class="action-btn" onclick="window.print(); return false;"><i class="fas fa-print"></i> Print Dashboard</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // COMPREHENSIVE SAMPLE DATA - Training-Job Relevance
+    // ============================================================
+
+    const sampleData = {
+        records: [
+            { id: 'TRN001', name: 'Priya Sharma', program: 'Data Analytics', provider: 'Skill India Centre', trainingRole: 'Data Analyst', actualRole: 'Data Analyst', relevance: 'High', skillMatch: 85, expectedSalary: 30000, actualSalary: 28000, mismatchReason: 'N/A' },
+            { id: 'TRN002', name: 'Rahul Verma', program: 'Full Stack Development', provider: 'NITC Training', trainingRole: 'Full Stack Developer', actualRole: 'Full Stack Developer', relevance: 'High', skillMatch: 90, expectedSalary: 35000, actualSalary: 32000, mismatchReason: 'N/A' },
+            { id: 'TRN003', name: 'Ananya Reddy', program: 'Digital Marketing', provider: 'Digital India Academy', trainingRole: 'Marketing Executive', actualRole: 'Digital Marketing Lead', relevance: 'High', skillMatch: 82, expectedSalary: 25000, actualSalary: 25000, mismatchReason: 'N/A' },
+            { id: 'TRN004', name: 'Vikram Singh', program: 'Data Science', provider: 'Data Science Institute', trainingRole: 'Data Scientist', actualRole: 'Data Scientist', relevance: 'High', skillMatch: 88, expectedSalary: 38000, actualSalary: 35000, mismatchReason: 'N/A' },
+            { id: 'TRN005', name: 'Arjun Nair', program: 'Cloud Computing', provider: 'Cloud Academy', trainingRole: 'Cloud Engineer', actualRole: 'Cloud Engineer', relevance: 'High', skillMatch: 85, expectedSalary: 32000, actualSalary: 30000, mismatchReason: 'N/A' },
+            { id: 'TRN006', name: 'Meera Iyer', program: 'Digital Marketing', provider: 'Digital India Academy', trainingRole: 'Marketing Executive', actualRole: 'SEO Specialist', relevance: 'Medium', skillMatch: 68, expectedSalary: 24000, actualSalary: 22000, mismatchReason: 'Job role mismatch' },
+            { id: 'TRN007', name: 'Amit Patel', program: 'Full Stack Development', provider: 'NITC Training', trainingRole: 'Full Stack Developer', actualRole: 'Backend Developer', relevance: 'Medium', skillMatch: 72, expectedSalary: 35000, actualSalary: 38000, mismatchReason: 'N/A' },
+            { id: 'TRN008', name: 'Deepa Menon', program: 'Data Analytics', provider: 'Skill India Centre', trainingRole: 'Data Analyst', actualRole: 'Business Analyst', relevance: 'Medium', skillMatch: 65, expectedSalary: 28000, actualSalary: 24000, mismatchReason: 'Skill gap' },
+            { id: 'TRN009', name: 'Suresh Reddy', program: 'UI/UX Design', provider: 'Design Academy', trainingRole: 'UI/UX Designer', actualRole: 'Graphic Designer', relevance: 'Low', skillMatch: 45, expectedSalary: 25000, actualSalary: 20000, mismatchReason: 'Industry mismatch' },
+            { id: 'TRN010', name: 'Lakshmi N', program: 'Cloud Computing', provider: 'Cloud Academy', trainingRole: 'Cloud Engineer', actualRole: 'DevOps Engineer', relevance: 'Medium', skillMatch: 70, expectedSalary: 32000, actualSalary: 25000, mismatchReason: 'Skill gap' },
+            { id: 'TRN011', name: 'Kiran Joshi', program: 'Full Stack Development', provider: 'Code Institute', trainingRole: 'Full Stack Developer', actualRole: 'Junior Developer', relevance: 'Medium', skillMatch: 60, expectedSalary: 30000, actualSalary: 18000, mismatchReason: 'Salary mismatch' },
+            { id: 'TRN012', name: 'Divya K', program: 'Data Analytics', provider: 'Analytics School', trainingRole: 'Data Analyst', actualRole: 'Data Analyst', relevance: 'High', skillMatch: 78, expectedSalary: 25000, actualSalary: 18000, mismatchReason: 'Salary mismatch' },
+            { id: 'TRN013', name: 'Ravi Kumar', program: 'Data Science', provider: 'Data Science Institute', trainingRole: 'Data Scientist', actualRole: 'N/A', relevance: 'Not Relevant', skillMatch: 0, expectedSalary: 35000, actualSalary: 0, mismatchReason: 'Lack of employment opportunities' },
+            { id: 'TRN014', name: 'Sneha Patel', program: 'UI/UX Design', provider: 'Design Academy', trainingRole: 'UI/UX Designer', actualRole: 'N/A', relevance: 'Not Relevant', skillMatch: 0, expectedSalary: 25000, actualSalary: 0, mismatchReason: 'Trainee chose another career' },
+            { id: 'TRN015', name: 'Pooja Shah', program: 'Data Analytics', provider: 'Skill India Centre', trainingRole: 'Data Analyst', actualRole: 'Data Entry Operator', relevance: 'Low', skillMatch: 35, expectedSalary: 25000, actualSalary: 12000, mismatchReason: 'Qualification mismatch' },
+            { id: 'TRN016', name: 'Nisha Gupta', program: 'Digital Marketing', provider: 'Digital India Academy', trainingRole: 'Marketing Executive', actualRole: 'Content Writer', relevance: 'Low', skillMatch: 40, expectedSalary: 22000, actualSalary: 18000, mismatchReason: 'Job role mismatch' },
+            { id: 'TRN017', name: 'Manoj Kumar', program: 'Full Stack Development', provider: 'NITC Training', trainingRole: 'Full Stack Developer', actualRole: 'Frontend Developer', relevance: 'Medium', skillMatch: 68, expectedSalary: 32000, actualSalary: 22000, mismatchReason: 'Skill gap' },
+            { id: 'TRN018', name: 'Kavya Reddy', program: 'Data Science', provider: 'Data Science Institute', trainingRole: 'Data Scientist', actualRole: 'Data Analyst', relevance: 'Medium', skillMatch: 62, expectedSalary: 35000, actualSalary: 25000, mismatchReason: 'Skill gap' },
+            { id: 'TRN019', name: 'Arjun Singh', program: 'Cloud Computing', provider: 'Cloud Academy', trainingRole: 'Cloud Engineer', actualRole: 'Cloud Engineer', relevance: 'High', skillMatch: 82, expectedSalary: 32000, actualSalary: 25000, mismatchReason: 'Salary mismatch' },
+            { id: 'TRN020', name: 'Shweta Jain', program: 'UI/UX Design', provider: 'Design Academy', trainingRole: 'UI/UX Designer', actualRole: 'UI Developer', relevance: 'Medium', skillMatch: 58, expectedSalary: 25000, actualSalary: 16000, mismatchReason: 'Skill gap' }
+        ],
+        skills: [
+            { name: 'Python', employerDemand: 82, trainingCoverage: 78 },
+            { name: 'Cloud Computing', employerDemand: 76, trainingCoverage: 41 },
+            { name: 'SQL', employerDemand: 69, trainingCoverage: 65 },
+            { name: 'AI/ML', employerDemand: 63, trainingCoverage: 38 },
+            { name: 'React', employerDemand: 72, trainingCoverage: 68 },
+            { name: 'Data Analysis', employerDemand: 85, trainingCoverage: 82 },
+            { name: 'Communication', employerDemand: 78, trainingCoverage: 45 },
+            { name: 'DevOps', employerDemand: 65, trainingCoverage: 32 },
+            { name: 'Cybersecurity', employerDemand: 58, trainingCoverage: 25 },
+            { name: 'UI/UX Design', employerDemand: 55, trainingCoverage: 60 }
+        ],
+        mismatchReasons: [
+            { reason: 'Skill gap', count: 5 },
+            { reason: 'Salary mismatch', count: 3 },
+            { reason: 'Job role mismatch', count: 2 },
+            { reason: 'Industry mismatch', count: 1 },
+            { reason: 'Qualification mismatch', count: 1 },
+            { reason: 'Lack of employment opportunities', count: 1 },
+            { reason: 'Trainee chose another career', count: 1 },
+            { reason: 'Outdated curriculum', count: 0 },
+            { reason: 'Insufficient practical training', count: 0 },
+            { reason: 'Employer requirement changed', count: 0 },
+            { reason: 'Location constraints', count: 0 },
+            { reason: 'Other', count: 0 }
+        ]
+    };
+
+    // ============================================================
+    // DATA LOADER
+    // ============================================================
+
+    function getTraineeData() {
+        let data = localStorage.getItem('traineeData');
+        if (data) { try { return JSON.parse(data); } catch(e) {} }
+        return null;
+    }
+
+    function getEmploymentData() {
+        let data = localStorage.getItem('employmentData');
+        if (data) { try { return JSON.parse(data); } catch(e) {} }
+        return null;
+    }
+
+    function getProviderData() {
+        let data = localStorage.getItem('providerData');
+        if (data) { try { return JSON.parse(data); } catch(e) {} }
+        return null;
+    }
+
+    function getGovernmentData() {
+        let data = localStorage.getItem('governmentData');
+        if (data) { try { return JSON.parse(data); } catch(e) {} }
+        return null;
+    }
+
+    // ============================================================
+    // BUILD RELEVANCE RECORDS
+    // ============================================================
+
+    function buildRelevanceRecords() {
+        let records = [];
+        const traineeData = getTraineeData();
+        const employmentData = getEmploymentData();
+        const providerData = getProviderData();
+
+        if (traineeData && traineeData.fullName) {
+            const program = traineeData.skillTrade || 'N/A';
+            const provider = traineeData.trainingProvider || providerData?.orgName || 'N/A';
+            const actualRole = employmentData?.jobRole || traineeData.currentJobRole || 'N/A';
+            
+            // Calculate relevance based on program and role
+            let relevance = 'Medium';
+            let skillMatch = 65;
+            if (actualRole !== 'N/A') {
+                const programLower = program.toLowerCase();
+                const roleLower = actualRole.toLowerCase();
+                if ((programLower.includes('data') && roleLower.includes('data')) ||
+                    (programLower.includes('full stack') && roleLower.includes('developer')) ||
+                    (programLower.includes('cloud') && roleLower.includes('cloud'))) {
+                    relevance = 'High';
+                    skillMatch = 85;
+                } else if (roleLower.includes('analyst') || roleLower.includes('developer')) {
+                    relevance = 'Medium';
+                    skillMatch = 65;
+                } else {
+                    relevance = 'Low';
+                    skillMatch = 40;
+                }
+            } else {
+                relevance = 'Not Relevant';
+                skillMatch = 0;
+            }
+
+            const expectedSalary = parseInt(traineeData.expectedSalary) || 30000;
+            const actualSalary = parseInt(employmentData?.currentIncome) || parseInt(traineeData.currentIncome) || 0;
+
+            records.push({
+                id: traineeData.traineeId || 'TRN001',
+                name: traineeData.fullName || 'Trainee',
+                program: program,
+                provider: provider,
+                trainingRole: program,
+                actualRole: actualRole,
+                relevance: relevance,
+                skillMatch: skillMatch,
+                expectedSalary: expectedSalary,
+                actualSalary: actualSalary,
+                mismatchReason: actualSalary === 0 ? 'Lack of employment opportunities' : 
+                               actualSalary < expectedSalary * 0.8 ? 'Salary mismatch' : 'N/A',
+                avatar: traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T'
+            });
+        }
+
+        // Add sample data
+        if (records.length === 0 || records.length < 5) {
+            const existingIds = new Set(records.map(r => r.id));
+            sampleData.records.forEach(r => {
+                if (!existingIds.has(r.id)) {
+                    records.push({...r, avatar: r.name.charAt(0)});
+                }
+            });
+        }
+
+        return records;
+    }
+
+    // ============================================================
+    // CALCULATE RELEVANCE STATISTICS
+    // ============================================================
+
+    function calculateRelevanceStats(records) {
+        const total = records.length;
+        const employed = records.filter(r => r.actualSalary > 0).length;
+
+        // Relevance distribution
+        const highRelevance = records.filter(r => r.relevance === 'High').length;
+        const mediumRelevance = records.filter(r => r.relevance === 'Medium').length;
+        const lowRelevance = records.filter(r => r.relevance === 'Low').length;
+        const notRelevant = records.filter(r => r.relevance === 'Not Relevant').length;
+
+        const highPct = total > 0 ? Math.round((highRelevance / total) * 100) : 0;
+        const mediumPct = total > 0 ? Math.round((mediumRelevance / total) * 100) : 0;
+        const lowPct = total > 0 ? Math.round((lowRelevance / total) * 100) : 0;
+        const notRelevantPct = total > 0 ? Math.round((notRelevant / total) * 100) : 0;
+
+        // Match score
+        const matchScore = Math.round((highPct * 1.0 + mediumPct * 0.6 + lowPct * 0.3) * 1.0);
+        const mismatchRate = total > 0 ? Math.round(((lowRelevance + notRelevant) / total) * 100) : 0;
+
+        // Salary alignment
+        const expectedSalaries = records.filter(r => r.expectedSalary > 0).map(r => r.expectedSalary);
+        const actualSalaries = records.filter(r => r.actualSalary > 0).map(r => r.actualSalary);
+        const avgExpected = expectedSalaries.length > 0 ? Math.round(expectedSalaries.reduce((a,b) => a+b, 0) / expectedSalaries.length) : 0;
+        const avgActual = actualSalaries.length > 0 ? Math.round(actualSalaries.reduce((a,b) => a+b, 0) / actualSalaries.length) : 0;
+        const salaryGap = avgActual - avgExpected;
+        const salaryMatchPct = avgExpected > 0 ? Math.round((avgActual / avgExpected) * 100) : 0;
+        
+        const aboveExpectation = records.filter(r => r.actualSalary > r.expectedSalary).length;
+        const belowExpectation = records.filter(r => r.actualSalary > 0 && r.actualSalary < r.expectedSalary).length;
+        const abovePct = employed > 0 ? Math.round((aboveExpectation / employed) * 100) : 0;
+        const belowPct = employed > 0 ? Math.round((belowExpectation / employed) * 100) : 0;
+
+        // Skill alignment
+        const skillMatches = records.filter(r => r.skillMatch > 0).map(r => r.skillMatch);
+        const avgSkillMatch = skillMatches.length > 0 ? Math.round(skillMatches.reduce((a,b) => a+b, 0) / skillMatches.length) : 0;
+        const fullyMatched = records.filter(r => r.skillMatch >= 80).length;
+        const partiallyMatched = records.filter(r => r.skillMatch >= 50 && r.skillMatch < 80).length;
+        const skillsMissing = records.filter(r => r.skillMatch < 50).length;
+
+        // Top skill gap and demand
+        const skills = sampleData.skills;
+        const sortedByGap = [...skills].sort((a, b) => (b.employerDemand - b.trainingCoverage) - (a.employerDemand - a.trainingCoverage));
+        const topGap = sortedByGap.length > 0 ? sortedByGap[0].name : '-';
+        const sortedByDemand = [...skills].sort((a, b) => b.employerDemand - a.employerDemand);
+        const topDemand = sortedByDemand.length > 0 ? sortedByDemand[0].name : '-';
+
+        // Job role alignment
+        const sameRole = records.filter(r => r.relevance === 'High').length;
+        const relatedRole = records.filter(r => r.relevance === 'Medium').length;
+        const differentRole = records.filter(r => r.relevance === 'Low').length;
+        const noRole = records.filter(r => r.relevance === 'Not Relevant').length;
+
+        // Mismatch reasons
+        const mismatchReasons = {};
+        records.forEach(r => {
+            if (r.mismatchReason && r.mismatchReason !== 'N/A') {
+                if (!mismatchReasons[r.mismatchReason]) mismatchReasons[r.mismatchReason] = 0;
+                mismatchReasons[r.mismatchReason]++;
+            }
+        });
+
+        // Program effectiveness
+        const programStats = {};
+        records.forEach(r => {
+            if (!programStats[r.program]) {
+                programStats[r.program] = { total: 0, high: 0, skillSum: 0, employed: 0, salarySum: 0, expectedSum: 0 };
+            }
+            const p = programStats[r.program];
+            p.total++;
+            if (r.relevance === 'High') p.high++;
+            p.skillSum += r.skillMatch;
+            if (r.actualSalary > 0) {
+                p.employed++;
+                p.salarySum += r.actualSalary;
+                p.expectedSum += r.expectedSalary;
+            }
+        });
+        Object.keys(programStats).forEach(key => {
+            const p = programStats[key];
+            p.relevanceRate = p.total > 0 ? Math.round((p.high / p.total) * 100) : 0;
+            p.avgSkillMatch = p.total > 0 ? Math.round(p.skillSum / p.total) : 0;
+            p.employmentRate = p.total > 0 ? Math.round((p.employed / p.total) * 100) : 0;
+            p.salaryGrowth = p.expectedSum > 0 ? Math.round(((p.salarySum - p.expectedSum) / p.expectedSum) * 100) : 0;
+        });
+
+        // Provider performance
+        const providerStats = {};
+        records.forEach(r => {
+            if (!providerStats[r.provider]) {
+                providerStats[r.provider] = { total: 0, high: 0, skillSum: 0, employed: 0, salarySum: 0, expectedSum: 0 };
+            }
+            const p = providerStats[r.provider];
+            p.total++;
+            if (r.relevance === 'High') p.high++;
+            p.skillSum += r.skillMatch;
+            if (r.actualSalary > 0) {
+                p.employed++;
+                p.salarySum += r.actualSalary;
+                p.expectedSum += r.expectedSalary;
+            }
+        });
+        Object.keys(providerStats).forEach(key => {
+            const p = providerStats[key];
+            p.relevanceRate = p.total > 0 ? Math.round((p.high / p.total) * 100) : 0;
+            p.avgSkillMatch = p.total > 0 ? Math.round(p.skillSum / p.total) : 0;
+            p.employmentRate = p.total > 0 ? Math.round((p.employed / p.total) * 100) : 0;
+            p.salaryGrowth = p.expectedSum > 0 ? Math.round(((p.salarySum - p.expectedSum) / p.expectedSum) * 100) : 0;
+            p.outcomeScore = Math.round((p.relevanceRate * 0.3 + p.avgSkillMatch * 0.25 + p.employmentRate * 0.25 + Math.max(0, p.salaryGrowth) * 0.2));
+        });
+
+        return {
+            total, employed,
+            highRelevance, mediumRelevance, lowRelevance, notRelevant,
+            highPct, mediumPct, lowPct, notRelevantPct,
+            matchScore, mismatchRate,
+            avgExpected, avgActual, salaryGap, salaryMatchPct,
+            abovePct, belowPct, aboveExpectation, belowExpectation,
+            avgSkillMatch, fullyMatched, partiallyMatched, skillsMissing,
+            topGap, topDemand,
+            sameRole, relatedRole, differentRole, noRole,
+            mismatchReasons, programStats, providerStats
+        };
+    }
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+
+    let allRecords = [];
+    let stats = {};
+
+    function loadAndRender() {
+        allRecords = buildRelevanceRecords();
+        stats = calculateRelevanceStats(allRecords);
+        renderAll();
+        updateSidebar();
+        updateNotificationBadge();
+    }
+
+    function renderAll() {
+        renderBanner(stats);
+        renderKPIs(stats);
+        renderRelevanceDonut(stats);
+        renderSalaryAlignment(stats);
+        renderSkillAlignment(stats);
+        renderSkillTable();
+        renderRoleAlignment(stats);
+        renderTransitions();
+        renderMismatchReasons(stats);
+        renderChain(stats);
+        renderProgramEffectiveness(stats);
+        renderProviderPerformance(stats);
+        renderAIInsights(stats);
+    }
+
+    function renderBanner(stats) {
+        document.getElementById('bannerHigh').textContent = stats.highPct + '%';
+        document.getElementById('bannerScore').textContent = stats.matchScore;
+        document.getElementById('bannerMismatch').textContent = stats.mismatchRate + '%';
+        document.getElementById('bannerSalary').textContent = stats.salaryMatchPct + '%';
+    }
+
+    function renderKPIs(stats) {
+        document.getElementById('kpiHighRelevance').textContent = stats.highPct + '%';
+        document.getElementById('kpiMediumRelevance').textContent = stats.mediumPct + '%';
+        document.getElementById('kpiLowRelevance').textContent = stats.lowPct + '%';
+        document.getElementById('kpiNotRelevant').textContent = stats.notRelevantPct + '%';
+        document.getElementById('kpiMatchScore').textContent = stats.matchScore;
+        document.getElementById('kpiMismatchRate').textContent = stats.mismatchRate + '%';
+    }
+
+    function renderRelevanceDonut(stats) {
+        const container = document.getElementById('relevanceDonutChart');
+        const legend = document.getElementById('relevanceLegend');
+        const data = [
+            { label: 'High Relevance', value: stats.highRelevance, color: '#22c55e' },
+            { label: 'Medium Relevance', value: stats.mediumRelevance, color: '#2563eb' },
+            { label: 'Low Relevance', value: stats.lowRelevance, color: '#eab308' },
+            { label: 'Not Relevant', value: stats.notRelevant, color: '#dc2626' }
+        ];
+        const totalVal = stats.total || 1;
+        let gradient = '';
+        let currentAngle = 0;
+        data.forEach(d => {
+            const pct = (d.value / totalVal) * 100;
+            if (pct > 0) {
+                const angle = (pct / 100) * 360;
+                gradient += `${d.color} ${currentAngle}deg ${currentAngle + angle}deg, `;
+                currentAngle += angle;
+            }
+        });
+        gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
+        container.style.background = `conic-gradient(${gradient})`;
+        document.getElementById('relevanceTotal').textContent = stats.total;
+
+        legend.innerHTML = data.map(d => {
+            const pct = totalVal > 0 ? Math.round((d.value / totalVal) * 100) : 0;
+            return `<div class="legend-item">
+                <div class="dot" style="background:${d.color};"></div>
+                ${d.label} <span class="pct">${d.value} (${pct}%)</span>
+            </div>`;
+        }).join('');
+    }
+
+    function renderSalaryAlignment(stats) {
+        document.getElementById('salaryExpected').textContent = '₹' + stats.avgExpected.toLocaleString();
+        document.getElementById('salaryActual').textContent = '₹' + stats.avgActual.toLocaleString();
+        document.getElementById('salaryGap').textContent = (stats.salaryGap >= 0 ? '+' : '') + '₹' + stats.salaryGap.toLocaleString();
+        document.getElementById('salaryMatchPct').textContent = stats.salaryMatchPct + '%';
+        document.getElementById('salaryAbove').textContent = stats.abovePct + '%';
+        document.getElementById('salaryBelow').textContent = stats.belowPct + '%';
+    }
+
+    function renderSkillAlignment(stats) {
+        document.getElementById('kpiSkillMatch').textContent = stats.avgSkillMatch + '%';
+        document.getElementById('kpiSkillsFullyMatched').textContent = stats.fullyMatched;
+        document.getElementById('kpiSkillsPartial').textContent = stats.partiallyMatched;
+        document.getElementById('kpiSkillsMissing').textContent = stats.skillsMissing;
+        document.getElementById('kpiTopGap').textContent = stats.topGap;
+        document.getElementById('kpiTopDemand').textContent = stats.topDemand;
+    }
+
+    function renderSkillTable() {
+        const tbody = document.getElementById('skillTableBody');
+        const skills = sampleData.skills;
+        document.getElementById('skillCount').textContent = skills.length + ' skills';
+
+        tbody.innerHTML = skills.map(s => {
+            const gap = s.employerDemand - s.trainingCoverage;
+            const gapClass = gap > 20 ? 'high' : gap > 10 ? 'medium' : 'low';
+            const gapLabel = gap > 20 ? '🔴 High' : gap > 10 ? '🟠 Medium' : '🟢 Low';
+            const demandWidth = Math.min(s.employerDemand, 100);
+            const coverageWidth = Math.min(s.trainingCoverage, 100);
+            return `<tr>
+                <td><strong>${s.name}</strong></td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:10px;font-weight:600;color:#64748b;">${s.employerDemand}%</span>
+                        <div class="gap-bar"><div class="fill" style="width:${demandWidth}%;background:#22c55e;"></div></div>
+                    </div>
+                </td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:10px;font-weight:600;color:#64748b;">${s.trainingCoverage}%</span>
+                        <div class="gap-bar"><div class="fill" style="width:${coverageWidth}%;background:#2563eb;"></div></div>
+                    </div>
+                </td>
+                <td style="font-weight:700;color:${gap > 20 ? '#dc2626' : gap > 10 ? '#d97706' : '#16a34a'};">
+                    ${gap > 0 ? '+' : ''}${gap}%
+                </td>
+                <td><span class="gap-indicator ${gapClass}">${gapLabel}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderRoleAlignment(stats) {
+        const container = document.getElementById('roleDonutChart');
+        const legend = document.getElementById('roleLegend');
+        const data = [
+            { label: 'Same Role', value: stats.sameRole, color: '#22c55e' },
+            { label: 'Related Role', value: stats.relatedRole, color: '#2563eb' },
+            { label: 'Different Role', value: stats.differentRole, color: '#eab308' },
+            { label: 'No Job', value: stats.noRole, color: '#dc2626' }
+        ];
+        const totalVal = stats.total || 1;
+        let gradient = '';
+        let currentAngle = 0;
+        data.forEach(d => {
+            const pct = (d.value / totalVal) * 100;
+            if (pct > 0) {
+                const angle = (pct / 100) * 360;
+                gradient += `${d.color} ${currentAngle}deg ${currentAngle + angle}deg, `;
+                currentAngle += angle;
+            }
+        });
+        gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
+        container.style.background = `conic-gradient(${gradient})`;
+        document.getElementById('roleTotal').textContent = stats.total;
+
+        legend.innerHTML = data.map(d => {
+            const pct = totalVal > 0 ? Math.round((d.value / totalVal) * 100) : 0;
+            return `<div class="legend-item">
+                <div class="dot" style="background:${d.color};"></div>
+                ${d.label} <span class="pct">${d.value} (${pct}%)</span>
+            </div>`;
+        }).join('');
+    }
+
+    function renderTransitions() {
+        const container = document.getElementById('transitionsList');
+        const transitions = [
+            { from: 'Data Analytics', to: 'Data Analyst', pct: 62 },
+            { from: 'Data Analytics', to: 'Business Analyst', pct: 18 },
+            { from: 'Data Analytics', to: 'Non-related roles', pct: 20 },
+            { from: 'Full Stack Development', to: 'Full Stack Developer', pct: 55 },
+            { from: 'Full Stack Development', to: 'Backend Developer', pct: 25 },
+            { from: 'Full Stack Development', to: 'Non-related roles', pct: 20 },
+            { from: 'Digital Marketing', to: 'Marketing Executive', pct: 58 },
+            { from: 'Digital Marketing', to: 'SEO Specialist', pct: 22 }
+        ];
+        container.innerHTML = transitions.map(t => `
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f8fafc;">
+                <span>${t.from} → ${t.to}</span>
+                <span style="font-weight:700;color:${t.pct > 50 ? '#16a34a' : t.pct > 20 ? '#d97706' : '#dc2626'};">${t.pct}%</span>
+            </div>
+        `).join('');
+    }
+
+    function renderMismatchReasons(stats) {
+        const container = document.getElementById('mismatchGrid');
+        const reasons = sampleData.mismatchReasons;
+        const totalMismatch = reasons.reduce((sum, r) => sum + r.count, 0) || 1;
+
+        container.innerHTML = reasons.filter(r => r.count > 0).map(r => {
+            const pct = Math.round((r.count / totalMismatch) * 100);
+            return `<div class="mismatch-item">
+                <div class="mismatch-label">⚠️ ${r.reason}</div>
+                <div>
+                    <span class="mismatch-count">${r.count}</span>
+                    <span class="mismatch-pct">(${pct}%)</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderChain(stats) {
+        const trainingCompletion = 85;
+        const employmentRate = stats.total > 0 ? Math.round((stats.employed / stats.total) * 100) : 0;
+        const relevanceRate = stats.highPct + stats.mediumPct;
+        const skillMatchRate = stats.total > 0 ? Math.round(((stats.fullyMatched + stats.partiallyMatched) / stats.total) * 100) : 0;
+        const salaryMatchRate = stats.salaryMatchPct;
+        const incomeGrowthRate = 68;
+        const retentionRate = 62;
+
+        document.getElementById('chainTraining').textContent = trainingCompletion + '%';
+        document.getElementById('chainEmployment').textContent = employmentRate + '%';
+        document.getElementById('chainRelevance').textContent = relevanceRate + '%';
+        document.getElementById('chainSkillMatch').textContent = skillMatchRate + '%';
+        document.getElementById('chainSalary').textContent = salaryMatchRate + '%';
+        document.getElementById('chainIncomeGrowth').textContent = incomeGrowthRate + '%';
+        document.getElementById('chainRetention').textContent = retentionRate + '%';
+
+        const steps = document.querySelectorAll('.chain-step');
+        const values = [trainingCompletion, employmentRate, relevanceRate, skillMatchRate, salaryMatchRate, incomeGrowthRate, retentionRate];
+        const thresholds = [70, 60, 60, 60, 70, 60, 60];
+        steps.forEach((step, i) => {
+            step.className = 'chain-step';
+            if (values[i] >= thresholds[i]) {
+                step.classList.add('completed');
+            } else if (values[i] >= thresholds[i] * 0.7) {
+                step.classList.add('active');
+            } else if (values[i] >= thresholds[i] * 0.5) {
+                step.classList.add('warning');
+            } else {
+                step.classList.add('danger');
+            }
+        });
+    }
+
+    function renderProgramEffectiveness(stats) {
+        const tbody = document.getElementById('programTableBody');
+        const programs = stats.programStats;
+        document.getElementById('programCount').textContent = Object.keys(programs).length + ' programs';
+
+        tbody.innerHTML = Object.keys(programs).map(name => {
+            const p = programs[name];
+            const relColor = p.relevanceRate >= 70 ? '#16a34a' : p.relevanceRate >= 40 ? '#d97706' : '#dc2626';
+            const skillColor = p.avgSkillMatch >= 70 ? '#16a34a' : p.avgSkillMatch >= 50 ? '#d97706' : '#dc2626';
+            const salaryColor = p.salaryGrowth >= 20 ? '#16a34a' : p.salaryGrowth >= 0 ? '#d97706' : '#dc2626';
+            const empColor = p.employmentRate >= 70 ? '#16a34a' : p.employmentRate >= 50 ? '#d97706' : '#dc2626';
+            
+            return `<tr>
+                <td><strong>${name}</strong></td>
+                <td>
+                    <div class="score-bar-container">
+                        <div class="score-bar"><div class="fill" style="width:${p.relevanceRate}%;background:${relColor};"></div></div>
+                        <span class="score-val" style="color:${relColor};">${p.relevanceRate}%</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="score-bar-container">
+                        <div class="score-bar"><div class="fill" style="width:${p.avgSkillMatch}%;background:${skillColor};"></div></div>
+                        <span class="score-val" style="color:${skillColor};">${p.avgSkillMatch}%</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="score-bar-container">
+                        <div class="score-bar"><div class="fill" style="width:${Math.max(0, p.salaryGrowth)}%;background:${salaryColor};"></div></div>
+                        <span class="score-val" style="color:${salaryColor};">${p.salaryGrowth}%</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="score-bar-container">
+                        <div class="score-bar"><div class="fill" style="width:${p.employmentRate}%;background:${empColor};"></div></div>
+                        <span class="score-val" style="color:${empColor};">${p.employmentRate}%</span>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderProviderPerformance(stats) {
+        const tbody = document.getElementById('providerTableBody');
+        const providers = stats.providerStats;
+        const providerNames = Object.keys(providers).sort((a, b) => providers[b].outcomeScore - providers[a].outcomeScore);
+        document.getElementById('providerCount').textContent = providerNames.length + ' providers';
+
+        tbody.innerHTML = providerNames.map((name, index) => {
+            const p = providers[name];
+            const scoreColor = p.outcomeScore >= 70 ? '#16a34a' : p.outcomeScore >= 50 ? '#d97706' : '#dc2626';
+            const medal = index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : '';
+            return `<tr>
+                <td><strong>${medal}${name}</strong></td>
+                <td style="font-weight:700;color:${p.relevanceRate >= 70 ? '#16a34a' : p.relevanceRate >= 40 ? '#d97706' : '#dc2626'};">${p.relevanceRate}%</td>
+                <td style="font-weight:700;color:${p.avgSkillMatch >= 70 ? '#16a34a' : p.avgSkillMatch >= 50 ? '#d97706' : '#dc2626'};">${p.avgSkillMatch}%</td>
+                <td style="font-weight:700;color:${p.employmentRate >= 70 ? '#16a34a' : p.employmentRate >= 50 ? '#d97706' : '#dc2626'};">${p.employmentRate}%</td>
+                <td style="font-weight:700;color:${p.salaryGrowth >= 20 ? '#16a34a' : p.salaryGrowth >= 0 ? '#d97706' : '#dc2626'};">${p.salaryGrowth}%</td>
+                <td>
+                    <div class="score-bar-container">
+                        <div class="score-bar"><div class="fill" style="width:${p.outcomeScore}%;background:${scoreColor};"></div></div>
+                        <span class="score-val" style="color:${scoreColor};">${p.outcomeScore}</span>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderAIInsights(stats) {
+        const insights = document.getElementById('aiInsights');
+        const recs = document.getElementById('aiRecommendations');
+
+        let insightHtml = '';
+        let recHtml = '';
+
+        // Skill gap alert
+        const skills = sampleData.skills;
+        const criticalGaps = skills.filter(s => (s.employerDemand - s.trainingCoverage) > 20);
+        if (criticalGaps.length > 0) {
+            insightHtml += `<div class="ai-item"><span class="ai-icon">🔴</span><div><strong>Skill Gap Alert:</strong> ${criticalGaps.map(s => s.name).join(', ')} ${criticalGaps.length > 1 ? 'have' : 'has'} high employer demand but low training coverage.</div></div>`;
+            recHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Increase practical training modules for ${criticalGaps.map(s => s.name).join(', ')}.</div></div>`;
+        }
+
+        // Program performance alert
+        const programNames = Object.keys(stats.programStats);
+        const lowRelevancePrograms = programNames.filter(p => stats.programStats[p].relevanceRate < 40 && stats.programStats[p].employmentRate > 50);
+        if (lowRelevancePrograms.length > 0) {
+            insightHtml += `<div class="ai-item"><span class="ai-icon">🟠</span><div><strong>Program Performance Alert:</strong> ${lowRelevancePrograms[0]} has employment but low relevance.</div></div>`;
+            recHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Review curriculum alignment for ${lowRelevancePrograms[0]}.</div></div>`;
+        }
+
+        // Salary mismatch
+        if (stats.salaryGap < -2000) {
+            insightHtml += `<div class="ai-item"><span class="ai-icon">🟡</span><div><strong>Salary Mismatch Alert:</strong> Average actual salary is ${Math.abs(Math.round((stats.salaryGap / stats.avgExpected) * 100))}% below expected.</div></div>`;
+            recHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Review salary expectations and employer negotiations.</div></div>`;
+        }
+
+        // High impact program
+        const highImpact = programNames.filter(p => stats.programStats[p].relevanceRate >= 70 && stats.programStats[p].employmentRate >= 70);
+        if (highImpact.length > 0) {
+            insightHtml += `<div class="ai-item"><span class="ai-icon">🟢</span><div><strong>High Impact Program:</strong> ${highImpact[0]} shows strong job relevance and employment.</div></div>`;
+        }
+
+        // Mismatch reasons
+        const topReason = sampleData.mismatchReasons.sort((a, b) => b.count - a.count)[0];
+        if (topReason && topReason.count > 0) {
+            insightHtml += `<div class="ai-item"><span class="ai-icon">⚠️</span><div><strong>Top Mismatch Reason:</strong> ${topReason.reason} (${topReason.count} cases).</div></div>`;
+            recHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Address ${topReason.reason.toLowerCase()} through targeted interventions.</div></div>`;
+        }
+
+        if (!insightHtml) insightHtml = '<div class="ai-item"><span class="ai-icon">📊</span><div>Insufficient data for detailed insights.</div></div>';
+        if (!recHtml) recHtml = '<div class="ai-item"><span class="ai-icon">✅</span><div>Programs are performing well. Continue monitoring.</div></div>';
+
+        insights.innerHTML = insightHtml;
+        recs.innerHTML = recHtml;
+    }
+
+    function updateSidebar() {
+        const govData = getGovernmentData();
+        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
+        document.getElementById('sidebarAvatar').textContent = initial;
+        document.getElementById('sidebarName').textContent = govData?.name || 'Government';
+        document.getElementById('sidebarRole').textContent = govData?.role || 'Admin';
+        document.getElementById('headerAvatar').textContent = initial;
+        document.getElementById('headerName').textContent = govData?.name || 'Government';
+    }
+
+    function updateNotificationBadge() {
+        const mismatches = allRecords.filter(r => r.relevance === 'Low' || r.relevance === 'Not Relevant').length;
+        document.getElementById('notifBadge').textContent = mismatches;
+    }
+
+    // ============================================================
+    // UTILITY FUNCTIONS
+    // ============================================================
+
+    function updateDate() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    function showNotifications() {
+        const mismatches = allRecords.filter(r => r.relevance === 'Low' || r.relevance === 'Not Relevant').length;
+        alert(`📬 Notifications\n\n• ${mismatches} job mismatches detected\n• ${stats.mismatchRate}% mismatch rate\n• ${allRecords.length} total records`);
+    }
+
+    function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            alert('Logging out... Redirecting to login page.');
+            window.location.href = '../auth/login.html';
+        }
+    }
+
+    function exportData() {
+        if (allRecords.length === 0) { alert('No data to export'); return; }
+        let csv = 'Name,Program,Provider,Training Role,Actual Role,Relevance,Skill Match,Expected Salary,Actual Salary,Mismatch Reason\n';
+        allRecords.forEach(r => {
+            csv += `${r.name},${r.program},${r.provider},${r.trainingRole},${r.actualRole},${r.relevance},${r.skillMatch},${r.expectedSalary},${r.actualSalary},${r.mismatchReason}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `training-job-relevance-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('📥 Data exported successfully!');
+    }
+
+    function refreshData() { loadAndRender(); showToast('🔄 Data refreshed!'); }
+
+    function exportFullReport() {
+        let report = '📊 TRAINING-TO-JOB RELEVANCE REPORT\n';
+        report += '================================\n';
+        report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
+        report += `📈 OVERALL RELEVANCE\n`;
+        report += `• High Relevance: ${stats.highPct}%\n`;
+        report += `• Medium Relevance: ${stats.mediumPct}%\n`;
+        report += `• Low Relevance: ${stats.lowPct}%\n`;
+        report += `• Not Relevant: ${stats.notRelevantPct}%\n`;
+        report += `• Match Score: ${stats.matchScore}/100\n`;
+        report += `• Mismatch Rate: ${stats.mismatchRate}%\n\n`;
+        report += `💰 SALARY ALIGNMENT\n`;
+        report += `• Avg Expected: ₹${stats.avgExpected.toLocaleString()}\n`;
+        report += `• Avg Actual: ₹${stats.avgActual.toLocaleString()}\n`;
+        report += `• Salary Gap: ₹${stats.salaryGap.toLocaleString()}\n`;
+        report += `• Salary Match: ${stats.salaryMatchPct}%\n\n`;
+        report += `🔧 SKILL ALIGNMENT\n`;
+        report += `• Avg Skill Match: ${stats.avgSkillMatch}%\n`;
+        report += `• Fully Matched: ${stats.fullyMatched}\n`;
+        report += `• Partially Matched: ${stats.partiallyMatched}\n`;
+        report += `• Skills Missing: ${stats.skillsMissing}\n\n`;
+        report += `📊 PROGRAM EFFECTIVENESS\n`;
+        Object.keys(stats.programStats).forEach(name => {
+            const p = stats.programStats[name];
+            report += `• ${name}: Relevance ${p.relevanceRate}%, Skill ${p.avgSkillMatch}%, Employment ${p.employmentRate}%\n`;
+        });
+        report += '\n================================\n';
+        report += '📌 Generated by SkillBridge Government Portal';
+        alert(report);
+    }
+
+    function viewSkillGaps() {
+        let msg = '🔧 SKILL GAP ANALYSIS\n';
+        msg += '================================\n\n';
+        const skills = sampleData.skills.sort((a, b) => (b.employerDemand - b.trainingCoverage) - (a.employerDemand - a.trainingCoverage));
+        skills.forEach(s => {
+            const gap = s.employerDemand - s.trainingCoverage;
+            const status = gap > 20 ? '🔴 HIGH' : gap > 10 ? '🟠 MEDIUM' : '🟢 LOW';
+            msg += `${status} ${s.name}\n`;
+            msg += `   Demand: ${s.employerDemand}% | Coverage: ${s.trainingCoverage}% | Gap: ${gap}%\n\n`;
+        });
+        alert(msg);
+    }
+
+    function generateAIInsights() {
+        let insights = '🤖 AI GOVERNMENT INSIGHTS\n';
+        insights += '================================\n\n';
+        insights += `📊 RELEVANCE ANALYSIS\n`;
+        insights += `• Match Score: ${stats.matchScore}/100\n`;
+        insights += `• ${stats.highPct}% of trainees have high job relevance\n`;
+        insights += `• ${stats.mismatchRate}% mismatch rate detected\n\n`;
+        
+        insights += `🔴 CRITICAL FINDINGS\n`;
+        const criticalGaps = sampleData.skills.filter(s => (s.employerDemand - s.trainingCoverage) > 20);
+        if (criticalGaps.length > 0) {
+            insights += `• Skill gaps: ${criticalGaps.map(s => s.name).join(', ')}\n`;
+        }
+        insights += `• Top mismatch: ${sampleData.mismatchReasons.sort((a, b) => b.count - a.count)[0]?.reason || 'N/A'}\n\n`;
+
+        insights += `💡 POLICY RECOMMENDATIONS\n`;
+        insights += `• Update curriculum for emerging skills\n`;
+        insights += `• Improve industry partnerships\n`;
+        insights += `• Focus on practical training\n`;
+        insights += `• Align salary expectations with market\n`;
+        insights += '\n================================\n';
+        alert(insights);
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `position:fixed;bottom:30px;right:30px;background:white;padding:14px 22px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.15);border-left:4px solid #2563eb;max-width:400px;z-index:1000;font-size:13px;color:#0b1a33;display:flex;align-items:center;gap:10px;font-weight:500;`;
+        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#2563eb;font-size:16px;"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAndRender();
+        updateDate();
+
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        console.log('🎯 Training-to-Job Relevance page loaded!');
+        console.log('📋 Records:', allRecords.length);
+        console.log('📊 Match Score:', stats.matchScore);
+        console.log('⚠️ Mismatch Rate:', stats.mismatchRate + '%');
+    });
+</script>
+
+<script src="../js/script.js"></script>\n</body>
+</html>

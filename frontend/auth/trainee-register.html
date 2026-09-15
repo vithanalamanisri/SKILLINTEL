@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SkillBridge · Trainee Registration</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- ✅ Apply theme BEFORE page renders — no flash of light -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('skillintel-theme') || 'light';
+          document.documentElement.setAttribute('data-theme', saved);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef2f7;
+            padding: 2rem 1.5rem;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 10% 20%, rgba(26,86,219,0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 90% 80%, rgba(79,70,229,0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ─── THEME TOGGLE (top-right floating) ─── */
+        .theme-toggle-float {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 200;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s;
+        }
+        .theme-toggle-float:hover {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+            transform: rotate(15deg) scale(1.05);
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
+        }
+
+        .register-wrapper {
+            width: 100%;
+            max-width: 880px;
+            background: #ffffff;
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 60px -15px rgba(0,20,40,0.15), 0 0 0 1px rgba(226,232,240,0.5);
+            padding: 2.8rem 3rem 2.5rem;
+            position: relative;
+            z-index: 1;
+            max-height: 98vh;
+            overflow-y: auto;
+        }
+        .register-wrapper::-webkit-scrollbar { width: 5px; }
+        .register-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .register-wrapper::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 10px; }
+        .register-wrapper::-webkit-scrollbar-thumb:hover { background: #a5b4fc; }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .brand { display: flex; align-items: center; gap: 0.7rem; }
+        .brand-icon {
+            background: linear-gradient(145deg, #1a56db, #4f46e5);
+            width: 44px; height: 44px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+            box-shadow: 0 8px 20px -8px rgba(26,86,219,0.35);
+        }
+        .brand-text { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.03em; color: #0b1a33; }
+        .brand-text span { color: #1a56db; }
+        .header-badge {
+            background: #f1f5f9; padding: 0.35rem 1.2rem; border-radius: 60px;
+            font-size: 0.7rem; font-weight: 600; color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        .header-badge i { color: #1a56db; margin-right: 0.3rem; }
+
+        .page-title { margin-bottom: 1.8rem; }
+        .page-title h2 {
+            font-size: 1.5rem; font-weight: 700; color: #0b1a33;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .page-title h2 i { color: #1a56db; }
+        .page-title p { color: #64748b; font-size: 0.85rem; margin-top: 0.1rem; font-weight: 450; }
+
+        .alert {
+            padding: 0.8rem 1.2rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 500;
+            display: none; margin-bottom: 1.5rem; align-items: flex-start; gap: 0.8rem;
+            border-left: 4px solid;
+        }
+        .alert.success { display: flex; background: #ecfdf5; color: #065f46; border-left-color: #10b981; }
+        .alert.error { display: flex; background: #fef2f2; color: #991b1b; border-left-color: #ef4444; }
+        .alert.info { display: flex; background: #eff6ff; color: #1e40af; border-left-color: #3b82f6; }
+        .alert i { font-size: 1.1rem; margin-top: 0.05rem; flex-shrink: 0; }
+        .alert .alert-msg { line-height: 1.5; }
+        .alert .alert-msg strong { color: #0b1a33; }
+
+        .form-section { margin-bottom: 2rem; }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .section-header .step-num {
+            background: #1a56db; color: white; font-size: 0.6rem; font-weight: 700;
+            width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .section-header h3 { font-size: 0.9rem; font-weight: 700; color: #0b1a33; }
+        .section-header h3 i { color: #1a56db; margin-right: 0.4rem; }
+        .section-header .section-badge {
+            margin-left: auto; font-size: 0.6rem; font-weight: 500;
+            color: #94a3b8; background: #f1f5f9; padding: 0.1rem 0.7rem; border-radius: 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem 1.5rem;
+        }
+        .form-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
+        .form-grid .full-width { grid-column: 1 / -1; }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .form-group label {
+            font-weight: 600; font-size: 0.72rem; color: #334155;
+            display: flex; align-items: center; gap: 0.3rem;
+        }
+        .form-group label i { color: #1a56db; font-size: 0.7rem; width: 0.9rem; }
+        .form-group label .required { color: #ef4444; font-size: 0.7rem; }
+        .form-group .helper-text {
+            font-size: 0.6rem; color: #94a3b8; font-weight: 400;
+            margin-top: 0.05rem; padding-left: 0.2rem;
+        }
+        .form-group .error-text {
+            font-size: 0.6rem; color: #ef4444; font-weight: 500;
+            margin-top: 0.05rem; padding-left: 0.2rem;
+            display: none;
+        }
+        .form-group .error-text.show { display: block; }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .input-wrap:hover { border-color: #cbd5e1; }
+        .input-wrap:focus-within {
+            border-color: #1a56db;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(26,86,219,0.08);
+        }
+        .input-wrap.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.08);
+        }
+        .input-wrap .field-icon {
+            position: absolute; left: 0.9rem;
+            color: #94a3b8; font-size: 0.8rem;
+            transition: 0.2s; pointer-events: none;
+        }
+        .input-wrap:focus-within .field-icon { color: #1a56db; }
+        .input-wrap.error .field-icon { color: #ef4444; }
+        .input-wrap input, .input-wrap select, .input-wrap textarea {
+            width: 100%;
+            padding: 0.65rem 0.9rem 0.65rem 2.5rem;
+            border: none; background: transparent;
+            font-size: 0.82rem; font-weight: 500;
+            color: #0b1a33; outline: none;
+            border-radius: 10px;
+        }
+        .input-wrap textarea {
+            resize: vertical; min-height: 50px;
+            padding-top: 0.7rem; font-weight: 400;
+        }
+        .input-wrap input::placeholder, .input-wrap textarea::placeholder {
+            color: #94a3b8; font-weight: 400; font-size: 0.78rem;
+        }
+        .input-wrap input:read-only { color: #1a56db; font-weight: 600; }
+        .input-wrap select { appearance: none; cursor: pointer; padding-right: 2.2rem; }
+        .input-wrap select option { padding: 0.4rem; font-weight: 400; }
+        .input-wrap .select-arrow {
+            position: absolute; right: 0.9rem;
+            color: #94a3b8; pointer-events: none; font-size: 0.65rem;
+        }
+        .input-wrap .toggle-pw {
+            position: absolute; right: 0.8rem;
+            background: none; border: none;
+            color: #94a3b8; cursor: pointer; font-size: 0.8rem;
+            padding: 0.2rem; transition: 0.2s;
+            border-radius: 50%; width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .input-wrap .toggle-pw:hover { background: #f1f5f9; color: #1a56db; }
+
+        .checkbox-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding-top: 0.2rem;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            font-size: 0.8rem;
+            color: #1e293b;
+            font-weight: 450;
+            cursor: pointer;
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            transition: 0.1s;
+        }
+        .checkbox-item:hover { background: #f8fafc; }
+        .checkbox-item input[type="checkbox"] {
+            accent-color: #1a56db;
+            width: 17px; height: 17px;
+            cursor: pointer; border-radius: 4px;
+            flex-shrink: 0; margin-top: 0.05rem;
+        }
+        .checkbox-item .check-icon {
+            color: #1a56db; font-size: 0.8rem;
+            flex-shrink: 0; width: 1.2rem; text-align: center;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.8rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #f1f5f9;
+        }
+        .btn {
+            padding: 0.7rem 2rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-primary {
+            background: #1a56db; color: white;
+            box-shadow: 0 6px 20px -8px rgba(26,86,219,0.4);
+            flex: 2;
+        }
+        .btn-primary:hover { background: #1e40af; transform: translateY(-1px); box-shadow: 0 10px 28px -10px rgba(26,86,219,0.5); }
+        .btn-secondary {
+            background: #f1f5f9; color: #475569;
+            border: 1.5px solid #e2e8f0;
+            flex: 1;
+        }
+        .btn-secondary:hover { background: #e2e8f0; border-color: #cbd5e1; }
+        .btn-success {
+            background: #059669; color: white;
+            box-shadow: 0 6px 20px -8px rgba(5,150,105,0.35);
+        }
+        .btn-success:hover { background: #047857; transform: translateY(-1px); }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.2rem;
+            font-size: 0.82rem;
+            color: #64748b;
+        }
+        .login-link a {
+            color: #1a56db;
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: 0.15s;
+        }
+        .login-link a:hover { border-bottom-color: #1a56db; }
+
+        .footer-note {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.6rem;
+            color: #94a3b8;
+            letter-spacing: 0.02em;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 1rem;
+        }
+        .footer-note i { color: #1a56db; }
+
+        /* Firebase status indicator */
+        .firebase-status {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+        .firebase-status.online { background: #dcfce7; color: #15803d; }
+        .firebase-status.offline { background: #fef3c7; color: #b45309; }
+        .firebase-status .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @media (max-width: 768px) {
+            .register-wrapper { padding: 1.8rem 1.5rem; border-radius: 1.8rem; }
+            .form-grid { grid-template-columns: 1fr; gap: 0.8rem; }
+            .form-grid.three-col { grid-template-columns: 1fr 1fr; }
+            .header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .form-actions { flex-direction: column; }
+            .btn { padding: 0.65rem 1.5rem; }
+            .page-title h2 { font-size: 1.2rem; }
+            .brand-text { font-size: 1rem; }
+            .firebase-status { top: 0.5rem; right: 0.5rem; padding: 0.3rem 0.7rem; font-size: 0.6rem; }
+        }
+        @media (max-width: 480px) {
+            .register-wrapper { padding: 1.2rem 0.8rem; border-radius: 1.2rem; }
+            .form-grid.three-col { grid-template-columns: 1fr; }
+            .section-header h3 { font-size: 0.8rem; }
+            .input-wrap input, .input-wrap select, .input-wrap textarea {
+                font-size: 0.78rem; padding: 0.55rem 0.7rem 0.55rem 2.2rem;
+            }
+            .input-wrap .field-icon { left: 0.7rem; font-size: 0.7rem; }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           DARK MODE — FORCE EVERY ELEMENT ON THIS PAGE
+           ═══════════════════════════════════════════════════════ */
+        html[data-theme="dark"] body {
+            background: linear-gradient(135deg, #0B1220 0%, #0F172A 50%, #0B1220 100%) !important;
+            color: #F1F5F9 !important;
+        }
+        html[data-theme="dark"] body::before {
+            background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 90% 80%, rgba(124, 58, 237, 0.12) 0%, transparent 50%) !important;
+        }
+        html[data-theme="dark"] .theme-toggle-float {
+            background: #1E293B !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            color: #F1F5F9 !important;
+        }
+        html[data-theme="dark"] .theme-toggle-float:hover {
+            background: #4f46e5 !important;
+            color: white !important;
+            border-color: #4f46e5 !important;
+        }
+        html[data-theme="dark"] .register-wrapper {
+            background: #151E32 !important;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+        }
+        html[data-theme="dark"] .header {
+            border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html[data-theme="dark"] .brand-text {
+            color: #F1F5F9 !important;
+        }
+        html[data-theme="dark"] .brand-text span {
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .header-badge {
+            background: #1E293B !important;
+            color: #CBD5E1 !important;
+            border-color: rgba(255, 255, 255, 0.10) !important;
+        }
+        html[data-theme="dark"] .header-badge i {
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .page-title h2 {
+            color: #F1F5F9 !important;
+        }
+        html[data-theme="dark"] .page-title h2 i {
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .page-title p {
+            color: #94A3B8 !important;
+        }
+        html[data-theme="dark"] .section-header {
+            border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html[data-theme="dark"] .section-header h3 {
+            color: #F1F5F9 !important;
+        }
+        html[data-theme="dark"] .section-header .section-badge {
+            background: #1E293B !important;
+            color: #94A3B8 !important;
+        }
+        html[data-theme="dark"] .form-group label {
+            color: #E2E8F0 !important;
+        }
+        html[data-theme="dark"] .form-group label i {
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .form-group .helper-text {
+            color: #64748B !important;
+        }
+        html[data-theme="dark"] .input-wrap {
+            background: #1A2338 !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        html[data-theme="dark"] .input-wrap:hover {
+            border-color: rgba(255, 255, 255, 0.20) !important;
+        }
+        html[data-theme="dark"] .input-wrap:focus-within {
+            border-color: #60A5FA !important;
+            background: #1E293B !important;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18) !important;
+        }
+        html[data-theme="dark"] .input-wrap .field-icon {
+            color: #64748B !important;
+        }
+        html[data-theme="dark"] .input-wrap:focus-within .field-icon {
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .input-wrap input,
+        html[data-theme="dark"] .input-wrap select,
+        html[data-theme="dark"] .input-wrap textarea {
+            color: #F1F5F9 !important;
+            background: transparent !important;
+        }
+        html[data-theme="dark"] .input-wrap input:read-only {
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .input-wrap input::placeholder,
+        html[data-theme="dark"] .input-wrap textarea::placeholder {
+            color: #64748B !important;
+        }
+        html[data-theme="dark"] .input-wrap select option {
+            background: #1A2338 !important;
+            color: #F1F5F9 !important;
+        }
+        html[data-theme="dark"] .input-wrap .select-arrow {
+            color: #64748B !important;
+        }
+        html[data-theme="dark"] .input-wrap .toggle-pw {
+            color: #64748B !important;
+        }
+        html[data-theme="dark"] .input-wrap .toggle-pw:hover {
+            background: #1E293B !important;
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .checkbox-item {
+            color: #E2E8F0 !important;
+        }
+        html[data-theme="dark"] .checkbox-item:hover {
+            background: #1E293B !important;
+        }
+        html[data-theme="dark"] .checkbox-item .check-icon {
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .form-actions {
+            border-top-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html[data-theme="dark"] .btn-secondary {
+            background: #1E293B !important;
+            color: #CBD5E1 !important;
+            border-color: rgba(255, 255, 255, 0.10) !important;
+        }
+        html[data-theme="dark"] .btn-secondary:hover {
+            background: #334155 !important;
+            color: #F1F5F9 !important;
+            border-color: rgba(255, 255, 255, 0.20) !important;
+        }
+        html[data-theme="dark"] .login-link {
+            color: #94A3B8 !important;
+        }
+        html[data-theme="dark"] .login-link a {
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .login-link a:hover {
+            border-bottom-color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .footer-note {
+            color: #64748B !important;
+            border-top-color: rgba(255, 255, 255, 0.06) !important;
+        }
+        html[data-theme="dark"] .footer-note i {
+            color: #60A5FA !important;
+        }
+        html[data-theme="dark"] .firebase-status.online {
+            background: rgba(34, 197, 94, 0.18) !important;
+            color: #4ADE80 !important;
+        }
+        html[data-theme="dark"] .firebase-status.offline {
+            background: rgba(245, 158, 11, 0.18) !important;
+            color: #FCD34D !important;
+        }
+        html[data-theme="dark"] .alert.success {
+            background: rgba(34, 197, 94, 0.15) !important;
+            color: #86EFAC !important;
+        }
+        html[data-theme="dark"] .alert.success strong {
+            color: #86EFAC !important;
+        }
+        html[data-theme="dark"] .alert.error {
+            background: rgba(239, 68, 68, 0.15) !important;
+            color: #FCA5A5 !important;
+        }
+        html[data-theme="dark"] .alert.error strong {
+            color: #FCA5A5 !important;
+        }
+        html[data-theme="dark"] .alert.info {
+            background: rgba(37, 99, 235, 0.15) !important;
+            color: #93C5FD !important;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle-float" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+    <i class="fas fa-moon"></i>
+</button>
+
+<!-- Firebase Status Indicator -->
+<div class="firebase-status offline" id="firebaseStatus">
+    <span class="status-dot"></span>
+    <span id="firebaseStatusText">Connecting...</span>
+</div>
+
+<div class="register-wrapper">
+
+    <div class="header">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-brain"></i></div>
+            <div class="brand-text">Trainee<span>Hub</span></div>
+        </div>
+        <div class="header-badge">
+            <i class="fas fa-shield-alt"></i> SIH26135 · Skill India
+        </div>
+    </div>
+
+    <div class="page-title">
+        <h2><i class="fas fa-user-plus"></i> Trainee Registration</h2>
+        <p>Complete all sections to register for outcome-based skill training tracking</p>
+    </div>
+
+    <div class="alert" id="alertBox">
+        <i class="fas fa-check-circle" id="alertIcon"></i>
+        <div class="alert-msg" id="alertMessage">Registration successful!</div>
+    </div>
+
+    <form id="registerForm" onsubmit="return false;">
+
+        <!-- ===== 1. ACCOUNT DETAILS ===== -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="step-num">1</span>
+                <h3><i class="fas fa-user-circle"></i> Account Details</h3>
+                <span class="section-badge">Required</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label><i class="fas fa-id-card"></i> Trainee ID <span class="required">*</span></label>
+                    <div class="input-wrap">
+                        <i class="fas fa-hashtag field-icon"></i>
+                        <input type="text" id="traineeId" value="TRN2026-0000" readonly />
+                    </div>
+                    <span class="helper-text">Auto-generated by the system</span>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Full Name <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapFullName">
+                        <i class="fas fa-user field-icon"></i>
+                        <input type="text" id="fullName" placeholder="Enter full name" required />
+                    </div>
+                    <div class="error-text" id="errFullName">Please enter your full name</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email Address <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapEmail">
+                        <i class="fas fa-envelope field-icon"></i>
+                        <input type="email" id="email" placeholder="name@example.com" required />
+                    </div>
+                    <div class="error-text" id="errEmail">Please enter a valid email address</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-phone"></i> Mobile Number <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapMobile">
+                        <i class="fas fa-phone field-icon"></i>
+                        <input type="tel" id="mobile" placeholder="9876543210" maxlength="10" required />
+                    </div>
+                    <div class="error-text" id="errMobile">Please enter a valid 10-digit mobile number</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapPassword">
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="password" id="password" placeholder="Min 8 characters" required />
+                        <button type="button" class="toggle-pw" onclick="togglePassword('password', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="error-text" id="errPassword">Password must be at least 8 characters with letters & numbers</div>
+                    <span class="helper-text">Minimum 8 characters with letters & numbers</span>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-check-circle"></i> Confirm Password <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapConfirm">
+                        <i class="fas fa-check-circle field-icon"></i>
+                        <input type="password" id="confirmPassword" placeholder="Re-enter password" required />
+                        <button type="button" class="toggle-pw" onclick="togglePassword('confirmPassword', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="error-text" id="errConfirm">Passwords do not match</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 2. PERSONAL DETAILS ===== -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="step-num">2</span>
+                <h3><i class="fas fa-address-card"></i> Personal Details</h3>
+                <span class="section-badge">Required</span>
+            </div>
+            <div class="form-grid three-col">
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-alt"></i> Date of Birth <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapDob">
+                        <i class="fas fa-calendar-alt field-icon"></i>
+                        <input type="date" id="dob" required />
+                    </div>
+                    <div class="error-text" id="errDob">Please select your date of birth</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-venus-mars"></i> Gender <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapGender">
+                        <i class="fas fa-venus-mars field-icon"></i>
+                        <select id="gender" required>
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Transgender">Transgender</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-text" id="errGender">Please select your gender</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-graduation-cap"></i> Education Qualification <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapEducation">
+                        <i class="fas fa-graduation-cap field-icon"></i>
+                        <select id="education" required>
+                            <option value="">Select</option>
+                            <option value="Below 10th">Below 10th</option>
+                            <option value="10th Pass">10th Pass</option>
+                            <option value="12th Pass">12th Pass</option>
+                            <option value="ITI">ITI</option>
+                            <option value="Diploma">Diploma</option>
+                            <option value="Graduate">Graduate</option>
+                            <option value="Post Graduate">Post Graduate</option>
+                            <option value="PhD">PhD</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-text" id="errEducation">Please select your education qualification</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 3. LOCATION DETAILS ===== -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="step-num">3</span>
+                <h3><i class="fas fa-map-marker-alt"></i> Location Details</h3>
+                <span class="section-badge">Required</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label><i class="fas fa-map"></i> State <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapState">
+                        <i class="fas fa-map field-icon"></i>
+                        <select id="state" required>
+                            <option value="">Select State</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Bihar">Bihar</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="West Bengal">West Bengal</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-text" id="errState">Please select your state</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-city"></i> District <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapDistrict">
+                        <i class="fas fa-city field-icon"></i>
+                        <input type="text" id="district" placeholder="Enter district" required />
+                    </div>
+                    <div class="error-text" id="errDistrict">Please enter your district</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-layer-group"></i> Mandal / Block</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-layer-group field-icon"></i>
+                        <input type="text" id="mandal" placeholder="Enter mandal or block" />
+                    </div>
+                    <span class="helper-text">Optional</span>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-home"></i> Village / Town <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapVillage">
+                        <i class="fas fa-home field-icon"></i>
+                        <input type="text" id="village" placeholder="Enter village or town" required />
+                    </div>
+                    <div class="error-text" id="errVillage">Please enter your village or town</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-mail-bulk"></i> PIN Code <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapPincode">
+                        <i class="fas fa-mail-bulk field-icon"></i>
+                        <input type="text" id="pincode" placeholder="6-digit PIN" maxlength="6" required />
+                    </div>
+                    <div class="error-text" id="errPincode">Please enter a valid 6-digit PIN code</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-tree"></i> Area Type <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapAreaType">
+                        <i class="fas fa-tree field-icon"></i>
+                        <select id="areaType" required>
+                            <option value="">Select</option>
+                            <option value="Rural">Rural</option>
+                            <option value="Urban">Urban</option>
+                            <option value="Semi-Urban">Semi-Urban</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-text" id="errAreaType">Please select area type</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 4. TRAINING DETAILS ===== -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="step-num">4</span>
+                <h3><i class="fas fa-chalkboard-teacher"></i> Training Details</h3>
+                <span class="section-badge">Required</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label><i class="fas fa-award"></i> Training Program <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapProgram">
+                        <i class="fas fa-award field-icon"></i>
+                        <select id="trainingProgram" required>
+                            <option value="">Select Program</option>
+                            <option value="PMKVY">Pradhan Mantri Kaushal Vikas Yojana (PMKVY)</option>
+                            <option value="NSDC">National Skill Development Corporation (NSDC)</option>
+                            <option value="DDU-GKY">Deen Dayal Upadhyaya Grameen Kaushalya Yojana (DDU-GKY)</option>
+                            <option value="PMYY">Pradhan Mantri Yuva Yojana (PMYY)</option>
+                            <option value="State Skill Mission">State Skill Development Mission</option>
+                            <option value="Other Government Scheme">Other Government Scheme</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-text" id="errProgram">Please select training program</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-tools"></i> Skill / Course / Trade <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapSkill">
+                        <i class="fas fa-tools field-icon"></i>
+                        <input type="text" id="skillTrade" placeholder="e.g. Data Analytics, Welding" required />
+                    </div>
+                    <div class="error-text" id="errSkill">Please enter skill/trade</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-building"></i> Training Provider <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapProvider">
+                        <i class="fas fa-building field-icon"></i>
+                        <input type="text" id="trainingProvider" placeholder="Provider name" required />
+                    </div>
+                    <div class="error-text" id="errProvider">Please enter training provider</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-tag"></i> Batch ID <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapBatch">
+                        <i class="fas fa-tag field-icon"></i>
+                        <input type="text" id="batchId" placeholder="e.g. BATCH-2026-05" required />
+                    </div>
+                    <div class="error-text" id="errBatch">Please enter batch ID</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-id-badge"></i> Enrollment ID <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapEnrollment">
+                        <i class="fas fa-id-badge field-icon"></i>
+                        <input type="text" id="enrollmentId" placeholder="Enrollment number" required />
+                    </div>
+                    <div class="error-text" id="errEnrollment">Please enter enrollment ID</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-laptop"></i> Training Mode <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapMode">
+                        <i class="fas fa-laptop field-icon"></i>
+                        <select id="trainingMode" required>
+                            <option value="">Select Mode</option>
+                            <option value="Offline">Offline</option>
+                            <option value="Online">Online</option>
+                            <option value="Hybrid">Hybrid</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-text" id="errMode">Please select training mode</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-plus"></i> Start Date <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapStartDate">
+                        <i class="fas fa-calendar-plus field-icon"></i>
+                        <input type="date" id="startDate" required />
+                    </div>
+                    <div class="error-text" id="errStartDate">Please select start date</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-check"></i> Expected Completion <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapCompletion">
+                        <i class="fas fa-calendar-check field-icon"></i>
+                        <input type="date" id="completionDate" required />
+                    </div>
+                    <div class="error-text" id="errCompletion">Please select completion date</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 5. PREVIOUS EMPLOYMENT & SKILLS ===== -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="step-num">5</span>
+                <h3><i class="fas fa-briefcase"></i> Previous Employment & Skills</h3>
+                <span class="section-badge">Baseline Data</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label><i class="fas fa-user-tie"></i> Employment Status <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapEmploymentStatus">
+                        <i class="fas fa-user-tie field-icon"></i>
+                        <select id="employmentStatus" required>
+                            <option value="">Select Status</option>
+                            <option value="Employed">Employed</option>
+                            <option value="Unemployed">Unemployed</option>
+                            <option value="Self-employed">Self-employed</option>
+                            <option value="Apprentice">Apprentice</option>
+                            <option value="Student">Student</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-text" id="errEmploymentStatus">Please select employment status</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-briefcase"></i> Previous Job Role</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-briefcase field-icon"></i>
+                        <input type="text" id="prevJobRole" placeholder="If applicable" />
+                    </div>
+                    <span class="helper-text">Optional</span>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-clock"></i> Experience (years)</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-clock field-icon"></i>
+                        <input type="number" id="prevExperience" placeholder="0" min="0" step="0.5" />
+                    </div>
+                    <span class="helper-text">Optional</span>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-tools"></i> Previous Skill / Trade</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-tools field-icon"></i>
+                        <input type="text" id="prevSkill" placeholder="Any prior skill" />
+                    </div>
+                    <span class="helper-text">Optional</span>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Previous Monthly Income <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapPrevIncome">
+                        <i class="fas fa-rupee-sign field-icon"></i>
+                        <input type="number" id="prevIncome" placeholder="e.g. 12000" min="0" required />
+                    </div>
+                    <div class="error-text" id="errPrevIncome">Please enter previous monthly income</div>
+                    <span class="helper-text">Critical for income-growth calculation</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 6. CAREER GOAL ===== -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="step-num">6</span>
+                <h3><i class="fas fa-bullseye"></i> Career Goal</h3>
+                <span class="section-badge">Required</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label><i class="fas fa-flag"></i> Primary Career Goal <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapCareerGoal">
+                        <i class="fas fa-flag field-icon"></i>
+                        <select id="careerGoal" required>
+                            <option value="">Select Goal</option>
+                            <option value="Find a Job">Find a Job</option>
+                            <option value="Self-Employment">Self-Employment</option>
+                            <option value="Apprenticeship">Apprenticeship</option>
+                            <option value="Improve Current Job">Improve Current Job</option>
+                            <option value="Start Business">Start Business</option>
+                            <option value="Further Skill Development">Further Skill Development</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-text" id="errCareerGoal">Please select career goal</div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-user-tie"></i> Preferred Job Role</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-user-tie field-icon"></i>
+                        <input type="text" id="preferredRole" placeholder="e.g. Data Analyst" />
+                    </div>
+                    <span class="helper-text">Optional</span>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-globe-asia"></i> Preferred Work Location <span class="required">*</span></label>
+                    <div class="input-wrap" id="wrapPreferredLocation">
+                        <i class="fas fa-globe-asia field-icon"></i>
+                        <select id="preferredLocation" required>
+                            <option value="">Select</option>
+                            <option value="Same District">Same District</option>
+                            <option value="Same State">Same State</option>
+                            <option value="Anywhere in India">Anywhere in India</option>
+                            <option value="Abroad">Abroad</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-text" id="errPreferredLocation">Please select preferred work location</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 7. CONSENT ===== -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="step-num">7</span>
+                <h3><i class="fas fa-handshake"></i> Consent & Agreement</h3>
+                <span class="section-badge">Required</span>
+            </div>
+            <div class="checkbox-grid">
+                <label class="checkbox-item">
+                    <input type="checkbox" id="consentInfo" required />
+                    <span class="check-icon"><i class="fas fa-check-circle"></i></span>
+                    I confirm that all information provided is correct and complete.
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="consentFollowup" required />
+                    <span class="check-icon"><i class="fas fa-clock"></i></span>
+                    I agree to periodic outcome follow-ups (30, 90, 180, 365 days).
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="consentAnalysis" required />
+                    <span class="check-icon"><i class="fas fa-chart-bar"></i></span>
+                    I agree to use my outcome data for skill-development analysis & improvement.
+                </label>
+            </div>
+        </div>
+
+        <!-- ===== FORM ACTIONS ===== -->
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button type="submit" class="btn btn-success" id="submitBtn" onclick="registerTrainee()">
+                <i class="fas fa-user-plus"></i> Register & Go to Dashboard
+            </button>
+        </div>
+
+        <div class="login-link">
+            Already have an account? <a href="login.html"><i class="fas fa-arrow-right"></i> Sign in here</a>
+        </div>
+
+    </form>
+
+    <div class="footer-note">
+        <i class="fas fa-shield-alt"></i> Secured & encrypted · Data used for skill development outcome analysis · v2.0
+    </div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+    // ============================================================
+    // FIREBASE INITIALIZATION
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    let db = null;
+    let firebaseReady = false;
+
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        firebaseReady = true;
+        console.log('✅ Firebase initialized successfully');
+        updateFirebaseStatus(true);
+    } catch (error) {
+        console.error('❌ Firebase initialization failed:', error);
+        updateFirebaseStatus(false);
+    }
+
+    function updateFirebaseStatus(online) {
+        const statusEl = document.getElementById('firebaseStatus');
+        const statusText = document.getElementById('firebaseStatusText');
+        if (!statusEl || !statusText) return;
+
+        if (online) {
+            statusEl.className = 'firebase-status online';
+            statusText.textContent = 'Firebase Connected';
+        } else {
+            statusEl.className = 'firebase-status offline';
+            statusText.textContent = 'Offline Mode';
+        }
+    }
+
+    async function saveTraineeToFirebase(traineeData) {
+        if (!firebaseReady || !db) {
+            console.log('ℹ️ Firebase not available - skipping sync');
+            return null;
+        }
+
+        try {
+            const firebaseData = { ...traineeData };
+            delete firebaseData.password;
+
+            const docRef = await db.collection("trainees").add({
+                ...firebaseData,
+                registrationStatus: "Pending",
+                employeeVerification: {
+                    status: "Pending",
+                    employeeId: "",
+                    employeeName: "",
+                    remarks: "",
+                    verifiedAt: null
+                },
+                providerOutcome: {
+                    status: "Pending"
+                },
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            console.log("✅ Trainee saved to Firebase:", docRef.id);
+            return docRef.id;
+
+        } catch (error) {
+            console.error("❌ Firebase save failed:", error);
+            return null;
+        }
+    }
+
+    // ============================================================
+    // TOGGLE PASSWORD
+    // ============================================================
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // ============================================================
+    // GENERATE TRAINEE ID
+    // ============================================================
+    function generateTraineeId() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const count = String(Math.floor(Math.random() * 9000) + 1000);
+        return 'TRN' + year + '-' + count;
+    }
+
+    // ============================================================
+    // SHOW ALERT
+    // ============================================================
+    function showAlert(message, type = 'success') {
+        const alertBox = document.getElementById('alertBox');
+        const alertMsg = document.getElementById('alertMessage');
+        const alertIcon = document.getElementById('alertIcon');
+
+        alertBox.className = 'alert ' + type;
+        if (type === 'success') alertIcon.className = 'fas fa-check-circle';
+        else if (type === 'info') alertIcon.className = 'fas fa-info-circle';
+        else alertIcon.className = 'fas fa-exclamation-circle';
+
+        alertMsg.innerHTML = message;
+        alertBox.style.display = 'flex';
+
+        clearTimeout(window.alertTimeout);
+        window.alertTimeout = setTimeout(() => {
+            alertBox.style.display = 'none';
+        }, 8000);
+    }
+
+    // ============================================================
+    // VALIDATION HELPERS
+    // ============================================================
+    function setError(wrapId, errId, show) {
+        const wrap = document.getElementById(wrapId);
+        const err = document.getElementById(errId);
+        if (wrap) wrap.classList.toggle('error', show);
+        if (err) err.classList.toggle('show', show);
+    }
+
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function validateMobile(mobile) {
+        return /^[0-9]{10}$/.test(mobile);
+    }
+
+    function validatePassword(pw) {
+        return pw.length >= 8 && /[a-zA-Z]/.test(pw) && /[0-9]/.test(pw);
+    }
+
+    // ============================================================
+    // RESET FORM
+    // ============================================================
+    function resetForm() {
+        if (confirm('Are you sure you want to reset all fields?')) {
+            document.getElementById('registerForm').reset();
+            document.getElementById('traineeId').value = generateTraineeId();
+            document.getElementById('alertBox').style.display = 'none';
+
+            document.querySelectorAll('.toggle-pw').forEach(btn => {
+                const input = btn.closest('.input-wrap').querySelector('input');
+                if (input) {
+                    input.type = 'password';
+                    btn.querySelector('i').className = 'fas fa-eye';
+                }
+            });
+
+            document.querySelectorAll('.error-text').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.input-wrap').forEach(el => el.classList.remove('error'));
+        }
+    }
+
+    // ============================================================
+    // REGISTER TRAINEE
+    // ============================================================
+    async function registerTrainee() {
+        console.log('📝 Starting registration process...');
+
+        const traineeId = document.getElementById('traineeId').value;
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const mobile = document.getElementById('mobile').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const dob = document.getElementById('dob').value;
+        const gender = document.getElementById('gender').value;
+        const education = document.getElementById('education').value;
+        const state = document.getElementById('state').value;
+        const district = document.getElementById('district').value.trim();
+        const mandal = document.getElementById('mandal').value.trim();
+        const village = document.getElementById('village').value.trim();
+        const pincode = document.getElementById('pincode').value.trim();
+        const areaType = document.getElementById('areaType').value;
+        const trainingProgram = document.getElementById('trainingProgram').value;
+        const skillTrade = document.getElementById('skillTrade').value.trim();
+        const trainingProvider = document.getElementById('trainingProvider').value.trim();
+        const batchId = document.getElementById('batchId').value.trim();
+        const enrollmentId = document.getElementById('enrollmentId').value.trim();
+        const trainingMode = document.getElementById('trainingMode').value;
+        const startDate = document.getElementById('startDate').value;
+        const completionDate = document.getElementById('completionDate').value;
+        const employmentStatus = document.getElementById('employmentStatus').value;
+        const prevJobRole = document.getElementById('prevJobRole').value.trim();
+        const prevExperience = document.getElementById('prevExperience').value;
+        const prevSkill = document.getElementById('prevSkill').value.trim();
+        const prevIncome = document.getElementById('prevIncome').value;
+        const careerGoal = document.getElementById('careerGoal').value;
+        const preferredRole = document.getElementById('preferredRole').value.trim();
+        const preferredLocation = document.getElementById('preferredLocation').value;
+        const consentInfo = document.getElementById('consentInfo').checked;
+        const consentFollowup = document.getElementById('consentFollowup').checked;
+        const consentAnalysis = document.getElementById('consentAnalysis').checked;
+
+        let valid = true;
+
+        if (!fullName) { setError('wrapFullName', 'errFullName', true); valid = false; }
+        else { setError('wrapFullName', 'errFullName', false); }
+
+        if (!validateEmail(email)) { setError('wrapEmail', 'errEmail', true); valid = false; }
+        else { setError('wrapEmail', 'errEmail', false); }
+
+        if (!validateMobile(mobile)) { setError('wrapMobile', 'errMobile', true); valid = false; }
+        else { setError('wrapMobile', 'errMobile', false); }
+
+        if (!validatePassword(password)) { setError('wrapPassword', 'errPassword', true); valid = false; }
+        else { setError('wrapPassword', 'errPassword', false); }
+
+        if (password !== confirmPassword || !confirmPassword) { setError('wrapConfirm', 'errConfirm', true); valid = false; }
+        else { setError('wrapConfirm', 'errConfirm', false); }
+
+        if (!dob) { setError('wrapDob', 'errDob', true); valid = false; }
+        else { setError('wrapDob', 'errDob', false); }
+
+        if (!gender) { setError('wrapGender', 'errGender', true); valid = false; }
+        else { setError('wrapGender', 'errGender', false); }
+
+        if (!education) { setError('wrapEducation', 'errEducation', true); valid = false; }
+        else { setError('wrapEducation', 'errEducation', false); }
+
+        if (!state) { setError('wrapState', 'errState', true); valid = false; }
+        else { setError('wrapState', 'errState', false); }
+
+        if (!district) { setError('wrapDistrict', 'errDistrict', true); valid = false; }
+        else { setError('wrapDistrict', 'errDistrict', false); }
+
+        if (!village) { setError('wrapVillage', 'errVillage', true); valid = false; }
+        else { setError('wrapVillage', 'errVillage', false); }
+
+        if (!pincode || pincode.length < 6) { setError('wrapPincode', 'errPincode', true); valid = false; }
+        else { setError('wrapPincode', 'errPincode', false); }
+
+        if (!areaType) { setError('wrapAreaType', 'errAreaType', true); valid = false; }
+        else { setError('wrapAreaType', 'errAreaType', false); }
+
+        if (!trainingProgram) { setError('wrapProgram', 'errProgram', true); valid = false; }
+        else { setError('wrapProgram', 'errProgram', false); }
+
+        if (!skillTrade) { setError('wrapSkill', 'errSkill', true); valid = false; }
+        else { setError('wrapSkill', 'errSkill', false); }
+
+        if (!trainingProvider) { setError('wrapProvider', 'errProvider', true); valid = false; }
+        else { setError('wrapProvider', 'errProvider', false); }
+
+        if (!batchId) { setError('wrapBatch', 'errBatch', true); valid = false; }
+        else { setError('wrapBatch', 'errBatch', false); }
+
+        if (!enrollmentId) { setError('wrapEnrollment', 'errEnrollment', true); valid = false; }
+        else { setError('wrapEnrollment', 'errEnrollment', false); }
+
+        if (!trainingMode) { setError('wrapMode', 'errMode', true); valid = false; }
+        else { setError('wrapMode', 'errMode', false); }
+
+        if (!startDate) { setError('wrapStartDate', 'errStartDate', true); valid = false; }
+        else { setError('wrapStartDate', 'errStartDate', false); }
+
+        if (!completionDate) { setError('wrapCompletion', 'errCompletion', true); valid = false; }
+        else { setError('wrapCompletion', 'errCompletion', false); }
+
+        if (!employmentStatus) { setError('wrapEmploymentStatus', 'errEmploymentStatus', true); valid = false; }
+        else { setError('wrapEmploymentStatus', 'errEmploymentStatus', false); }
+
+        if (prevIncome === '' || prevIncome < 0) { setError('wrapPrevIncome', 'errPrevIncome', true); valid = false; }
+        else { setError('wrapPrevIncome', 'errPrevIncome', false); }
+
+        if (!careerGoal) { setError('wrapCareerGoal', 'errCareerGoal', true); valid = false; }
+        else { setError('wrapCareerGoal', 'errCareerGoal', false); }
+
+        if (!preferredLocation) { setError('wrapPreferredLocation', 'errPreferredLocation', true); valid = false; }
+        else { setError('wrapPreferredLocation', 'errPreferredLocation', false); }
+
+        if (!consentInfo || !consentFollowup || !consentAnalysis) {
+            showAlert('Please <strong>accept all consent terms</strong> to register.', 'error');
+            return;
+        }
+
+        if (!valid) {
+            showAlert('Please fix all <strong>errors</strong> before registering.', 'error');
+            return;
+        }
+
+        const traineeData = {
+            traineeId: traineeId,
+            fullName: fullName,
+            email: email,
+            mobile: mobile,
+            password: password,
+            dob: dob,
+            gender: gender,
+            education: education,
+            state: state,
+            district: district,
+            mandal: mandal || '',
+            village: village,
+            pincode: pincode,
+            areaType: areaType,
+            location: `${village}, ${district}, ${state}`,
+            trainingProgram: trainingProgram,
+            skillTrade: skillTrade,
+            trainingProvider: trainingProvider,
+            batchId: batchId,
+            enrollmentId: enrollmentId,
+            trainingMode: trainingMode,
+            startDate: startDate,
+            completionDate: completionDate,
+            registrationDate: new Date().toISOString().split('T')[0],
+            employmentStatus: employmentStatus,
+            prevJobRole: prevJobRole || '',
+            prevExperience: prevExperience || 0,
+            prevSkill: prevSkill || '',
+            prevIncome: Number(prevIncome),
+            careerGoal: careerGoal,
+            preferredRole: preferredRole || '',
+            preferredLocation: preferredLocation,
+            consentInfo: consentInfo,
+            consentFollowup: consentFollowup,
+            consentAnalysis: consentAnalysis,
+            status: 'Active',
+            trainingProgress: 0,
+            certificationStatus: 'Pending',
+            employmentStatusDisplay: employmentStatus,
+            currentIncome: Number(prevIncome),
+            jobRelevance: 'N/A',
+            retentionDays: 0,
+            currentJobRole: prevJobRole || 'N/A',
+            currentEmployer: 'N/A',
+            joiningDate: 'Not Joined',
+            employmentType: 'N/A',
+            certificateName: 'Not Certified',
+            certificateId: 'N/A',
+            issueDate: 'N/A',
+            trainingCompletion: 0,
+            completedModules: 0,
+            totalModules: 10,
+            goalProgress: 10,
+            profileCompletion: 95,
+            notifications: 1,
+            achievements: [
+                { icon: '📝', title: 'Registration Complete', desc: 'Successfully registered on SkillBridge' }
+            ],
+            documents: [
+                { name: 'ID Proof', icon: 'fa-id-card', color: '#7c3aed' }
+            ],
+            suggestions: [
+                'Complete your training modules to get certified.',
+                'Update your employment status once you get placed.',
+                'Keep your profile updated for accurate tracking.'
+            ],
+            notificationsList: [
+                { icon: 'fa-check-circle', text: 'Registration completed successfully', time: 'Just now' }
+            ],
+            followups: [
+                { days: '30', status: 'pending' },
+                { days: '90', status: 'pending' },
+                { days: '180', status: 'pending' },
+                { days: '365', status: 'pending' }
+            ],
+            nextFollowup: calculateNextFollowup(completionDate),
+            daysRemaining: 90
+        };
+
+        console.log('📋 Trainee data prepared:', traineeData);
+
+        try {
+            let allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+
+            const existingIndex = allTrainees.findIndex(t => t.email === email);
+            if (existingIndex !== -1) {
+                allTrainees[existingIndex] = { ...allTrainees[existingIndex], ...traineeData };
+            } else {
+                traineeData.traineeId = traineeData.traineeId || 'TRN' + Date.now();
+                traineeData.registeredAt = new Date().toISOString();
+                allTrainees.push(traineeData);
+            }
+
+            localStorage.setItem('allTrainees', JSON.stringify(allTrainees));
+            localStorage.setItem('currentTraineeEmail', email);
+            localStorage.setItem('currentTraineeId', traineeData.traineeId);
+            localStorage.setItem('traineeData', JSON.stringify(traineeData));
+
+            console.log('✅ Trainee registered. Total trainees:', allTrainees.length);
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userRole', 'trainee');
+            console.log('✅ Saved to localStorage');
+        } catch (e) {
+            console.error('❌ localStorage save failed:', e);
+            showAlert('Error saving data locally. Please try again.', 'error');
+            return;
+        }
+
+        const successHTML = `
+            <strong>✅ Registration Successful!</strong><br>
+            <span style="font-size:0.75rem;color:inherit;">
+                Trainee: ${fullName} (${traineeId})<br>
+                Program: ${skillTrade} · ${trainingProgram}<br>
+                Provider: ${trainingProvider} · Batch: ${batchId}<br>
+                Previous Income: ₹${Number(prevIncome).toLocaleString()} · Goal: ${careerGoal}<br>
+                📍 ${district}, ${state}<br><br>
+                <strong>💾 Syncing to cloud database...</strong>
+            </span>
+        `;
+        showAlert(successHTML, 'success');
+
+        if (firebaseReady && db) {
+            try {
+                const firebaseId = await saveTraineeToFirebase(traineeData);
+                if (firebaseId) {
+                    console.log('✅ Synced to Firebase with ID:', firebaseId);
+                    showAlert(`
+                        <strong>✅ Registration Complete!</strong><br>
+                        <span style="font-size:0.75rem;color:inherit;">
+                            Trainee: ${fullName} (${traineeId})<br>
+                            Program: ${skillTrade} · ${trainingProgram}<br>
+                            📍 ${district}, ${state}<br><br>
+                            <strong>☁️ Synced to cloud</strong> · <strong>Redirecting...</strong>
+                        </span>
+                    `, 'success');
+                }
+            } catch (fbError) {
+                console.log('ℹ️ Firebase sync failed (localStorage is safe):', fbError);
+            }
+        } else {
+            console.log('ℹ️ Firebase not ready - data saved locally only');
+        }
+
+        setTimeout(() => {
+            console.log('🚀 Redirecting to dashboard...');
+            window.location.href = '../trainee/dashboard.html';
+        }, 2500);
+    }
+
+    function calculateNextFollowup(completionDate) {
+        try {
+            const compDate = new Date(completionDate);
+            compDate.setDate(compDate.getDate() + 90);
+            return compDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        } catch(e) {
+            return '90 Days from completion';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Initializing trainee registration form...');
+
+        document.getElementById('traineeId').value = generateTraineeId();
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').max = today;
+        document.getElementById('startDate').value = today;
+
+        const compDate = new Date();
+        compDate.setMonth(compDate.getMonth() + 3);
+        document.getElementById('completionDate').value = compDate.toISOString().split('T')[0];
+
+        document.querySelectorAll('.input-wrap input, .input-wrap select, .input-wrap textarea').forEach(el => {
+            el.addEventListener('focus', function() {
+                const wrap = this.closest('.input-wrap');
+                if (wrap) wrap.classList.remove('error');
+                const err = wrap?.parentElement?.querySelector('.error-text');
+                if (err) err.classList.remove('show');
+            });
+        });
+
+        // Update theme icon
+        updateThemeIcon();
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        registerTrainee();
+    });
+
+    document.getElementById('mobile').addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+    });
+    document.getElementById('pincode').addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+    });
+
+    // ============================================================
+    // THEME TOGGLE
+    // ============================================================
+    function updateThemeIcon() {
+        const btn = document.querySelector('.theme-toggle-float i');
+        if (!btn) return;
+        const theme = document.documentElement.getAttribute('data-theme') || 'light';
+        btn.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    if (typeof window.toggleTheme !== 'function') {
+        window.toggleTheme = function () {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme') || 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+            updateThemeIcon();
+        };
+    }
+</script>
+
+<script src="../js/script.js"></script>
+</body>
+</html>
