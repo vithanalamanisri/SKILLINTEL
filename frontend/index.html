@@ -13,6 +13,11 @@
 
   <link rel="stylesheet" href="css/style.css">
 
+  <!-- ✅ Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
   <script>
     (function() {
       try {
@@ -572,7 +577,6 @@
     }
     html[data-theme="dark"] .admin-modal .field-label { color: #94A3B8; }
 
-    /* Hide elements per step */
     .admin-step { display: none; }
     .admin-step.active { display: block; }
 
@@ -624,7 +628,7 @@
     </div>
     <div class="status-badge" id="statusBadge">
       <span class="dot"></span>
-      <span id="statusText">Checking backend…</span>
+      <span id="statusText">Connecting…</span>
     </div>
   </div>
 
@@ -710,7 +714,7 @@
 <!-- ═══════════════════════════════════════════════════════
      ADMIN GATE MODAL — TWO STEPS
      Step 1: Passcode
-     Step 2: Username + Password
+     Step 2: Username + Password (Firebase Auth)
      ═══════════════════════════════════════════════════════ -->
 <div class="admin-modal-overlay" id="adminOverlay" onclick="if(event.target===this)closeAdminGate()">
   <div class="admin-modal" id="adminModal">
@@ -745,12 +749,12 @@
     <div class="admin-step" id="adminStep2">
       <div class="modal-icon" id="adminModalIcon"><i class="fas fa-user-shield"></i></div>
       <h3 id="adminModalTitle">Admin Credentials</h3>
-      <p id="adminModalText">Enter your admin username and password to continue.</p>
+      <p id="adminModalText">Enter your admin email and password to continue.</p>
 
-      <div class="field-label">Username</div>
-      <input type="text"
+      <div class="field-label">Email</div>
+      <input type="email"
              id="adminUsernameInput"
-             placeholder="admin username"
+             placeholder="admin@skillintel.gov.in"
              autocomplete="username"
              spellcheck="false" />
 
@@ -777,19 +781,32 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
+   FIREBASE CONFIG
+   ═══════════════════════════════════════════════════════════════ */
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* ═══════════════════════════════════════════════════════════════
    CONFIGURATION
    ═══════════════════════════════════════════════════════════════ */
-const API_BASE = '/api';                       // Flask backend
-const ADMIN_PANEL_PATH = 'admin/admin.html';   // Where admin lands after login
+const ADMIN_PANEL_PATH = 'admin/admin.html';
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_MS = 30000;
 
 /* ═══════════════════════════════════════════════════════════════
-   HARDCODED CREDENTIALS
+   STEP 1 PASSCODE (hardcoded gate)
    ═══════════════════════════════════════════════════════════════ */
-const ADMIN_PASSCODE = '1512';                              // Step 1 passcode
-const DEMO_ADMIN_USERNAME = 'vithanalamanisri@gmail.com';   // Step 2 username
-const DEMO_ADMIN_PASSWORD = 'vManisri@1512';                // Step 2 password
+const ADMIN_PASSCODE = '1512';
 
 /* ═══════════════════════════════════════════════════════════════
    STATE
@@ -804,7 +821,7 @@ try {
 } catch (e) {}
 
 /* ═══════════════════════════════════════════════════════════════
-   BACKEND HEALTH CHECK
+   FIREBASE HEALTH CHECK
    ═══════════════════════════════════════════════════════════════ */
 async function checkBackendHealth() {
   const statusBadge = document.getElementById('statusBadge');
@@ -812,14 +829,16 @@ async function checkBackendHealth() {
   if (!statusBadge || !statusText) return;
 
   try {
-    const res = await fetch(`${API_BASE}/system/health`, { method: 'GET' });
-    if (!res.ok) throw new Error('Backend returned ' + res.status);
-    const data = await res.json();
-    statusBadge.classList.remove('offline');
-    statusText.textContent = 'Backend Online · DB ' + (data.checks?.database || 'connected');
+    // Verify Firebase Auth + Firestore are reachable
+    if (auth && db) {
+      statusBadge.classList.remove('offline');
+      statusText.textContent = 'Firebase Connected';
+    } else {
+      throw new Error('Firebase not initialized');
+    }
   } catch (e) {
     statusBadge.classList.add('offline');
-    statusText.textContent = 'Backend Offline (demo mode)';
+    statusText.textContent = 'Firebase Unavailable';
   }
 }
 
@@ -859,10 +878,8 @@ function closeAdminGate() {
 }
 
 function resetGateModal() {
-  // Reset to Step 1
   showStep(1);
 
-  // Reset passcode step
   const pIcon  = document.getElementById('passcodeIcon');
   const pTitle = document.getElementById('passcodeTitle');
   const pText  = document.getElementById('passcodeText');
@@ -877,7 +894,6 @@ function resetGateModal() {
   if (pInput) { pInput.value = ''; pInput.disabled = false; }
   document.getElementById('passcodeWarning').textContent = '';
 
-  // Reset credentials step
   const icon  = document.getElementById('adminModalIcon');
   const title = document.getElementById('adminModalTitle');
   const text  = document.getElementById('adminModalText');
@@ -885,7 +901,7 @@ function resetGateModal() {
   icon.className = 'modal-icon';
   icon.innerHTML = '<i class="fas fa-user-shield"></i>';
   title.textContent = 'Admin Credentials';
-  text.textContent  = 'Enter your admin username and password to continue.';
+  text.textContent  = 'Enter your admin email and password to continue.';
   btn.disabled = false;
   btn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
   ['adminUsernameInput', 'adminPasswordInput'].forEach(id => {
@@ -926,14 +942,12 @@ function verifyPasscode() {
     return;
   }
 
-  // Lock UI
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking…';
   warningEl.textContent = '';
 
   setTimeout(() => {
     if (entered === ADMIN_PASSCODE) {
-      // ✅ Passcode correct → move to Step 2
       const icon = document.getElementById('passcodeIcon');
       icon.className = 'modal-icon success';
       icon.innerHTML = '<i class="fas fa-check"></i>';
@@ -946,7 +960,6 @@ function verifyPasscode() {
         showStep(2);
       }, 500);
     } else {
-      // ❌ Wrong passcode
       passcodeAttempts++;
       logSuspiciousAttempt(`Failed passcode attempt #${passcodeAttempts}`);
       warningEl.textContent = `⚠ Incorrect passcode. ${MAX_ATTEMPTS - passcodeAttempts} attempt${(MAX_ATTEMPTS - passcodeAttempts) !== 1 ? 's' : ''} left.`;
@@ -965,7 +978,7 @@ function verifyPasscode() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   STEP 2: VERIFY USERNAME + PASSWORD
+   STEP 2: VERIFY EMAIL + PASSWORD via FIREBASE AUTH
    ═══════════════════════════════════════════════════════════════ */
 async function verifyAdminCredentials() {
   const now = Date.now();
@@ -980,101 +993,54 @@ async function verifyAdminCredentials() {
   const warningEl  = document.getElementById('adminAttemptsWarning');
   const submitBtn  = document.getElementById('adminSubmitBtn');
 
-  const username = (usernameEl.value || '').trim();
+  const email = (usernameEl.value || '').trim().toLowerCase();
   const password = (passwordEl.value || '').trim();
 
-  if (!username || !password) {
-    warningEl.textContent = 'Both username and password are required.';
+  if (!email || !password) {
+    warningEl.textContent = 'Both email and password are required.';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    warningEl.textContent = 'Please enter a valid email address.';
     return;
   }
 
-  // Lock UI
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying…';
   warningEl.textContent = '';
 
-  let handledByBackend = false;
-
   try {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'same-origin',
-      body: JSON.stringify({ username, password })
-    });
+    // ── Step 1: Firebase Auth sign-in ──
+    const cred = await auth.signInWithEmailAndPassword(email, password);
+    const fbUser = cred.user;
 
-    // If backend actually responds (not a 404/500), treat as reachable
-    if (res.status !== 404 && res.status !== 500 && res.status !== 502 && res.status !== 503) {
-      handledByBackend = true;
-      const data = await res.json().catch(() => ({}));
-
-      // ── SUCCESS from backend ──
-      if (res.ok && data.role) {
-        const allowedRoles = ['super_admin', 'admin', 'verifier'];
-        if (!allowedRoles.includes(data.role)) {
-          warningEl.textContent = 'This account is not an admin. Access denied.';
-          logSuspiciousAttempt(`Non-admin role tried to access: ${data.role}`);
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
-          passwordEl.value = '';
-          return;
-        }
-
-        adminAttempts = 0;
-        try { sessionStorage.setItem('admin_attempts', '0'); } catch (e) {}
-
-        const icon = document.getElementById('adminModalIcon');
-        icon.className = 'modal-icon success';
-        icon.innerHTML = '<i class="fas fa-check"></i>';
-        document.getElementById('adminModalTitle').textContent = 'Access Granted';
-        document.getElementById('adminModalText').textContent =
-          `Welcome ${data.full_name || data.username}. Redirecting…`;
-
-        logAdminAccess(`Admin login (backend): ${data.username} (${data.role})`);
-
-        setTimeout(() => {
-          window.location.href = ADMIN_PANEL_PATH;
-        }, 900);
-        return;
-      }
-
-      // ── FAILURE from backend (401/403) ──
-      if (res.status === 401 || res.status === 403) {
-        adminAttempts++;
-        try { sessionStorage.setItem('admin_attempts', String(adminAttempts)); } catch (e) {}
-
-        const remaining = MAX_ATTEMPTS - adminAttempts;
-        logSuspiciousAttempt(`Failed admin attempt #${adminAttempts} (user: ${username})`);
-
-        if (adminAttempts >= MAX_ATTEMPTS) {
-          adminLockedUntil = now + LOCKOUT_MS;
-          try { sessionStorage.setItem('admin_locked_until', String(adminLockedUntil)); } catch (e) {}
-          showIntrusionAlert();
-          showLockedModal(Math.ceil(LOCKOUT_MS / 1000));
-          return;
-        }
-
-        warningEl.textContent = data.error
-          ? `⚠ ${data.error}. ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`
-          : `⚠ Invalid credentials. ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`;
-
-        passwordEl.value = '';
-        passwordEl.focus();
-        shakeModal();
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
-        return;
-      }
+    // ── Step 2: Check role in Firestore ──
+    const snap = await db.collection('users').doc(fbUser.uid).get();
+    if (!snap.exists) {
+      await auth.signOut();
+      throw { code: 'no-profile' };
     }
-  } catch (networkErr) {
-    // Backend unreachable → fall through to offline mode
-    handledByBackend = false;
-  }
 
-  // ─────────────────────────────────────────────────────────────
-  // OFFLINE FALLBACK — accept hardcoded admin credentials
-  // ─────────────────────────────────────────────────────────────
-  if (username === DEMO_ADMIN_USERNAME && password === DEMO_ADMIN_PASSWORD) {
+    const data = snap.data();
+    const allowedRoles = ['super_admin', 'admin', 'verifier'];
+
+    if (!allowedRoles.includes(data.role)) {
+      await auth.signOut();
+      adminAttempts++;
+      try { sessionStorage.setItem('admin_attempts', String(adminAttempts)); } catch (e) {}
+      logSuspiciousAttempt(`Non-admin role tried to access: ${data.role}`);
+
+      const remaining = MAX_ATTEMPTS - adminAttempts;
+      warningEl.innerHTML = `⚠ This account is not an admin. ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`;
+      passwordEl.value = '';
+      passwordEl.focus();
+      shakeModal();
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
+      return;
+    }
+
+    // ── SUCCESS ──
     adminAttempts = 0;
     try { sessionStorage.setItem('admin_attempts', '0'); } catch (e) {}
 
@@ -1083,39 +1049,68 @@ async function verifyAdminCredentials() {
     icon.innerHTML = '<i class="fas fa-check"></i>';
     document.getElementById('adminModalTitle').textContent = 'Access Granted';
     document.getElementById('adminModalText').textContent =
-      'Backend offline. Redirecting to admin panel…';
+      `Welcome ${data.fullName || data.email}. Redirecting…`;
 
-    logAdminAccess(`Admin login (offline): ${username}`);
+    logAdminAccess(`Admin login (Firebase): ${data.email} (${data.role})`);
+
+    // Update last login
+    db.collection('users').doc(fbUser.uid).update({
+      lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(() => {});
+
+    // Save session locally for admin panel
+    try {
+      sessionStorage.setItem('admin_session', JSON.stringify({
+        uid: fbUser.uid,
+        email: data.email,
+        role: data.role,
+        fullName: data.fullName,
+        loginAt: new Date().toISOString()
+      }));
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userRole', 'admin');
+      localStorage.setItem('userId', fbUser.uid);
+    } catch (e) {}
 
     setTimeout(() => {
       window.location.href = ADMIN_PANEL_PATH;
     }, 900);
-    return;
+
+  } catch (err) {
+    console.error('Admin login error:', err);
+
+    // Map Firebase error codes to friendly messages
+    let friendlyMsg = 'Invalid credentials.';
+    if (err.code === 'auth/user-not-found')       friendlyMsg = 'No admin account found with this email.';
+    else if (err.code === 'auth/wrong-password')  friendlyMsg = 'Incorrect password.';
+    else if (err.code === 'auth/invalid-email')   friendlyMsg = 'Invalid email address.';
+    else if (err.code === 'auth/too-many-requests') friendlyMsg = 'Too many attempts. Try again later.';
+    else if (err.code === 'auth/network-request-failed') friendlyMsg = 'Network error. Check your internet.';
+    else if (err.code === 'auth/user-disabled')   friendlyMsg = 'This account has been disabled.';
+    else if (err.code === 'no-profile')           friendlyMsg = 'No admin profile found in Firestore.';
+    else if (err.code === 'permission-denied')    friendlyMsg = 'Firestore permission denied. Check rules.';
+
+    adminAttempts++;
+    try { sessionStorage.setItem('admin_attempts', String(adminAttempts)); } catch (e) {}
+
+    const remaining = MAX_ATTEMPTS - adminAttempts;
+    logSuspiciousAttempt(`Failed admin attempt #${adminAttempts} (email: ${email})`);
+
+    if (adminAttempts >= MAX_ATTEMPTS) {
+      adminLockedUntil = now + LOCKOUT_MS;
+      try { sessionStorage.setItem('admin_locked_until', String(adminLockedUntil)); } catch (e) {}
+      showIntrusionAlert();
+      showLockedModal(Math.ceil(LOCKOUT_MS / 1000));
+      return;
+    }
+
+    warningEl.innerHTML = `⚠ ${friendlyMsg} ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`;
+    passwordEl.value = '';
+    passwordEl.focus();
+    shakeModal();
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
   }
-
-  // Wrong credentials offline
-  adminAttempts++;
-  try { sessionStorage.setItem('admin_attempts', String(adminAttempts)); } catch (e) {}
-
-  const remaining = MAX_ATTEMPTS - adminAttempts;
-  logSuspiciousAttempt(`Failed offline admin attempt #${adminAttempts} (user: ${username})`);
-
-  if (adminAttempts >= MAX_ATTEMPTS) {
-    adminLockedUntil = now + LOCKOUT_MS;
-    try { sessionStorage.setItem('admin_locked_until', String(adminLockedUntil)); } catch (e) {}
-    showIntrusionAlert();
-    showLockedModal(Math.ceil(LOCKOUT_MS / 1000));
-    return;
-  }
-
-  warningEl.innerHTML =
-    `⚠ Invalid credentials. ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`;
-
-  passwordEl.value = '';
-  passwordEl.focus();
-  shakeModal();
-  submitBtn.disabled = false;
-  submitBtn.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1269,12 +1264,12 @@ function updateThemeIcon(theme) {
 function setGreeting() {
   const statusText = document.getElementById('statusText');
   if (!statusText) return;
-  if (statusText.textContent.startsWith('Backend Offline')) return;
+  if (statusText.textContent.startsWith('Firebase Unavailable')) return;
   const hour = new Date().getHours();
   let greeting = 'Good Morning';
   if (hour >= 12 && hour < 17) greeting = 'Good Afternoon';
   else if (hour >= 17) greeting = 'Good Evening';
-  statusText.textContent = `${greeting} · Backend Online`;
+  statusText.textContent = `${greeting} · Firebase Online`;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1287,9 +1282,6 @@ document.querySelectorAll('.role-card').forEach(card => {
       localStorage.setItem('selectedRole', role);
       sessionStorage.setItem('selectedRole', role);
     } catch (e) {}
-    fetch(`${API_BASE}/auth/sessions`, { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : null)
-      .catch(() => null);
   });
 });
 
@@ -1323,10 +1315,11 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ═══════════════════════════════════════════════════════════════
    CONSOLE BRANDING
    ═══════════════════════════════════════════════════════════════ */
-console.log('%cSKILLINTEL%c  ·  Landing page ready',
+console.log('%cSKILLINTEL%c  ·  Landing page ready (Firebase)',
   'background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;padding:6px 12px;border-radius:6px;font-weight:800;font-size:13px;',
   'color:#64748B;font-size:12px;margin-left:8px;');
 console.log('%cHint: Ctrl + Shift + A opens the admin gate', 'color:#94A3B8;font-size:11px;font-style:italic;');
+console.log('%cAdmin login uses Firebase Auth (create account in Firebase Console first)', 'color:#f59e0b;font-size:11px;');
 </script>
 
 </body>

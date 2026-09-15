@@ -10,7 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     
     <link rel="stylesheet" href="../css/style.css">
-    <script src="../js/api.js"></script>
+
+    <!-- ✅ Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
         body {
@@ -712,144 +717,204 @@
 
 <script>
     // ============================================================
-    // BACKEND CACHE
+    // FIREBASE CONFIG
     // ============================================================
-    let _providerBackend = null;
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     // ============================================================
-    // LOAD PROVIDER DATA (backend first)
+    // CACHE
+    // ============================================================
+    let _firebaseUser = null;
+    let _userProfile = null;
+
+    // ============================================================
+    // AUTH GUARD
+    // ============================================================
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=provider';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=provider';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'provider') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=provider';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
+            });
+        });
+    }
+
+    // ============================================================
+    // PROVIDER DATA
     // ============================================================
     async function getProviderData() {
-        const currentEmail = localStorage.getItem('currentProviderEmail') || localStorage.getItem('userEmail') || '';
-
-        // Try backend
-        try {
-            const res = await apiCall('/api/providers');
-            if (res.ok && Array.isArray(res.data)) {
-                const match = res.data.find(p => (p.email || '').toLowerCase() === currentEmail.toLowerCase());
-                if (match) {
-                    _providerBackend = match;
-                    return {
-                        id: match.id,
-                        providerId: 'PRV' + String(match.id).padStart(4, '0'),
-                        orgName: match.name || 'Provider',
-                        contactPerson: match.name || 'Provider',
-                        email: match.email,
-                        mobile: match.contact || 'N/A',
-                        state: match.state || 'N/A',
-                        district: match.district || 'N/A',
-                        status: match.verified ? 'Active' : 'Pending Verification',
-                    };
-                }
-            }
-        } catch (e) { console.warn('Backend provider load failed:', e); }
-
-        // Fallback localStorage
-        const allProviders = JSON.parse(localStorage.getItem('allProviders') || '[]');
-        let data = allProviders.find(p => p.email === currentEmail);
-        if (!data) {
-            const oldData = localStorage.getItem('providerData');
-            if (oldData) { try { data = JSON.parse(oldData); } catch(e) {} }
-        }
-        if (!data) {
-            data = {
+        if (!_firebaseUser) {
+            return {
                 providerId: 'PRV2026-0000',
                 orgName: 'Your Training Centre',
                 contactPerson: 'Provider',
                 email: '',
                 mobile: '',
+                state: 'N/A',
+                district: 'N/A',
                 status: 'Active',
             };
         }
-        return data;
+
+        const uid = _firebaseUser.uid;
+
+        let data = null;
+        try {
+            const provSnap = await db.collection('providers').doc(uid).get();
+            if (provSnap.exists) data = provSnap.data();
+        } catch (e) {
+            console.warn('Could not read providers/{uid}:', e);
+        }
+        if (!data && _userProfile) data = _userProfile;
+
+        if (!data) {
+            return {
+                providerId: 'PRV2026-0000',
+                orgName: 'Your Training Centre',
+                contactPerson: 'Provider',
+                email: _firebaseUser.email || '',
+                mobile: '',
+                state: 'N/A',
+                district: 'N/A',
+                status: 'Active',
+            };
+        }
+
+        const providerCode = data.providerCode || ('PRV' + uid.substring(0, 6).toUpperCase());
+
+        return {
+            uid: uid,
+            providerId: providerCode,
+            orgName: data.orgName || 'Your Training Centre',
+            contactPerson: data.repName || data.contactPerson || data.orgName || _firebaseUser.displayName || 'Provider',
+            email: data.email || _firebaseUser.email || '',
+            mobile: data.mobile || data.repMobile || 'N/A',
+            state: data.state || 'N/A',
+            district: data.district || 'N/A',
+            city: data.city || 'N/A',
+            trainingSector: data.trainingSector || '',
+            trainingCapacity: data.trainingCapacity || '',
+            schemeName: data.schemeName || '',
+            status: data.status || 'Active',
+            recognitionStatus: data.recognitionStatus || 'Pending',
+            verificationStatus: data.verificationStatus || 'Pending Verification',
+        };
     }
 
     // ============================================================
-    // LOAD ALL TRAINEES (backend first)
+    // LOAD TRAINEES — Firestore
+    // Only shows trainees whose `trainingProvider` matches this provider
     // ============================================================
-    async function getAllTrainees() {
-        // Try backend
+    async function getAllTrainees(providerData) {
+        if (!_firebaseUser) return [];
+
+        const providerUid = _firebaseUser.uid;
+        const providerName = (providerData?.orgName || '').toLowerCase().trim();
+
+        let docs = [];
         try {
-            const res = await apiCall('/api/trainees');
-            if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
-                return res.data.map((t, index) => {
-                    // Determine status
-                    let status = 'pending';
-                    const ts = (t.training_status || '').toLowerCase();
-                    if (ts === 'completed') status = 'pending';   // completed training, awaiting placement
-                    else if (ts === 'training') status = 'pending';
-                    // If assessment passed
-                    if (t.assessment_result === 'Pass') status = 'pending';
+            const snap = await db.collection('trainees').get();
+            snap.forEach(d => docs.push({ _id: d.id, ...d.data() }));
+        } catch (e) {
+            console.warn('Could not read trainees collection:', e);
+            return [];
+        }
 
-                    return {
-                        id: t.trainee_code || 'TRN' + t.id,
-                        backendId: t.id,
-                        name: t.full_name || 'Trainee',
-                        email: t.email || '',
-                        mobile: t.phone || 'N/A',
-                        course: t.skills || t.qualification || 'Training',
-                        provider: 'N/A',
-                        batch: 'N/A',
-                        registrationDate: (t.created_at || '').split('T')[0] || 'N/A',
-                        trainingProgress: t.assessment_score || 0,
-                        certificationStatus: t.assessment_result === 'Pass' ? 'Certified' : 'Pending',
-                        company: 'N/A',
-                        jobRole: t.preferred_role || 'N/A',
-                        employmentType: 'N/A',
-                        joiningDate: 'N/A',
-                        currentIncome: 0,
-                        previousIncome: 0,
-                        employmentStatus: 'Not Updated',
-                        followupStatus: 'Pending',
-                        status: status,
-                        avatar: (t.full_name || 'T').charAt(0).toUpperCase(),
-                        color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6]
-                    };
-                });
-            }
-        } catch (e) { console.warn('Backend trainees load failed:', e); }
+        if (docs.length === 0) {
+            return getSampleTrainees();
+        }
 
-        // Fallback localStorage
-        const allTraineesArray = JSON.parse(localStorage.getItem('allTrainees') || '[]');
-        const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-        const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
+        // Filter: only show trainees whose trainingProvider matches this provider
+        // (match by exact name OR uid if they have it OR keep all as fallback)
+        const filtered = docs.filter(t => {
+            const tProviderLower = (t.trainingProvider || '').toLowerCase().trim();
+            return !providerName || !tProviderLower || tProviderLower.includes(providerName) || providerName.includes(tProviderLower);
+        });
 
-        if (allTraineesArray.length === 0) return [];
+        const list = filtered.length > 0 ? filtered : docs; // fallback to all if no match
 
-        return allTraineesArray.map((t, index) => {
-            const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
-            const fol = allFollowups.find(f => f.traineeEmail === t.email) || {};
+        const COLOR_PALETTE = ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'];
 
+        return list.map((t, index) => {
+            const emp = t.employment || null;
+
+            // Determine placement status
             let status = 'pending';
-            const empStatus = emp.status || t.employmentStatusDisplay || '';
-            if (empStatus === 'Employed') status = 'employed';
-            else if (empStatus === 'Self-Employed') status = 'self';
+            const empStatus = (emp && (emp.status || '')) || t.employmentStatus || '';
+            if (empStatus === 'Employed' || empStatus === 'Verified') status = 'employed';
+            else if (empStatus === 'Self-Employed' || empStatus === 'Self-employed') status = 'self';
             else if (empStatus === 'Unemployed' || empStatus === 'Looking for Job') status = 'unemployed';
 
             return {
-                id: t.traineeId || 'TRN' + (index + 1),
-                name: t.fullName || 'Unknown',
+                id: t.traineeCode || ('TRN' + (t.uid ? t.uid.substring(0, 6) : index)),
+                uid: t.uid || t._id,
+                name: t.fullName || 'Trainee',
                 email: t.email || '',
                 mobile: t.mobile || 'N/A',
-                course: t.skillTrade || 'N/A',
+                course: t.skillTrade || t.qualification || 'Training',
                 provider: t.trainingProvider || 'N/A',
                 batch: t.batchId || 'N/A',
-                registrationDate: t.registrationDate || t.registeredAt || 'N/A',
-                trainingProgress: t.trainingProgress || 0,
+                registrationDate: (t.registeredAt || '').split('T')[0] || 'N/A',
+                trainingProgress: Number(t.trainingProgress) || 0,
                 certificationStatus: t.certificationStatus || 'Pending',
-                company: emp.companyName || 'N/A',
-                jobRole: emp.jobRole || 'N/A',
-                employmentType: emp.employmentType || 'N/A',
-                joiningDate: emp.joiningDate || 'N/A',
-                currentIncome: parseInt(emp.currentIncome) || 0,
-                previousIncome: parseInt(emp.previousIncome) || 0,
+                company: (emp && (emp.companyName || emp.employerName)) || 'N/A',
+                jobRole: (emp && emp.jobRole) || t.preferredRole || 'N/A',
+                employmentType: (emp && emp.employmentType) || 'N/A',
+                joiningDate: (emp && (emp.joiningDate || emp.startDate)) || 'N/A',
+                currentIncome: Number((emp && (emp.currentIncome || emp.monthlyIncome)) || 0) || 0,
+                previousIncome: Number((emp && emp.previousIncome) || t.prevIncome) || 0,
                 employmentStatus: empStatus || 'Not Updated',
-                followupStatus: fol.status || 'Pending',
+                followupStatus: (t.followups && t.followups[0] && t.followups[0].status) || 'Pending',
                 status: status,
                 avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
-                color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6]
+                color: COLOR_PALETTE[index % COLOR_PALETTE.length]
             };
         });
+    }
+
+    function getSampleTrainees() {
+        return [
+            { id: 'TRN001', name: 'Priya Sharma', email: 'priya@email.com', course: 'Data Analytics', status: 'employed', avatar: 'P', color: '#2563eb', company: 'ABC Tech', jobRole: 'Data Analyst', currentIncome: 28000, registrationDate: '2026-01-15' },
+            { id: 'TRN002', name: 'Rahul Verma', email: 'rahul@email.com', course: 'Full Stack Development', status: 'pending', avatar: 'R', color: '#7c3aed', company: 'Tech Solutions', jobRole: 'Developer', currentIncome: 32000, registrationDate: '2026-02-20' },
+            { id: 'TRN003', name: 'Ananya Reddy', email: 'ananya@email.com', course: 'Digital Marketing', status: 'self', avatar: 'A', color: '#16a34a', company: 'Growth Media', jobRole: 'Marketing Lead', currentIncome: 25000, registrationDate: '2026-03-10' },
+            { id: 'TRN004', name: 'Vikram Singh', email: 'vikram@email.com', course: 'Data Science', status: 'employed', avatar: 'V', color: '#d97706', company: 'AI Solutions', jobRole: 'Data Scientist', currentIncome: 35000, registrationDate: '2026-04-05' },
+        ];
     }
 
     // ============================================================
@@ -860,7 +925,7 @@
 
     async function loadData() {
         const providerData = await getProviderData();
-        allTrainees = await getAllTrainees();
+        allTrainees = await getAllTrainees(providerData);
         console.log('✅ Loaded', allTrainees.length, 'trainees for provider view');
 
         // Build programs from trainees' courses
@@ -1099,10 +1164,15 @@
 
     async function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
-            localStorage.removeItem('currentProviderEmail');
-            localStorage.removeItem('currentProviderId');
-            window.location.href = '../auth/login.html';
+            try { await auth.signOut(); } catch (e) {}
+            try {
+                localStorage.removeItem('currentProviderEmail');
+                localStorage.removeItem('currentProviderId');
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userId');
+            } catch (e) {}
+            window.location.href = '../auth/login.html?role=provider';
         }
     }
 
@@ -1129,7 +1199,14 @@
         } catch (e) {}
 
         updateDate();
-        await loadData();
+
+        try {
+            await requireAuth();
+            await loadData();
+            console.log('✅ Provider Dashboard loaded (Firebase)');
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
 
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
@@ -1140,8 +1217,6 @@
                 }
             }
         });
-
-        console.log('✅ Provider Dashboard loaded!');
     });
 </script>
 

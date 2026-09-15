@@ -6,7 +6,12 @@
     <title>SkillBridge · Trainee Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
     <link rel="stylesheet" href="../css/style.css">
-    <script src="../js/api.js"></script>
+
+    <!-- ✅ Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f4f7ff; color: #1e293b; display: flex; min-height: 100vh; }
@@ -443,126 +448,193 @@
 
 <script>
     // ============================================================
-    // BACKEND CACHE — set after loadAllData()
+    // FIREBASE CONFIG
     // ============================================================
-    let _traineeBackend = null;
-    let _trainee360 = null;
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     // ============================================================
-    // LOAD ALL DATA — pulls from BACKEND first, localStorage as fallback
+    // CACHE — set after loadAllData()
+    // ============================================================
+    let _trainee = null;      // merged trainee profile
+    let _userProfile = null;   // users/{uid} doc
+    let _firebaseUser = null;  // firebase auth user
+
+    // ============================================================
+    // AUTH GUARD — redirect to login if not signed in
+    // ============================================================
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=trainee';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    // Verify role
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=trainee';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'trainee') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=trainee';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
+            });
+        });
+    }
+
+    // ============================================================
+    // LOAD ALL DATA — reads from Firestore
+    //   users/{uid}      → identity, role
+    //   trainees/{uid}   → full trainee profile + baseline
+    //   employers/{uid}  → (looked up by email if employment exists)
+    //   employment data  → stored inside trainees/{uid} as `employment`
+    //   followups        → stored inside trainees/{uid} as `followups`
     // ============================================================
     async function loadAllData() {
-        // Identify current trainee by email (stored at login)
-        const currentEmail =
-            localStorage.getItem('currentTraineeEmail') ||
-            (JSON.parse(localStorage.getItem('traineeData') || '{}').email) ||
-            localStorage.getItem('userEmail');
+        if (!_firebaseUser) {
+            return { traineeData: null, employmentData: null, followupData: null };
+        }
 
-        // Try BACKEND first
+        const uid = _firebaseUser.uid;
+
+        // ---- 1. Read trainee doc from Firestore ----
+        let traineeDoc = null;
         try {
-            const backendCacheKey = 'currentTraineeId';
-            let backendId = localStorage.getItem(backendCacheKey);
-
-            // If we don't have a numeric backend id yet, search by email
-            if (!backendId) {
-                const listRes = await apiCall('/api/trainees?search=' + encodeURIComponent(currentEmail || ''));
-                if (listRes.ok && Array.isArray(listRes.data)) {
-                    const found = listRes.data.find(t =>
-                        (t.email || '').toLowerCase() === (currentEmail || '').toLowerCase()
-                    );
-                    if (found) {
-                        backendId = found.id;
-                        localStorage.setItem(backendCacheKey, String(found.id));
-                    }
-                }
-            }
-
-            if (backendId) {
-                const [fullRes, t360Res] = await Promise.all([
-                    apiCall('/api/trainees/' + backendId + '/360'),
-                    apiCall('/api/trainees/' + backendId + '/360'),
-                ]);
-                if (fullRes.ok && fullRes.data) {
-                    _traineeBackend = fullRes.data;
-                    _trainee360 = t360Res.ok ? t360Res.data : fullRes.data;
-                }
-            }
+            const snap = await db.collection('trainees').doc(uid).get();
+            if (snap.exists) traineeDoc = snap.data();
         } catch (e) {
-            console.warn('Backend trainee load failed, using localStorage:', e);
+            console.warn('Could not read trainees/{uid}:', e);
         }
 
-        // ---- Build trainee object (backend → localStorage merge) ----
-        let traineeData = {};
-
-        const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
-        const localTrainee = allTrainees.find(t => t.email === currentEmail) ||
-                             JSON.parse(localStorage.getItem('traineeData') || '{}');
-
-        // Start with local data, override with backend if available
-        traineeData = { ...localTrainee };
-
-        if (_traineeBackend) {
-            traineeData = {
-                ...traineeData,
-                traineeId: _traineeBackend.trainee_code || traineeData.traineeId,
-                fullName: _traineeBackend.full_name || traineeData.fullName,
-                email: _traineeBackend.email || traineeData.email,
-                mobile: _traineeBackend.phone || traineeData.mobile,
-                state: _traineeBackend.state || traineeData.state,
-                district: _traineeBackend.district || traineeData.district,
-                skillTrade: _traineeBackend.skills || traineeData.skillTrade,
-                trainingProvider: traineeData.trainingProvider,
-                batchId: traineeData.batchId,
-                registrationDate: _traineeBackend.created_at ? _traineeBackend.created_at.split('T')[0] : traineeData.registrationDate,
-                trainingProgress: _traineeBackend.assessment_score || traineeData.trainingProgress || 0,
-                assessmentScore: _traineeBackend.assessment_score,
-                trainingStatus: _traineeBackend.training_status,
-            };
+        // ---- 2. Read users/{uid} as fallback ----
+        let userDoc = _userProfile;
+        if (!userDoc) {
+            try {
+                const snap = await db.collection('users').doc(uid).get();
+                if (snap.exists) userDoc = snap.data();
+            } catch (e) {}
         }
 
-        // ---- Employment data ----
+        // ---- 3. Merge into traineeData (Firestore-first) ----
+        const src = traineeDoc || userDoc || {};
+        const traineeData = {
+            traineeId:        src.traineeCode || ('TRN' + uid.substring(0, 6).toUpperCase()),
+            fullName:         src.fullName || src.displayName || _firebaseUser.displayName || 'Trainee',
+            email:            src.email || _firebaseUser.email || '',
+            mobile:           src.mobile || '',
+            state:            src.state || '',
+            district:         src.district || '',
+            village:          src.village || src.city || '',
+            areaType:         src.areaType || '',
+            dob:              src.dob || '',
+            gender:           src.gender || '',
+            education:        src.qualification || src.education || '',
+            skillTrade:       src.skillTrade || src.skills || '',
+            trainingProvider: src.trainingProvider || '',
+            batchId:          src.batchId || '',
+            enrollmentId:     src.enrollmentId || '',
+            trainingMode:     src.trainingMode || '',
+            trainingProgram:  src.trainingProgram || '',
+            startDate:        src.startDate || '',
+            completionDate:   src.completionDate || '',
+            registrationDate: src.registeredAt ? src.registeredAt.split('T')[0]
+                              : (src.createdAt && src.createdAt.toDate ? src.createdAt.toDate().toISOString().split('T')[0] : '—'),
+            employmentStatus: src.employmentStatus || '',
+            prevIncome:       Number(src.prevIncome) || 0,
+            careerGoal:       src.careerGoal || '',
+            preferredRole:    src.preferredRole || '',
+            preferredLocation: src.preferredLocation || '',
+            // Optional training-progress fields (may not exist yet)
+            trainingProgress:  Number(src.trainingProgress) || 0,
+            completedModules:  Number(src.completedModules) || 0,
+            totalModules:      Number(src.totalModules) || 10,
+            certificationStatus: src.certificationStatus || 'Pending',
+            certificateName:   src.certificateName || 'Not Certified',
+            profileCompletion: Number(src.profileCompletion) || 90,
+            status:            src.status || 'Active',
+            // Nested optional sub-objects
+            _employment:       src.employment || null,
+            _followups:        src.followups || null,
+        };
+
+        // ---- 4. Employment data (from trainees/{uid}.employment) ----
         let employmentData = null;
-
-        // Backend 360 view has employments
-        if (_trainee360 && _trainee360.employments && _trainee360.employments.length > 0) {
-            const emp = _trainee360.employments[0];
+        if (traineeData._employment) {
+            const e = traineeData._employment;
             employmentData = {
-                status: emp.status === 'verified' ? 'Employed' : 'Pending',
-                companyName: emp.employer_name || 'N/A',
-                jobRole: emp.job_role || 'N/A',
-                employmentType: emp.employment_type || 'N/A',
-                joiningDate: emp.start_date || 'N/A',
-                currentIncome: emp.monthly_income || 0,
-                previousIncome: emp.pre_training_income || 0,
-                jobCity: emp.job_location || traineeData.location || 'N/A',
+                status:          e.status || 'Not Updated',
+                companyName:     e.companyName || e.employerName || 'N/A',
+                jobRole:         e.jobRole || 'N/A',
+                employmentType:  e.employmentType || 'N/A',
+                joiningDate:     e.joiningDate || e.startDate || 'N/A',
+                currentIncome:   Number(e.currentIncome || e.monthlyIncome) || 0,
+                previousIncome:  Number(e.previousIncome || traineeData.prevIncome) || 0,
+                jobCity:         e.jobCity || e.jobLocation || traineeData.district || 'N/A',
             };
         } else {
-            // localStorage fallback
-            const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-            employmentData = allEmployment.find(e => e.traineeEmail === currentEmail) ||
-                             JSON.parse(localStorage.getItem('employmentData') || '{}');
+            employmentData = {
+                status:         'Not Updated',
+                companyName:    '—',
+                jobRole:        '—',
+                employmentType: '—',
+                joiningDate:    '—',
+                currentIncome:  0,
+                previousIncome: traineeData.prevIncome || 0,
+                jobCity:        traineeData.district || '—',
+            };
         }
 
-        // ---- Follow-up data ----
+        // ---- 5. Follow-up data ----
         let followupData = null;
-
-        if (_trainee360 && _trainee360.followups && _trainee360.followups.length > 0) {
-            // Find earliest pending/due follow-up
-            const pending = _trainee360.followups.find(f => f.status === 'due' || f.status === 'pending') ||
-                            _trainee360.followups[0];
+        if (Array.isArray(traineeData._followups) && traineeData._followups.length > 0) {
+            const pending = traineeData._followups.find(f => f.status === 'due' || f.status === 'pending')
+                            || traineeData._followups[0];
             followupData = {
-                status: pending.status === 'completed' ? 'Completed' :
-                        pending.status === 'due' ? 'In Progress' : 'Pending',
-                period: String(pending.period_days || 90),
-                date: pending.due_date || 'N/A',
-                notifications: _trainee360.followups.filter(f => f.status !== 'completed').length,
+                status:        pending.status === 'completed' ? 'Completed'
+                              : pending.status === 'due' ? 'In Progress'
+                              : 'Pending',
+                period:        String(pending.periodDays || pending.period || 90),
+                date:          pending.dueDate || pending.date || '—',
+                notifications: traineeData._followups.filter(f => f.status !== 'completed').length,
+                _all:          traineeData._followups,
             };
         } else {
-            const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
-            followupData = allFollowups.find(f => f.traineeEmail === currentEmail) ||
-                           JSON.parse(localStorage.getItem('followupData') || '{}');
+            followupData = {
+                status:        'Pending',
+                period:        '90',
+                date:          '—',
+                notifications: 0,
+                _all:          null,
+            };
         }
 
+        _trainee = traineeData;
         return { traineeData, employmentData, followupData };
     }
 
@@ -579,7 +651,7 @@
                     <h2>No Trainee Data Found</h2>
                     <p>Please complete your registration first, or log in again.</p>
                     <br>
-                    <a href="../../auth/trainee-register.html" style="display:inline-block; background:linear-gradient(135deg,#2563eb,#7c3aed); color:white; padding:12px 30px; border-radius:12px; text-decoration:none; font-weight:600;">
+                    <a href="../auth/trainee-register.html" style="display:inline-block; background:linear-gradient(135deg,#2563eb,#7c3aed); color:white; padding:12px 30px; border-radius:12px; text-decoration:none; font-weight:600;">
                         <i class="fas fa-user-plus"></i> Go to Registration
                     </a>
                 </div>
@@ -605,11 +677,11 @@
         document.getElementById('statCertification').textContent = traineeData.certificationStatus || 'Pending';
         document.getElementById('statCertSub').textContent = traineeData.certificateName || 'Not Certified';
 
-        const empStatus = employmentData.status || traineeData.employmentStatusDisplay || 'Not Updated';
+        const empStatus = employmentData.status || 'Not Updated';
         document.getElementById('statEmployment').textContent = empStatus;
-        document.getElementById('statEmploySub').textContent = employmentData.companyName || traineeData.currentEmployer || 'No company';
+        document.getElementById('statEmploySub').textContent = employmentData.companyName || 'No company';
 
-        const currentIncome = parseInt(employmentData.currentIncome) || traineeData.currentIncome || 0;
+        const currentIncome = parseInt(employmentData.currentIncome) || 0;
         document.getElementById('statIncome').textContent = '₹' + currentIncome.toLocaleString();
         const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 0;
         const growth = prevIncome > 0 ? Math.round(((currentIncome - prevIncome) / prevIncome) * 100) : 0;
@@ -627,21 +699,22 @@
     // RENDER OVERVIEW
     // ============================================================
     function renderOverview(traineeData, employmentData, followupData) {
-        const currentIncome = parseInt(employmentData.currentIncome) || traineeData.currentIncome || 0;
+        const currentIncome = parseInt(employmentData.currentIncome) || 0;
         const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 0;
         const growth = prevIncome > 0 ? Math.round(((currentIncome - prevIncome) / prevIncome) * 100) : 0;
 
-        // Build follow-up grid from 360 data if available, else default
+        // Build follow-up grid
         let followupGrid = '';
-        if (_trainee360 && _trainee360.followups && _trainee360.followups.length > 0) {
-            followupGrid = _trainee360.followups.map(f => {
+        if (followupData._all && followupData._all.length > 0) {
+            followupGrid = followupData._all.map(f => {
                 const isCompleted = f.status === 'completed';
                 const isDue = f.status === 'due' || f.status === 'overdue';
                 const cls = isCompleted ? 'completed' : isDue ? 'due' : '';
                 const icon = isCompleted ? '✅' : isDue ? '⏳' : '📅';
+                const days = f.periodDays || f.period || '—';
                 return `
                     <div class="followup-item ${cls}">
-                        <div class="days">${f.period_days} Days</div>
+                        <div class="days">${days} Days</div>
                         <div class="status-icon">${icon}</div>
                     </div>
                 `;
@@ -678,12 +751,12 @@
                     <!-- Employment Status -->
                     <div class="card">
                         <h3><i class="fas fa-briefcase"></i> Employment Status</h3>
-                        <p><b>Status:</b> <span class="status-badge ${employmentData.status === 'Employed' ? 'success' : 'warning'}">${employmentData.status || traineeData.employmentStatusDisplay || 'Not Updated'}</span></p>
-                        <p><b>Company:</b> <span>${employmentData.companyName || traineeData.currentEmployer || 'N/A'}</span></p>
-                        <p><b>Job Role:</b> <span>${employmentData.jobRole || traineeData.currentJobRole || 'N/A'}</span></p>
-                        <p><b>Employment Type:</b> <span>${employmentData.employmentType || traineeData.employmentType || 'N/A'}</span></p>
-                        <p><b>Joining Date:</b> <span>${employmentData.joiningDate || traineeData.joiningDate || 'N/A'}</span></p>
-                        <p><b>Location:</b> <span>${employmentData.jobCity || traineeData.location || 'N/A'}</span></p>
+                        <p><b>Status:</b> <span class="status-badge ${employmentData.status === 'Employed' || employmentData.status === 'Verified' ? 'success' : 'warning'}">${employmentData.status || 'Not Updated'}</span></p>
+                        <p><b>Company:</b> <span>${employmentData.companyName || 'N/A'}</span></p>
+                        <p><b>Job Role:</b> <span>${employmentData.jobRole || 'N/A'}</span></p>
+                        <p><b>Employment Type:</b> <span>${employmentData.employmentType || 'N/A'}</span></p>
+                        <p><b>Joining Date:</b> <span>${employmentData.joiningDate || 'N/A'}</span></p>
+                        <p><b>Location:</b> <span>${employmentData.jobCity || 'N/A'}</span></p>
                         <a href="employment.html" style="margin-top:10px; display:inline-block; text-decoration:none;">
                             <button class="btn-outline" style="font-size:12px; padding:6px 16px;"><i class="fas fa-edit"></i> Update Employment</button>
                         </a>
@@ -731,7 +804,7 @@
                         </div>
                         <div class="timeline-item">
                             <b>💼 Employment</b>
-                            <p>${employmentData.status || traineeData.employmentStatusDisplay || 'Not employed yet'}</p>
+                            <p>${employmentData.status || 'Not employed yet'}</p>
                         </div>
                         <div class="timeline-item">
                             <b>📅 Follow-up</b>
@@ -795,19 +868,24 @@
     }
 
     // ============================================================
-    // LOGOUT
+    // LOGOUT — Firebase
     // ============================================================
     async function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
-            localStorage.removeItem('currentTraineeId');
-            localStorage.removeItem('currentTraineeEmail');
-            window.location.href = '../auth/login.html';
+            try { await auth.signOut(); } catch (e) {}
+            try {
+                localStorage.removeItem('currentTraineeId');
+                localStorage.removeItem('currentTraineeEmail');
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userId');
+            } catch (e) {}
+            window.location.href = '../auth/login.html?role=trainee';
         }
     }
 
     // ============================================================
-    // THEME TOGGLE (used by header button)
+    // THEME TOGGLE
     // ============================================================
     function toggleTheme() {
         const html = document.documentElement;
@@ -831,8 +909,13 @@
             if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         } catch (e) {}
 
-        // Load real data from backend
-        await renderDashboard();
+        // Auth guard + load
+        try {
+            await requireAuth();
+            await renderDashboard();
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
 
         // Mobile: close sidebar on outside click
         document.addEventListener('click', function(e) {

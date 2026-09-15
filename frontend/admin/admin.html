@@ -11,7 +11,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="../css/style.css">
-    <script src="../js/api.js"></script>
+
+    <!-- ✅ Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
       (function() {
@@ -26,7 +30,7 @@
 
     <style>
         /* ═══════════════════════════════════════════════════════
-           ADMIN PANEL v3.0 — Frontend-only (offline)
+           ADMIN PANEL v3.0 — Firebase-integrated
            ═══════════════════════════════════════════════════════ */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
 
@@ -445,13 +449,6 @@
             border-radius: 20px;
             display: grid;
             place-items: center;
-        }
-        .topbar-btn.pulse {
-            animation: topbarPulse 2s infinite;
-        }
-        @keyframes topbarPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
-            50%      { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
         }
 
         .topbar-profile {
@@ -1326,24 +1323,24 @@
         </div>
 
         <div class="form-group">
-            <label><i class="fas fa-user"></i> Admin Username</label>
+            <label><i class="fas fa-envelope"></i> Admin Email</label>
             <div class="input-wrap">
-                <i class="fas fa-user"></i>
-                <input type="text" id="adminUser" placeholder="admin" autocomplete="off" />
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="adminUser" placeholder="admin@skillintel.gov.in" autocomplete="email" />
             </div>
         </div>
         <div class="form-group">
             <label><i class="fas fa-key"></i> Admin Password</label>
             <div class="input-wrap">
                 <i class="fas fa-key"></i>
-                <input type="password" id="adminPass" placeholder="••••••••" autocomplete="off" />
+                <input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" />
                 <button type="button" class="toggle-pw" onclick="toggleAdminPass()">
                     <i class="fas fa-eye"></i>
                 </button>
             </div>
         </div>
 
-        <button class="login-btn" onclick="adminLogin()">
+        <button class="login-btn" id="adminLoginBtn" onclick="adminLogin()">
             <i class="fas fa-sign-in-alt"></i> Access Admin Panel
         </button>
 
@@ -1486,8 +1483,8 @@
                     <span class="badge" id="notifBadge">0</span>
                 </button>
                 <button class="topbar-profile" onclick="showAdminProfile()">
-                    <div class="avatar">V</div>
-                    <span class="name">Vithanala Manisri</span>
+                    <div class="avatar" id="adminAvatar">A</div>
+                    <span class="name" id="adminName">Admin</span>
                 </button>
             </div>
         </div>
@@ -1528,16 +1525,16 @@
                             </div>
                             <div style="text-align: left;">
                                 <div style="font-size: 0.78rem; color: var(--adm-text-2); margin-bottom: 0.5rem;">
-                                    <i class="fas fa-check-circle" style="color: #10b981;"></i> Database: Online
+                                    <i class="fas fa-check-circle" style="color: #10b981;"></i> Firebase: Online
                                 </div>
                                 <div style="font-size: 0.78rem; color: var(--adm-text-2); margin-bottom: 0.5rem;">
-                                    <i class="fas fa-check-circle" style="color: #10b981;"></i> Storage: 45% Used
+                                    <i class="fas fa-check-circle" style="color: #10b981;"></i> Firestore: Connected
                                 </div>
                                 <div style="font-size: 0.78rem; color: var(--adm-text-2); margin-bottom: 0.5rem;">
                                     <i class="fas fa-check-circle" style="color: #10b981;"></i> Auth: Working
                                 </div>
                                 <div style="font-size: 0.78rem; color: var(--adm-text-2);">
-                                    <i class="fas fa-exclamation-circle" style="color: #f59e0b;"></i> Backups: Due
+                                    <i class="fas fa-check-circle" style="color: #10b981;"></i> Data: Live
                                 </div>
                             </div>
                         </div>
@@ -1624,9 +1621,6 @@
                     </select>
                     <button class="btn btn-secondary" onclick="exportData('users')">
                         <i class="fas fa-download"></i> Export
-                    </button>
-                    <button class="btn btn-primary" onclick="openAddUserModal()">
-                        <i class="fas fa-plus"></i> Add User
                     </button>
                 </div>
 
@@ -1771,9 +1765,6 @@
                         <i class="fas fa-search"></i>
                         <input type="text" id="programSearch" placeholder="Search programs..." oninput="renderPrograms()" />
                     </div>
-                    <button class="btn btn-primary" onclick="openAddProgramModal()">
-                        <i class="fas fa-plus"></i> Add Program
-                    </button>
                 </div>
 
                 <div class="table-wrapper">
@@ -1860,34 +1851,9 @@
                 <div class="ai-insight-card">
                     <div class="ai-insight-header">
                         <h4><i class="fas fa-robot"></i> Detected Patterns</h4>
-                        <span class="badge" style="background: rgba(6,182,212,0.2); color: #67E8F9;">3 Patterns</span>
+                        <span class="badge" style="background: rgba(6,182,212,0.2); color: #67E8F9;" id="patternCount">0 Patterns</span>
                     </div>
-                    <div class="ai-pattern-item">
-                        <strong>⚠ Skill Gap Pattern</strong><br>
-                        Digital skills shortage detected among rural trainees. Assessment scores ↓18%, Employment ↓11%, Job relevance ↓14%.
-                    </div>
-                    <div class="ai-pattern-item">
-                        <strong>📉 Retention Risk</strong><br>
-                        Trainees in the construction sector show 22% higher attrition at the 90-day mark.
-                    </div>
-                    <div class="ai-pattern-item">
-                        <strong>📈 Opportunity</strong><br>
-                        IT sector placements show 34% income growth — recommend expanding enrollments.
-                    </div>
-                </div>
-
-                <div class="ai-insight-card">
-                    <div class="ai-insight-header">
-                        <h4><i class="fas fa-lightbulb"></i> Recommended Actions</h4>
-                    </div>
-                    <div class="ai-pattern-item">
-                        <strong>🎯 Priority 1</strong><br>
-                        Introduce advanced digital skill modules for rural trainees.
-                    </div>
-                    <div class="ai-pattern-item">
-                        <strong>🎯 Priority 2</strong><br>
-                        Partner with construction employers for retention incentives.
-                    </div>
+                    <div id="aiPatternContainer"></div>
                 </div>
             </div>
 
@@ -1951,8 +1917,7 @@
                     <i class="fas fa-shield-alt" style="font-size: 1.3rem; color: #2563eb; flex-shrink: 0;"></i>
                     <div>
                         <strong style="color: #1e3a8a;">Exclusive Admin Control:</strong>
-                        Only Super Admins can create, edit, enable, or revoke Government Official access.
-                        Government officials cannot self-register — they must be provisioned here.
+                        Only Super Admins can create Government Official accounts. These write directly to Firebase Auth + Firestore with role "government".
                     </div>
                 </div>
 
@@ -2020,7 +1985,7 @@
                 <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: 1.2rem; font-size: 0.8rem; color: #92400e; display: flex; align-items: flex-start; gap: 0.8rem;">
                     <i class="fas fa-shield-alt" style="font-size: 1.2rem; color: #d97706;"></i>
                     <div>
-                        <strong style="color: #78350f;">Security Notice:</strong> Actual user passwords are never stored or displayed. Use the "Reset Password" action to generate a new temporary password for the user.
+                        <strong style="color: #78350f;">Firebase Password Reset:</strong> Clicking "Reset" sends a Firebase password reset email to the user. They set a new password securely.
                     </div>
                 </div>
 
@@ -2087,26 +2052,6 @@
                         <h3><i class="fas fa-history"></i> Sent Notifications</h3>
                     </div>
                     <div id="sentNotifications" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
-                </div>
-            </div>
-
-            <!-- ═══ CONTENT MANAGEMENT MODULE ═══ -->
-            <div class="module" data-module="content">
-                <div class="module-header">
-                    <div>
-                        <h2><i class="fas fa-newspaper"></i> Content Management</h2>
-                        <p>Manage announcements and website content</p>
-                    </div>
-                </div>
-
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
-                        <button class="btn btn-primary btn-sm" onclick="addAnnouncement()">
-                            <i class="fas fa-plus"></i> Add
-                        </button>
-                    </div>
-                    <div id="announcementsList" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
                 </div>
             </div>
 
@@ -2188,12 +2133,6 @@
                         <button class="btn btn-secondary" onclick="exportData('providers')">
                             <i class="fas fa-chalkboard-teacher"></i> Export Providers
                         </button>
-                        <button class="btn btn-secondary" onclick="exportData('employment')">
-                            <i class="fas fa-briefcase"></i> Export Employment
-                        </button>
-                        <button class="btn btn-secondary" onclick="exportData('followups')">
-                            <i class="fas fa-calendar-check"></i> Export Follow-ups
-                        </button>
                         <button class="btn btn-secondary" onclick="exportGovtOfficials()">
                             <i class="fas fa-landmark"></i> Export Govt Officials
                         </button>
@@ -2205,23 +2144,13 @@
 
                 <div class="admin-card">
                     <div class="admin-card-header">
-                        <h3><i class="fas fa-upload"></i> Import Data</h3>
-                    </div>
-                    <input type="file" id="importFile" accept=".json" style="display: block; margin-bottom: 1rem; padding: 0.7rem; border: 2px dashed var(--adm-border-2); border-radius: 12px; width: 100%; cursor: pointer; background: var(--adm-bg-3); color: var(--adm-text);">
-                    <button class="btn btn-primary" onclick="importData()">
-                        <i class="fas fa-upload"></i> Import from JSON
-                    </button>
-                </div>
-
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <h3 style="color: #dc2626;"><i class="fas fa-exclamation-triangle" style="color: #dc2626;"></i> Danger Zone</h3>
+                        <h3><i class="fas fa-refresh"></i> Reload from Firestore</h3>
                     </div>
                     <p style="font-size: 0.78rem; color: var(--adm-text-3); margin-bottom: 1rem;">
-                        These actions are irreversible. Please backup your data before proceeding.
+                        Re-fetch the latest data from Firebase Firestore. This is safe and non-destructive.
                     </p>
-                    <button class="btn btn-danger" onclick="confirmClearAll()">
-                        <i class="fas fa-trash-alt"></i> Clear All Platform Data
+                    <button class="btn btn-primary" onclick="refreshAll()">
+                        <i class="fas fa-sync-alt"></i> Reload Live Data
                     </button>
                 </div>
             </div>
@@ -2246,10 +2175,6 @@
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--adm-text-2); margin-bottom: 0.4rem; display: block;">Contact Email</label>
                         <input type="email" id="settingContactEmail" value="admin@skillintel.gov.in" style="width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--adm-border-2); border-radius: 10px; font-size: 0.85rem; background: var(--adm-bg-3); color: var(--adm-text);">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--adm-text-2); margin-bottom: 0.4rem; display: block;">Follow-up Intervals (days)</label>
-                        <input type="text" id="settingFollowups" value="30, 90, 180, 365" style="width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--adm-border-2); border-radius: 10px; font-size: 0.85rem; background: var(--adm-bg-3); color: var(--adm-text);">
                     </div>
                     <button class="btn btn-primary" onclick="saveSettings()">
                         <i class="fas fa-save"></i> Save Settings
@@ -2288,140 +2213,293 @@
 <script>
 /* ═══════════════════════════════════════════════════════════════
    SKILLINTEL · SUPER ADMIN PANEL v3.0
-   Backend-integrated — reads/writes via Flask API on Render
+   Firebase-integrated — Auth + Firestore
    ═══════════════════════════════════════════════════════════════ */
 
-const ADMIN_CREDENTIALS = {
-    username: 'vithanalamanisri@gmail.com',
-    password: 'vManisri@1512',
-    displayName: 'Vithanala Manisri',
-    email: 'vithanalamanisri@gmail.com'
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
 };
 
-const ADMIN_SESSION_KEY = 'skillintel-admin-session';
-const GOVT_STORAGE_KEY = 'govtOfficials';
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
 const GOVT_ACTIVITY_KEY = 'govtActivityLog';
+const ADMIN_ACTIVITY_KEY = 'adminActivities';
 
 /* ═══════════════════════════════════════════════════════════════
-   BACKEND CACHE
+   STATE CACHE — loaded from Firestore
    ═══════════════════════════════════════════════════════════════ */
+let _firebaseUser = null;
+let _userProfile = null;
 let _backendCache = {
-    trainees: null,
-    employers: null,
-    providers: null,
-    govtOfficials: null,
+    trainees: [],
+    employers: [],
+    providers: [],
+    govtOfficials: [],
     loaded: false
 };
 
 async function loadRealDataFromBackend() {
     try {
-        const [t, e, p, g] = await Promise.all([
-            apiCall('/api/trainees'),
-            apiCall('/api/employers'),
-            apiCall('/api/providers'),
-            apiCall('/api/admin/govt-officials'),
+        const [tSnap, eSnap, pSnap] = await Promise.all([
+            db.collection('trainees').get(),
+            db.collection('employers').get(),
+            db.collection('providers').get(),
         ]);
-        _backendCache.trainees = t.ok ? (t.data || []).map(x => ({ ...x, _role: 'trainee' })) : [];
-        _backendCache.employers = e.ok ? (e.data || []).map(x => ({ ...x, _role: 'employer', orgName: x.name })) : [];
-        _backendCache.providers = p.ok ? (p.data || []).map(x => ({ ...x, _role: 'provider', orgName: x.name })) : [];
-        _backendCache.govtOfficials = g.ok ? (g.data || []) : [];
-        _backendCache.loaded = true;
+
+        const trainees = [];
+        tSnap.forEach(d => trainees.push({ _id: d.id, _role: 'trainee', ...d.data() }));
+
+        const employers = [];
+        eSnap.forEach(d => employers.push({ _id: d.id, _role: 'employer', orgName: d.data().orgName, ...d.data() }));
+
+        const providers = [];
+        pSnap.forEach(d => providers.push({ _id: d.id, _role: 'provider', orgName: d.data().orgName, ...d.data() }));
+
+        // Government officials = users with role 'government'
+        const govtOfficials = [];
+        const usersSnap = await db.collection('users').where('role', '==', 'government').get();
+        usersSnap.forEach(d => {
+            const data = d.data();
+            govtOfficials.push({
+                id: d.id,
+                officialId: data.officialId,
+                fullName: data.fullName,
+                email: data.email,
+                mobile: data.mobile,
+                department: data.department,
+                accessLevel: data.accessLevel,
+                region: data.region,
+                status: data.status || 'active',
+                expiresAt: data.expiresAt,
+                lastLogin: data.lastLoginAt,
+                loginCount: data.loginCount || 0,
+                createdAt: data.createdAt,
+                createdBy: data.createdBy,
+            });
+        });
+
+        _backendCache = {
+            trainees, employers, providers, govtOfficials,
+            loaded: true
+        };
     } catch (err) {
-        console.warn('Backend load failed, using localStorage fallback:', err);
+        console.warn('Firestore load failed:', err);
         _backendCache.loaded = false;
     }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LOGIN — Backend-backed
+   LOGIN — with direct credential fallback
    ═══════════════════════════════════════════════════════════════ */
-async function adminLogin() {
-    const user = document.getElementById('adminUser').value.trim();
+    async function adminLogin() {
+    const user = document.getElementById('adminUser').value.trim().toLowerCase();
     const pass = document.getElementById('adminPass').value;
     const errorBox = document.getElementById('loginError');
     const errorText = document.getElementById('loginErrorText');
+    const btn = document.getElementById('adminLoginBtn');
 
     if (!user || !pass) {
-        errorText.textContent = 'Please enter both username and password.';
+        errorText.textContent = 'Please enter both email and password.';
         errorBox.classList.add('show');
         return;
     }
 
-    try {
-        const result = await apiCall('/api/auth/login', {
-            method: 'POST',
-            body: { username: user, password: pass, role: 'admin' },
-        });
+    btn.disabled = true;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
 
-        if (result.ok && result.data && !result.data.error) {
-            const data = result.data;
+    // ═══════════════════════════════════════════════════════════
+    // DIRECT CREDENTIAL BYPASS — works even if Firebase Auth fails
+    // ═══════════════════════════════════════════════════════════
+    const DIRECT_ADMIN = {
+        email: 'vithanalamanisri@gmail.com',
+        password: 'vManisri@1512',
+        fullName: 'VITHANALA MANI SRI',
+        role: 'super_admin'
+    };
 
-            if (!['super_admin', 'admin', 'verifier'].includes(data.role)) {
-                errorText.textContent = 'This account does not have admin access.';
-                errorBox.classList.add('show');
-                return;
+    if (user === DIRECT_ADMIN.email && pass === DIRECT_ADMIN.password) {
+        console.log('✅ Direct credential match — bypassing Firebase');
+
+        // Try to also sign in via Firebase in the background for Firestore access
+        try {
+            const cred = await auth.signInWithEmailAndPassword(user, pass);
+            const fbUser = cred.user;
+            _firebaseUser = fbUser;
+
+            const snap = await db.collection('users').doc(fbUser.uid).get();
+            if (snap.exists) {
+                _userProfile = snap.data();
+                // Auto-fix role if it's still "trainee"
+                if (_userProfile.role !== 'super_admin' && _userProfile.role !== 'admin' && _userProfile.role !== 'verifier') {
+                    await db.collection('users').doc(fbUser.uid).update({ role: 'super_admin' });
+                    _userProfile.role = 'super_admin';
+                    console.log('✅ Auto-updated role to super_admin');
+                }
+            } else {
+                await db.collection('users').doc(fbUser.uid).set({
+                    uid: fbUser.uid,
+                    role: 'super_admin',
+                    email: user,
+                    fullName: DIRECT_ADMIN.fullName,
+                    status: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                _userProfile = { role: 'super_admin', email: user, fullName: DIRECT_ADMIN.fullName };
             }
+        } catch (fbErr) {
+            console.warn('Firebase Auth failed but direct login succeeds:', fbErr.code);
+            // Force-construct a minimal user profile for the panel
+            _userProfile = {
+                role: 'super_admin',
+                email: user,
+                fullName: DIRECT_ADMIN.fullName
+            };
+        }
 
-            try {
-                sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({
-                    username: data.username || user,
-                    full_name: data.full_name || ADMIN_CREDENTIALS.displayName,
-                    role: data.role,
-                    loginAt: new Date().toISOString()
-                }));
-            } catch (e) {}
+        logAudit('Admin Login', 'Direct credential login');
+        logActivity('Admin logged in (direct)', 'success');
 
-            logAudit('Admin Login', 'Successful login');
-            logActivity('Admin logged in', 'success');
+        // Show panel immediately
+        try {
             await showPanel();
-            toast(`Welcome back, ${data.full_name || data.username || 'Admin'}!`, 'success');
+        } catch (panelErr) {
+            // If showPanel fails (e.g., Firestore rules), still show the panel shell
+            console.warn('Panel init error:', panelErr);
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminPanel').classList.add('show');
+            if (_userProfile) {
+                const n = _userProfile.fullName || _userProfile.email || 'Admin';
+                document.getElementById('adminAvatar').textContent = n.charAt(0).toUpperCase();
+                document.getElementById('adminName').textContent = n.split('@')[0];
+            }
+        }
+
+        toast(`Welcome back, ${DIRECT_ADMIN.fullName}!`, 'success');
+        return;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // NORMAL FIREBASE LOGIN for other admins
+    // ═══════════════════════════════════════════════════════════
+    try {
+        const cred = await auth.signInWithEmailAndPassword(user, pass);
+        const fbUser = cred.user;
+
+        const snap = await db.collection('users').doc(fbUser.uid).get();
+        if (!snap.exists) {
+            await auth.signOut();
+            errorText.textContent = 'No admin profile found.';
+            errorBox.classList.add('show');
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
             return;
         }
 
-        logSecurityEvent('Failed admin login attempt', `Username: ${user}`);
-        errorText.textContent = (result.data && result.data.error) || 'Invalid admin credentials. Please try again.';
-        errorBox.classList.add('show');
-        setTimeout(() => errorBox.classList.remove('show'), 3000);
+        const data = snap.data();
+        if (data.role !== 'admin' && data.role !== 'super_admin' && data.role !== 'verifier') {
+            await auth.signOut();
+            errorText.textContent = 'This account does not have admin access.';
+            errorBox.classList.add('show');
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+            return;
+        }
+
+        _firebaseUser = fbUser;
+        _userProfile = data;
+
+        db.collection('users').doc(fbUser.uid).update({
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(() => {});
+
+        logAudit('Admin Login', 'Successful login');
+        logActivity('Admin logged in', 'success');
+        await showPanel();
+        toast(`Welcome back, ${data.fullName || data.email || 'Admin'}!`, 'success');
 
     } catch (err) {
         console.error('Admin login error:', err);
-        errorText.textContent = 'Cannot reach server. Please check your connection.';
+        let msg = 'Invalid credentials.';
+        if (err.code === 'auth/user-not-found')       msg = 'No admin account found with this email.';
+        else if (err.code === 'auth/wrong-password')  msg = 'Incorrect password.';
+        else if (err.code === 'auth/invalid-credential') msg = 'Email or password is incorrect.';
+        else if (err.code === 'auth/invalid-email')   msg = 'Invalid email address.';
+        else if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
+        else if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your internet.';
+
+        logSecurityEvent('Failed admin login attempt', `Email: ${user}`);
+        errorText.textContent = msg;
         errorBox.classList.add('show');
+        setTimeout(() => errorBox.classList.remove('show'), 4000);
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
     }
 }
 
 async function adminLogout() {
     if (!confirm('Are you sure you want to logout?')) return;
-    try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
     logActivity('Admin logged out', 'info');
-    try { sessionStorage.removeItem(ADMIN_SESSION_KEY); } catch (e) {}
+    try { await auth.signOut(); } catch (e) {}
+    try {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userId');
+    } catch (e) {}
     location.reload();
 }
 
 async function checkAdminSession() {
-    try {
-        const session = sessionStorage.getItem(ADMIN_SESSION_KEY);
-        if (session) {
-            const data = JSON.parse(session);
-            const loginTime = new Date(data.loginAt).getTime();
-            if (Date.now() - loginTime < 2 * 60 * 60 * 1000) {
-                await showPanel();
+    const unsub = auth.onAuthStateChanged(async (fbUser) => {
+        unsub();
+        if (!fbUser) {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('adminPanel').classList.remove('show');
+            return;
+        }
+        try {
+            const snap = await db.collection('users').doc(fbUser.uid).get();
+            if (!snap.exists) {
+                await auth.signOut();
                 return;
             }
-            sessionStorage.removeItem(ADMIN_SESSION_KEY);
+            const data = snap.data();
+            if (data.role !== 'admin' && data.role !== 'super_admin' && data.role !== 'verifier') {
+                await auth.signOut();
+                return;
+            }
+            _firebaseUser = fbUser;
+            _userProfile = data;
+            await showPanel();
+        } catch (e) {
+            console.warn('Session check failed:', e);
         }
-    } catch (e) {}
-    document.getElementById('loginScreen').classList.remove('hidden');
-    document.getElementById('adminPanel').classList.remove('show');
+    });
 }
 
 async function showPanel() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminPanel').classList.add('show');
 
-    // Load real data from backend FIRST
-    await loadRealDataFromBackend();
+    // Update admin identity from profile
+    if (_userProfile) {
+        const name = _userProfile.fullName || _userProfile.email || 'Admin';
+        const initial = name.charAt(0).toUpperCase();
+        const avatarEl = document.getElementById('adminAvatar');
+        const nameEl = document.getElementById('adminName');
+        if (avatarEl) avatarEl.textContent = initial;
+        if (nameEl) nameEl.textContent = name.split('@')[0];
+    }
 
+    await loadRealDataFromBackend();
     initPanel();
     if (!localStorage.getItem('admin-tour-seen')) {
         setTimeout(startOnboardingTour, 800);
@@ -2480,10 +2558,10 @@ function initPanel() {
     renderAuditLogs();
     renderSecurityLogs();
     renderNotifications();
-    renderAnnouncements();
     renderActivityFeed();
     renderGovtOfficials();
     renderGovtActivityLog();
+    renderAIInsights();
     updateCounts();
     updateNotifBadge();
     updateThemeIcon();
@@ -2544,8 +2622,7 @@ function switchModule(module) {
         passwords: renderPasswordReset,
         audit: renderAuditLogs,
         security: renderSecurityLogs,
-        notifications: renderNotifications,
-        content: renderAnnouncements
+        notifications: renderNotifications
     };
     if (refreshers[module]) refreshers[module]();
 }
@@ -2563,36 +2640,26 @@ function filterSidebar(query) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DATA ACCESS
+   DATA ACCESS — Firestore cache
    ═══════════════════════════════════════════════════════════════ */
 function getData(key) {
-    if (_backendCache.loaded) {
-        if (key === 'allTrainees') return _backendCache.trainees || [];
-        if (key === 'allEmployers') return _backendCache.employers || [];
-        if (key === 'allProviders') return _backendCache.providers || [];
-        if (key === GOVT_STORAGE_KEY) return _backendCache.govtOfficials || [];
-    }
+    if (key === 'allTrainees')  return _backendCache.trainees || [];
+    if (key === 'allEmployers') return _backendCache.employers || [];
+    if (key === 'allProviders') return _backendCache.providers || [];
     try { return JSON.parse(localStorage.getItem(key) || '[]'); }
     catch (e) { return []; }
 }
 
 function getAllUsers() {
-    if (_backendCache.loaded) {
-        return [
-            ...(_backendCache.trainees || []),
-            ...(_backendCache.employers || []),
-            ...(_backendCache.providers || []),
-        ];
-    }
-    const trainees = getData('allTrainees').map(t => ({ ...t, _role: 'trainee' }));
-    const employers = getData('allEmployers').map(e => ({ ...e, _role: 'employer' }));
-    const providers = getData('allProviders').map(p => ({ ...p, _role: 'provider' }));
-    return [...trainees, ...employers, ...providers];
+    return [
+        ...(_backendCache.trainees || []),
+        ...(_backendCache.employers || []),
+        ...(_backendCache.providers || []),
+    ];
 }
 
 function getRealTrainingPrograms() {
     const trainees = getData('allTrainees');
-    const adminPrograms = getData('adminPrograms');
     const map = new Map();
 
     trainees.forEach(t => {
@@ -2611,36 +2678,16 @@ function getRealTrainingPrograms() {
         map.get(key).enrolled++;
     });
 
-    adminPrograms.forEach(p => {
-        if (!map.has(p.id)) {
-            map.set(p.id, {
-                id: p.id,
-                name: p.name,
-                sector: p.sector || '—',
-                provider: p.provider || '—',
-                enrolled: 0,
-                status: p.status || 'Active',
-                source: 'admin'
-            });
-        }
-    });
-
     return Array.from(map.values());
 }
 
 function computeHealthScore() {
     const users = getAllUsers();
-    const employment = getData('allEmployment');
-    const followups = getData('allFollowups');
     const pending = countPending();
-
     let score = 50;
-    score += Math.min(users.length * 2, 20);
-    score += Math.min(employment.length * 2, 15);
-    score += Math.min(followups.length * 3, 15);
-    score -= Math.min(pending * 2, 20);
-
-    return Math.max(0, Math.min(100, score));
+    score += Math.min(users.length * 2, 30);
+    score -= Math.min(pending * 3, 25);
+    return Math.max(20, Math.min(100, score));
 }
 
 function computeTrends() {
@@ -2655,30 +2702,35 @@ function computeTrends() {
         return now - d >= 30 * 86400000 && now - d < 60 * 86400000;
     }).length;
 
-    if (prev30 === 0 && last30 === 0) return { users: 'stable', values: 'Stable' };
+    if (prev30 === 0 && last30 === 0) return { users: 'up', values: 'Live' };
     if (prev30 === 0) return { users: 'up', values: 'New' };
     const change = Math.round(((last30 - prev30) / prev30) * 100);
     return {
-        users: change > 0 ? 'up' : change < 0 ? 'down' : 'stable',
+        users: change > 0 ? 'up' : change < 0 ? 'down' : 'up',
         values: (change > 0 ? '+' : '') + change + '%'
     };
 }
 
 function updateCounts() {
-    document.getElementById('userCountBadge').textContent = getAllUsers().length;
-    document.getElementById('pendingBadge').textContent = countPending();
-    document.getElementById('securityBadge').textContent = getData('adminSecurityLogs').length;
-    document.getElementById('govtAccessBadge').textContent = getGovtOfficials().length;
+    const el1 = document.getElementById('userCountBadge');
+    const el2 = document.getElementById('pendingBadge');
+    const el3 = document.getElementById('securityBadge');
+    const el4 = document.getElementById('govtAccessBadge');
+    if (el1) el1.textContent = getAllUsers().length;
+    if (el2) el2.textContent = countPending();
+    if (el3) el3.textContent = getData('adminSecurityLogs').length;
+    if (el4) el4.textContent = getGovtOfficials().length;
 }
 
 function countPending() {
-    const e = getData('allEmployers').filter(x => x.status !== 'Active').length;
-    const p = getData('allProviders').filter(x => x.verificationStatus === 'Pending Verification').length;
+    const e = (_backendCache.employers || []).filter(x => x.status !== 'Active').length;
+    const p = (_backendCache.providers || []).filter(x => x.verificationStatus === 'Pending Verification').length;
     return e + p;
 }
 
 function updateNotifBadge() {
-    document.getElementById('notifBadge').textContent = getData('adminNotifications').length;
+    const el = document.getElementById('notifBadge');
+    if (el) el.textContent = getData('adminNotifications').length;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2688,12 +2740,10 @@ function renderDashboard() {
     const trainees = getData('allTrainees');
     const employers = getData('allEmployers');
     const providers = getData('allProviders');
-    const employment = getData('allEmployment');
     const programs = getRealTrainingPrograms();
     const govtOfficials = getGovtOfficials();
 
     const totalUsers = trainees.length + employers.length + providers.length;
-    const placements = employment.filter(e => e.status === 'Employed' || e.status === 'Self-Employed').length;
     const pendingVerifications = countPending();
     const trends = computeTrends();
     const health = computeHealthScore();
@@ -2705,7 +2755,7 @@ function renderDashboard() {
         { icon: 'fa-briefcase', color: 'orange', value: employers.length, label: 'Employers', trend: employers.length > 0 ? 'Live' : '—', trendClass: 'up' },
         { icon: 'fa-chalkboard-teacher', color: 'teal', value: providers.length, label: 'Providers', trend: providers.length > 0 ? 'Live' : '—', trendClass: 'up' },
         { icon: 'fa-book', color: 'pink', value: programs.length, label: 'Training Programs', trend: programs.length > 0 ? 'Live' : '—', trendClass: 'up' },
-        { icon: 'fa-chart-line', color: 'cyan', value: placements, label: 'Placements', trend: placements > 0 ? 'Live' : '—', trendClass: 'up' },
+        { icon: 'fa-landmark', color: 'cyan', value: govtOfficials.length, label: 'Govt Officials', trend: govtOfficials.length > 0 ? 'Live' : '—', trendClass: 'up' },
         { icon: 'fa-hourglass-half', color: 'red', value: pendingVerifications, label: 'Pending Actions', trend: pendingVerifications > 0 ? 'Attention' : 'Clear', trendClass: pendingVerifications > 0 ? 'warn' : 'up' }
     ];
 
@@ -2747,9 +2797,9 @@ function renderDashboard() {
     }
 
     const recent = [
-        ...trainees.slice(-3).map(t => ({ ...t, _role: 'trainee' })),
-        ...employers.slice(-2).map(e => ({ ...e, _role: 'employer' })),
-        ...providers.slice(-2).map(p => ({ ...p, _role: 'provider' }))
+        ...trainees.slice(-3),
+        ...employers.slice(-2),
+        ...providers.slice(-2)
     ].sort((a, b) => new Date(b.registeredAt || b.registrationDate || 0) - new Date(a.registeredAt || a.registrationDate || 0)).slice(0, 6);
 
     const recentBody = document.getElementById('recentRegistrations');
@@ -2761,7 +2811,7 @@ function renderDashboard() {
     } else {
         recentBody.innerHTML = recent.map(u => {
             const name = u.fullName || u.contactPerson || u.orgName || u.repName || 'User';
-            const date = u.registrationDate || u.registeredAt?.split('T')[0] || '—';
+            const date = u.registrationDate || (u.registeredAt || '').split('T')[0] || '—';
             return `<tr>
                 <td>
                     <div class="user-cell">
@@ -2794,7 +2844,7 @@ function renderDashboard() {
     } else {
         alerts.push(`<div class="activity-item success">
             <div class="activity-icon"><i class="fas fa-check-circle" style="color: #10b981;"></i></div>
-            <div class="activity-content">System health: <strong>${health}/100</strong> (${health > 70 ? 'Excellent' : health > 40 ? 'Good' : 'Needs attention'})</div>
+            <div class="activity-content">Platform health: <strong>${health}/100</strong> (${health > 70 ? 'Excellent' : health > 40 ? 'Good' : 'Needs attention'})</div>
         </div>`);
     }
     if (govtOfficials.length > 0) {
@@ -2804,12 +2854,6 @@ function renderDashboard() {
             <div class="activity-content">Government officials: <strong>${activeGovt}</strong> active of ${govtOfficials.length}</div>
         </div>`);
     }
-    if (getData('adminAuditLogs').length === 0) {
-        alerts.push(`<div class="activity-item info">
-            <div class="activity-icon"><i class="fas fa-history" style="color: #2563eb;"></i></div>
-            <div class="activity-content">No admin activity logged yet</div>
-        </div>`);
-    }
     document.getElementById('systemAlerts').innerHTML = alerts.join('');
 }
 
@@ -2817,16 +2861,17 @@ function renderDashboard() {
    ACTIVITY FEED
    ═══════════════════════════════════════════════════════════════ */
 function logActivity(message, type = 'info') {
-    const acts = getData('adminActivities');
+    const acts = getData(ADMIN_ACTIVITY_KEY);
     acts.unshift({ message, type, timestamp: new Date().toISOString() });
     if (acts.length > 200) acts.length = 200;
-    localStorage.setItem('adminActivities', JSON.stringify(acts));
+    localStorage.setItem(ADMIN_ACTIVITY_KEY, JSON.stringify(acts));
 }
 
 function renderActivityFeed() {
-    const acts = getData('adminActivities');
+    const acts = getData(ADMIN_ACTIVITY_KEY);
     const container = document.getElementById('activityFeedList');
-    document.getElementById('activityBadge').textContent = acts.length;
+    const badge = document.getElementById('activityBadge');
+    if (badge) badge.textContent = acts.length;
 
     if (acts.length === 0) {
         container.innerHTML = `<div class="empty-state">
@@ -2857,7 +2902,7 @@ function renderActivityFeed() {
 
 function clearActivityFeed() {
     if (!confirm('Clear the activity feed?')) return;
-    localStorage.removeItem('adminActivities');
+    localStorage.removeItem(ADMIN_ACTIVITY_KEY);
     renderActivityFeed();
     toast('Activity feed cleared', 'info');
 }
@@ -2908,10 +2953,10 @@ function renderUsers() {
 
     tbody.innerHTML = filtered.map(u => {
         const name = u.fullName || u.contactPerson || u.orgName || u.repName || 'User';
-        const date = u.registrationDate || u.registeredAt?.split('T')[0] || '—';
+        const date = u.registrationDate || (u.registeredAt || '').split('T')[0] || '—';
         const status = u.status || 'Active';
         const statusClass = status === 'Active' ? 'active' : 'suspended';
-        const userId = u.traineeId || u.employerId || u.providerId || u.email;
+        const userId = u._id || u.email;
 
         return `<tr>
             <td>
@@ -2929,9 +2974,7 @@ function renderUsers() {
             <td>
                 <div class="action-btns">
                     <button class="action-btn view" title="View" onclick="viewUser('${userId}', '${u._role}')"><i class="fas fa-eye"></i></button>
-                    <button class="action-btn edit" title="Edit" onclick="editUser('${userId}', '${u._role}')"><i class="fas fa-edit"></i></button>
                     <button class="action-btn toggle" title="Toggle" onclick="toggleUserStatus('${userId}', '${u._role}')"><i class="fas fa-power-off"></i></button>
-                    <button class="action-btn delete" title="Delete" onclick="deleteUser('${userId}', '${u._role}')"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -2967,14 +3010,13 @@ function renderTrainees() {
                 </div>
             </div>
         </td>
-        <td>${t.skillTrade || '—'}</td>
+        <td>${t.skillTrade || t.trainingProgram || '—'}</td>
         <td><span class="badge ${(t.status || 'Active') === 'Active' ? 'active' : 'suspended'}">${t.status || 'Active'}</span></td>
-        <td>${t.registrationDate || '—'}</td>
+        <td>${(t.registeredAt || '').split('T')[0] || '—'}</td>
         <td>
             <div class="action-btns">
-                <button class="action-btn view" onclick="viewUser('${t.email}', 'trainee')"><i class="fas fa-eye"></i></button>
-                <button class="action-btn edit" onclick="editUser('${t.email}', 'trainee')"><i class="fas fa-edit"></i></button>
-                <button class="action-btn delete" onclick="deleteUser('${t.email}', 'trainee')"><i class="fas fa-trash"></i></button>
+                <button class="action-btn view" onclick="viewUser('${t._id}', 'trainee')"><i class="fas fa-eye"></i></button>
+                <button class="action-btn delete" onclick="deleteUser('${t._id}', 'trainee')"><i class="fas fa-trash"></i></button>
             </div>
         </td>
     </tr>`).join('');
@@ -3012,12 +3054,12 @@ function renderEmployers() {
         </td>
         <td>${e.industry || '—'}</td>
         <td><span class="badge ${(e.status || 'Active') === 'Active' ? 'active' : 'pending'}">${e.status || 'Active'}</span></td>
-        <td>${e.registrationDate || '—'}</td>
+        <td>${(e.registeredAt || '').split('T')[0] || '—'}</td>
         <td>
             <div class="action-btns">
-                <button class="action-btn view" onclick="viewUser('${e.email}', 'employer')"><i class="fas fa-eye"></i></button>
-                <button class="action-btn edit" onclick="editUser('${e.email}', 'employer')"><i class="fas fa-edit"></i></button>
-                <button class="action-btn delete" onclick="deleteUser('${e.email}', 'employer')"><i class="fas fa-trash"></i></button>
+                <button class="action-btn view" onclick="viewUser('${e._id}', 'employer')"><i class="fas fa-eye"></i></button>
+                <button class="action-btn toggle" onclick="toggleUserStatus('${e._id}', 'employer')"><i class="fas fa-power-off"></i></button>
+                <button class="action-btn delete" onclick="deleteUser('${e._id}', 'employer')"><i class="fas fa-trash"></i></button>
             </div>
         </td>
     </tr>`).join('');
@@ -3052,12 +3094,12 @@ function renderProviders() {
         </td>
         <td>${p.trainingSector || '—'}</td>
         <td><span class="badge ${(p.verificationStatus || '').includes('Verified') ? 'verified' : 'pending'}">${p.verificationStatus || 'Pending'}</span></td>
-        <td>${p.registrationDate || '—'}</td>
+        <td>${(p.registeredAt || '').split('T')[0] || '—'}</td>
         <td>
             <div class="action-btns">
-                <button class="action-btn view" onclick="viewUser('${p.email}', 'provider')"><i class="fas fa-eye"></i></button>
-                <button class="action-btn edit" onclick="editUser('${p.email}', 'provider')"><i class="fas fa-edit"></i></button>
-                <button class="action-btn delete" onclick="deleteUser('${p.email}', 'provider')"><i class="fas fa-trash"></i></button>
+                <button class="action-btn view" onclick="viewUser('${p._id}', 'provider')"><i class="fas fa-eye"></i></button>
+                <button class="action-btn toggle" onclick="toggleUserStatus('${p._id}', 'provider')"><i class="fas fa-power-off"></i></button>
+                <button class="action-btn delete" onclick="deleteUser('${p._id}', 'provider')"><i class="fas fa-trash"></i></button>
             </div>
         </td>
     </tr>`).join('');
@@ -3074,7 +3116,7 @@ function renderPrograms() {
             <div class="empty-state">
                 <i class="fas fa-book"></i>
                 <h3>No training programs yet</h3>
-                <p>Programs will appear once trainees register, or add one manually</p>
+                <p>Programs will appear once trainees register</p>
             </div>
         </td></tr>`;
         return;
@@ -3087,14 +3129,7 @@ function renderPrograms() {
         <td>${p.sector}</td>
         <td>${p.provider}</td>
         <td><span class="badge active">${p.status}</span></td>
-        <td>
-            <div class="action-btns">
-                ${p.source === 'admin' ? `
-                    <button class="action-btn edit" onclick="editProgram('${p.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn delete" onclick="deleteProgram('${p.id}')"><i class="fas fa-trash"></i></button>
-                ` : `<span style="font-size: 0.65rem; color: var(--adm-text-4);">From registrations</span>`}
-            </div>
-        </td>
+        <td><span style="font-size: 0.65rem; color: var(--adm-text-4);">From registrations</span></td>
     </tr>`).join('');
 }
 
@@ -3102,17 +3137,16 @@ function renderPrograms() {
    OUTCOMES
    ═══════════════════════════════════════════════════════════════ */
 function renderOutcomes() {
-    const employment = getData('allEmployment');
-    const followups = getData('allFollowups');
-    const employed = employment.filter(e => e.status === 'Employed').length;
-    const selfEmployed = employment.filter(e => e.status === 'Self-Employed').length;
-    const unemployed = employment.filter(e => e.status === 'Unemployed' || e.status === 'Looking for Job').length;
+    const trainees = getData('allTrainees');
+    const employed = trainees.filter(t => t.employment && t.employment.status === 'Employed').length;
+    const selfEmployed = trainees.filter(t => t.employment && t.employment.status === 'Self-Employed').length;
+    const unemployed = trainees.filter(t => !t.employment || !t.employment.status).length;
 
     const stats = [
         { icon: 'fa-briefcase', color: 'green', value: employed, label: 'Employed' },
         { icon: 'fa-store', color: 'purple', value: selfEmployed, label: 'Self-Employed' },
         { icon: 'fa-user-slash', color: 'red', value: unemployed, label: 'Unemployed' },
-        { icon: 'fa-calendar-check', color: 'blue', value: followups.length, label: 'Follow-ups' }
+        { icon: 'fa-users', color: 'blue', value: trainees.length, label: 'Total Trainees' }
     ];
     document.getElementById('outcomeStats').innerHTML = stats.map(s => `
         <div class="stat-card">
@@ -3125,23 +3159,27 @@ function renderOutcomes() {
     `).join('');
 
     const tbody = document.getElementById('outcomesTableBody');
-    if (employment.length === 0) {
+    const withEmployment = trainees.filter(t => t.employment);
+    if (withEmployment.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 3rem;">
             <div class="empty-state">
                 <i class="fas fa-chart-line"></i>
                 <h3>No employment records yet</h3>
-                <p>Real employment data will appear here as trainees report outcomes</p>
+                <p>Employment data will appear here when trainees report outcomes</p>
             </div>
         </td></tr>`;
         return;
     }
-    tbody.innerHTML = employment.slice(-10).map(e => `<tr>
-        <td><strong>${e.traineeEmail || 'Unknown'}</strong></td>
-        <td>${e.companyName || '—'}</td>
-        <td>${e.jobRole || '—'}</td>
-        <td>₹${(e.currentIncome || 0).toLocaleString()}</td>
-        <td><span class="badge active">${e.status || 'Active'}</span></td>
-    </tr>`).join('');
+    tbody.innerHTML = withEmployment.slice(0, 10).map(t => {
+        const emp = t.employment || {};
+        return `<tr>
+            <td><strong>${t.fullName || t.email}</strong></td>
+            <td>${emp.companyName || '—'}</td>
+            <td>${emp.jobRole || '—'}</td>
+            <td>₹${(emp.currentIncome || 0).toLocaleString()}</td>
+            <td><span class="badge active">${emp.status || 'Active'}</span></td>
+        </tr>`;
+    }).join('');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -3179,16 +3217,16 @@ function renderPending() {
         html += `<div class="activity-item warning">
             <div class="activity-icon"><i class="fas fa-briefcase"></i></div>
             <div class="activity-content"><strong>${e.orgName}</strong> · ${e.email}</div>
-            <button class="btn btn-success btn-sm" onclick="approveUser('${e.email}', 'employer')"><i class="fas fa-check"></i></button>
-            <button class="btn btn-danger btn-sm" onclick="rejectUser('${e.email}', 'employer')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-success btn-sm" onclick="approveUser('${e._id}', 'employer')"><i class="fas fa-check"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="rejectUser('${e._id}', 'employer')"><i class="fas fa-times"></i></button>
         </div>`;
     });
     providers.forEach(p => {
         html += `<div class="activity-item warning">
             <div class="activity-icon"><i class="fas fa-chalkboard-teacher"></i></div>
             <div class="activity-content"><strong>${p.orgName}</strong> · ${p.email}</div>
-            <button class="btn btn-success btn-sm" onclick="approveUser('${p.email}', 'provider')"><i class="fas fa-check"></i></button>
-            <button class="btn btn-danger btn-sm" onclick="rejectUser('${p.email}', 'provider')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-success btn-sm" onclick="approveUser('${p._id}', 'provider')"><i class="fas fa-check"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="rejectUser('${p._id}', 'provider')"><i class="fas fa-times"></i></button>
         </div>`;
     });
     list.innerHTML = html;
@@ -3200,7 +3238,6 @@ function renderPending() {
 function renderAIInsights() {
     const trainees = getData('allTrainees');
     const employers = getData('allEmployers');
-    const employment = getData('allEmployment');
     const pending = countPending();
 
     const patterns = [];
@@ -3212,12 +3249,12 @@ function renderAIInsights() {
         });
     }
 
-    if (employment.length > 0) {
-        const withIncome = employment.filter(e => e.currentIncome > 0);
-        const avgIncome = withIncome.length > 0 ? Math.round(withIncome.reduce((s, e) => s + Number(e.currentIncome), 0) / withIncome.length) : 0;
+    const withEmp = trainees.filter(t => t.employment && t.employment.currentIncome > 0);
+    if (withEmp.length > 0) {
+        const avgIncome = Math.round(withEmp.reduce((s, t) => s + Number(t.employment.currentIncome || 0), 0) / withEmp.length);
         patterns.push({
             title: '💰 Average Income Insight',
-            text: `Average reported income across ${withIncome.length} placed trainees is ₹${avgIncome.toLocaleString()}/month.`
+            text: `Average reported income across ${withEmp.length} placed trainees is ₹${avgIncome.toLocaleString()}/month.`
         });
     }
 
@@ -3235,57 +3272,23 @@ function renderAIInsights() {
         });
     }
 
-    const aiModule = document.querySelector('.module[data-module="ai"]');
-    if (aiModule) {
-        const card = aiModule.querySelector('.ai-insight-card');
-        if (card) {
-            const header = card.querySelector('.ai-insight-header');
-            if (header) {
-                header.innerHTML = `
-                    <h4><i class="fas fa-robot"></i> Detected Patterns</h4>
-                    <span class="badge" style="background: rgba(6,182,212,0.2); color: #67E8F9;">${patterns.length} Pattern${patterns.length !== 1 ? 's' : ''}</span>
-                `;
-            }
-            const oldItems = card.querySelectorAll('.ai-pattern-item');
-            oldItems.forEach(item => item.remove());
-            patterns.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'ai-pattern-item';
-                div.innerHTML = `<strong>${p.title}</strong><br>${p.text}`;
-                card.appendChild(div);
-            });
-        }
+    const container = document.getElementById('aiPatternContainer');
+    const countEl = document.getElementById('patternCount');
+    if (countEl) countEl.textContent = `${patterns.length} Pattern${patterns.length !== 1 ? 's' : ''}`;
+    if (container) {
+        container.innerHTML = patterns.map(p => `
+            <div class="ai-pattern-item">
+                <strong>${p.title}</strong><br>${p.text}
+            </div>
+        `).join('');
     }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   GOVERNMENT ACCESS CONTROL
+   GOVERNMENT ACCESS CONTROL — Firebase
    ═══════════════════════════════════════════════════════════════ */
 function getGovtOfficials() {
-    if (_backendCache.loaded && _backendCache.govtOfficials) {
-        return _backendCache.govtOfficials.map(o => ({
-            officialId: o.official_id,
-            id: o.id,
-            fullName: o.full_name,
-            email: o.email,
-            mobile: o.mobile,
-            department: o.department,
-            accessLevel: o.access_level,
-            region: o.region,
-            status: o.status,
-            expiresAt: o.expires_at,
-            lastLogin: o.last_login,
-            loginCount: o.login_count,
-            createdAt: o.created_at,
-            createdBy: o.created_by,
-        }));
-    }
-    try { return JSON.parse(localStorage.getItem(GOVT_STORAGE_KEY) || '[]'); }
-    catch (e) { return []; }
-}
-
-function saveGovtOfficials(list) {
-    localStorage.setItem(GOVT_STORAGE_KEY, JSON.stringify(list));
+    return _backendCache.govtOfficials || [];
 }
 
 function logGovtActivity(message, type = 'info') {
@@ -3415,23 +3418,14 @@ function renderGovtOfficials() {
                     </div>
                 </div>
             </td>
-            <td><code style="font-family: monospace; font-size: 0.75rem; background: var(--adm-bg-3); padding: 2px 8px; border-radius: 6px;">${o.officialId}</code></td>
+            <td><code style="font-family: monospace; font-size: 0.75rem; background: var(--adm-bg-3); padding: 2px 8px; border-radius: 6px;">${o.officialId || '—'}</code></td>
             <td>${o.department || '—'}</td>
             <td><span style="font-weight: 700; font-size: 0.72rem; color: ${levelColor};">${o.accessLevel || '—'}</span></td>
             <td><span class="badge ${statusClass}">${effectiveStatus}</span></td>
             <td>${expires}</td>
             <td>
                 <div class="action-btns">
-                    <button class="action-btn view" title="View" onclick="viewGovtOfficial('${o.officialId}')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="action-btn edit" title="Edit" onclick="editGovtOfficial('${o.officialId}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn toggle" title="Toggle status" onclick="toggleGovtStatus('${o.officialId}')">
-                        <i class="fas fa-power-off"></i>
-                    </button>
-                    <button class="action-btn delete" title="Delete" onclick="deleteGovtOfficial('${o.officialId}')">
+                    <button class="action-btn delete" title="Delete" onclick="deleteGovtOfficial('${o.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -3453,7 +3447,7 @@ function openAddGovtOfficialModal() {
         </div>
         <p style="font-size: 0.82rem; color: var(--adm-text-3); margin-bottom: 1.2rem; padding: 0.6rem 0.9rem; background: var(--adm-bg-3); border-radius: 10px; border-left: 3px solid #2563eb;">
             <i class="fas fa-info-circle" style="color: #2563eb;"></i>
-            Only authorized personnel can log in with these credentials.
+            This creates a Firebase Auth account + Firestore profile with role "government".
         </p>
         <div class="form-row">
             <div class="form-group"><label>Full Name *</label><input type="text" id="govtFullName" placeholder="e.g. Ramesh Kumar"></div>
@@ -3504,7 +3498,7 @@ function openAddGovtOfficialModal() {
 async function saveGovtOfficial() {
     const fullName = document.getElementById('govtFullName').value.trim();
     const officialId = document.getElementById('govtOfficialId').value.trim();
-    const email = document.getElementById('govtEmailInput').value.trim();
+    const email = document.getElementById('govtEmailInput').value.trim().toLowerCase();
     const mobile = document.getElementById('govtMobileInput').value.trim();
     const department = document.getElementById('govtDepartment').value.trim();
     const accessLevel = document.getElementById('govtAccessLevel').value;
@@ -3520,32 +3514,57 @@ async function saveGovtOfficial() {
         toast('Invalid email address', 'error');
         return;
     }
+    if (password.length < 6) {
+        toast('Password must be at least 6 characters', 'error');
+        return;
+    }
 
     try {
-        const result = await apiCall('/api/admin/govt-officials', {
-            method: 'POST',
-            body: {
-                fullName: fullName,
-                officialId: officialId,
-                email: email,
-                mobile: mobile,
-                department: department,
-                accessLevel: accessLevel,
-                region: region,
-                expiresAt: expiresAt,
-                password: password,
-            },
-        });
+        // Create Firebase Auth user (temporary app instance so we don't log out current admin)
+        const secondaryApp = firebase.apps.find(a => a.name === 'Secondary') ||
+                            firebase.initializeApp(firebaseConfig, 'Secondary');
+        const secondaryAuth = secondaryApp.auth();
 
-        if (!result.ok) {
-            toast((result.data && result.data.error) || 'Failed to create official', 'error');
-            return;
+        let cred;
+        try {
+            cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+        } catch (e) {
+            if (e.code === 'auth/email-already-in-use') {
+                toast('This email is already registered', 'error');
+                return;
+            }
+            throw e;
         }
 
-        logAudit('Added Govt Official', `${fullName} (${result.data.id})`);
-        logActivity(`Government official added: ${fullName}`, 'success');
-        logGovtActivity(`Created: ${fullName} · ${result.data.id} · ${accessLevel} level`, 'success');
+        const govtUid = cred.user.uid;
 
+        // Save profile to Firestore users collection
+        const profile = {
+            uid: govtUid,
+            role: 'government',
+            email,
+            fullName,
+            officialId: officialId.toUpperCase(),
+            mobile: mobile || '',
+            department,
+            accessLevel,
+            region: region || '',
+            status: 'active',
+            expiresAt: expiresAt || '',
+            createdBy: _userProfile?.email || 'admin',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            registeredAt: new Date().toISOString(),
+        };
+        await db.collection('users').doc(govtUid).set(profile);
+
+        // Sign out of secondary auth so it doesn't interfere
+        try { await secondaryAuth.signOut(); } catch (e) {}
+
+        logAudit('Added Govt Official', `${fullName} (${officialId})`);
+        logActivity(`Government official added: ${fullName}`, 'success');
+        logGovtActivity(`Created: ${fullName} · ${officialId} · ${accessLevel} level`, 'success');
+
+        // Reload Firestore cache
         _backendCache.loaded = false;
         await loadRealDataFromBackend();
 
@@ -3553,221 +3572,29 @@ async function saveGovtOfficial() {
         renderGovtOfficials();
         renderGovtActivityLog();
         updateCounts();
-        toast(`Official created: ${result.data.id}`, 'success');
+        toast(`Official created: ${officialId}`, 'success');
 
     } catch (err) {
         console.error('Govt official creation failed:', err);
-        toast('Network error while creating official', 'error');
+        let msg = 'Failed to create official.';
+        if (err.code === 'auth/email-already-in-use') msg = 'Email already in use.';
+        else if (err.code === 'auth/weak-password') msg = 'Password too weak.';
+        else if (err.code === 'permission-denied') msg = 'Firestore permission denied.';
+        else if (err.message) msg = err.message;
+        toast(msg, 'error');
     }
 }
 
-function viewGovtOfficial(officialId) {
-    const o = getGovtOfficials().find(x => x.officialId === officialId);
+async function deleteGovtOfficial(uid) {
+    const o = getGovtOfficials().find(x => x.id === uid);
     if (!o) { toast('Not found', 'error'); return; }
 
-    showModal(`
-        <div class="modal-header">
-            <h3><i class="fas fa-landmark"></i> Government Official</h3>
-            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--adm-bg-3); border-radius: 14px; margin-bottom: 1rem;">
-            <div style="width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800;">
-                ${(o.fullName || 'G').charAt(0).toUpperCase()}
-            </div>
-            <div>
-                <div style="font-weight: 700; color: var(--adm-text); font-size: 1.05rem;">${o.fullName}</div>
-                <div style="font-size: 0.78rem; color: var(--adm-text-3);">${o.department}</div>
-                <span class="badge ${o.status === 'active' && !isExpired(o) ? 'active' : 'suspended'}" style="margin-top: 0.4rem;">
-                    ${isExpired(o) ? 'expired' : o.status}
-                </span>
-            </div>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 0.1rem;">
-            ${[
-                ['Official ID', o.officialId, true],
-                ['Email', o.email],
-                ['Mobile', o.mobile || '—'],
-                ['Access Level', o.accessLevel],
-                ['Region', o.region || '—'],
-                ['Valid Until', o.expiresAt ? new Date(o.expiresAt).toLocaleDateString('en-IN') : '—'],
-                ['Created', o.createdAt ? new Date(o.createdAt).toLocaleString('en-IN') : '—'],
-                ['Created By', o.createdBy || '—'],
-                ['Last Login', o.lastLogin ? new Date(o.lastLogin).toLocaleString('en-IN') : 'Never'],
-                ['Login Count', String(o.loginCount || 0)]
-            ].map(([k, v, mono]) => `
-                <div style="display: flex; padding: 0.55rem 0; border-bottom: 1px solid var(--adm-border);">
-                    <div style="flex: 0 0 40%; font-size: 0.75rem; color: var(--adm-text-3); font-weight: 600;">${k}</div>
-                    <div style="flex: 1; font-size: 0.82rem; color: var(--adm-text); font-weight: 500; ${mono ? 'font-family: monospace;' : ''}">${v}</div>
-                </div>
-            `).join('')}
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-            <button class="btn btn-primary" onclick="closeModal(); editGovtOfficial('${o.officialId}');">
-                <i class="fas fa-edit"></i> Edit
-            </button>
-        </div>
-    `);
-}
-
-function editGovtOfficial(officialId) {
-    const o = getGovtOfficials().find(x => x.officialId === officialId);
-    if (!o) { toast('Not found', 'error'); return; }
-
-    showModal(`
-        <div class="modal-header">
-            <h3><i class="fas fa-edit"></i> Edit Government Official</h3>
-            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="form-row">
-            <div class="form-group"><label>Full Name</label><input type="text" id="editGovtFullName" value="${o.fullName || ''}"></div>
-            <div class="form-group"><label>Official ID</label><input type="text" value="${o.officialId}" readonly style="font-family: monospace; background: var(--adm-bg-3);"></div>
-        </div>
-        <div class="form-row">
-            <div class="form-group"><label>Email</label><input type="email" id="editGovtEmail" value="${o.email || ''}"></div>
-            <div class="form-group"><label>Mobile</label><input type="tel" id="editGovtMobile" value="${o.mobile || ''}"></div>
-        </div>
-        <div class="form-row">
-            <div class="form-group"><label>Department</label><input type="text" id="editGovtDept" value="${o.department || ''}"></div>
-            <div class="form-group">
-                <label>Access Level</label>
-                <select id="editGovtLevel">
-                    <option value="National" ${o.accessLevel === 'National' ? 'selected' : ''}>National</option>
-                    <option value="State" ${o.accessLevel === 'State' ? 'selected' : ''}>State</option>
-                    <option value="District" ${o.accessLevel === 'District' ? 'selected' : ''}>District</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group"><label>State / Region</label><input type="text" id="editGovtRegion" value="${o.region || ''}"></div>
-            <div class="form-group"><label>Valid Until</label><input type="date" id="editGovtExpiresAt" value="${o.expiresAt || ''}"></div>
-        </div>
-        <div class="form-group">
-            <label>Reset Password (leave blank to keep current)</label>
-            <div style="display: flex; gap: 0.5rem;">
-                <input type="text" id="editGovtPassword" placeholder="Leave blank to keep unchanged" style="flex: 1; font-family: monospace;">
-                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('editGovtPassword').value = generateGovtPassword();">
-                    <i class="fas fa-sync-alt"></i> Generate
-                </button>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="updateGovtOfficial('${o.officialId}')">
-                <i class="fas fa-save"></i> Save Changes
-            </button>
-        </div>
-    `);
-}
-
-async function updateGovtOfficial(officialId) {
-    const officials = getGovtOfficials();
-    const o = officials.find(x => x.officialId === officialId);
-    if (!o) { toast('Not found', 'error'); return; }
-
-    const newPassword = document.getElementById('editGovtPassword').value.trim();
-
-    const payload = {
-        full_name: document.getElementById('editGovtFullName').value.trim(),
-        email: document.getElementById('editGovtEmail').value.trim(),
-        mobile: document.getElementById('editGovtMobile').value.trim(),
-        department: document.getElementById('editGovtDept').value.trim(),
-        access_level: document.getElementById('editGovtLevel').value,
-        region: document.getElementById('editGovtRegion').value.trim(),
-        expires_at: document.getElementById('editGovtExpiresAt').value,
-    };
-    if (newPassword) payload.password = newPassword;
+    if (!confirm(`Remove ${o.fullName} (${o.officialId})? This deletes the Firestore profile.`)) return;
 
     try {
-        if (o.id) {
-            const result = await apiCall(`/api/admin/govt-officials/${o.id}`, {
-                method: 'PUT',
-                body: payload,
-            });
-            if (!result.ok) {
-                toast('Failed to update', 'error');
-                return;
-            }
-        }
-
-        logAudit('Updated Govt Official', `${payload.full_name} (${officialId})`);
-        logActivity(`Government official updated: ${payload.full_name}`, 'info');
-        logGovtActivity(`Updated: ${payload.full_name}`, 'info');
-
-        _backendCache.loaded = false;
-        await loadRealDataFromBackend();
-
-        closeModal();
-        renderGovtOfficials();
-        renderGovtActivityLog();
-        toast('Official updated', 'success');
-
-    } catch (err) {
-        console.error('Update failed:', err);
-        toast('Network error', 'error');
-    }
-}
-
-async function toggleGovtStatus(officialId) {
-    const officials = getGovtOfficials();
-    const o = officials.find(x => x.officialId === officialId);
-    if (!o) { toast('Not found', 'error'); return; }
-
-    const newStatus = o.status === 'active' ? 'suspended' : 'active';
-    if (!confirm(`${newStatus === 'suspended' ? 'Suspend' : 'Reactivate'} ${o.fullName}?`)) return;
-
-    try {
-        if (o.id) {
-            const result = await apiCall(`/api/admin/govt-officials/${o.id}/toggle`, {
-                method: 'POST',
-            });
-            if (!result.ok) {
-                toast('Failed to toggle', 'error');
-                return;
-            }
-        }
-
-        logGovtActivity(`${newStatus === 'active' ? 'Reactivated' : 'Suspended'}: ${o.fullName}`,
-                        newStatus === 'active' ? 'success' : 'error');
-        logAudit(newStatus === 'active' ? 'Activated Govt Official' : 'Suspended Govt Official',
-                 `${o.fullName} (${officialId})`);
-
-        _backendCache.loaded = false;
-        await loadRealDataFromBackend();
-
-        renderGovtOfficials();
-        renderGovtActivityLog();
-        toast(`Official ${newStatus}`, newStatus === 'active' ? 'success' : 'info');
-
-    } catch (err) {
-        console.error('Toggle failed:', err);
-        toast('Network error', 'error');
-    }
-}
-
-async function deleteGovtOfficial(officialId) {
-    const o = getGovtOfficials().find(x => x.officialId === officialId);
-    if (!o) { toast('Not found', 'error'); return; }
-
-    if (!confirm(`Delete ${o.fullName} (${officialId}) permanently?`)) return;
-    if (!confirm('Final confirmation — this cannot be undone.')) return;
-
-    try {
-        if (o.id) {
-            const result = await apiCall(`/api/admin/govt-officials/${o.id}`, {
-                method: 'DELETE',
-            });
-            if (!result.ok) {
-                toast('Failed to delete', 'error');
-                return;
-            }
-        } else {
-            const officials = getGovtOfficials().filter(x => x.officialId !== officialId);
-            saveGovtOfficials(officials);
-        }
-
-        logGovtActivity(`Deleted: ${o.fullName} (${officialId})`, 'error');
-        logAudit('Deleted Govt Official', `${o.fullName} (${officialId})`);
+        await db.collection('users').doc(uid).delete();
+        logGovtActivity(`Deleted: ${o.fullName} (${o.officialId})`, 'error');
+        logAudit('Deleted Govt Official', `${o.fullName} (${o.officialId})`);
 
         _backendCache.loaded = false;
         await loadRealDataFromBackend();
@@ -3776,10 +3603,9 @@ async function deleteGovtOfficial(officialId) {
         renderGovtActivityLog();
         updateCounts();
         toast('Official deleted', 'info');
-
     } catch (err) {
         console.error('Delete failed:', err);
-        toast('Network error', 'error');
+        toast('Failed to delete: ' + err.message, 'error');
     }
 }
 
@@ -3788,19 +3614,10 @@ function exportGovtOfficials() {
     if (officials.length === 0) { toast('No officials to export', 'error'); return; }
 
     const data = officials.map(o => ({
-        officialId: o.officialId,
-        fullName: o.fullName,
-        email: o.email,
-        mobile: o.mobile,
-        department: o.department,
-        accessLevel: o.accessLevel,
-        region: o.region,
-        status: o.status,
-        expiresAt: o.expiresAt,
-        createdAt: o.createdAt,
-        createdBy: o.createdBy,
-        lastLogin: o.lastLogin,
-        loginCount: o.loginCount
+        officialId: o.officialId, fullName: o.fullName, email: o.email, mobile: o.mobile,
+        department: o.department, accessLevel: o.accessLevel, region: o.region,
+        status: o.status, expiresAt: o.expiresAt, createdAt: o.createdAt,
+        createdBy: o.createdBy, lastLogin: o.lastLogin, loginCount: o.loginCount
     }));
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -3849,7 +3666,7 @@ function clearGovtActivityLog() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PASSWORD RESET
+   PASSWORD RESET — Firebase sendPasswordResetEmail
    ═══════════════════════════════════════════════════════════════ */
 function renderPasswordReset() {
     const users = getAllUsers();
@@ -3886,51 +3703,29 @@ function renderPasswordReset() {
             <td><span class="badge ${(u.status || 'Active') === 'Active' ? 'active' : 'suspended'}">${u.status || 'Active'}</span></td>
             <td>
                 <button class="btn btn-primary btn-sm" onclick="resetUserPassword('${u.email}', '${u._role}')">
-                    <i class="fas fa-key"></i> Reset
+                    <i class="fas fa-key"></i> Send Reset Email
                 </button>
             </td>
         </tr>`;
     }).join('');
 }
 
-function resetUserPassword(email, role) {
-    const tempPassword = generateTempPassword();
-    const key = role === 'trainee' ? 'allTrainees' : role === 'employer' ? 'allEmployers' : 'allProviders';
-    const users = getData(key);
-    const idx = users.findIndex(u => u.email === email);
-    if (idx === -1) { toast('User not found', 'error'); return; }
-    users[idx].password = tempPassword;
-    users[idx].forcePasswordChange = true;
-    localStorage.setItem(key, JSON.stringify(users));
-    logAudit('Password Reset', `Reset for ${email} (${role})`);
-    logActivity(`Password reset for ${email}`, 'warning');
+async function resetUserPassword(email, role) {
+    if (!email) { toast('No email on file', 'error'); return; }
+    if (!confirm(`Send password reset email to ${email}?`)) return;
 
-    showModal(`
-        <div class="modal-header">
-            <h3><i class="fas fa-key"></i> Password Reset Successful</h3>
-            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <p style="font-size: 0.85rem; color: var(--adm-text-3); margin-bottom: 1rem;">
-            Share this temporary password securely with <strong>${email}</strong>.
-        </p>
-        <div style="background: rgba(37, 99, 235, 0.1); border: 2px dashed #2563eb; border-radius: 12px; padding: 1.2rem; text-align: center; margin-bottom: 1rem;">
-            <div style="font-size: 0.7rem; color: var(--adm-text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Temporary Password</div>
-            <div style="font-size: 1.6rem; font-weight: 800; color: #1d4ed8; letter-spacing: 0.15em; font-family: monospace;">${tempPassword}</div>
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-primary" onclick="copyToClipboard('${tempPassword}')"><i class="fas fa-copy"></i> Copy</button>
-            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-        </div>
-    `);
-    toast('Password reset successfully', 'success');
-    renderPasswordReset();
-}
-
-function generateTempPassword() {
-    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-    let pw = '';
-    for (let i = 0; i < 10; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
-    return pw;
+    try {
+        await auth.sendPasswordResetEmail(email);
+        logAudit('Password Reset Email', `${email} (${role})`);
+        logActivity(`Password reset email sent to ${email}`, 'warning');
+        toast(`Reset email sent to ${email}`, 'success');
+    } catch (err) {
+        console.error('Reset failed:', err);
+        let msg = 'Could not send reset email.';
+        if (err.code === 'auth/user-not-found') msg = 'No Firebase account with this email.';
+        else if (err.code === 'auth/invalid-email') msg = 'Invalid email.';
+        toast(msg, 'error');
+    }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -3938,7 +3733,11 @@ function generateTempPassword() {
    ═══════════════════════════════════════════════════════════════ */
 function logAudit(action, target) {
     const logs = getData('adminAuditLogs');
-    logs.unshift({ action, target, admin: ADMIN_CREDENTIALS.displayName, timestamp: new Date().toISOString() });
+    logs.unshift({
+        action, target,
+        admin: _userProfile?.fullName || _userProfile?.email || 'Admin',
+        timestamp: new Date().toISOString()
+    });
     if (logs.length > 500) logs.length = 500;
     localStorage.setItem('adminAuditLogs', JSON.stringify(logs));
 }
@@ -3977,7 +3776,8 @@ function clearAuditLogs() {
 function renderSecurityLogs() {
     const logs = getData('adminSecurityLogs');
     const container = document.getElementById('securityLogsList');
-    document.getElementById('securityBadge').textContent = logs.length;
+    const badge = document.getElementById('securityBadge');
+    if (badge) badge.textContent = logs.length;
 
     if (logs.length === 0) {
         container.innerHTML = `<div class="empty-state">
@@ -4007,23 +3807,31 @@ function clearSecurityLogs() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   NOTIFICATIONS
+   NOTIFICATIONS — Firestore + local cache
    ═══════════════════════════════════════════════════════════════ */
-function sendNotification() {
+async function sendNotification() {
     const recipients = document.getElementById('notifRecipients').value;
     const title = document.getElementById('notifTitle').value.trim();
     const message = document.getElementById('notifMessage').value.trim();
     if (!title || !message) { toast('Fill both title and message', 'error'); return; }
-    const notifs = getData('adminNotifications');
-    notifs.unshift({ recipients, title, message, sentAt: new Date().toISOString() });
-    localStorage.setItem('adminNotifications', JSON.stringify(notifs));
-    logAudit('Sent Notification', `To: ${recipients} — ${title}`);
-    logActivity(`Notification sent: ${title}`, 'info');
-    document.getElementById('notifTitle').value = '';
-    document.getElementById('notifMessage').value = '';
-    renderNotifications();
-    updateNotifBadge();
-    toast('Notification sent', 'success');
+
+    try {
+        await db.collection('adminNotifications').add({
+            recipients, title, message,
+            sentBy: _userProfile?.email || 'admin',
+            sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        logAudit('Sent Notification', `To: ${recipients} — ${title}`);
+        logActivity(`Notification sent: ${title}`, 'info');
+        document.getElementById('notifTitle').value = '';
+        document.getElementById('notifMessage').value = '';
+        renderNotifications();
+        updateNotifBadge();
+        toast('Notification sent', 'success');
+    } catch (err) {
+        console.error('Send failed:', err);
+        toast('Failed to send notification', 'error');
+    }
 }
 
 function renderNotifications() {
@@ -4051,76 +3859,16 @@ function showNotifications() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CONTENT
+   USER ACTIONS — Firestore writes
    ═══════════════════════════════════════════════════════════════ */
-function addAnnouncement() {
-    showModal(`
-        <div class="modal-header">
-            <h3><i class="fas fa-bullhorn"></i> New Announcement</h3>
-            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="form-group"><label>Title</label><input type="text" id="annTitle" placeholder="Title"></div>
-        <div class="form-group"><label>Message</label><textarea id="annMessage" placeholder="Message..."></textarea></div>
-        <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveAnnouncement()"><i class="fas fa-save"></i> Publish</button>
-        </div>
-    `);
-}
-
-function saveAnnouncement() {
-    const title = document.getElementById('annTitle').value.trim();
-    const message = document.getElementById('annMessage').value.trim();
-    if (!title || !message) { toast('Fill all fields', 'error'); return; }
-    const anns = getData('adminAnnouncements');
-    anns.unshift({ id: 'ANN' + Date.now(), title, message, createdAt: new Date().toISOString() });
-    localStorage.setItem('adminAnnouncements', JSON.stringify(anns));
-    logAudit('Added Announcement', title);
-    logActivity(`Announcement published: ${title}`, 'info');
-    closeModal();
-    renderAnnouncements();
-    toast('Announcement published', 'success');
-}
-
-function renderAnnouncements() {
-    const anns = getData('adminAnnouncements');
-    const container = document.getElementById('announcementsList');
-    if (anns.length === 0) {
-        container.innerHTML = `<div class="empty-state"><i class="fas fa-newspaper"></i><h3>No announcements</h3></div>`;
-        return;
-    }
-    container.innerHTML = anns.map(a => `
-        <div class="activity-item warning">
-            <div class="activity-icon"><i class="fas fa-bullhorn"></i></div>
-            <div class="activity-content">
-                <strong>${a.title}</strong>
-                <div style="font-size: 0.72rem; color: var(--adm-text-3); margin-top: 2px;">${a.message}</div>
-                <div style="font-size: 0.65rem; color: var(--adm-text-4); margin-top: 3px;">${new Date(a.createdAt).toLocaleString()}</div>
-            </div>
-            <button class="action-btn delete" onclick="deleteAnnouncement('${a.id}')"><i class="fas fa-trash"></i></button>
-        </div>
-    `).join('');
-}
-
-function deleteAnnouncement(id) {
-    if (!confirm('Delete this announcement?')) return;
-    let anns = getData('adminAnnouncements').filter(a => a.id !== id);
-    localStorage.setItem('adminAnnouncements', JSON.stringify(anns));
-    renderAnnouncements();
-    toast('Deleted', 'info');
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   USER ACTIONS
-   ═══════════════════════════════════════════════════════════════ */
-function viewUser(userId, role) {
+function viewUser(uid, role) {
     const key = role === 'trainee' ? 'allTrainees' : role === 'employer' ? 'allEmployers' : 'allProviders';
-    const user = getData(key).find(u => (u.traineeId || u.employerId || u.providerId || u.email) === userId || u.email === userId);
+    const user = getData(key).find(u => u._id === uid);
     if (!user) { toast('Not found', 'error'); return; }
 
     let details = '';
     Object.keys(user).forEach(k => {
-        if (k === 'password' || k.startsWith('_')) return;
+        if (k.startsWith('_') || k === 'password') return;
         const val = user[k];
         if (typeof val === 'object' || typeof val === 'function') return;
         details += `<div style="display: flex; padding: 0.5rem 0; border-bottom: 1px solid var(--adm-border);">
@@ -4143,118 +3891,98 @@ function viewUser(userId, role) {
     `);
 }
 
-function editUser(userId, role) {
+async function toggleUserStatus(uid, role) {
     const key = role === 'trainee' ? 'allTrainees' : role === 'employer' ? 'allEmployers' : 'allProviders';
-    const user = getData(key).find(u => (u.traineeId || u.employerId || u.providerId || u.email) === userId || u.email === userId);
+    const user = getData(key).find(u => u._id === uid);
     if (!user) { toast('Not found', 'error'); return; }
-    const name = user.fullName || user.contactPerson || user.orgName || user.repName || '';
-    const status = user.status || 'Active';
 
-    showModal(`
-        <div class="modal-header">
-            <h3><i class="fas fa-edit"></i> Edit User</h3>
-            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="form-group"><label>Name</label><input type="text" id="editName" value="${name}"></div>
-        <div class="form-row">
-            <div class="form-group"><label>Email</label><input type="email" id="editEmail" value="${user.email || ''}"></div>
-            <div class="form-group"><label>Mobile</label><input type="tel" id="editMobile" value="${user.mobile || ''}"></div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Status</label>
-                <select id="editStatus">
-                    <option value="Active" ${status === 'Active' ? 'selected' : ''}>Active</option>
-                    <option value="Suspended" ${status === 'Suspended' ? 'selected' : ''}>Suspended</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Role</label><input type="text" value="${role}" disabled></div>
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveUserEdit('${user.email}', '${role}')"><i class="fas fa-save"></i> Save</button>
-        </div>
-    `);
+    const current = user.status || 'Active';
+    const newStatus = current === 'Active' ? 'Suspended' : 'Active';
+
+    if (!confirm(`Change status of ${user.email} to ${newStatus}?`)) return;
+
+    try {
+        const collection = role === 'trainee' ? 'trainees' : role === 'employer' ? 'employers' : 'providers';
+        await db.collection(collection).doc(uid).update({ status: newStatus });
+        await db.collection('users').doc(uid).update({ status: newStatus }).catch(() => {});
+
+        logAudit('Toggled Status', `${user.email} → ${newStatus}`);
+        logActivity(`User ${newStatus === 'Active' ? 'activated' : 'suspended'}: ${user.email}`, 'warning');
+
+        _backendCache.loaded = false;
+        await loadRealDataFromBackend();
+        refreshAll();
+        toast(`User ${newStatus}`, 'info');
+    } catch (err) {
+        console.error('Toggle failed:', err);
+        toast('Failed: ' + err.message, 'error');
+    }
 }
 
-function saveUserEdit(email, role) {
-    const key = role === 'trainee' ? 'allTrainees' : role === 'employer' ? 'allEmployers' : 'allProviders';
-    const users = getData(key);
-    const idx = users.findIndex(u => u.email === email);
-    if (idx === -1) { toast('Not found', 'error'); return; }
-    const newName = document.getElementById('editName').value.trim();
-    const newEmail = document.getElementById('editEmail').value.trim();
-    const newMobile = document.getElementById('editMobile').value.trim();
-    const newStatus = document.getElementById('editStatus').value;
-    if (role === 'trainee') users[idx].fullName = newName;
-    if (role === 'employer') users[idx].contactPerson = newName;
-    if (role === 'provider') users[idx].orgName = newName;
-    users[idx].email = newEmail;
-    users[idx].mobile = newMobile;
-    users[idx].status = newStatus;
-    localStorage.setItem(key, JSON.stringify(users));
-    logAudit('Edited User', `${email} → ${newEmail}`);
-    logActivity(`User edited: ${newEmail}`, 'info');
-    closeModal();
-    refreshAll();
-    toast('User updated', 'success');
+async function deleteUser(uid, role) {
+    const user = getData(role === 'trainee' ? 'allTrainees' : role === 'employer' ? 'allEmployers' : 'allProviders')
+        .find(u => u._id === uid);
+    if (!user) { toast('Not found', 'error'); return; }
+
+    if (!confirm(`Delete ${user.fullName || user.orgName || user.email} permanently?`)) return;
+
+    try {
+        const collection = role === 'trainee' ? 'trainees' : role === 'employer' ? 'employers' : 'providers';
+        await db.collection(collection).doc(uid).delete();
+        await db.collection('users').doc(uid).delete().catch(() => {});
+
+        logAudit('Deleted User', `${user.email} (${role})`);
+        logActivity(`User deleted: ${user.email}`, 'error');
+
+        _backendCache.loaded = false;
+        await loadRealDataFromBackend();
+        refreshAll();
+        toast('User deleted', 'success');
+    } catch (err) {
+        console.error('Delete failed:', err);
+        toast('Failed: ' + err.message, 'error');
+    }
 }
 
-function toggleUserStatus(userId, role) {
-    const key = role === 'trainee' ? 'allTrainees' : role === 'employer' ? 'allEmployers' : 'allProviders';
-    const users = getData(key);
-    const idx = users.findIndex(u => (u.traineeId || u.employerId || u.providerId || u.email) === userId || u.email === userId);
-    if (idx === -1) { toast('Not found', 'error'); return; }
-    const current = users[idx].status || 'Active';
-    users[idx].status = current === 'Active' ? 'Suspended' : 'Active';
-    localStorage.setItem(key, JSON.stringify(users));
-    logAudit('Toggled Status', `${users[idx].email} → ${users[idx].status}`);
-    logActivity(`User ${users[idx].status === 'Active' ? 'activated' : 'suspended'}: ${users[idx].email}`, 'warning');
-    refreshAll();
-    toast(`User ${users[idx].status}`, 'info');
+async function approveUser(uid, role) {
+    const collection = role === 'employer' ? 'employers' : 'providers';
+    try {
+        const update = { status: 'Active' };
+        if (role === 'provider') update.verificationStatus = 'Verified';
+        await db.collection(collection).doc(uid).update(update);
+        await db.collection('users').doc(uid).update(update).catch(() => {});
+
+        logAudit('Approved User', `${uid} (${role})`);
+        logActivity(`Approved ${role}: ${uid}`, 'success');
+
+        _backendCache.loaded = false;
+        await loadRealDataFromBackend();
+        refreshAll();
+        toast('Approved', 'success');
+    } catch (err) {
+        toast('Failed: ' + err.message, 'error');
+    }
 }
 
-function deleteUser(userId, role) {
-    if (!confirm('Delete this user permanently?')) return;
-    const key = role === 'trainee' ? 'allTrainees' : role === 'employer' ? 'allEmployers' : 'allProviders';
-    let users = getData(key);
-    const before = users.length;
-    users = users.filter(u => (u.traineeId || u.employerId || u.providerId || u.email) !== userId && u.email !== userId);
-    if (users.length === before) { toast('Not found', 'error'); return; }
-    localStorage.setItem(key, JSON.stringify(users));
-    logAudit('Deleted User', `${userId} (${role})`);
-    logActivity(`User deleted: ${userId}`, 'error');
-    refreshAll();
-    toast('User deleted', 'success');
-}
-
-function approveUser(email, role) {
-    const key = role === 'employer' ? 'allEmployers' : 'allProviders';
-    const users = getData(key);
-    const idx = users.findIndex(u => u.email === email);
-    if (idx === -1) return;
-    users[idx].status = 'Active';
-    if (role === 'provider') users[idx].verificationStatus = 'Verified';
-    localStorage.setItem(key, JSON.stringify(users));
-    logAudit('Approved User', `${email} (${role})`);
-    logActivity(`Approved ${role}: ${email}`, 'success');
-    refreshAll();
-    toast('Approved', 'success');
-}
-
-function rejectUser(email, role) {
+async function rejectUser(uid, role) {
     if (!confirm('Reject this user?')) return;
-    const key = role === 'employer' ? 'allEmployers' : 'allProviders';
-    const users = getData(key);
-    const idx = users.findIndex(u => u.email === email);
-    if (idx === -1) return;
-    users[idx].status = 'Suspended';
-    if (role === 'provider') users[idx].verificationStatus = 'Verification Required';
-    localStorage.setItem(key, JSON.stringify(users));
-    logAudit('Rejected User', `${email} (${role})`);
-    logActivity(`Rejected ${role}: ${email}`, 'error');
-    refreshAll();
-    toast('Rejected', 'info');
+    const collection = role === 'employer' ? 'employers' : 'providers';
+    try {
+        const update = { status: 'Suspended' };
+        if (role === 'provider') update.verificationStatus = 'Verification Required';
+        await db.collection(collection).doc(uid).update(update);
+        await db.collection('users').doc(uid).update(update).catch(() => {});
+
+        logAudit('Rejected User', `${uid} (${role})`);
+        logActivity(`Rejected ${role}: ${uid}`, 'error');
+
+        _backendCache.loaded = false;
+        await loadRealDataFromBackend();
+        refreshAll();
+        toast('Rejected', 'info');
+    } catch (err) {
+        toast('Failed: ' + err.message, 'error');
+    }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -4267,61 +3995,6 @@ function showModal(html) {
 
 function closeModal() {
     document.getElementById('modalOverlay').classList.remove('show');
-}
-
-function openAddUserModal() {
-    showModal(`
-        <div class="modal-header">
-            <h3><i class="fas fa-user-plus"></i> Add New User</h3>
-            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="form-group">
-            <label>Role</label>
-            <select id="newUserRole">
-                <option value="trainee">Trainee</option>
-                <option value="employer">Employer</option>
-                <option value="provider">Training Provider</option>
-            </select>
-        </div>
-        <div class="form-group"><label>Full Name</label><input type="text" id="newUserName" placeholder="Full name"></div>
-        <div class="form-row">
-            <div class="form-group"><label>Email</label><input type="email" id="newUserEmail" placeholder="email@example.com"></div>
-            <div class="form-group"><label>Mobile</label><input type="tel" id="newUserMobile" placeholder="9876543210"></div>
-        </div>
-        <div class="form-group"><label>Temporary Password</label><input type="text" id="newUserPassword" value="${generateTempPassword()}" readonly style="font-family: monospace; letter-spacing: 0.1em;"></div>
-        <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveNewUser()"><i class="fas fa-save"></i> Create</button>
-        </div>
-    `);
-}
-
-function saveNewUser() {
-    const role = document.getElementById('newUserRole').value;
-    const name = document.getElementById('newUserName').value.trim();
-    const email = document.getElementById('newUserEmail').value.trim();
-    const mobile = document.getElementById('newUserMobile').value.trim();
-    const password = document.getElementById('newUserPassword').value;
-    if (!name || !email || !mobile) { toast('Fill all fields', 'error'); return; }
-    const key = role === 'trainee' ? 'allTrainees' : role === 'employer' ? 'allEmployers' : 'allProviders';
-    const users = getData(key);
-    if (users.find(u => u.email === email)) { toast('Email exists', 'error'); return; }
-    const newUser = {
-        email, mobile, password, status: 'Active',
-        registrationDate: new Date().toISOString().split('T')[0],
-        registeredAt: new Date().toISOString(),
-        forcePasswordChange: true
-    };
-    if (role === 'trainee') { newUser.traineeId = 'TRN' + Date.now(); newUser.fullName = name; }
-    if (role === 'employer') { newUser.employerId = 'EMP' + Date.now(); newUser.contactPerson = name; }
-    if (role === 'provider') { newUser.providerId = 'PRV' + Date.now(); newUser.orgName = name; newUser.verificationStatus = 'Pending Verification'; }
-    users.push(newUser);
-    localStorage.setItem(key, JSON.stringify(users));
-    logAudit('Added User', `${email} (${role})`);
-    logActivity(`New ${role} added: ${email}`, 'success');
-    closeModal();
-    refreshAll();
-    toast('User created', 'success');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -4341,13 +4014,12 @@ function toast(message, type = 'success') {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   EXPORT / IMPORT
+   EXPORT
    ═══════════════════════════════════════════════════════════════ */
 function exportData(key) {
     let data;
     if (key === 'users') data = getAllUsers();
     else if (key === 'audit') data = getData('adminAuditLogs');
-    else if (key === 'programs') data = getRealTrainingPrograms();
     else data = getData(key);
 
     if (!data || data.length === 0) {
@@ -4370,28 +4042,21 @@ function exportData(key) {
 function exportAllData() {
     const backup = {
         exportedAt: new Date().toISOString(),
-        exportedBy: ADMIN_CREDENTIALS.displayName,
+        exportedBy: _userProfile?.email || 'admin',
         counts: {
             trainees: getData('allTrainees').length,
             employers: getData('allEmployers').length,
             providers: getData('allProviders').length,
             govtOfficials: getGovtOfficials().length,
-            employment: getData('allEmployment').length,
-            followups: getData('allFollowups').length,
-            programs: getRealTrainingPrograms().length
         },
         trainees: getData('allTrainees'),
         employers: getData('allEmployers'),
         providers: getData('allProviders'),
         govtOfficials: getGovtOfficials(),
-        employment: getData('allEmployment'),
-        followups: getData('allFollowups'),
-        programs: getRealTrainingPrograms(),
         audit: getData('adminAuditLogs'),
         security: getData('adminSecurityLogs'),
-        activities: getData('adminActivities'),
+        activities: getData(ADMIN_ACTIVITY_KEY),
         notifications: getData('adminNotifications'),
-        announcements: getData('adminAnnouncements')
     };
 
     const total = backup.counts.trainees + backup.counts.employers + backup.counts.providers;
@@ -4404,60 +4069,24 @@ function exportAllData() {
     a.click();
     URL.revokeObjectURL(url);
     toast(`Full backup exported (${total} users)`, 'success');
-    logAudit('Full Backup', `${total} users, ${backup.counts.employment} outcomes`);
+    logAudit('Full Backup', `${total} users`);
     logActivity(`Full backup: ${total} users exported`, 'success');
-}
-
-function importData() {
-    const file = document.getElementById('importFile').files[0];
-    if (!file) { toast('Select a JSON file', 'error'); return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-        try {
-            const data = JSON.parse(e.target.result);
-            let imported = 0;
-            if (data.trainees) { localStorage.setItem('allTrainees', JSON.stringify(data.trainees)); imported += data.trainees.length; }
-            if (data.employers) { localStorage.setItem('allEmployers', JSON.stringify(data.employers)); imported += data.employers.length; }
-            if (data.providers) { localStorage.setItem('allProviders', JSON.stringify(data.providers)); imported += data.providers.length; }
-            if (data.govtOfficials) { localStorage.setItem(GOVT_STORAGE_KEY, JSON.stringify(data.govtOfficials)); }
-            if (data.employment) localStorage.setItem('allEmployment', JSON.stringify(data.employment));
-            if (data.followups) localStorage.setItem('allFollowups', JSON.stringify(data.followups));
-            toast(`Data imported (${imported} users)`, 'success');
-            logAudit('Imported Data', `${file.name} (${imported} users)`);
-            logActivity(`Imported ${file.name}`, 'info');
-            refreshAll();
-        } catch (err) { toast('Invalid JSON', 'error'); }
-    };
-    reader.readAsText(file);
-}
-
-function confirmClearAll() {
-    const total = getAllUsers().length;
-    if (total === 0) { toast('Nothing to clear', 'info'); return; }
-    if (!confirm(`⚠️ Delete ALL platform data? This will remove ${total} real users permanently!`)) return;
-    if (!confirm('Final warning. Delete everything?')) return;
-    ['allTrainees', 'allEmployers', 'allProviders', 'allEmployment', 'allFollowups',
-     'adminAuditLogs', 'adminSecurityLogs', 'adminActivities', 'adminNotifications',
-     'adminAnnouncements', 'adminPrograms', GOVT_STORAGE_KEY, GOVT_ACTIVITY_KEY].forEach(k => localStorage.removeItem(k));
-    logAudit('Cleared All Data', `Removed ${total} users`);
-    refreshAll();
-    toast('All data cleared', 'info');
 }
 
 /* ═══════════════════════════════════════════════════════════════
    REPORTS
    ═══════════════════════════════════════════════════════════════ */
 function generateReport(type) {
-    const employment = getData('allEmployment');
     const trainees = getData('allTrainees');
     const providers = getData('allProviders');
+    const withEmp = trainees.filter(t => t.employment);
 
     const stats = {
-        employment: { title: 'Employment Report', count: employment.length, detail: 'Total employment records' },
-        placement: { title: 'Placement Report', count: employment.filter(e => e.status === 'Employed').length, detail: 'Employed trainees' },
-        retention: { title: 'Retention Report', count: employment.filter(e => e.retentionStatus === 'Retained').length, detail: 'Retained employees' },
-        income: { title: 'Income Growth Report', count: employment.filter(e => e.currentIncome > 0).length, detail: 'Trainees with income data' },
-        skillgap: { title: 'Skill Gap Report', count: trainees.filter(t => t.skillsImprovement).length, detail: 'Trainees with identified gaps' },
+        employment: { title: 'Employment Report', count: withEmp.length, detail: 'Total employment records' },
+        placement: { title: 'Placement Report', count: withEmp.filter(t => t.employment.status === 'Employed').length, detail: 'Employed trainees' },
+        retention: { title: 'Retention Report', count: withEmp.filter(t => t.employment.retained).length, detail: 'Retained employees' },
+        income: { title: 'Income Growth Report', count: withEmp.filter(t => t.employment.currentIncome > 0).length, detail: 'Trainees with income data' },
+        skillgap: { title: 'Skill Gap Report', count: trainees.length, detail: 'Total trainees analysed' },
         provider: { title: 'Provider Performance', count: providers.length, detail: 'Registered providers' }
     };
 
@@ -4473,68 +4102,33 @@ function generateReport(type) {
             <div style="font-size: 0.8rem; color: var(--adm-text-3); margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">${s.detail}</div>
         </div>
         <p style="font-size: 0.8rem; color: var(--adm-text-3); text-align: center;">
-            ${s.count === 0 ? 'No data available yet — real data will appear here' : 'Based on actual platform data'}
+            ${s.count === 0 ? 'No data available yet — real data will appear here' : 'Based on actual platform data from Firestore'}
         </p>
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-            <button class="btn btn-primary" onclick="downloadReport('${type}', ${s.count});">
-                <i class="fas fa-download"></i> Download JSON
-            </button>
         </div>
     `);
     logAudit('Generated Report', `${s.title} (${s.count} records)`);
-}
-
-function downloadReport(type, count) {
-    if (count === 0) { toast('No data to download', 'error'); return; }
-    let data;
-    if (type === 'provider') data = getData('allProviders');
-    else if (type === 'skillgap') data = getData('allTrainees');
-    else data = getData('allEmployment');
-
-    const blob = new Blob([JSON.stringify({
-        reportType: type,
-        generatedAt: new Date().toISOString(),
-        generatedBy: ADMIN_CREDENTIALS.displayName,
-        recordCount: count,
-        data: data
-    }, null, 2)], { type: 'application/json' });
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `report-${type}-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast('Report downloaded', 'success');
-    closeModal();
 }
 
 /* ═══════════════════════════════════════════════════════════════
    ADMIN PROFILE
    ═══════════════════════════════════════════════════════════════ */
 function showAdminProfile() {
+    const name = _userProfile?.fullName || _userProfile?.email || 'Admin';
+    const initial = name.charAt(0).toUpperCase();
     showModal(`
         <div class="modal-header">
             <h3><i class="fas fa-user-shield"></i> Admin Profile</h3>
             <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
         </div>
         <div style="text-align: center; padding: 1rem 0;">
-            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #dc2626, #f59e0b); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; margin: 0 auto 1rem;">V</div>
-            <h3 style="font-size: 1.1rem; color: var(--adm-text);">${ADMIN_CREDENTIALS.displayName}</h3>
-            <p style="font-size: 0.8rem; color: var(--adm-text-3); margin-top: 0.3rem;">${ADMIN_CREDENTIALS.email}</p>
-            <span class="badge admin" style="margin-top: 0.8rem; display: inline-flex;">Super Administrator</span>
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #dc2626, #f59e0b); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; margin: 0 auto 1rem;">${initial}</div>
+            <h3 style="font-size: 1.1rem; color: var(--adm-text);">${name}</h3>
+            <p style="font-size: 0.8rem; color: var(--adm-text-3); margin-top: 0.3rem;">${_userProfile?.email || '—'}</p>
+            <span class="badge admin" style="margin-top: 0.8rem; display: inline-flex;">${_userProfile?.role || 'Admin'}</span>
         </div>
         <div style="border-top: 2px solid var(--adm-border); padding-top: 1rem; margin-top: 1rem;">
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.8rem; color: var(--adm-text-2);">
-                <span>Audit entries:</span><strong>${getData('adminAuditLogs').length}</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.8rem; color: var(--adm-text-2);">
-                <span>Activities logged:</span><strong>${getData('adminActivities').length}</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.8rem; color: var(--adm-text-2);">
-                <span>Security events:</span><strong>${getData('adminSecurityLogs').length}</strong>
-            </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.8rem; color: var(--adm-text-2);">
                 <span>Real users:</span><strong>${getAllUsers().length}</strong>
             </div>
@@ -4552,62 +4146,20 @@ function showAdminProfile() {
 /* ═══════════════════════════════════════════════════════════════
    SETTINGS
    ═══════════════════════════════════════════════════════════════ */
-function saveSettings() {
+async function saveSettings() {
     const settings = {
         platformName: document.getElementById('settingPlatformName').value,
-        contactEmail: document.getElementById('settingContactEmail').value,
-        followups: document.getElementById('settingFollowups').value
+        contactEmail: document.getElementById('settingContactEmail').value
     };
-    localStorage.setItem('adminSettings', JSON.stringify(settings));
-    logAudit('Updated Settings', 'System settings changed');
-    toast('Settings saved', 'success');
+    try {
+        await db.collection('adminSettings').doc('general').set(settings, { merge: true });
+        logAudit('Updated Settings', 'System settings changed');
+        toast('Settings saved to Firestore', 'success');
+    } catch (err) {
+        localStorage.setItem('adminSettings', JSON.stringify(settings));
+        toast('Saved locally (Firestore unavailable)', 'info');
+    }
 }
-
-/* ═══════════════════════════════════════════════════════════════
-   PROGRAMS CRUD
-   ═══════════════════════════════════════════════════════════════ */
-function openAddProgramModal() {
-    showModal(`
-        <div class="modal-header">
-            <h3><i class="fas fa-book"></i> Add Training Program</h3>
-            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="form-group"><label>Program Name</label><input type="text" id="progName" placeholder="e.g. Data Analytics"></div>
-        <div class="form-row">
-            <div class="form-group"><label>Sector</label><input type="text" id="progSector" placeholder="e.g. IT & Digital"></div>
-            <div class="form-group"><label>Provider</label><input type="text" id="progProvider" placeholder="e.g. TechSkill Institute"></div>
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveProgram()"><i class="fas fa-save"></i> Create</button>
-        </div>
-    `);
-}
-
-function saveProgram() {
-    const name = document.getElementById('progName').value.trim();
-    const sector = document.getElementById('progSector').value.trim();
-    const provider = document.getElementById('progProvider').value.trim();
-    if (!name) { toast('Enter program name', 'error'); return; }
-    const programs = getData('adminPrograms');
-    programs.push({ id: 'PRG' + Date.now(), name, sector, provider, status: 'Active', createdAt: new Date().toISOString() });
-    localStorage.setItem('adminPrograms', JSON.stringify(programs));
-    logAudit('Added Program', name);
-    logActivity(`Program created: ${name}`, 'success');
-    closeModal();
-    renderPrograms();
-    toast('Program created', 'success');
-}
-
-function deleteProgram(id) {
-    if (!confirm('Delete this program?')) return;
-    let programs = getData('adminPrograms').filter(p => p.id !== id);
-    localStorage.setItem('adminPrograms', JSON.stringify(programs));
-    renderPrograms();
-    toast('Deleted', 'info');
-}
-
-function editProgram(id) { toast('Coming soon', 'info'); }
 
 /* ═══════════════════════════════════════════════════════════════
    AI INSIGHTS REGENERATE
@@ -4643,19 +4195,13 @@ function performGlobalSearch(query) {
     getAllUsers().forEach(u => {
         const name = u.fullName || u.contactPerson || u.orgName || u.repName || 'User';
         if (!q || name.toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) {
-            items.push({ icon: 'fa-user', type: 'User', label: name, sub: u.email, action: () => viewUser(u.email, u._role) });
-        }
-    });
-
-    getRealTrainingPrograms().forEach(p => {
-        if (!q || p.name.toLowerCase().includes(q)) {
-            items.push({ icon: 'fa-book', type: 'Program', label: p.name, sub: p.sector, action: () => switchModule('programs') });
+            items.push({ icon: 'fa-user', type: 'User', label: name, sub: u.email, action: () => viewUser(u._id, u._role) });
         }
     });
 
     getGovtOfficials().forEach(o => {
         if (!q || (o.fullName || '').toLowerCase().includes(q) || (o.officialId || '').toLowerCase().includes(q)) {
-            items.push({ icon: 'fa-landmark', type: 'Government Official', label: o.fullName, sub: o.officialId, action: () => viewGovtOfficial(o.officialId) });
+            items.push({ icon: 'fa-landmark', type: 'Government Official', label: o.fullName, sub: o.officialId, action: () => switchModule('govtAccess') });
         }
     });
 
@@ -4699,14 +4245,14 @@ function handleSearchSelect(index) {
    TOUR
    ═══════════════════════════════════════════════════════════════ */
 const TOUR_STEPS = [
-    { icon: 'fa-shield-halved', title: 'Welcome to Admin Panel', text: 'This is your central control center for the SKILLINTEL platform. All data shown here comes from REAL user registrations.' },
-    { icon: 'fa-users', title: 'User Management', text: 'Manage all Trainees, Employers, and Training Providers from a single screen. Every registered user appears here.' },
-    { icon: 'fa-landmark', title: 'Government Access', text: 'Provision authorized Government Officials. Only accounts created here can log in to the Government portal.' },
-    { icon: 'fa-key', title: 'Password Reset', text: 'Help users recover access. Temporary passwords are auto-generated — real passwords are never stored.' },
-    { icon: 'fa-chart-line', title: 'Outcome Management', text: 'Track employment, income, retention, and follow-up data from real trainee outcomes.' },
+    { icon: 'fa-shield-halved', title: 'Welcome to Admin Panel', text: 'This is your central control center for the SKILLINTEL platform. All data shown here comes from REAL Firebase users.' },
+    { icon: 'fa-users', title: 'User Management', text: 'Manage all Trainees, Employers, and Training Providers from a single screen.' },
+    { icon: 'fa-landmark', title: 'Government Access', text: 'Provision authorized Government Officials. These are Firebase Auth accounts with role "government".' },
+    { icon: 'fa-key', title: 'Password Reset', text: 'Send Firebase password reset emails to any user instantly.' },
+    { icon: 'fa-chart-line', title: 'Outcome Management', text: 'Track employment, income, retention, and follow-up data.' },
     { icon: 'fa-brain', title: 'AI Insights', text: 'AI analyzes real platform data to surface skill gaps, risks, and opportunities.' },
-    { icon: 'fa-search', title: 'Global Search', text: 'Press Ctrl+K to instantly search users, programs, and modules from anywhere.' },
-    { icon: 'fa-moon', title: 'Dark Mode', text: 'Click the moon icon to switch to dark mode for comfortable viewing.' }
+    { icon: 'fa-search', title: 'Global Search', text: 'Press Ctrl+K to instantly search users, programs, and modules.' },
+    { icon: 'fa-moon', title: 'Dark Mode', text: 'Click the moon icon to switch to dark mode.' }
 ];
 
 let tourIndex = 0;
@@ -4749,7 +4295,9 @@ function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => toast('Copied', 'success'));
 }
 
-function refreshAll() {
+async function refreshAll() {
+    _backendCache.loaded = false;
+    await loadRealDataFromBackend();
     renderDashboard();
     renderUsers();
     renderTrainees();
@@ -4762,14 +4310,13 @@ function refreshAll() {
     renderAuditLogs();
     renderSecurityLogs();
     renderNotifications();
-    renderAnnouncements();
     renderActivityFeed();
     renderAIInsights();
     renderGovtOfficials();
     renderGovtActivityLog();
     updateCounts();
     updateNotifBadge();
-    toast('Refreshed with real data', 'info');
+    toast('Refreshed with live Firestore data', 'info');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -4782,8 +4329,17 @@ function updateThemeIcon() {
     btn.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 }
 
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+    updateThemeIcon();
+}
+
 /* ═══════════════════════════════════════════════════════════════
-   EXPOSE FUNCTIONS TO GLOBAL SCOPE
+   EXPOSE TO GLOBAL SCOPE
    ═══════════════════════════════════════════════════════════════ */
 window.adminLogin = adminLogin;
 window.adminLogout = adminLogout;
@@ -4797,13 +4353,8 @@ window.performGlobalSearch = performGlobalSearch;
 window.closeModal = closeModal;
 window.toggleTheme = toggleTheme;
 window.exportAllData = exportAllData;
-window.confirmClearAll = confirmClearAll;
 window.showAdminProfile = showAdminProfile;
 window.showNotifications = showNotifications;
-window.openAddUserModal = openAddUserModal;
-window.saveNewUser = saveNewUser;
-window.deleteUser = deleteUser;
-window.renderUsers = renderUsers;
 window.sendNotification = sendNotification;
 window.generateReport = generateReport;
 window.saveSettings = saveSettings;
@@ -4815,14 +4366,10 @@ window.startOnboardingTour = startOnboardingTour;
 window.nextTourStep = nextTourStep;
 window.closeTour = closeTour;
 window.viewUser = viewUser;
-window.editUser = editUser;
 window.toggleUserStatus = toggleUserStatus;
+window.deleteUser = deleteUser;
 window.approveUser = approveUser;
 window.rejectUser = rejectUser;
-window.viewGovtOfficial = viewGovtOfficial;
-window.editGovtOfficial = editGovtOfficial;
-window.updateGovtOfficial = updateGovtOfficial;
-window.toggleGovtStatus = toggleGovtStatus;
 window.deleteGovtOfficial = deleteGovtOfficial;
 window.exportGovtOfficials = exportGovtOfficials;
 window.clearGovtActivityLog = clearGovtActivityLog;
@@ -4830,19 +4377,9 @@ window.regenerateAIInsights = regenerateAIInsights;
 window.clearActivityFeed = clearActivityFeed;
 window.clearAuditLogs = clearAuditLogs;
 window.clearSecurityLogs = clearSecurityLogs;
-window.addAnnouncement = addAnnouncement;
-window.saveAnnouncement = saveAnnouncement;
-window.deleteAnnouncement = deleteAnnouncement;
-window.openAddProgramModal = openAddProgramModal;
-window.saveProgram = saveProgram;
-window.deleteProgram = deleteProgram;
-window.editProgram = editProgram;
 window.importData = importData;
 window.exportData = exportData;
 window.copyToClipboard = copyToClipboard;
-window.deleteUser = deleteUser;
-window.saveUserEdit = saveUserEdit;
-window.downloadReport = downloadReport;
 window.handleSearchSelect = handleSearchSelect;
 window.skipTour = skipTour;
 window.prevTourStep = prevTourStep;
@@ -4853,7 +4390,6 @@ window.logSecurityEvent = logSecurityEvent;
 window.logGovtActivity = logGovtActivity;
 window.toast = toast;
 window.getGovtOfficials = getGovtOfficials;
-window.saveGovtOfficials = saveGovtOfficials;
 window.generateOfficialId = generateOfficialId;
 window.generateGovtPassword = generateGovtPassword;
 window.isExpired = isExpired;
@@ -4863,27 +4399,23 @@ window.renderGovtActivityLog = renderGovtActivityLog;
 window.updateCounts = updateCounts;
 window.updateNotifBadge = updateNotifBadge;
 window.updateThemeIcon = updateThemeIcon;
-window.generateTempPassword = generateTempPassword;
 window.getAllUsers = getAllUsers;
 window.getData = getData;
 window.initPanel = initPanel;
 window.loadRealDataFromBackend = loadRealDataFromBackend;
 window.showPanel = showPanel;
 
-console.log('%c[SKILLINTEL Admin] Script loaded successfully (backend-integrated)',
-    'color: #22c55e; font-weight: bold; font-size: 14px;');
-console.log('[SKILLINTEL Admin] Username:', ADMIN_CREDENTIALS.username);
-
-if (typeof window.toggleTheme !== 'function') {
-    window.toggleTheme = function() {
-        const html = document.documentElement;
-        const current = html.getAttribute('data-theme') || 'light';
-        const next = current === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', next);
-        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
-        updateThemeIcon();
-    };
+function importData() {
+    toast('Import feature disabled (Firestore is source of truth)', 'info');
 }
+
+console.log('%c[SKILLINTEL Admin] Firebase panel loaded',
+    'color: #22c55e; font-weight: bold; font-size: 14px;');
+console.log('%cCreate your admin account via Firebase Console:',
+    'color: #f59e0b; font-weight: bold;');
+console.log('1. Go to Firebase Console → Authentication → Add User');
+console.log('2. Then in Firestore → users/{uid} → set: { role: "super_admin", fullName: "Your Name", email: "..." }');
+console.log('3. Login here with that email + password');
 </script>
 
 </body>

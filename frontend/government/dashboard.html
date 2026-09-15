@@ -9,7 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css">
-    <script src="../js/api.js"></script>
+
+    <!-- ✅ Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         /* ============================================================
            RESET & BASE
@@ -1262,70 +1267,227 @@ MAIN CONTENT
 
 <script>
     // ============================================================
-    // BACKEND STATE — real data only
+    // FIREBASE CONFIG
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ============================================================
+    // STATE
     // ============================================================
     let allRecords = [];
     let stats = {};
     let analyticsRaw = null;
+    let _firebaseUser = null;
+    let _userProfile = null;
 
     // ============================================================
-    // LOAD REAL ANALYTICS FROM BACKEND
-    // Uses /api/govt/analytics (fast aggregate) +
-    //      /api/trainees (detailed rows for the table)
-    // NO FALLBACK TO SAMPLE DATA
+    // AUTH GUARD — government role only
+    // ============================================================
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=government';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=government';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'government') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=government';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
+            });
+        });
+    }
+
+    // ============================================================
+    // LOAD ANALYTICS — Firestore aggregation
+    // Reads all 3 collections in parallel and computes KPIs client-side
     // ============================================================
     async function loadAnalytics() {
         try {
-            const [analyticsRes, traineesRes] = await Promise.all([
-                apiCall('/api/govt/analytics'),
-                apiCall('/api/trainees'),
+            // Parallel fetches from Firestore
+            const [traineesSnap, employersSnap, providersSnap] = await Promise.all([
+                db.collection('trainees').get(),
+                db.collection('employers').get(),
+                db.collection('providers').get(),
             ]);
 
-            if (!analyticsRes.ok) {
-                console.warn('Analytics endpoint failed:', analyticsRes.data);
-                return { ok: false };
-            }
+            const trainees = [];
+            traineesSnap.forEach(d => trainees.push({ _id: d.id, ...d.data() }));
 
-            analyticsRaw = analyticsRes.data || {};
-            const trainees = (traineesRes.ok && Array.isArray(traineesRes.data)) ? traineesRes.data : [];
+            const employers = [];
+            employersSnap.forEach(d => employers.push({ _id: d.id, ...d.data() }));
 
-            // Build the detailed rows for the table
+            const providers = [];
+            providersSnap.forEach(d => providers.push({ _id: d.id, ...d.data() }));
+
+            // ---- Build detailed rows ----
             const rows = trainees.map((t, index) => {
-                // Determine status — will be enriched if we have employment info
+                const emp = t.employment || null;
                 let status = 'unemployed';
                 let income = 0;
                 let joiningDate = 'N/A';
-                let provider = t.skills || t.qualification || 'N/A';
 
-                // Match against recent_employments from analytics response
-                const emp = (analyticsRaw.recent_employments || []).find(e =>
-                    String(e.trainee_id) === String(t.id)
-                );
                 if (emp) {
-                    const empType = (emp.employment_type || '').toLowerCase();
-                    if (empType === 'self') status = 'self-employed';
-                    else if (empType === 'intern' || empType === 'apprentice') status = 'internship';
-                    else status = 'employed';
-                    income = emp.monthly_income || 0;
-                    joiningDate = emp.start_date || 'N/A';
+                    const empType = (emp.status || emp.employmentType || '').toLowerCase();
+                    if (empType.includes('self')) status = 'self-employed';
+                    else if (empType.includes('intern') || empType.includes('apprentice')) status = 'internship';
+                    else if (empType.includes('employ') || empType.includes('verified') || empType.includes('full')) status = 'employed';
+                    income = Number(emp.currentIncome || emp.monthlyIncome) || 0;
+                    joiningDate = emp.joiningDate || emp.startDate || 'N/A';
                 }
 
                 return {
-                    id: t.trainee_code || ('TRN' + t.id),
-                    backendId: t.id,
-                    name: t.full_name || 'Trainee',
+                    id: t.traineeCode || ('TRN' + (t.uid ? t.uid.substring(0, 6) : index)),
+                    uid: t.uid || t._id,
+                    name: t.fullName || 'Trainee',
                     email: t.email || '',
-                    program: t.skills || t.qualification || 'N/A',
-                    provider: provider,
+                    program: t.skillTrade || t.trainingProgram || t.qualification || 'N/A',
+                    provider: t.trainingProvider || 'N/A',
                     district: t.district || 'N/A',
                     state: t.state || 'N/A',
                     status: status,
                     income: income,
                     joiningDate: joiningDate,
-                    avatar: (t.full_name || 'T').charAt(0).toUpperCase(),
+                    completed: (t.trainingProgress || 0) >= 100 || t.certificationStatus === 'Certified',
+                    certified: t.certificationStatus === 'Certified',
+                    _raw: t,
+                    avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
                     color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
                 };
             });
+
+            // ---- Aggregate analytics object (same shape as old Flask API) ----
+            const total = rows.length;
+            const employed = rows.filter(r => r.status === 'employed').length;
+            const selfEmployed = rows.filter(r => r.status === 'self-employed').length;
+            const internships = rows.filter(r => r.status === 'internship').length;
+            const completedCount = rows.filter(r => r.completed).length;
+            const certifiedCount = rows.filter(r => r.certified).length;
+            const employedTotal = employed + selfEmployed;
+            const rate = total > 0 ? Math.round((employedTotal / total) * 100) : 0;
+
+            // Income calculations
+            const incomesArr = rows.filter(r => r.income > 0).map(r => r.income);
+            const avgIncome = incomesArr.length > 0
+                ? Math.round(incomesArr.reduce((a, b) => a + b, 0) / incomesArr.length)
+                : 0;
+
+            const prevIncomesArr = rows
+                .map(r => Number(r._raw.prevIncome) || 0)
+                .filter(v => v > 0);
+            const avgPrevious = prevIncomesArr.length > 0
+                ? Math.round(prevIncomesArr.reduce((a, b) => a + b, 0) / prevIncomesArr.length)
+                : 0;
+            const growthPct = avgPrevious > 0
+                ? Math.round(((avgIncome - avgPrevious) / avgPrevious) * 100)
+                : 0;
+
+            // Income distribution buckets
+            const incomeDistribution = {
+                zero: rows.filter(r => r.income === 0).length,
+                under_15k: rows.filter(r => r.income > 0 && r.income < 15000).length,
+                '15k_25k': rows.filter(r => r.income >= 15000 && r.income < 25000).length,
+                '25k_35k': rows.filter(r => r.income >= 25000 && r.income < 35000).length,
+                '35k_plus': rows.filter(r => r.income >= 35000).length,
+            };
+
+            // Group by program
+            const programMap = {};
+            rows.forEach(r => {
+                const key = r.program || 'Unnamed';
+                if (!programMap[key]) programMap[key] = { program_name: key, enrolled: 0, employed: 0 };
+                programMap[key].enrolled++;
+                if (r.status === 'employed' || r.status === 'self-employed') programMap[key].employed++;
+            });
+
+            // Group by provider
+            const providerMap = {};
+            rows.forEach(r => {
+                const key = r.provider || 'Unnamed';
+                if (!providerMap[key]) providerMap[key] = { provider_name: key, total_trainees: 0, employed: 0 };
+                providerMap[key].total_trainees++;
+                if (r.status === 'employed' || r.status === 'self-employed') providerMap[key].employed++;
+            });
+
+            // Retention (basic: employed with followups marked retained)
+            const followupStats = { '30d': 0, '90d': 0, '180d': 0, '365d': 0 };
+            let retained180 = 0;
+            rows.forEach(r => {
+                const fus = r._raw.followups;
+                if (Array.isArray(fus)) {
+                    fus.forEach(f => {
+                        const days = f.periodDays || f.period;
+                        if (days === 30) followupStats['30d']++;
+                        if (days === 90) followupStats['90d']++;
+                        if (days === 180) {
+                            followupStats['180d']++;
+                            if (f.status === 'completed' && r.status === 'employed') retained180++;
+                        }
+                        if (days === 365) followupStats['365d']++;
+                    });
+                }
+            });
+
+            // Retention rate approximation
+            const retentionRate = employedTotal > 0 ? Math.round((retained180 / employedTotal) * 100) : 0;
+
+            analyticsRaw = {
+                totals: {
+                    trainees: total,
+                    completed: completedCount,
+                    certified: certifiedCount,
+                    employed: employed,
+                    self_employed: selfEmployed,
+                    full_time: employed,
+                    part_time: internships,
+                    contract: 0,
+                    employment_rate: rate,
+                    employers: employers.length,
+                    providers: providers.length,
+                },
+                income: {
+                    avg_current: avgIncome,
+                    avg_previous: avgPrevious,
+                    growth_percent: growthPct,
+                },
+                retention: {
+                    '180d': { rate: retentionRate, retained: retained180 },
+                },
+                by_program: Object.values(programMap),
+                by_provider: Object.values(providerMap),
+                income_distribution: incomeDistribution,
+                followups: followupStats,
+            };
 
             return { ok: true, analytics: analyticsRaw, rows };
         } catch (e) {
@@ -1339,50 +1501,31 @@ MAIN CONTENT
     // ============================================================
     function calculateStats(rows) {
         const a = analyticsRaw || {};
-
-        // Extract from backend analytics — this is the source of truth
         const total = a.totals?.trainees || 0;
         const completed = a.totals?.completed || 0;
         const employed = a.totals?.employed || 0;
         const selfEmployed = a.totals?.self_employed || 0;
-        const fullTime = a.totals?.full_time || 0;
-        const partTime = a.totals?.part_time || 0;
-        const contract = a.totals?.contract || 0;
         const rate = a.totals?.employment_rate || 0;
 
         const avgIncome = a.income?.avg_current || 0;
         const avgPrevious = a.income?.avg_previous || 0;
         const growthPct = a.income?.growth_percent || 0;
 
-        // Retention: highest available period's rate
         const retention = a.retention || {};
-        const retentionRate = retention['180d']?.rate || retention['90d']?.rate || 0;
+        const retentionRate = retention['180d']?.rate || 0;
 
-        // Program breakdown (from by_program)
         const programs = {};
         (a.by_program || []).forEach(p => {
             const name = p.program_name || 'Unnamed';
-            const enrolled = p.enrolled || 0;
-            const emp = p.employed || 0;
-            programs[name] = {
-                total: enrolled,
-                employed: emp,
-            };
+            programs[name] = { total: p.enrolled || 0, employed: p.employed || 0 };
         });
 
-        // Provider breakdown (from by_provider)
         const providers = {};
         (a.by_provider || []).forEach(p => {
             const name = p.provider_name || 'Unnamed';
-            const total = p.total_trainees || 0;
-            const emp = p.employed || 0;
-            providers[name] = {
-                total: total,
-                employed: emp,
-            };
+            providers[name] = { total: p.total_trainees || 0, employed: p.employed || 0 };
         });
 
-        // Income distribution (from backend)
         const inc = a.income_distribution || {};
         const incomeDistribution = {
             '₹0': inc.zero || 0,
@@ -1392,16 +1535,10 @@ MAIN CONTENT
             '₹35K+': inc['35k_plus'] || 0,
         };
 
-        // Assessment distribution
-        const assessment = a.assessment_distribution || {};
-
-        // Follow-up stats
-        const followups = a.followups || {};
-
         return {
-            total, completed, employed, selfEmployed, fullTime, partTime, contract,
-            rate, avgIncome, avgPrevious, growthPct, retentionRate, retention,
-            programs, providers, incomeDistribution, assessment, followups,
+            total, completed, employed, selfEmployed, rate,
+            avgIncome, avgPrevious, growthPct, retentionRate, retention,
+            programs, providers, incomeDistribution,
         };
     }
 
@@ -1410,11 +1547,7 @@ MAIN CONTENT
     // ============================================================
     async function loadAndRender() {
         const result = await loadAnalytics();
-
-        if (!result.ok) {
-            renderErrorState();
-            return;
-        }
+        if (!result.ok) { renderErrorState(); return; }
 
         allRecords = result.rows;
         stats = calculateStats(allRecords);
@@ -1431,7 +1564,7 @@ MAIN CONTENT
         updateSidebar();
         updateNotificationBadge();
 
-        console.log('✅ Government Dashboard loaded with REAL data');
+        console.log('✅ Government Dashboard loaded (Firebase)');
         console.log('   Trainees:', stats.total, '| Employed:', stats.employed);
     }
 
@@ -1454,24 +1587,16 @@ MAIN CONTENT
     // RENDER FUNCTIONS
     // ============================================================
     function renderDataSourceBanner() {
-        const banner = document.getElementById('dataSourceBanner');
-        const icon = document.getElementById('dsIcon');
-        const title = document.getElementById('dsTitle');
-        const sub = document.getElementById('dsSub');
-
-        const employerCount = stats.providers ? Object.keys(stats.providers).length : 0;
-        const providerCount = analyticsRaw?.totals?.providers || 0;
         const employerTotal = analyticsRaw?.totals?.employers || 0;
+        const providerCount = analyticsRaw?.totals?.providers || 0;
 
         document.getElementById('dsTrainees').textContent = stats.total;
         document.getElementById('dsEmployers').textContent = employerTotal;
         document.getElementById('dsProviders').textContent = providerCount;
-
-        // Always green — real data only
-        banner.className = 'data-source-banner';
-        icon.textContent = '🟢';
-        title.textContent = 'Live Data Connected';
-        sub.textContent = 'Real-time data from trainee, employer, and provider registrations';
+        document.getElementById('dataSourceBanner').className = 'data-source-banner';
+        document.getElementById('dsIcon').textContent = '🟢';
+        document.getElementById('dsTitle').textContent = 'Live Data Connected';
+        document.getElementById('dsSub').textContent = 'Real-time data from trainee, employer, and provider registrations';
     }
 
     function renderBanner() {
@@ -1489,7 +1614,6 @@ MAIN CONTENT
         document.getElementById('kpiAvgIncome').textContent = '₹' + (stats.avgIncome >= 1000 ? (stats.avgIncome/1000).toFixed(0) + 'K' : stats.avgIncome);
         document.getElementById('kpiProviders').textContent = analyticsRaw?.totals?.providers || 0;
 
-        // Update trend badges based on real data
         const trendRetention = document.getElementById('trendRetention');
         if (stats.retentionRate >= 70) {
             trendRetention.textContent = '● Good';
@@ -1504,13 +1628,12 @@ MAIN CONTENT
     }
 
     function renderPipeline() {
-        // Real numbers from backend analytics
         const total = stats.total;
         const completed = stats.completed;
-        const certified = stats.completed;   // assume all completed are certified if no better data
+        const certified = analyticsRaw?.totals?.certified || completed;
         const placed = stats.employed + stats.selfEmployed;
         const joined = stats.employed + stats.selfEmployed;
-        const retained = stats.retention['180d']?.retained || stats.retention['90d']?.retained || 0;
+        const retained = stats.retention['180d']?.retained || 0;
 
         document.getElementById('pipeRegistered').textContent = total;
         document.getElementById('pipeCompleted').textContent = completed;
@@ -1636,7 +1759,7 @@ MAIN CONTENT
         const labels = Object.keys(dist);
         const values = Object.values(dist);
         const totalVal = values.reduce((a, b) => a + b, 0) || 1;
-        const earningCount = values.slice(1).reduce((a, b) => a + b, 0);  // exclude ₹0 bucket
+        const earningCount = values.slice(1).reduce((a, b) => a + b, 0);
 
         if (totalVal === 0) {
             container.style.background = '#e2e8f0';
@@ -1695,7 +1818,6 @@ MAIN CONTENT
             const statusLabel = r.status === 'employed' ? 'Employed' :
                                r.status === 'self-employed' ? 'Self-Employed' :
                                r.status === 'internship' ? 'Internship' : 'Unemployed';
-
             const profileUrl = `trainee-360-profile.html?traineeId=${encodeURIComponent(r.id)}`;
 
             return `<tr>
@@ -1723,19 +1845,18 @@ MAIN CONTENT
     }
 
     function updateSidebar() {
-        let govData = null;
-        try { govData = JSON.parse(localStorage.getItem('governmentData') || 'null'); } catch (e) {}
-        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
+        const name = _userProfile?.fullName || _userProfile?.name || 'Government';
+        const role = _userProfile?.accessLevel ? `Admin · ${_userProfile.accessLevel}` : 'Admin';
+        const initial = name.charAt(0).toUpperCase();
         document.getElementById('sidebarAvatar').textContent = initial;
-        document.getElementById('sidebarName').textContent = govData?.name || 'Government';
-        document.getElementById('sidebarRole').textContent = govData?.role || 'Admin';
+        document.getElementById('sidebarName').textContent = name;
+        document.getElementById('sidebarRole').textContent = role;
         document.getElementById('headerAvatar').textContent = initial;
-        document.getElementById('headerName').textContent = govData?.name || 'Government';
-        document.getElementById('welcomeName').textContent = govData?.name || 'Government';
+        document.getElementById('headerName').textContent = name;
+        document.getElementById('welcomeName').textContent = name;
     }
 
     function updateNotificationBadge() {
-        // Unemployed = total - employed - self-employed
         const pending = Math.max(stats.total - stats.employed - stats.selfEmployed, 0);
         document.getElementById('notifBadge').textContent = pending;
     }
@@ -1752,7 +1873,7 @@ MAIN CONTENT
 
     async function refreshData() {
         await loadAndRender();
-        showToast('🔄 Data refreshed from backend!');
+        showToast('🔄 Data refreshed from Firestore!');
     }
 
     function showToast(message) {
@@ -1773,7 +1894,7 @@ MAIN CONTENT
 
     function showNotifications() {
         const pending = Math.max(stats.total - stats.employed - stats.selfEmployed, 0);
-        alert(`📬 Notifications\n\n• ${pending} trainees unemployed\n• ${stats.employed} trainees employed\n• ${stats.total} total records\n\n✅ Using REAL data from backend`);
+        alert(`📬 Notifications\n\n• ${pending} trainees unemployed\n• ${stats.employed} trainees employed\n• ${stats.total} total records\n\n✅ Using REAL data from Firestore`);
     }
 
     function toggleProfileMenu() {
@@ -1782,8 +1903,16 @@ MAIN CONTENT
 
     async function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
-            window.location.href = '../auth/login.html';
+            try { await auth.signOut(); } catch (e) {}
+            try {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('currentGovtOfficialId');
+                localStorage.removeItem('govtOfficerName');
+                localStorage.removeItem('govtAccessLevel');
+            } catch (e) {}
+            window.location.href = '../auth/login.html?role=government';
         }
     }
 
@@ -1816,7 +1945,14 @@ MAIN CONTENT
         } catch (e) {}
 
         updateDate();
-        await loadAndRender();
+
+        try {
+            await requireAuth();
+            await loadAndRender();
+            console.log('✅ Government Dashboard loaded (Firebase)!');
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
 
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
@@ -1827,8 +1963,6 @@ MAIN CONTENT
                 }
             }
         });
-
-        console.log('✅ Government Dashboard loaded!');
     });
 </script>
 

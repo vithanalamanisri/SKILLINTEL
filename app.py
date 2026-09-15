@@ -35,13 +35,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # =============================================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# --- DATABASE URL ---
-# On Render: set DATABASE_URL env var (copy the "Internal Database URL")
-# Locally: falls back to SQLite file
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 USE_POSTGRES = bool(DATABASE_URL and PSYCOPG2_AVAILABLE)
 
-# Fallback SQLite location (only used when DATABASE_URL is missing)
 DATA_DIR = os.environ.get("DATA_DIR", BASE_DIR)
 os.makedirs(DATA_DIR, exist_ok=True)
 DB_PATH = os.path.join(DATA_DIR, "skillintel.db")
@@ -50,13 +46,14 @@ os.makedirs(BACKUP_DIR, exist_ok=True)
 
 app = Flask(__name__)
 
-# --- Stable secret key (never regenerates, survives everything) ---
 app.secret_key = os.environ.get(
     "SECRET_KEY",
     "skillintel-sih26135-FIXED-secret-key-do-not-change-abc123xyz987"
 )
 
-app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(minutes=45)
+app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(days=30)
+app.config["SESSION_COOKIE_PATH"] = "/"
+app.config["SESSION_REFRESH_EACH_REQUEST"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SECURE"] = os.environ.get("COOKIE_SECURE", "0") == "1"
@@ -82,10 +79,9 @@ SUPER_ADMIN_NAME = "Vithanala Manisri"
 
 
 # =============================================================================
-#  SECTION 1 — DATABASE CONNECTION (Postgres OR SQLite)
+#  SECTION 1 — DATABASE CONNECTION
 # =============================================================================
 def get_db():
-    """Get a DB connection. Auto-detects Postgres vs SQLite."""
     if "db" not in g:
         if USE_POSTGRES:
             conn = psycopg2.connect(DATABASE_URL, sslmode="require")
@@ -111,18 +107,12 @@ def close_db(exc):
 
 
 def _normalize_sql(sql):
-    """Convert SQLite '?' placeholders to Postgres '%s' when needed."""
     if USE_POSTGRES:
         return sql.replace("?", "%s")
     return sql
 
 
 def q(sql, args=(), one=False):
-    """Run a SELECT and return rows as list of dicts.
-
-    NOTE: no try/except around fetchall() — real SQL errors must surface,
-    otherwise you get silent empty dashboards.
-    """
     db = get_db()
     sql_norm = _normalize_sql(sql)
     if USE_POSTGRES:
@@ -139,12 +129,6 @@ def q(sql, args=(), one=False):
 
 
 def qx(sql, args=()):
-    """Run INSERT/UPDATE/DELETE.
-
-    Returns:
-      - For INSERT: new row id
-      - For UPDATE/DELETE: number of affected rows
-    """
     db = get_db()
     sql_norm = _normalize_sql(sql)
     is_insert = sql_norm.strip().upper().startswith("INSERT")
@@ -173,7 +157,6 @@ def qx(sql, args=()):
 
 
 def exec_script(sql):
-    """Execute a multi-statement schema script."""
     db = get_db()
     cur = db.cursor()
     if USE_POSTGRES:
@@ -184,7 +167,7 @@ def exec_script(sql):
             except Exception as e:
                 msg = str(e).lower()
                 if "already exists" not in msg:
-                    print(f"[schema] Warning: {e}\n  Stmt: {stmt[:80]}...")
+                    print(f"[schema] Warning: {e}")
     else:
         cur.executescript(sql)
     db.commit()
@@ -192,7 +175,7 @@ def exec_script(sql):
 
 
 # =============================================================================
-#  SECTION 2 — SCHEMA (Postgres or SQLite)
+#  SECTION 2 — SCHEMA
 # =============================================================================
 def build_schema():
     if USE_POSTGRES:
@@ -476,7 +459,6 @@ CREATE TABLE IF NOT EXISTS backup_history (
 
 
 def init_db():
-    """Bootstrap DB. Idempotent. Creates super admin if missing."""
     with app.app_context():
         print("=" * 70)
         print(f"[init_db] Using: {'PostgreSQL' if USE_POSTGRES else 'SQLite'}")
@@ -566,9 +548,7 @@ def security_event(message, details=""):
         pass
 
 
-# --- Decorators ---
 def login_required(f):
-    """Accept either a user session (uid) or a government session (govt_id)."""
     @wraps(f)
     def wrapper(*a, **kw):
         if not session.get("uid") and not session.get("govt_id"):
@@ -578,7 +558,6 @@ def login_required(f):
 
 
 def role_required(*allowed):
-    """Role gate that also lets government sessions through on analytics endpoints."""
     def deco(f):
         @wraps(f)
         def wrapper(*a, **kw):
@@ -590,7 +569,6 @@ def role_required(*allowed):
                 if u["role"] not in allowed and u["role"] != "super_admin":
                     return jsonify(error="Forbidden"), 403
             else:
-                # Government session: allow on analytics-style endpoints
                 if not any(r in allowed for r in ("admin", "verifier")):
                     return jsonify(error="Forbidden"), 403
             return f(*a, **kw)
@@ -642,8 +620,8 @@ def api_login():
     ip = request.remote_addr
     ua = request.headers.get("User-Agent", "")[:200]
 
-    # --- ADMIN ---
-    if role in ("admin", "super_admin", "verifier") or d.get("username"):
+    # --- ADMIN / SUPER ADMIN / VERIFIER ---
+    if role in ("admin", "super_admin", "verifier"):
         username = (d.get("username") or d.get("email") or "").strip()
         password = d.get("password") or ""
         if not username or not password:
@@ -733,12 +711,14 @@ def api_login():
     if role not in ("trainee", "employer", "provider"):
         return jsonify(error="Unknown role"), 400
 
-    email = (d.get("email") or "").strip().lower()
+    email = (d.get("email") or d.get("username") or "").strip().lower()
     password = d.get("password") or ""
     if not email or not password:
         return jsonify(error="email and password required"), 400
 
     u = q("SELECT * FROM users WHERE email=?", (email,), one=True)
+    if not u:
+        u = q("SELECT * FROM users WHERE username=?", (email,), one=True)
     if not u or not check_password_hash(u["password_hash"], password):
         security_event("Failed login", f"role={role} email={email} ip={ip}")
         return jsonify(error="Invalid credentials"), 401
@@ -764,7 +744,6 @@ def api_me():
             id=u["id"], username=u["username"], role=u["role"],
             full_name=u["full_name"], email=u["email"],
         )
-    # Government session
     return jsonify(
         role="government",
         officialId=session.get("govt_id"),
@@ -845,7 +824,7 @@ def api_decide_reset(rid):
 
 
 # =============================================================================
-#  SECTION 6 — GOVERNMENT OFFICIALS (ADMIN CONTROL)
+#  SECTION 6 — GOVERNMENT OFFICIALS
 # =============================================================================
 def _gen_official_id():
     year = dt.datetime.utcnow().year
@@ -1293,7 +1272,6 @@ def _schedule_followups(trainee_id, completion_date_str):
 
 
 def ensure_followup_schedule(trainee_id, completion_date=None):
-    """Ensure a trainee has 30/90/180/365 day follow-ups scheduled."""
     base = None
     if completion_date:
         try:
@@ -1880,7 +1858,7 @@ def api_global_insights():
 
 
 # =============================================================================
-#  SECTION 14 — GOVERNMENT ANALYTICS (summary, retention, income, relevance)
+#  SECTION 14 — GOVERNMENT ANALYTICS
 # =============================================================================
 @app.route("/api/analytics/summary", methods=["GET"])
 @role_required("admin", "verifier")
@@ -1953,6 +1931,172 @@ def api_record_nonplacement():
              (d["trainee_id"], d["reason"], d.get("details")))
     audit("create", "non_placement", nid, after=d)
     return jsonify(id=nid), 201
+
+
+# =============================================================================
+#  SECTION 15B — DEMO SEED: NON-PLACEMENT
+# =============================================================================
+@app.route("/api/demo/seed-nonplacement", methods=["POST"])
+@admin_required
+def api_seed_nonplacement():
+    """Create non_placement records for trainees who have NO verified employment."""
+    random.seed(99)
+    count = 0
+    trainees = q("SELECT id, state FROM trainees WHERE archived=0")
+    for t in trainees:
+        has_emp = q("""SELECT id FROM employments
+                       WHERE trainee_id=? AND status='verified' LIMIT 1""",
+                    (t["id"],), one=True)
+        if has_emp:
+            continue
+        already = q("SELECT id FROM non_placement WHERE trainee_id=? LIMIT 1",
+                    (t["id"],), one=True)
+        if already:
+            continue
+        reason = random.choice(NON_PLACEMENT_REASONS)
+        qx("INSERT INTO non_placement (trainee_id,reason,details) VALUES (?,?,?)",
+           (t["id"], reason, "seeded"))
+        count += 1
+    return jsonify(ok=True, seeded=count)
+
+
+# =============================================================================
+#  SECTION 15C — DEMO SEED: PROGRAMS + ENROLLMENTS
+# =============================================================================
+@app.route("/api/demo/seed-programs", methods=["POST"])
+@admin_required
+def api_seed_programs():
+    """Ensure there are programs + enrollments + employers so program comparison works."""
+    random.seed(7)
+
+    provider_ids = []
+    for i, pname in enumerate(["Skill India Training Centre", "DataEdge Academy",
+                               "TechSkill Institute", "NSDC Partner Institute"]):
+        existing = q("SELECT id FROM providers WHERE name=?", (pname,), one=True)
+        if existing:
+            provider_ids.append(existing["id"])
+        else:
+            pid = qx("INSERT INTO providers (name,state,district,verified) VALUES (?,?,?,1)",
+                     (pname, random.choice(STATES), f"District{i}"))
+            provider_ids.append(pid)
+
+    program_ids = []
+    for i in range(6):
+        pname = f"Program {chr(65 + i)}"
+        existing = q("SELECT id FROM programs WHERE name=?", (pname,), one=True)
+        if existing:
+            program_ids.append(existing["id"])
+        else:
+            pid = qx("""INSERT INTO programs (name,sector,provider_id,duration_weeks,skills_taught)
+                        VALUES (?,?,?,?,?)""",
+                     (pname, random.choice(SECTORS), random.choice(provider_ids),
+                      random.choice([8, 12, 16, 24]), "Python, SQL, Excel"))
+            program_ids.append(pid)
+
+    emp_ids = []
+    for ename in ["ABC Technologies", "TCS", "Infosys Ltd.", "Wipro", "HCL"]:
+        existing = q("SELECT id FROM employers WHERE name=?", (ename,), one=True)
+        if existing:
+            emp_ids.append(existing["id"])
+        else:
+            eid = qx("INSERT INTO employers (name,industry,state,verified) VALUES (?,?,?,1)",
+                     (ename, random.choice(SECTORS), random.choice(STATES)))
+            emp_ids.append(eid)
+
+    # Enroll every trainee who isn't enrolled
+    enrolled_count = 0
+    for t in q("SELECT id FROM trainees WHERE archived=0 LIMIT 200"):
+        exists = q("SELECT id FROM enrollments WHERE trainee_id=? LIMIT 1", (t["id"],), one=True)
+        if exists:
+            continue
+        qx("""INSERT INTO enrollments
+              (trainee_id,program_id,enrolled_on,completion_status,attendance_pct)
+              VALUES (?,?,?,?,?)""",
+           (t["id"], random.choice(program_ids),
+            (dt.date.today() - dt.timedelta(days=random.randint(60, 400))).isoformat(),
+            "completed", round(random.uniform(60, 100), 1)))
+        enrolled_count += 1
+
+    return jsonify(ok=True, programs=len(program_ids), enrolled=enrolled_count)
+
+
+# =============================================================================
+#  SECTION 15D — DEMO SEED: EVERYTHING
+# =============================================================================
+@app.route("/api/demo/seed-all", methods=["POST"])
+@admin_required
+def api_seed_all():
+    """Seed demo data for every dashboard at once."""
+    from flask import Response
+    results = {}
+    with app.test_request_context():
+        # non-placement
+        try:
+            random.seed(99)
+            np_count = 0
+            for t in q("SELECT id FROM trainees WHERE archived=0"):
+                has_emp = q("""SELECT id FROM employments
+                               WHERE trainee_id=? AND status='verified' LIMIT 1""",
+                            (t["id"],), one=True)
+                if has_emp:
+                    continue
+                already = q("SELECT id FROM non_placement WHERE trainee_id=? LIMIT 1",
+                            (t["id"],), one=True)
+                if already:
+                    continue
+                qx("INSERT INTO non_placement (trainee_id,reason,details) VALUES (?,?,?)",
+                   (t["id"], random.choice(NON_PLACEMENT_REASONS), "seeded"))
+                np_count += 1
+            results["non_placement"] = np_count
+        except Exception as e:
+            results["non_placement_error"] = str(e)
+
+        # programs + enrollments
+        try:
+            random.seed(7)
+            provider_ids = []
+            for i, pname in enumerate(["Skill India Training Centre", "DataEdge Academy",
+                                       "TechSkill Institute", "NSDC Partner Institute"]):
+                existing = q("SELECT id FROM providers WHERE name=?", (pname,), one=True)
+                if existing:
+                    provider_ids.append(existing["id"])
+                else:
+                    provider_ids.append(qx(
+                        "INSERT INTO providers (name,state,district,verified) VALUES (?,?,?,1)",
+                        (pname, random.choice(STATES), f"District{i}")))
+
+            program_ids = []
+            for i in range(6):
+                pname = f"Program {chr(65 + i)}"
+                existing = q("SELECT id FROM programs WHERE name=?", (pname,), one=True)
+                if existing:
+                    program_ids.append(existing["id"])
+                else:
+                    program_ids.append(qx(
+                        """INSERT INTO programs (name,sector,provider_id,duration_weeks,skills_taught)
+                           VALUES (?,?,?,?,?)""",
+                        (pname, random.choice(SECTORS), random.choice(provider_ids),
+                         random.choice([8, 12, 16, 24]), "Python, SQL, Excel")))
+
+            enrolled = 0
+            for t in q("SELECT id FROM trainees WHERE archived=0 LIMIT 200"):
+                exists = q("SELECT id FROM enrollments WHERE trainee_id=? LIMIT 1",
+                           (t["id"],), one=True)
+                if exists:
+                    continue
+                qx("""INSERT INTO enrollments
+                      (trainee_id,program_id,enrolled_on,completion_status,attendance_pct)
+                      VALUES (?,?,?,?,?)""",
+                   (t["id"], random.choice(program_ids),
+                    (dt.date.today() - dt.timedelta(days=random.randint(60, 400))).isoformat(),
+                    "completed", round(random.uniform(60, 100), 1)))
+                enrolled += 1
+            results["programs_created"] = len(program_ids)
+            results["enrollments_created"] = enrolled
+        except Exception as e:
+            results["programs_error"] = str(e)
+
+    return jsonify(ok=True, results=results)
 
 
 # =============================================================================
@@ -2162,6 +2306,9 @@ def api_check_db():
                 "govt_officials": q("SELECT COUNT(*) c FROM govt_officials", one=True)["c"],
                 "followups": q("SELECT COUNT(*) c FROM followups", one=True)["c"],
                 "employments": q("SELECT COUNT(*) c FROM employments", one=True)["c"],
+                "non_placement": q("SELECT COUNT(*) c FROM non_placement", one=True)["c"],
+                "programs": q("SELECT COUNT(*) c FROM programs", one=True)["c"],
+                "enrollments": q("SELECT COUNT(*) c FROM enrollments", one=True)["c"],
             },
         })
     except Exception as e:
@@ -2169,7 +2316,7 @@ def api_check_db():
 
 
 # =============================================================================
-#  SECTION 20 — DEMO SEED
+#  SECTION 20 — DEMO SEED (full)
 # =============================================================================
 @app.route("/api/demo/seed", methods=["POST"])
 @admin_required

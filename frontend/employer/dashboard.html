@@ -9,7 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="../css/style.css">
-<script src="../js/api.js"></script>
+
+<!-- ✅ Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
     <style>
         /* ===== RESET ===== */
@@ -944,59 +948,70 @@
 
 <script>
     // ============================================================
-    // BACKEND CACHE
+    // FIREBASE CONFIG
     // ============================================================
-    let _employerBackend = null;
-    let _allTraineesFromBackend = [];
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     // ============================================================
-    // EMPLOYER DATA — backend first, localStorage fallback
+    // CACHE
+    // ============================================================
+    let _firebaseUser = null;
+    let _userProfile = null;
+
+    // ============================================================
+    // AUTH GUARD
+    // ============================================================
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=employer';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=employer';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'employer') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=employer';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
+            });
+        });
+    }
+
+    // ============================================================
+    // EMPLOYER DATA — Firebase first, defaults second
     // ============================================================
     async function getEmployerData() {
-        const currentEmail =
-            localStorage.getItem('currentEmployerEmail') ||
-            localStorage.getItem('userEmail') ||
-            '';
-
-        // Try backend: load employer list and find by email
-        try {
-            const res = await apiCall('/api/employers');
-            if (res.ok && Array.isArray(res.data)) {
-                const match = res.data.find(e =>
-                    (e.email || '').toLowerCase() === currentEmail.toLowerCase()
-                );
-                if (match) {
-                    _employerBackend = match;
-                    return {
-                        employerId: 'EMP' + String(match.id).padStart(4, '0'),
-                        id: match.id,
-                        contactPerson: match.name || 'Employer',
-                        email: match.email,
-                        mobile: match.contact || 'N/A',
-                        orgName: match.name || 'Company',
-                        industry: match.industry || 'N/A',
-                        orgSize: 'N/A',
-                        city: match.district || 'N/A',
-                        state: match.state || 'N/A',
-                        status: match.verified ? 'Active' : 'Pending Verification',
-                    };
-                }
-            }
-        } catch (e) {
-            console.warn('Backend employer load failed:', e);
-        }
-
-        // Fallback: localStorage
-        const allEmployers = JSON.parse(localStorage.getItem('allEmployers') || '[]');
-        let data = currentEmail ? allEmployers.find(e => e.email === currentEmail) : null;
-
-        if (!data) {
-            const oldData = localStorage.getItem('employerData');
-            if (oldData) { try { data = JSON.parse(oldData); } catch(e) {} }
-        }
-
-        if (!data) {
-            data = {
+        if (!_firebaseUser) {
+            return {
                 employerId: 'EMP2026-0000',
                 contactPerson: 'Employer',
                 email: '',
@@ -1010,109 +1025,131 @@
             };
         }
 
-        return data;
+        const uid = _firebaseUser.uid;
+
+        // Prefer employers/{uid}, fall back to users/{uid}
+        let data = null;
+        try {
+            const empSnap = await db.collection('employers').doc(uid).get();
+            if (empSnap.exists) data = empSnap.data();
+        } catch (e) {
+            console.warn('Could not read employers/{uid}:', e);
+        }
+        if (!data && _userProfile) data = _userProfile;
+
+        if (!data) {
+            return {
+                employerId: 'EMP2026-0000',
+                contactPerson: 'Employer',
+                email: _firebaseUser.email || '',
+                mobile: '',
+                orgName: 'Your Organization',
+                industry: 'N/A',
+                orgSize: 'N/A',
+                city: 'N/A',
+                state: 'N/A',
+                status: 'Active',
+            };
+        }
+
+        const employerCode = data.employerCode || ('EMP' + uid.substring(0, 6).toUpperCase());
+
+        return {
+            employerId: employerCode,
+            uid: uid,
+            contactPerson: data.contactPerson || data.fullName || _firebaseUser.displayName || 'Employer',
+            email: data.email || _firebaseUser.email || '',
+            mobile: data.mobile || 'N/A',
+            orgName: data.orgName || 'Your Organization',
+            industry: data.industry || 'N/A',
+            orgSize: data.orgSize || 'N/A',
+            city: data.city || data.district || 'N/A',
+            state: data.state || 'N/A',
+            district: data.district || '',
+            pincode: data.pincode || '',
+            orgAddress: data.orgAddress || '',
+            status: data.status || 'Active',
+            hiringSectors: data.hiringSectors || '',
+            salaryRange: data.salaryRange || '',
+            verificationAuthority: data.verificationAuthority || '',
+        };
     }
 
     // ============================================================
-    // LOAD ALL TRAINEES (backend-first)
+    // LOAD TRAINEES from Firestore
+    // — Tries: (1) trainees verified by this employer
+    //          (2) all trainees (dashboard needs broad data)
     // ============================================================
     async function loadAllTraineesForEmployer() {
-        // Try backend first
+        if (!_firebaseUser) return [];
+
+        const employerUid = _firebaseUser.uid;
+        const employerEmail = (_firebaseUser.email || '').toLowerCase();
+        const employerName = ((_userProfile && _userProfile.orgName) || '').toLowerCase();
+
+        let docs = [];
         try {
-            const [traineesRes, empRes] = await Promise.all([
-                apiCall('/api/trainees'),
-                apiCall('/api/employers'),
-            ]);
-
-            if (traineesRes.ok && Array.isArray(traineesRes.data)) {
-                _allTraineesFromBackend = traineesRes.data;
-                const backendEmployers = (empRes.ok && Array.isArray(empRes.data)) ? empRes.data : [];
-
-                if (_allTraineesFromBackend.length > 0) {
-                    return _allTraineesFromBackend.map((t, index) => {
-                        // Find employer by name (best match)
-                        const employer = backendEmployers.find(e =>
-                            (e.name || '').toLowerCase().includes((t.preferred_role || '').toLowerCase())
-                        ) || backendEmployers[0];
-
-                        return {
-                            id: t.trainee_code || ('TRN' + t.id),
-                            backendId: t.id,
-                            name: t.full_name || 'Trainee',
-                            email: t.email || '',
-                            mobile: t.phone || 'N/A',
-                            course: t.skills || t.qualification || 'N/A',
-                            provider: 'N/A',
-                            batch: 'N/A',
-                            registrationDate: (t.created_at || '').split('T')[0] || 'N/A',
-                            trainingProgress: t.assessment_score || 0,
-                            certificationStatus: t.assessment_result === 'Pass' ? 'Certified' : 'Pending',
-                            employmentStatus: 'Not Updated',
-                            company: employer ? employer.name : 'N/A',
-                            jobRole: t.preferred_role || 'N/A',
-                            employmentType: 'N/A',
-                            joiningDate: 'N/A',
-                            location: t.district ? `${t.district}, ${t.state || ''}` : 'N/A',
-                            currentIncome: 0,
-                            previousIncome: 0,
-                            followupStatus: 'Pending',
-                            followupPeriod: '90 Days',
-                            verificationStatus: 'pending',
-                            verified: false,
-                            status: 'pending',
-                            avatar: (t.full_name || 'T').charAt(0).toUpperCase(),
-                            color: ['#2563eb', '#7c3aed', '#16a34a', '#d97706', '#dc2626'][index % 5],
-                        };
-                    });
-                }
-            }
+            const snap = await db.collection('trainees').get();
+            snap.forEach(d => docs.push({ _id: d.id, ...d.data() }));
         } catch (e) {
-            console.warn('Backend trainees load failed, using localStorage:', e);
+            console.warn('Could not read trainees collection:', e);
+            return [];
         }
 
-        // Fallback: localStorage
-        const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
-        const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-        const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
-
-        if (allTrainees.length === 0) {
+        if (docs.length === 0) {
             return getSampleTrainees();
         }
 
-        return allTrainees.map((t, index) => {
-            const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
-            const fol = allFollowups.find(f => f.traineeEmail === t.email) || {};
+        const COLOR_PALETTE = ['#2563eb', '#7c3aed', '#16a34a', '#d97706', '#dc2626'];
 
+        return docs.map((t, index) => {
+            // Determine employment linkage
+            const emp = t.employment || null;
+            const empCompanyLower = (emp && (emp.companyName || emp.employerName) || '').toLowerCase();
+            const empEmployerUid = emp && emp.employerUid || null;
+
+            // A trainee "belongs" to this employer if:
+            //  - employment.employerUid === this employer's uid, OR
+            //  - employment.companyName matches this employer's orgName, OR
+            //  - no employment yet (still visible as "unlinked trainee")
+            const linked =
+                empEmployerUid === employerUid ||
+                (empCompanyLower && employerName && empCompanyLower.includes(employerName));
+
+            // Status classification
             let status = 'pending';
-            if (t.verificationStatus === 'verified' || emp.verified) status = 'verified';
-            else if (emp.status === 'Employed') status = 'interview';
+            if (t.verificationStatus === 'verified' || (emp && emp.verified)) status = 'verified';
+            else if (emp && (emp.status === 'Employed' || emp.status === 'Verified')) status = 'interview';
 
             return {
-                id: t.traineeId || 'TRN' + (index + 1),
-                name: t.fullName || 'Unknown Trainee',
+                id: t.traineeCode || ('TRN' + (t.uid ? t.uid.substring(0, 6) : index)),
+                uid: t.uid || t._id,
+                name: t.fullName || 'Trainee',
                 email: t.email || '',
                 mobile: t.mobile || 'N/A',
-                course: t.skillTrade || 'N/A',
+                course: t.skillTrade || t.qualification || 'N/A',
                 provider: t.trainingProvider || 'N/A',
                 batch: t.batchId || 'N/A',
-                registrationDate: t.registrationDate || t.registeredAt || 'N/A',
-                trainingProgress: t.trainingProgress || 0,
+                registrationDate: (t.registeredAt || '').split('T')[0] || 'N/A',
+                trainingProgress: Number(t.trainingProgress) || 0,
                 certificationStatus: t.certificationStatus || 'Pending',
-                employmentStatus: emp.status || 'Not Updated',
-                company: emp.companyName || 'N/A',
-                jobRole: emp.jobRole || 'N/A',
-                employmentType: emp.employmentType || 'N/A',
-                joiningDate: emp.joiningDate || 'N/A',
-                location: emp.jobCity || 'N/A',
-                currentIncome: parseInt(emp.currentIncome) || 0,
-                previousIncome: parseInt(emp.previousIncome) || 0,
-                followupStatus: fol.status || 'Pending',
-                followupPeriod: fol.period || '90 Days',
+                employmentStatus: emp ? (emp.status || 'Employed') : 'Not Updated',
+                company: (emp && (emp.companyName || emp.employerName)) || 'N/A',
+                jobRole: (emp && emp.jobRole) || t.preferredRole || 'N/A',
+                employmentType: (emp && emp.employmentType) || 'N/A',
+                joiningDate: (emp && (emp.joiningDate || emp.startDate)) || 'N/A',
+                location: (emp && (emp.jobCity || emp.jobLocation)) ||
+                          (t.district ? `${t.district}, ${t.state || ''}` : 'N/A'),
+                currentIncome: Number((emp && (emp.currentIncome || emp.monthlyIncome)) || 0) || 0,
+                previousIncome: Number((emp && emp.previousIncome) || t.prevIncome) || 0,
+                followupStatus: (t.followups && t.followups[0] && t.followups[0].status) || 'Pending',
+                followupPeriod: (t.followups && t.followups[0] && (t.followups[0].periodDays || t.followups[0].period)) || '90 Days',
                 verificationStatus: status,
-                verified: t.verificationStatus === 'verified' || emp.verified || false,
+                verified: status === 'verified',
                 status: status,
+                linked: linked,
                 avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
-                color: ['#2563eb', '#7c3aed', '#16a34a', '#d97706', '#dc2626'][index % 5],
+                color: COLOR_PALETTE[index % COLOR_PALETTE.length],
             };
         });
     }
@@ -1219,7 +1256,7 @@
 
     function renderEmployment() {
         const container = document.getElementById('employmentDetails');
-        const employed = allTrainees.filter(t => t.employmentStatus === 'Employed');
+        const employed = allTrainees.filter(t => t.employmentStatus === 'Employed' || t.employmentStatus === 'Verified');
         const totalPlacements = employed.length;
         const avgSalary = employed.length > 0
             ? Math.round(employed.reduce((a, b) => a + (b.currentIncome || 0), 0) / employed.length)
@@ -1378,10 +1415,15 @@
 
     async function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
-            localStorage.removeItem('currentEmployerEmail');
-            localStorage.removeItem('currentEmployerId');
-            window.location.href = '../auth/login.html';
+            try { await auth.signOut(); } catch (e) {}
+            try {
+                localStorage.removeItem('currentEmployerEmail');
+                localStorage.removeItem('currentEmployerId');
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userId');
+            } catch (e) {}
+            window.location.href = '../auth/login.html?role=employer';
         }
     }
 
@@ -1415,20 +1457,25 @@
 
         updateDate();
 
-        // Load data (async)
-        employerData = await getEmployerData();
-        allTrainees = await loadAllTraineesForEmployer();
+        // Auth guard + load data
+        try {
+            await requireAuth();
+            employerData = await getEmployerData();
+            allTrainees = await loadAllTraineesForEmployer();
 
-        renderProfile();
-        renderStats();
-        renderTrainees();
-        renderEmployment();
-        renderSkills();
-        renderFeedback();
-        setActiveSidebar();
+            renderProfile();
+            renderStats();
+            renderTrainees();
+            renderEmployment();
+            renderSkills();
+            renderFeedback();
+            setActiveSidebar();
 
-        console.log('✅ Employer Dashboard loaded');
-        console.log('📊 Total trainees:', allTrainees.length);
+            console.log('✅ Employer Dashboard loaded (Firebase)');
+            console.log('📊 Total trainees:', allTrainees.length);
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
 
         // Mobile: close sidebar on outside click
         document.addEventListener('click', function(e) {

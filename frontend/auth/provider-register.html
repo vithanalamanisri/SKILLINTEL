@@ -11,7 +11,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="../css/style.css">
-    <script src="../js/api.js"></script>
+
+    <!-- ✅ Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <!-- ✅ Apply theme BEFORE page renders -->
     <script>
       (function() {
@@ -45,7 +50,6 @@
             z-index: 0;
         }
 
-        /* ─── THEME TOGGLE (top-right floating) ─── */
         .theme-toggle-float {
             position: fixed;
             top: 20px;
@@ -129,6 +133,7 @@
         }
         .alert.success { display: flex; background: #ecfdf5; color: #065f46; border-left-color: #10b981; }
         .alert.error { display: flex; background: #fef2f2; color: #991b1b; border-left-color: #ef4444; }
+        .alert.info { display: flex; background: #eff6ff; color: #1e40af; border-left-color: #3b82f6; }
         .alert i { font-size: 1.1rem; margin-top: 0.05rem; flex-shrink: 0; }
         .alert .alert-msg { line-height: 1.5; }
         .alert .alert-msg strong { color: #0b1a33; }
@@ -293,7 +298,6 @@
         }
         .input-wrap .toggle-pw:hover { background: #f1f5f9; color: #1a56db; }
 
-        /* ===== CONSENT CHECKBOXES - ENHANCED ===== */
         .consent-section {
             background: linear-gradient(135deg, #f0fdf4, #f0f9ff);
             border: 2px solid #bbf7d0;
@@ -494,9 +498,7 @@
             .form-actions { display: none !important; }
         }
 
-        /* ═══════════════════════════════════════════════════════
-           DARK MODE — FORCE EVERY ELEMENT ON THIS PAGE
-           ═══════════════════════════════════════════════════════ */
+        /* DARK MODE */
         html[data-theme="dark"] body {
             background: linear-gradient(135deg, #0B1220 0%, #0F172A 50%, #0B1220 100%) !important;
             color: #F1F5F9 !important;
@@ -534,7 +536,6 @@
         html[data-theme="dark"] .page-title h2 i { color: #60A5FA !important; }
         html[data-theme="dark"] .page-title p { color: #94A3B8 !important; }
 
-        /* Progress steps */
         html[data-theme="dark"] .progress-steps::before {
             background: rgba(255, 255, 255, 0.08) !important;
         }
@@ -557,7 +558,6 @@
         html[data-theme="dark"] .step-indicator.active .label { color: #60A5FA !important; }
         html[data-theme="dark"] .step-indicator.completed .label { color: #4ADE80 !important; }
 
-        /* Section headers */
         html[data-theme="dark"] .section-header {
             border-bottom-color: rgba(255, 255, 255, 0.08) !important;
         }
@@ -568,7 +568,6 @@
             color: #94A3B8 !important;
         }
 
-        /* Form labels & inputs */
         html[data-theme="dark"] .form-group label { color: #E2E8F0 !important; }
         html[data-theme="dark"] .form-group label i { color: #60A5FA !important; }
         html[data-theme="dark"] .form-group .helper-text { color: #64748B !important; }
@@ -606,7 +605,6 @@
             color: #60A5FA !important;
         }
 
-        /* Consent section */
         html[data-theme="dark"] .consent-section {
             background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(37, 99, 235, 0.08)) !important;
             border-color: rgba(34, 197, 94, 0.3) !important;
@@ -657,7 +655,6 @@
             color: #FCD34D !important;
         }
 
-        /* Review boxes (Step 5) */
         html[data-theme="dark"] .form-section[data-step="5"] > div[style*="background:#f8fafc"] {
             background: #1A2338 !important;
             border-color: rgba(255, 255, 255, 0.10) !important;
@@ -672,7 +669,6 @@
             color: #93C5FD !important;
         }
 
-        /* Form actions */
         html[data-theme="dark"] .form-actions {
             border-top-color: rgba(255, 255, 255, 0.08) !important;
         }
@@ -687,7 +683,6 @@
             border-color: rgba(255, 255, 255, 0.20) !important;
         }
 
-        /* Login link & footer */
         html[data-theme="dark"] .login-link { color: #94A3B8 !important; }
         html[data-theme="dark"] .login-link a { color: #60A5FA !important; }
         html[data-theme="dark"] .login-link a:hover { border-bottom-color: #60A5FA !important; }
@@ -697,7 +692,6 @@
         }
         html[data-theme="dark"] .footer-note i { color: #60A5FA !important; }
 
-        /* Alerts */
         html[data-theme="dark"] .alert.success {
             background: rgba(34, 197, 94, 0.15) !important;
             color: #86EFAC !important;
@@ -708,18 +702,59 @@
             color: #FCA5A5 !important;
         }
         html[data-theme="dark"] .alert.error strong { color: #FCA5A5 !important; }
+
+        /* Firebase status badge */
+        .firebase-status {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+        .firebase-status.online { background: #dcfce7; color: #15803d; }
+        .firebase-status.offline { background: #fef3c7; color: #b45309; }
+        .firebase-status .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        html[data-theme="dark"] .firebase-status.online {
+            background: rgba(34, 197, 94, 0.2) !important;
+            color: #86EFAC !important;
+        }
+        html[data-theme="dark"] .firebase-status.offline {
+            background: rgba(245, 158, 11, 0.2) !important;
+            color: #FCD34D !important;
+        }
     </style>
 </head>
 <body>
 
-<!-- Theme Toggle -->
 <button class="theme-toggle-float" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
     <i class="fas fa-moon"></i>
 </button>
 
+<div class="firebase-status offline" id="firebaseStatus">
+    <span class="status-dot"></span>
+    <span id="firebaseStatusText">Checking Firebase...</span>
+</div>
+
 <div class="register-wrapper">
 
-    <!-- HEADER -->
     <div class="header">
         <div class="brand">
             <div class="brand-icon"><i class="fas fa-brain"></i></div>
@@ -730,13 +765,11 @@
         </div>
     </div>
 
-    <!-- TITLE -->
     <div class="page-title">
         <h2><i class="fas fa-chalkboard-teacher"></i> Training Provider Registration</h2>
         <p>Register your organization to deliver skill training and track trainee outcomes</p>
     </div>
 
-    <!-- PROGRESS STEPS -->
     <div class="progress-steps" id="progressSteps">
         <div class="step-indicator active" data-step="1">
             <div class="circle">1</div>
@@ -760,16 +793,14 @@
         </div>
     </div>
 
-    <!-- ALERT -->
     <div class="alert" id="alertBox">
         <i class="fas fa-check-circle" id="alertIcon"></i>
         <div class="alert-msg" id="alertMessage">Registration successful!</div>
     </div>
 
-    <!-- FORM -->
     <form id="registerForm" onsubmit="return false;">
 
-        <!-- ===== STEP 1: ACCOUNT DETAILS ===== -->
+        <!-- STEP 1 -->
         <div class="form-section" data-step="1">
             <div class="section-header">
                 <span class="step-num">1</span>
@@ -781,9 +812,9 @@
                     <label><i class="fas fa-id-card"></i> Provider ID <span class="required">*</span></label>
                     <div class="input-wrap">
                         <i class="fas fa-hashtag field-icon"></i>
-                        <input type="text" id="providerId" value="PRV2026-0000" readonly />
+                        <input type="text" id="providerId" value="Auto-generated" readonly />
                     </div>
-                    <span class="helper-text">Auto-generated by the system</span>
+                    <span class="helper-text">Auto-generated by the server on registration</span>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-building"></i> Organization Name <span class="required">*</span></label>
@@ -840,7 +871,7 @@
             </div>
         </div>
 
-        <!-- ===== STEP 2: ORGANIZATION DETAILS ===== -->
+        <!-- STEP 2 -->
         <div class="form-section hidden" data-step="2">
             <div class="section-header">
                 <span class="step-num">2</span>
@@ -948,7 +979,7 @@
             </div>
         </div>
 
-        <!-- ===== STEP 3: LOCATION DETAILS ===== -->
+        <!-- STEP 3 -->
         <div class="form-section hidden" data-step="3">
             <div class="section-header">
                 <span class="step-num">3</span>
@@ -1043,7 +1074,7 @@
             </div>
         </div>
 
-        <!-- ===== STEP 4: TRAINING CAPABILITY ===== -->
+        <!-- STEP 4 -->
         <div class="form-section hidden" data-step="4">
             <div class="section-header">
                 <span class="step-num">4</span>
@@ -1202,7 +1233,7 @@
             </div>
         </div>
 
-        <!-- ===== STEP 5: REVIEW & SUBMIT ===== -->
+        <!-- STEP 5 -->
         <div class="form-section hidden" data-step="5">
             <div class="section-header">
                 <span class="step-num">5</span>
@@ -1229,7 +1260,6 @@
                 </div>
             </div>
 
-            <!-- ===== CONSENT SECTION ===== -->
             <div class="consent-section" style="margin-bottom:1.5rem;">
                 <div class="section-header" style="border-bottom-color:#bbf7d0; margin-bottom:0.8rem;">
                     <span class="step-num" style="background:#22c55e;">✓</span>
@@ -1296,7 +1326,6 @@
 
     </form>
 
-    <!-- ✅ Login link with correct path -->
     <div class="login-link">
         Already have an account? <a href="login.html?role=provider"><i class="fas fa-arrow-right"></i> Sign in here</a>
     </div>
@@ -1309,8 +1338,22 @@
 
 <script>
     // ============================================================
-    // TOGGLE PASSWORD
+    // FIREBASE CONFIG
     // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ===== TOGGLE PASSWORD =====
     function togglePassword(inputId, btn) {
         const input = document.getElementById(inputId);
         if (!input) return;
@@ -1326,19 +1369,7 @@
         }
     }
 
-    // ============================================================
-    // GENERATE PROVIDER ID
-    // ============================================================
-    function generateProviderId() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const count = String(Math.floor(Math.random() * 9000) + 1000);
-        return 'PRV' + year + '-' + count;
-    }
-
-    // ============================================================
-    // STEP NAVIGATION
-    // ============================================================
+    // ===== STEP NAVIGATION =====
     let currentStep = 1;
     const totalSteps = 5;
 
@@ -1374,9 +1405,6 @@
         updateSteps();
     }
 
-    // ============================================================
-    // VALIDATION HELPERS
-    // ============================================================
     function setError(wrapId, errId, show) {
         const wrap = document.getElementById(wrapId);
         const err = document.getElementById(errId);
@@ -1384,6 +1412,7 @@
         if (err) err.classList.toggle('show', show);
     }
 
+    // ===== VALIDATORS =====
     function validateEmail(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
@@ -1396,9 +1425,6 @@
         return pw.length >= 8 && /[a-zA-Z]/.test(pw) && /[0-9]/.test(pw);
     }
 
-    // ============================================================
-    // STEP 1 VALIDATION
-    // ============================================================
     function validateStep1() {
         let valid = true;
         const orgName = document.getElementById('orgName').value.trim();
@@ -1428,9 +1454,6 @@
         return valid;
     }
 
-    // ============================================================
-    // STEP 2 VALIDATION
-    // ============================================================
     function validateStep2() {
         let valid = true;
         const orgType = document.getElementById('orgType').value;
@@ -1468,9 +1491,6 @@
         return valid;
     }
 
-    // ============================================================
-    // STEP 3 VALIDATION
-    // ============================================================
     function validateStep3() {
         let valid = true;
         const state = document.getElementById('state').value;
@@ -1504,9 +1524,6 @@
         return valid;
     }
 
-    // ============================================================
-    // STEP 4 VALIDATION
-    // ============================================================
     function validateStep4() {
         let valid = true;
         const sector = document.getElementById('trainingSector').value;
@@ -1552,9 +1569,6 @@
         return valid;
     }
 
-    // ============================================================
-    // UPDATE REVIEW
-    // ============================================================
     function updateReview() {
         const getVal = (id) => document.getElementById(id).value || '—';
         const getSelectText = (id) => {
@@ -1598,16 +1612,15 @@
         `;
     }
 
-    // ============================================================
-    // SHOW ALERT
-    // ============================================================
     function showAlert(message, type = 'success') {
         const alertBox = document.getElementById('alertBox');
         const alertMsg = document.getElementById('alertMessage');
         const alertIcon = document.getElementById('alertIcon');
 
         alertBox.className = 'alert ' + type;
-        alertIcon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+        alertIcon.className = type === 'success' ? 'fas fa-check-circle' :
+                              type === 'info'    ? 'fas fa-info-circle' :
+                                                   'fas fa-exclamation-circle';
         alertMsg.innerHTML = message;
         alertBox.style.display = 'flex';
 
@@ -1617,28 +1630,10 @@
         }, 7000);
     }
 
-    // ============================================================
-    // CHECK ALL CONSENTS
-    // ============================================================
     function checkAllConsents() {
-        const consents = [
-            'consentOrg',
-            'consentRecords',
-            'consentMonitoring',
-            'consentCompliance',
-            'consentDataSharing'
-        ];
-
-        const consentItems = [
-            'consentItem1',
-            'consentItem2',
-            'consentItem3',
-            'consentItem4',
-            'consentItem5'
-        ];
-
+        const consents = ['consentOrg', 'consentRecords', 'consentMonitoring', 'consentCompliance', 'consentDataSharing'];
+        const consentItems = ['consentItem1', 'consentItem2', 'consentItem3', 'consentItem4', 'consentItem5'];
         let allChecked = true;
-
         consents.forEach((id, index) => {
             const checkbox = document.getElementById(id);
             const item = document.getElementById(consentItems[index]);
@@ -1649,154 +1644,199 @@
                 if (item) item.classList.remove('error');
             }
         });
-
         return allChecked;
     }
 
-   // ============================================================
-// REGISTER PROVIDER — backend-first
-// ============================================================
-async function registerProvider() {
-    if (!checkAllConsents()) {
-        showAlert('Please accept <strong>all 5 consent terms</strong> to complete registration.', 'error');
-        document.querySelector('.consent-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
+    // ============================================================
+    // CHECK FIREBASE
+    // ============================================================
+    function checkBackend() {
+        const statusEl = document.getElementById('firebaseStatus');
+        const statusText = document.getElementById('firebaseStatusText');
+        if (auth && db) {
+            statusEl.className = 'firebase-status online';
+            statusText.textContent = 'Firebase Connected';
+        } else {
+            statusEl.className = 'firebase-status offline';
+            statusText.textContent = 'Firebase Unavailable';
+        }
     }
 
-    const providerData = {
-        providerId: document.getElementById('providerId').value,
-        orgName: document.getElementById('orgName').value.trim(),
-        email: document.getElementById('email').value.trim().toLowerCase(),
-        password: document.getElementById('password').value,
-        mobile: document.getElementById('mobile').value.trim(),
-        orgType: document.getElementById('orgType').value,
-        registrationNumber: document.getElementById('registrationNumber').value.trim(),
-        yearEstablished: document.getElementById('yearEstablished').value,
-        website: document.getElementById('website').value.trim() || '',
-        orgEmail: document.getElementById('orgEmail').value.trim() || '',
-        orgPhone: document.getElementById('orgPhone').value.trim() || '',
-        repName: document.getElementById('repName').value.trim(),
-        designation: document.getElementById('designation').value.trim(),
-        repEmail: document.getElementById('repEmail').value.trim(),
-        repMobile: document.getElementById('repMobile').value.trim(),
-        state: document.getElementById('state').value,
-        district: document.getElementById('district').value.trim(),
-        mandal: document.getElementById('mandal').value.trim() || '',
-        city: document.getElementById('city').value.trim(),
-        pincode: document.getElementById('pincode').value.trim(),
-        areaType: document.getElementById('areaType').value,
-        address: document.getElementById('address').value.trim(),
-        trainingSector: document.getElementById('trainingSector').value,
-        skillsOffered: document.getElementById('skillsOffered').value.trim(),
-        trainingCapacity: document.getElementById('trainingCapacity').value,
-        batchSize: document.getElementById('batchSize').value,
-        trainerCount: document.getElementById('trainerCount').value,
-        assessmentAvailable: document.getElementById('assessmentAvailable').value,
-        certificationAvailable: document.getElementById('certificationAvailable').value,
-        certificationAuthority: document.getElementById('certificationAuthority').value.trim() || '',
-        schemeName: document.getElementById('schemeName').value,
-        programCode: document.getElementById('programCode').value.trim() || '',
-        recognitionStatus: document.getElementById('recognitionStatus').value,
-        verificationStatus: document.getElementById('verificationStatus').value,
-        consentOrg: document.getElementById('consentOrg').checked,
-        consentRecords: document.getElementById('consentRecords').checked,
-        consentMonitoring: document.getElementById('consentMonitoring').checked,
-        consentCompliance: document.getElementById('consentCompliance').checked,
-        consentDataSharing: document.getElementById('consentDataSharing').checked,
-        registrationDate: new Date().toISOString().split('T')[0],
-        status: 'Active'
-    };
-
-    const registerBtn = document.getElementById('registerBtn');
-    registerBtn.disabled = true;
-    const originalHTML = registerBtn.innerHTML;
-    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
-
-    try {
-        // STEP 1: Create user account
-        const userResult = await apiCall('/api/auth/register', {
-            method: 'POST',
-            body: {
-                username: providerData.email,
-                password: providerData.password,
-                role: 'provider',
-                full_name: providerData.orgName,
-                email: providerData.email,
-                phone: providerData.mobile,
-            },
-        });
-        if (!userResult.ok && userResult.status !== 409) {
-            throw new Error('Account creation failed: ' + (userResult.data.error || userResult.status));
+    // ============================================================
+    // REGISTER PROVIDER (Firebase Auth + Firestore)
+    // ============================================================
+    async function registerProvider() {
+        if (!checkAllConsents()) {
+            showAlert('Please accept <strong>all 5 consent terms</strong> to complete registration.', 'error');
+            document.querySelector('.consent-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
         }
 
-        // STEP 2: Create provider record
-        const provResult = await apiCall('/api/providers', {
-            method: 'POST',
-            body: {
-                name: providerData.orgName,
-                state: providerData.state,
-                district: providerData.district,
-                contact: providerData.repMobile || providerData.mobile,
-                email: providerData.email,
-            },
-        });
-        if (!provResult.ok && provResult.status !== 409) {
-            throw new Error('Provider record creation failed: ' + (provResult.data.error || provResult.status));
-        }
+        // Gather all fields
+        const orgName = document.getElementById('orgName').value.trim();
+        const email = document.getElementById('email').value.trim().toLowerCase();
+        const password = document.getElementById('password').value;
+        const mobile = document.getElementById('mobile').value.trim();
+        const orgType = document.getElementById('orgType').value;
+        const registrationNumber = document.getElementById('registrationNumber').value.trim();
+        const yearEstablished = document.getElementById('yearEstablished').value;
+        const website = document.getElementById('website').value.trim();
+        const orgEmail = document.getElementById('orgEmail').value.trim();
+        const orgPhone = document.getElementById('orgPhone').value.trim();
+        const repName = document.getElementById('repName').value.trim();
+        const designation = document.getElementById('designation').value.trim();
+        const repEmail = document.getElementById('repEmail').value.trim();
+        const repMobile = document.getElementById('repMobile').value.trim();
+        const state = document.getElementById('state').value;
+        const district = document.getElementById('district').value.trim();
+        const mandal = document.getElementById('mandal').value.trim();
+        const city = document.getElementById('city').value.trim();
+        const pincode = document.getElementById('pincode').value.trim();
+        const areaType = document.getElementById('areaType').value;
+        const address = document.getElementById('address').value.trim();
+        const trainingSector = document.getElementById('trainingSector').value;
+        const skillsOffered = document.getElementById('skillsOffered').value.trim();
+        const trainingCapacity = document.getElementById('trainingCapacity').value;
+        const batchSize = document.getElementById('batchSize').value;
+        const trainerCount = document.getElementById('trainerCount').value;
+        const assessmentAvailable = document.getElementById('assessmentAvailable').value;
+        const certificationAvailable = document.getElementById('certificationAvailable').value;
+        const certificationAuthority = document.getElementById('certificationAuthority').value.trim();
+        const schemeName = document.getElementById('schemeName').value;
+        const programCode = document.getElementById('programCode').value.trim();
+        const recognitionStatus = document.getElementById('recognitionStatus').value;
+        const verificationStatus = document.getElementById('verificationStatus').value;
 
-        // STEP 3: Local cache
+        const registerBtn = document.getElementById('registerBtn');
+        registerBtn.disabled = true;
+        const originalHTML = registerBtn.innerHTML;
+        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+
         try {
-            let allProviders = JSON.parse(localStorage.getItem('allProviders') || '[]');
-            const idx = allProviders.findIndex(p => p.email === providerData.email);
-            if (idx !== -1) allProviders[idx] = { ...allProviders[idx], ...providerData };
-            else allProviders.push(providerData);
-            localStorage.setItem('allProviders', JSON.stringify(allProviders));
-            localStorage.setItem('currentProviderEmail', providerData.email);
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userRole', 'provider');
-        } catch (e) { console.warn('localStorage cache failed:', e); }
+            // ============================================================
+            // STEP 1 — Create Firebase Auth user (permanent)
+            // ============================================================
+            console.log('📤 Step 1: Creating Firebase Auth user...');
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const fbUser = userCredential.user;
 
-        // STEP 4: Auto-login
-        await apiCall('/api/auth/login', {
-            method: 'POST',
-            body: { username: providerData.email, password: providerData.password, role: 'provider' },
-        });
+            try { await fbUser.updateProfile({ displayName: orgName }); } catch (e) {}
 
-        const successHTML = `
-            <strong>🎉 Registration Successful!</strong><br>
-            <span style="font-size:0.75rem;color:inherit;">
-                Provider: <strong>${providerData.orgName}</strong> (${providerData.providerId})<br>
-                Sector: ${providerData.trainingSector} · Capacity: ${providerData.trainingCapacity}<br>
-                Rep: ${providerData.repName} · ${providerData.repEmail}<br>
-                Location: ${providerData.city}, ${providerData.district}, ${providerData.state}<br><br>
-                <strong>☁️ Synced to cloud</strong> · <strong>Redirecting...</strong>
-            </span>
-        `;
-        showAlert(successHTML, 'success');
-        document.querySelector('.register-wrapper').scrollTop = 0;
+            // ============================================================
+            // STEP 2 — Save all provider details to Firestore
+            // ============================================================
+            console.log('📤 Step 2: Saving provider profile to Firestore...');
+            const providerProfile = {
+                uid: fbUser.uid,
+                role: 'provider',
+                email: email,
+                mobile: mobile,
+                orgName: orgName,
 
-        setTimeout(() => {
-            window.location.href = '../provider/dashboard.html';
-        }, 2000);
+                // Organization
+                orgType: orgType,
+                registrationNumber: registrationNumber,
+                yearEstablished: yearEstablished,
+                website: website,
+                orgEmail: orgEmail,
+                orgPhone: orgPhone,
 
-    } catch (err) {
-        console.error('❌ Provider registration failed:', err);
-        showAlert(`
-            <strong>Registration Failed</strong><br>
-            <span style="font-size:0.75rem;">${err.message}<br>
-            Please try again or check your internet connection.</span>
-        `, 'error');
-        registerBtn.disabled = false;
-        registerBtn.innerHTML = originalHTML;
+                // Representative
+                repName: repName,
+                designation: designation,
+                repEmail: repEmail,
+                repMobile: repMobile,
+
+                // Location
+                state: state,
+                district: district,
+                mandal: mandal,
+                city: city,
+                pincode: pincode,
+                areaType: areaType,
+                address: address,
+
+                // Training
+                trainingSector: trainingSector,
+                skillsOffered: skillsOffered,
+                trainingCapacity: trainingCapacity,
+                batchSize: batchSize,
+                trainerCount: trainerCount,
+                assessmentAvailable: assessmentAvailable,
+                certificationAvailable: certificationAvailable,
+                certificationAuthority: certificationAuthority,
+                schemeName: schemeName,
+                programCode: programCode,
+                recognitionStatus: recognitionStatus,
+                verificationStatus: verificationStatus,
+
+                // Consent
+                consentOrg: document.getElementById('consentOrg').checked,
+                consentRecords: document.getElementById('consentRecords').checked,
+                consentMonitoring: document.getElementById('consentMonitoring').checked,
+                consentCompliance: document.getElementById('consentCompliance').checked,
+                consentDataSharing: document.getElementById('consentDataSharing').checked,
+
+                status: 'Active',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                registeredAt: new Date().toISOString(),
+            };
+
+            await db.collection('users').doc(fbUser.uid).set(providerProfile);
+            await db.collection('providers').doc(fbUser.uid).set(providerProfile);
+
+            // Generate provider code
+            const providerCode = 'PRV' + fbUser.uid.substring(0, 6).toUpperCase();
+            await db.collection('users').doc(fbUser.uid).update({ providerCode: providerCode });
+            await db.collection('providers').doc(fbUser.uid).update({ providerCode: providerCode });
+
+            document.getElementById('providerId').value = providerCode;
+
+            console.log('✅ Registered in Firebase:', fbUser.uid);
+
+            showAlert(`
+                <strong>🎉 Registration Successful!</strong><br>
+                <span style="font-size:0.75rem;">
+                    Provider: <strong>${orgName}</strong> (${providerCode})<br>
+                    Sector: ${trainingSector} · Capacity: ${trainingCapacity}<br>
+                    Rep: ${repName} · ${email}<br>
+                    📍 ${city}, ${district}, ${state}<br><br>
+                    <strong>Now please log in with your email and password.</strong>
+                </span>
+            `, 'success');
+            document.querySelector('.register-wrapper').scrollTop = 0;
+
+            // Sign out so user logs in manually
+            await auth.signOut();
+
+            setTimeout(() => {
+                window.location.href = 'login.html?role=provider';
+            }, 2000);
+
+        } catch (err) {
+            console.error('❌ Firebase registration failed:', err);
+            let msg = err.message || 'Registration failed. Please try again.';
+            if (err.code === 'auth/email-already-in-use') {
+                msg = 'This email is already registered. Please log in instead.';
+            } else if (err.code === 'auth/invalid-email') {
+                msg = 'Invalid email address.';
+            } else if (err.code === 'auth/weak-password') {
+                msg = 'Password is too weak. Use at least 8 characters with letters and numbers.';
+            } else if (err.code === 'auth/network-request-failed') {
+                msg = 'Network error. Please check your internet connection.';
+            } else if (err.code === 'permission-denied') {
+                msg = 'Firestore permission denied. Please contact the administrator.';
+            }
+            showAlert(`<strong>Registration Failed</strong><br><span style="font-size:0.75rem;">${msg}</span>`, 'error');
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = originalHTML;
+        }
     }
-}
 
-    // ============================================================
-    // INITIALIZE
-    // ============================================================
+    // ===== INITIALIZE =====
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('providerId').value = generateProviderId();
         updateSteps();
+        checkBackend();
         document.getElementById('verificationStatus').value = 'Pending Verification';
 
         document.querySelectorAll('.input-wrap input, .input-wrap select, .input-wrap textarea').forEach(el => {
@@ -1816,13 +1856,16 @@ async function registerProvider() {
         });
 
         updateThemeIcon();
+        console.log('🚀 Provider registration ready (Firebase mode)');
     });
 
+    // ===== FORM SUBMIT =====
     document.getElementById('registerForm').addEventListener('submit', function(e) {
         e.preventDefault();
         registerProvider();
     });
 
+    // ===== MOBILE & PIN INPUT VALIDATION =====
     document.getElementById('mobile').addEventListener('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
     });
@@ -1833,6 +1876,7 @@ async function registerProvider() {
         this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
     });
 
+    // ===== STEP INDICATOR CLICK =====
     document.querySelectorAll('.step-indicator').forEach(indicator => {
         indicator.addEventListener('click', function() {
             const step = parseInt(this.dataset.step);
@@ -1854,16 +1898,6 @@ async function registerProvider() {
                 }
             }
         });
-    });
-
-    let isSubmitting = false;
-    document.querySelector('.btn-success').addEventListener('click', function(e) {
-        if (isSubmitting) {
-            e.preventDefault();
-            return;
-        }
-        isSubmitting = true;
-        setTimeout(() => { isSubmitting = false; }, 3000);
     });
 
     // ============================================================

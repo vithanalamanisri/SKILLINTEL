@@ -1,39 +1,121 @@
 // ============================================================
-// SKILLINTEL API CLIENT
-// Lets every page talk to the Flask backend at http://127.0.0.1:5000
+// SkillBridge · api.js
+// Safe wrapper around fetch that:
+//   - ALWAYS sends cookies (credentials: 'include')
+//   - NEVER throws — always returns { ok, data, status }
+//   - Works across all pages (login, register, dashboards)
 // ============================================================
 
-// Auto-detect backend URL:
-// - If page is served by Flask → use same origin (empty string)
-// - If page is opened as file:// → use localhost:5000
-const API_BASE = (window.location.protocol === 'file:')
-    ? 'http://127.0.0.1:5000'
-    : '';
+(function (global) {
 
-// Simple fetch wrapper
-async function apiCall(path, options = {}) {
-    const url = API_BASE + path;
-    const opts = {
-        method: options.method || 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',  // Send cookies to backend
-        ...options
-    };
-    if (opts.body && typeof opts.body === 'object') {
-        opts.body = JSON.stringify(opts.body);
+    // ------------------------------------------------------------
+    // CORE: apiCall(url, opts)
+    // ------------------------------------------------------------
+    async function apiCall(url, opts) {
+        opts = opts || {};
+        const method = (opts.method || 'GET').toUpperCase();
+        const headers = Object.assign(
+            { 'Accept': 'application/json' },
+            opts.headers || {}
+        );
+
+        let body = opts.body;
+        if (body && typeof body === 'object' && !(body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+            body = JSON.stringify(body);
+        }
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: headers,
+                body: body,
+                credentials: 'include',      // ← CRITICAL: sends session cookie
+                cache: 'no-store',
+            });
+
+            // Try to parse JSON, fall back to text
+            let data = null;
+            const text = await res.text();
+            if (text) {
+                try { data = JSON.parse(text); }
+                catch (e) { data = { raw: text }; }
+            }
+
+            // Success = 2xx
+            if (res.ok) {
+                return { ok: true, status: res.status, data: data };
+            }
+
+            // Non-2xx → still return data so UI can show the error
+            return {
+                ok: false,
+                status: res.status,
+                data: data || { error: 'HTTP ' + res.status },
+            };
+
+        } catch (err) {
+            console.warn('[apiCall] network error:', url, err && err.message);
+            return {
+                ok: false,
+                status: 0,
+                data: { error: 'Network error — cannot reach server' },
+            };
+        }
     }
-    const res = await fetch(url, opts);
-    let data;
-    try { data = await res.json(); } catch (e) { data = {}; }
-    return { ok: res.ok, status: res.status, data };
-}
 
-// Check if backend is reachable
-async function apiHealth() {
-    try {
-        const r = await apiCall('/api/system/health');
-        return r.ok ? r.data : null;
-    } catch (e) {
+    // ------------------------------------------------------------
+    // CONVENIENCE: apiGet / apiPost / apiPut / apiDelete
+    // ------------------------------------------------------------
+    function apiGet(url) {
+        return apiCall(url, { method: 'GET' });
+    }
+    function apiPost(url, body) {
+        return apiCall(url, { method: 'POST', body: body });
+    }
+    function apiPut(url, body) {
+        return apiCall(url, { method: 'PUT', body: body });
+    }
+    function apiDelete(url) {
+        return apiCall(url, { method: 'DELETE' });
+    }
+
+    // ------------------------------------------------------------
+    // SESSION HELPERS
+    // ------------------------------------------------------------
+    async function getCurrentUser() {
+        const res = await apiGet('/api/auth/me');
+        if (res.ok && res.data) return res.data;
         return null;
     }
-}
+
+    function clearSession() {
+        try {
+            ['isLoggedIn','userRole','userId','userName','userEmail',
+             'currentTraineeEmail','currentEmployerEmail','currentProviderEmail',
+             'currentGovtOfficialId','govtOfficerName','govtAccessLevel']
+                .forEach(function (k) { localStorage.removeItem(k); });
+        } catch (e) {}
+    }
+
+    async function logout() {
+        try { await apiPost('/api/auth/logout', {}); } catch (e) {}
+        clearSession();
+        window.location.href = '../auth/login.html';
+    }
+
+    // ------------------------------------------------------------
+    // EXPORT TO GLOBAL SCOPE
+    // ------------------------------------------------------------
+    global.apiCall = apiCall;
+    global.apiGet = apiGet;
+    global.apiPost = apiPost;
+    global.apiPut = apiPut;
+    global.apiDelete = apiDelete;
+    global.getCurrentUser = getCurrentUser;
+    global.clearSession = clearSession;
+    global.logout = logout;
+
+    console.log('✅ api.js loaded — cookies enabled, safe wrapper active');
+
+})(window);
