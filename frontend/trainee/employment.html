@@ -1144,64 +1144,104 @@
     </button>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <script>
     // ============================================================
-    // BACKEND STATE
+    // FIREBASE CONFIG
     // ============================================================
-    let _traineeBackendId = null;
-    let _existingEmploymentId = null;
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Keep session forever
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
+    let _firebaseUser = null;
+    let _traineeProfile = null;
+
+    // ============================================================
+    // AUTH GUARD
+    // ============================================================
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+
+                if (!fbUser) {
+                    // Check localStorage fallback (don't force logout on race condition)
+                    if (localStorage.getItem('isLoggedIn') === 'true' &&
+                        localStorage.getItem('userRole') === 'trainee') {
+                        resolve(null);
+                        return;
+                    }
+                    window.location.href = '../auth/login.html?role=trainee';
+                    reject('not-authenticated');
+                    return;
+                }
+
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (snap.exists) {
+                        const profile = snap.data();
+                        if (profile.role !== 'trainee') {
+                            window.location.href = '../auth/login.html?role=trainee';
+                            reject('wrong-role');
+                            return;
+                        }
+                        _traineeProfile = profile;
+                    }
+                    _firebaseUser = fbUser;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.warn('Auth guard read failed:', e);
+                    _firebaseUser = fbUser;
+                    resolve(fbUser);
+                }
+            });
+        });
+    }
 
     // ============================================================
     // LOAD USER DATA
     // ============================================================
     async function loadUserData() {
-        const currentEmail = localStorage.getItem('currentTraineeEmail') ||
-                             (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
+        if (!_firebaseUser) return null;
 
-        // Try backend first — find trainee by email
         try {
-            const res = await apiCall('/api/trainees?search=' + encodeURIComponent(currentEmail || ''));
-            if (res.ok && Array.isArray(res.data)) {
-                const found = res.data.find(t =>
-                    (t.email || '').toLowerCase() === (currentEmail || '').toLowerCase()
-                );
-                if (found) {
-                    _traineeBackendId = found.id;
-                    localStorage.setItem('currentTraineeId', String(found.id));
-
-                    const initial = (found.full_name || 'T').charAt(0).toUpperCase();
-                    document.getElementById('userAvatar').textContent = initial;
-                    console.log('👋 Welcome, ' + (found.full_name || found.email));
-                    return found;
-                }
+            const snap = await db.collection('trainees').doc(_firebaseUser.uid).get();
+            if (snap.exists) {
+                const data = snap.data();
+                const initial = (data.fullName || 'T').charAt(0).toUpperCase();
+                document.getElementById('userAvatar').textContent = initial;
+                console.log('👋 Welcome, ' + (data.fullName || data.email));
+                return data;
             }
         } catch (e) {
-            console.warn('Backend trainee load failed:', e);
+            console.warn('Trainee doc read failed:', e);
         }
 
-        // Fallback localStorage
-        const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
-        let userData = allTrainees.find(t => t.email === currentEmail);
-
-        if (!userData) {
-            const storedData = localStorage.getItem('traineeData');
-            if (storedData) {
-                try { userData = JSON.parse(storedData); } catch(e) {}
-            }
+        if (_traineeProfile) {
+            const initial = (_traineeProfile.fullName || 'T').charAt(0).toUpperCase();
+            document.getElementById('userAvatar').textContent = initial;
+            return _traineeProfile;
         }
-
-        if (userData) {
-            if (userData.fullName) {
-                document.getElementById('userAvatar').textContent = userData.fullName.charAt(0).toUpperCase();
-            }
-            console.log('👋 Welcome, ' + (userData.fullName || userData.email));
-        }
-
-        return userData;
+        return null;
     }
 
     // ============================================================
-    // CALCULATE INCOME GROWTH
+    // CALCULATE INCOME
     // ============================================================
     function calculateIncome() {
         const previous = parseFloat(document.getElementById('previousIncome').value) || 0;
@@ -1211,16 +1251,10 @@
         let growthText = '';
 
         if (previous > 0 && current > 0) {
-            growth = ((current - previous) / previous) * 100;
-            growth = Math.round(growth);
-
-            if (growth > 0) {
-                growthText = '⬆ ' + growth + '% growth';
-            } else if (growth < 0) {
-                growthText = '⬇ ' + Math.abs(growth) + '% decrease';
-            } else {
-                growthText = '➡ No change';
-            }
+            growth = Math.round(((current - previous) / previous) * 100);
+            growthText = growth > 0 ? '⬆ ' + growth + '% growth'
+                       : growth < 0 ? '⬇ ' + Math.abs(growth) + '% decrease'
+                       : '➡ No change';
         } else if (current > 0 && previous === 0) {
             growthText = '⬆ New income recorded';
         } else {
@@ -1228,9 +1262,8 @@
         }
 
         document.getElementById('incomeGrowth').value = growthText;
-
         document.getElementById('incomeText').textContent = current > 0 ? '₹' + current.toLocaleString() : '₹0';
-        document.getElementById('growthText').textContent = growth > 0 ? growth + '%' : (growth < 0 ? growth + '%' : '0%');
+        document.getElementById('growthText').textContent = growth + '%';
 
         const changeElement = document.getElementById('incomeChange');
         if (growth > 0) {
@@ -1256,12 +1289,8 @@
         if (status) {
             statusText.textContent = status;
             const emojis = {
-                'Employed': '💼',
-                'Unemployed': '🔍',
-                'Self-Employed': '🚀',
-                'Apprenticeship': '🎓',
-                'Internship': '📚',
-                'Looking for Job': '🔎'
+                'Employed': '💼', 'Unemployed': '🔍', 'Self-Employed': '🚀',
+                'Apprenticeship': '🎓', 'Internship': '📚', 'Looking for Job': '🔎'
             };
             statusChange.textContent = emojis[status] || '✅ Updated';
             statusChange.className = 'change positive';
@@ -1274,8 +1303,8 @@
         const progress = document.getElementById('careerProgress');
         const careerChange = document.getElementById('careerChange');
         const hasData = document.getElementById('companyName').value ||
-                       document.getElementById('jobRole').value ||
-                       document.getElementById('currentIncome').value;
+                        document.getElementById('jobRole').value ||
+                        document.getElementById('currentIncome').value;
 
         if (hasData) {
             progress.textContent = '85%';
@@ -1289,22 +1318,18 @@
     }
 
     // ============================================================
-    // SAVE EMPLOYMENT — backend-first
+    // SAVE EMPLOYMENT — writes to Firestore trainees/{uid}.employment
     // ============================================================
     async function saveEmployment() {
-        const saveBtn = document.getElementById('saveBtn');
-        const currentEmail = localStorage.getItem('currentTraineeEmail') ||
-                             (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
-
-        if (!currentEmail) {
-            alert('⚠️ No trainee logged in. Please login first.');
+        if (!_firebaseUser) {
+            alert('⚠️ Not logged in. Please login first.');
             return;
         }
 
+        const saveBtn = document.getElementById('saveBtn');
         const status = document.getElementById('employmentStatus').value;
         const companyName = document.getElementById('companyName').value;
         const jobRole = document.getElementById('jobRole').value;
-        const currentIncome = document.getElementById('currentIncome').value;
 
         if (!status) { alert('Please select Employment Status'); return; }
         if (!companyName && status !== 'Unemployed' && status !== 'Looking for Job') {
@@ -1314,12 +1339,12 @@
             alert('Please enter Job Role'); return;
         }
 
-        const employmentData = {
-            traineeEmail: currentEmail,
-            status: status,
+        // Build the employment sub-object (matches what dashboard reads)
+        const employment = {
+            status: document.getElementById('employmentStatus').value,
+            employmentCategory: document.getElementById('employmentCategory').value,
             startDate: document.getElementById('startDate').value,
-            category: document.getElementById('employmentCategory').value,
-            experience: document.getElementById('workExperience').value,
+            workExperience: document.getElementById('workExperience').value,
             companyName: companyName,
             orgType: document.getElementById('orgType').value,
             industry: document.getElementById('industry').value,
@@ -1337,9 +1362,9 @@
             jobCity: document.getElementById('jobCity').value,
             jobPincode: document.getElementById('jobPincode').value,
             relocated: document.getElementById('relocated').value,
-            previousIncome: document.getElementById('previousIncome').value,
-            currentIncome: currentIncome,
-            annualSalary: document.getElementById('annualSalary').value,
+            previousIncome: parseFloat(document.getElementById('previousIncome').value) || 0,
+            currentIncome: parseFloat(document.getElementById('currentIncome').value) || 0,
+            annualSalary: parseFloat(document.getElementById('annualSalary').value) || 0,
             salaryType: document.getElementById('salaryType').value,
             pfAvailable: document.getElementById('pfAvailable').value,
             esiAvailable: document.getElementById('esiAvailable').value,
@@ -1350,17 +1375,17 @@
             businessType: document.getElementById('businessType').value,
             businessRegistration: document.getElementById('businessRegistration').value,
             businessStartDate: document.getElementById('businessStartDate').value,
-            initialInvestment: document.getElementById('initialInvestment').value,
-            monthlyRevenue: document.getElementById('monthlyRevenue').value,
-            monthlyProfit: document.getElementById('monthlyProfit').value,
-            employeeCount: document.getElementById('employeeCount').value,
+            initialInvestment: parseFloat(document.getElementById('initialInvestment').value) || 0,
+            monthlyRevenue: parseFloat(document.getElementById('monthlyRevenue').value) || 0,
+            monthlyProfit: parseFloat(document.getElementById('monthlyProfit').value) || 0,
+            employeeCount: parseInt(document.getElementById('employeeCount').value) || 0,
             businessChallenges: document.getElementById('businessChallenges').value,
             internshipOrg: document.getElementById('internshipOrg').value,
             internshipRole: document.getElementById('internshipRole').value,
             internshipSector: document.getElementById('internshipSector').value,
             internshipStart: document.getElementById('internshipStart').value,
             internshipEnd: document.getElementById('internshipEnd').value,
-            internshipStipend: document.getElementById('internshipStipend').value,
+            internshipStipend: parseFloat(document.getElementById('internshipStipend').value) || 0,
             internshipStatus: document.getElementById('internshipStatus').value,
             internshipCertificate: document.getElementById('internshipCertificate').value,
             internshipSkills: document.getElementById('internshipSkills').value,
@@ -1370,7 +1395,7 @@
             skillsImprovement: document.getElementById('skillsImprovement').value,
             trainingRequired: document.getElementById('trainingRequired').value,
             targetRole: document.getElementById('targetRole').value,
-            targetSalary: document.getElementById('targetSalary').value,
+            targetSalary: parseFloat(document.getElementById('targetSalary').value) || 0,
             careerTimeline: document.getElementById('careerTimeline').value,
             salarySatisfaction: document.getElementById('salarySatisfaction').value,
             workEnvironment: document.getElementById('workEnvironment').value,
@@ -1381,135 +1406,91 @@
             challengeComments: document.getElementById('challengeComments').value,
             prevCompany: document.getElementById('prevCompany').value,
             prevRole: document.getElementById('prevRole').value,
-            prevSalary: document.getElementById('prevSalary').value,
+            prevSalary: parseFloat(document.getElementById('prevSalary').value) || 0,
             leavingDate: document.getElementById('leavingDate').value,
             leavingReason: document.getElementById('leavingReason').value,
             newCompany: document.getElementById('newCompany').value,
             newRole: document.getElementById('newRole').value,
-            newSalary: document.getElementById('newSalary').value,
-            savedDate: new Date().toISOString(),
-            incomeGrowth: document.getElementById('incomeGrowth').value
+            newSalary: parseFloat(document.getElementById('newSalary').value) || 0,
+            incomeGrowth: document.getElementById('incomeGrowth').value,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         };
 
-        // Lock button
         saveBtn.disabled = true;
         const originalHTML = saveBtn.innerHTML;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-        // --- Save to localStorage first (instant feedback) ---
         try {
-            let allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-            const existingIndex = allEmployment.findIndex(e => e.traineeEmail === currentEmail);
-            if (existingIndex !== -1) {
-                allEmployment[existingIndex] = { ...allEmployment[existingIndex], ...employmentData };
-            } else {
-                allEmployment.push(employmentData);
-            }
-            localStorage.setItem('allEmployment', JSON.stringify(allEmployment));
-            localStorage.setItem('employmentData', JSON.stringify(employmentData));
+            // ✅ Write to BOTH trainees/{uid} and users/{uid} so it's always found
+            await db.collection('trainees').doc(_firebaseUser.uid).set({
+                employment: employment,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+
+            await db.collection('users').doc(_firebaseUser.uid).set({
+                employment: employment,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+
+            console.log('✅ Employment saved to Firestore');
+            alert('✅ Employment details saved successfully!');
+            updateOverview();
+
         } catch (e) {
-            console.warn('localStorage save failed:', e);
+            console.error('❌ Firestore save failed:', e);
+            alert('❌ Save failed: ' + e.message);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalHTML;
         }
-
-        // --- Save to backend ---
-        try {
-            if (_traineeBackendId) {
-                // Map frontend fields → backend schema
-                const backendPayload = {
-                    trainee_id: _traineeBackendId,
-                    job_role: jobRole,
-                    employment_type: mapEmploymentType(employmentData.employmentType || employmentData.category),
-                    start_date: employmentData.joiningDate || employmentData.startDate || null,
-                    monthly_income: parseFloat(currentIncome) || 0,
-                    pre_training_income: parseFloat(employmentData.previousIncome) || 0,
-                    job_relevance: 'high', // default
-                    skills_matched: employmentData.skillsUsed || '',
-                    skills_missing: employmentData.skillsImprovement || '',
-                    status: 'pending',
-                };
-
-                const result = await apiCall('/api/employments', {
-                    method: 'POST',
-                    body: backendPayload,
-                });
-
-                if (result.ok) {
-                    _existingEmploymentId = result.data.id;
-                    console.log('✅ Employment saved to backend, id =', _existingEmploymentId);
-                } else {
-                    console.warn('Backend employment save failed:', result.data);
-                    // Still OK — localStorage has it
-                }
-            } else {
-                console.warn('No backend trainee id — saved only to localStorage');
-            }
-        } catch (e) {
-            console.warn('Backend save error:', e);
-        }
-
-        // Restore button
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = originalHTML;
-
-        alert('✅ Employment details saved successfully!');
-        console.log('📋 Saved employment');
-
-        updateOverview();
-    }
-
-    function mapEmploymentType(frontType) {
-        if (!frontType) return 'full';
-        const t = frontType.toLowerCase();
-        if (t.includes('part')) return 'part';
-        if (t.includes('contract') || t.includes('temporary')) return 'contract';
-        if (t.includes('self')) return 'self';
-        return 'full';
     }
 
     // ============================================================
     // CLEAR FORM
     // ============================================================
     function clearForm() {
-        if (confirm('Are you sure you want to clear all fields?')) {
-            document.getElementById('employmentForm').reset();
-            document.getElementById('incomeGrowth').value = '';
-            document.getElementById('incomeText').textContent = '₹0';
-            document.getElementById('growthText').textContent = '0%';
-            document.getElementById('statusText').textContent = 'Not Updated';
-            document.getElementById('statusChange').textContent = '—';
-            document.getElementById('incomeChange').textContent = '—';
-            document.getElementById('careerProgress').textContent = '70%';
-            document.getElementById('careerChange').textContent = '⏳ Incomplete';
-            alert('✅ Form cleared successfully!');
-        }
+        if (!confirm('Are you sure you want to clear all fields?')) return;
+        document.getElementById('employmentForm').reset();
+        document.getElementById('incomeGrowth').value = '';
+        document.getElementById('incomeText').textContent = '₹0';
+        document.getElementById('growthText').textContent = '0%';
+        document.getElementById('statusText').textContent = 'Not Updated';
+        document.getElementById('statusChange').textContent = '—';
+        document.getElementById('incomeChange').textContent = '—';
+        document.getElementById('careerProgress').textContent = '70%';
+        document.getElementById('careerChange').textContent = '⏳ Incomplete';
+        alert('✅ Form cleared successfully!');
     }
 
     // ============================================================
-    // SHOW NOTIFICATIONS
+    // NOTIFICATIONS
     // ============================================================
-    function showNotifications() {
-        alert('📬 No new notifications.');
-    }
+    function showNotifications() { alert('📬 No new notifications.'); }
 
     // ============================================================
-    // LOGOUT
+    // LOGOUT — clears session properly
     // ============================================================
     async function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+        if (!confirm('Are you sure you want to logout?')) return;
+        try {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
             localStorage.removeItem('currentTraineeEmail');
             localStorage.removeItem('currentTraineeId');
-            window.location.href = '../../auth/login.html';
-        }
+            await auth.signOut();
+        } catch (e) {}
+        window.location.href = '../auth/login.html?role=trainee';
     }
 
     // ============================================================
-    // THEME TOGGLE
+    // THEME
     // ============================================================
     function toggleTheme() {
         const html = document.documentElement;
-        const current = html.getAttribute('data-theme') || 'light';
-        const next = current === 'dark' ? 'light' : 'dark';
+        const next = (html.getAttribute('data-theme') || 'light') === 'dark' ? 'light' : 'dark';
         html.setAttribute('data-theme', next);
         try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
         const icon = document.querySelector('.theme-toggle i');
@@ -1517,73 +1498,64 @@
     }
 
     // ============================================================
-    // MOBILE SIDEBAR TOGGLE
-    // ============================================================
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('open');
-    }
-
-    // ============================================================
-    // LOAD EXISTING EMPLOYMENT DATA
+    // LOAD EXISTING EMPLOYMENT DATA (from Firestore)
     // ============================================================
     async function loadExistingEmployment() {
-        // Try backend first
-        if (_traineeBackendId) {
-            try {
-                const res = await apiCall('/api/trainees/' + _traineeBackendId + '/360');
-                if (res.ok && res.data && res.data.employments && res.data.employments.length > 0) {
-                    const emp = res.data.employments[0];
-                    _existingEmploymentId = emp.id;
+        if (!_firebaseUser) return;
 
-                    // Populate fields from backend
-                    if (emp.job_role) document.getElementById('jobRole').value = emp.job_role;
-                    if (emp.monthly_income) document.getElementById('currentIncome').value = emp.monthly_income;
-                    if (emp.pre_training_income) document.getElementById('previousIncome').value = emp.pre_training_income;
-                    if (emp.start_date) document.getElementById('joiningDate').value = emp.start_date;
-                    if (emp.skills_matched) document.getElementById('skillsUsed').value = emp.skills_matched;
-                    if (emp.skills_missing) document.getElementById('skillsImprovement').value = emp.skills_missing;
+        try {
+            let snap = await db.collection('trainees').doc(_firebaseUser.uid).get();
+            let data = snap.exists ? snap.data() : null;
 
-                    // Set employment status
-                    document.getElementById('employmentStatus').value = 'Employed';
+            if (!data) {
+                snap = await db.collection('users').doc(_firebaseUser.uid).get();
+                data = snap.exists ? snap.data() : null;
+            }
 
-                    // Fill company name from employer_name if available
-                    if (emp.employer_name) document.getElementById('companyName').value = emp.employer_name;
+            if (data && data.employment) {
+                const e = data.employment;
+                const fields = [
+                    'employmentStatus', 'startDate', 'employmentCategory', 'workExperience',
+                    'companyName', 'orgType', 'industry', 'department', 'employeeId', 'jobRole',
+                    'supervisorName', 'employmentType', 'joiningDate', 'workingHours',
+                    'workingDays', 'workMode', 'jobState', 'jobDistrict', 'jobCity',
+                    'jobPincode', 'relocated', 'previousIncome', 'currentIncome',
+                    'annualSalary', 'salaryType', 'pfAvailable', 'esiAvailable',
+                    'incentives', 'paymentMode', 'businessName', 'businessCategory',
+                    'businessType', 'businessRegistration', 'businessStartDate',
+                    'initialInvestment', 'monthlyRevenue', 'monthlyProfit', 'employeeCount',
+                    'businessChallenges', 'internshipOrg', 'internshipRole', 'internshipSector',
+                    'internshipStart', 'internshipEnd', 'internshipStipend', 'internshipStatus',
+                    'internshipCertificate', 'internshipSkills', 'currentSkills', 'skillsUsed',
+                    'newSkills', 'skillsImprovement', 'trainingRequired', 'targetRole',
+                    'targetSalary', 'careerTimeline', 'salarySatisfaction', 'workEnvironment',
+                    'careerGrowthRating', 'overallSatisfaction', 'mainChallenge',
+                    'supportRequired', 'challengeComments', 'prevCompany', 'prevRole',
+                    'prevSalary', 'leavingDate', 'leavingReason', 'newCompany', 'newRole',
+                    'newSalary'
+                ];
 
-                    calculateIncome();
-                    updateOverview();
-                    console.log('📂 Loaded employment from backend');
-                    return;
-                }
-            } catch (e) { console.warn('Backend emp load failed:', e); }
-        }
-
-        // Fallback localStorage
-        const currentEmail = localStorage.getItem('currentTraineeEmail');
-        const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-        const savedData = allEmployment.find(e => e.traineeEmail === currentEmail);
-
-        if (savedData) {
-            try {
-                Object.keys(savedData).forEach(key => {
-                    const element = document.getElementById(key);
-                    if (element && savedData[key] !== undefined && savedData[key] !== '') {
-                        element.value = savedData[key];
+                fields.forEach(field => {
+                    const el = document.getElementById(field);
+                    if (el && e[field] !== undefined && e[field] !== null && e[field] !== '') {
+                        el.value = e[field];
                     }
                 });
+
                 calculateIncome();
                 updateOverview();
-                console.log('📂 Loaded saved employment data for:', currentEmail);
-            } catch (e) {
-                console.error('Error loading saved data:', e);
+                console.log('📂 Loaded employment from Firestore');
             }
+        } catch (err) {
+            console.warn('Failed to load employment:', err);
         }
     }
 
     // ============================================================
-    // INITIALIZE
+    // INIT
     // ============================================================
     document.addEventListener('DOMContentLoaded', async function() {
-        // Apply saved theme
+        // Theme
         try {
             const saved = localStorage.getItem('skillintel-theme') || 'light';
             document.documentElement.setAttribute('data-theme', saved);
@@ -1591,76 +1563,24 @@
             if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         } catch (e) {}
 
-        await loadUserData();
-        await loadExistingEmployment();
-
-        calculateIncome();
-        updateOverview();
-
-        const inputs = document.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            input.addEventListener('change', function() {
-                if (this.id === 'employmentStatus' || this.id === 'companyName' ||
-                    this.id === 'jobRole' || this.id === 'currentIncome') {
-                    updateOverview();
-                }
-            });
-        });
-    });
-
-    // ============================================================
-    // MOBILE MENU BUTTON (auto-insert)
-    // ============================================================
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebar = document.getElementById('sidebar');
-
-        const toggleBtn = document.createElement('button');
-        toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-        toggleBtn.style.cssText = `
-            display: none;
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 200;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            color: white;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(37,99,235,0.3);
-        `;
-        toggleBtn.id = 'menuToggle';
-        document.body.appendChild(toggleBtn);
-
-        toggleBtn.addEventListener('click', function() {
-            sidebar.classList.toggle('open');
-        });
-
-        if (window.innerWidth <= 768) {
-            toggleBtn.style.display = 'block';
+        try {
+            await requireAuth();
+            await loadUserData();
+            await loadExistingEmployment();
+        } catch (e) {
+            console.warn('Init aborted:', e);
         }
 
-        window.addEventListener('resize', function() {
-            if (window.innerWidth <= 768) {
-                toggleBtn.style.display = 'block';
-            } else {
-                toggleBtn.style.display = 'none';
-                sidebar.classList.remove('open');
-            }
+        // Live overview on change
+        const watchIds = ['employmentStatus', 'companyName', 'jobRole', 'currentIncome'];
+        watchIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', updateOverview);
         });
 
-        document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 768) {
-                if (!sidebar.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
-                    sidebar.classList.remove('open');
-                }
-            }
-        });
+        updateOverview();
     });
 </script>
-
 <script src="../js/script.js"></script>
 </body>
 </html>

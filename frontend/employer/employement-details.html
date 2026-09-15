@@ -9,6 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css">
+
+    <!-- Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         /* ===== RESET ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
@@ -286,6 +292,25 @@
         }
         .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
         .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: #475569;
+            font-size: 16px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover {
+            background: #f1f5f9;
+            color: #06b6d4;
+            transform: rotate(15deg);
+        }
 
         /* ===== CONTAINER ===== */
         .container {
@@ -1155,7 +1180,6 @@
 <body>
 
 <!-- ===== SIDEBAR ===== -->
-<!-- ===== SIDEBAR ===== -->
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
         <div class="icon"><i class="fas fa-brain"></i></div>
@@ -1167,21 +1191,19 @@
 
     <div class="sidebar-user">
         <div class="avatar" id="sidebarAvatar">
-            E
             <span class="online-dot"></span>
         </div>
         <div class="info">
-            <div class="name" id="sidebarName">Employer</div>
-            <div class="company" id="sidebarCompany">Company Name</div>
+            <div class="name" id="sidebarName"></div>
+            <div class="company" id="sidebarCompany"></div>
             <div class="role">Employer · Admin</div>
         </div>
     </div>
 
-    <!-- ✅ employement-details is active -->
     <div class="menu">
         <div class="menu-label">Main Menu</div>
         <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
-        <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees <span class="badge">3</span></a>
+        <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees <span class="badge" id="pendingBadge" style="display:none;">0</span></a>
         <a class="active" href="employement-details.html"><i class="fas fa-briefcase"></i> Employment Details</a>
         <a href="employer-feedback-form.html"><i class="fas fa-star"></i> Submit Feedback</a>
         <a href="feedback&skillsgap.html"><i class="fas fa-chart-bar"></i> Feedback & Skill Gap</a>
@@ -1195,7 +1217,6 @@
 <!-- ===== MAIN ===== -->
 <div class="main-content">
 
-    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="toggleSidebar()">
@@ -1207,26 +1228,24 @@
             </div>
         </div>
         <div class="header-right">
-  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
-  <i class="fas fa-moon"></i>
-</button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
             <span class="date" id="dateDisplay"></span>
             <div class="notif" onclick="showNotifications()">
                 <i class="fas fa-bell"></i>
-                <span class="badge">5</span>
+                <span class="badge" id="notifBadge">0</span>
             </div>
             <button class="profile-btn" onclick="toggleProfileMenu()">
-                <div class="avatar" id="headerAvatar">E</div>
-                <span class="name" id="headerName">Employer</span>
+                <div class="avatar" id="headerAvatar"></div>
+                <span class="name" id="headerName"></span>
                 <i class="fas fa-chevron-down"></i>
             </button>
         </div>
     </header>
 
-    <!-- ===== CONTAINER ===== -->
     <div class="container">
 
-        <!-- ===== WELCOME BANNER ===== -->
         <div class="welcome-banner">
             <div class="banner-content">
                 <h2><i class="fas fa-rocket"></i> Employment Overview</h2>
@@ -1248,12 +1267,11 @@
             </div>
         </div>
 
-        <!-- ===== STATS ROW ===== -->
         <div class="stats-row">
             <div class="stat-box">
                 <div class="stat-top">
                     <div class="stat-icon blue"><i class="fas fa-users"></i></div>
-                    <span class="stat-trend up">↑ 12%</span>
+                    <span class="stat-trend up" id="totalTrend">—</span>
                 </div>
                 <div class="stat-number" id="totalTrainees">0</div>
                 <div class="stat-label">Total Trainees</div>
@@ -1261,7 +1279,7 @@
             <div class="stat-box">
                 <div class="stat-top">
                     <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-                    <span class="stat-trend up">↑ 8%</span>
+                    <span class="stat-trend up" id="employedTrend">—</span>
                 </div>
                 <div class="stat-number" id="employedCount">0</div>
                 <div class="stat-label">Employed</div>
@@ -1277,33 +1295,29 @@
             <div class="stat-box">
                 <div class="stat-top">
                     <div class="stat-icon purple"><i class="fas fa-rupee-sign"></i></div>
-                    <span class="stat-trend up">↑ 5%</span>
+                    <span class="stat-trend up" id="salaryTrend">—</span>
                 </div>
                 <div class="stat-number" id="avgSalary">₹0</div>
                 <div class="stat-label">Average Salary</div>
             </div>
         </div>
 
-        <!-- ===== ANALYTICS SECTION ===== -->
         <div class="analytics-section">
-            <!-- Employment Status Chart -->
             <div class="analytics-card">
                 <div class="card-title"><i class="fas fa-chart-bar"></i> Employment Status Distribution</div>
-                <div class="chart-container" id="statusChart">
-                    <!-- Dynamic -->
-                </div>
+                <div class="chart-container" id="statusChart"></div>
             </div>
-
-            <!-- Income Distribution Donut -->
             <div class="analytics-card">
                 <div class="card-title"><i class="fas fa-chart-pie"></i> Income Distribution</div>
                 <div class="donut-container" id="incomeDonut">
-                    <!-- Dynamic -->
+                    <div class="empty-state" style="padding:20px;">
+                        <i class="fas fa-chart-pie"></i>
+                        <p>Loading income data…</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== SEARCH ===== -->
         <div class="search-section">
             <div class="search-grid">
                 <div class="search-group">
@@ -1348,12 +1362,8 @@
             </div>
         </div>
 
-        <!-- ===== EMPLOYMENT CARDS ===== -->
-        <div class="employment-grid" id="employmentCards">
-            <!-- Dynamic -->
-        </div>
+        <div class="employment-grid" id="employmentCards"></div>
 
-        <!-- ===== TABLE ===== -->
         <div class="table-container">
             <div class="table-header">
                 <h3>
@@ -1380,22 +1390,19 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <!-- Dynamic -->
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">
+                                Loading employment records from Firestore…
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
-            <!-- ===== PAGINATION ===== -->
             <div class="pagination" id="pagination">
                 <div class="info">
                     Showing <strong id="startCount">0</strong> - <strong id="endCount">0</strong> of <strong id="totalCount">0</strong> records
                 </div>
-                <div class="pages">
-                    <button onclick="prevPage()"><i class="fas fa-chevron-left"></i></button>
-                    <button class="active" id="page1">1</button>
-                    <button id="page2">2</button>
-                    <button id="page3">3</button>
-                    <button onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>
-                </div>
+                <div class="pages" id="pageButtons"></div>
             </div>
         </div>
 
@@ -1473,69 +1480,143 @@
 
 <script>
     // ============================================================
-    // DATA STORE
+    // FIREBASE CONFIG
     // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
 
-    function loadAllData() {
-        const traineeData = JSON.parse(localStorage.getItem('traineeData') || '{}');
-        const employmentData = JSON.parse(localStorage.getItem('employmentData') || '{}');
-        const followupData = JSON.parse(localStorage.getItem('followupData') || '{}');
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-        let records = [];
+    let _firebaseUser = null;
+    let _userProfile = null;
 
-        if (traineeData && traineeData.fullName) {
-            records.push({
-                id: traineeData.traineeId || 'TRN001',
-                name: traineeData.fullName || 'Trainee',
-                email: traineeData.email || 'trainee@email.com',
-                course: traineeData.skillTrade || 'N/A',
-                provider: traineeData.trainingProvider || 'N/A',
-                certificationStatus: traineeData.certificationStatus || 'Pending',
-                jobRole: employmentData.jobRole || traineeData.currentJobRole || 'N/A',
-                company: employmentData.companyName || traineeData.currentEmployer || 'N/A',
-                joiningDate: employmentData.joiningDate || traineeData.joiningDate || 'N/A',
-                employmentType: employmentData.employmentType || traineeData.employmentType || 'N/A',
-                employmentStatus: employmentData.status || traineeData.employmentStatusDisplay || 'Not Updated',
-                currentIncome: parseInt(employmentData.currentIncome) || traineeData.currentIncome || 0,
-                previousIncome: parseInt(employmentData.previousIncome) || traineeData.prevIncome || 0,
-                location: employmentData.jobCity || traineeData.location || 'N/A',
-                followupStatus: followupData.status || 'Pending',
-                avatar: traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T',
-                color: '#2563eb',
-                verified: employmentData.verified || false
+    // ============================================================
+    // AUTH GUARD
+    // ============================================================
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=employer';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=employer';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'employer') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=employer';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
             });
-        }
-
-        // Sample data
-        if (records.length === 0) {
-            records = [
-                { id: 'TRN001', name: 'Priya Sharma', email: 'priya@email.com', course: 'Data Analytics', provider: 'Skill India Centre', certificationStatus: 'Certified', jobRole: 'Data Analyst', company: 'ABC Technologies', joiningDate: '2026-04-12', employmentType: 'Full Time', employmentStatus: 'Employed', currentIncome: 28000, previousIncome: 12000, location: 'Bengaluru', followupStatus: 'Completed', avatar: 'P', color: '#2563eb', verified: true },
-                { id: 'TRN002', name: 'Rahul Verma', email: 'rahul@email.com', course: 'Full Stack Development', provider: 'NITC Training', certificationStatus: 'In Progress', jobRole: 'Full Stack Developer', company: 'Tech Solutions Ltd', joiningDate: '2026-05-15', employmentType: 'Full Time', employmentStatus: 'Employed', currentIncome: 32000, previousIncome: 15000, location: 'Mumbai', followupStatus: 'In Progress', avatar: 'R', color: '#7c3aed', verified: false },
-                { id: 'TRN003', name: 'Ananya Reddy', email: 'ananya@email.com', course: 'Digital Marketing', provider: 'Digital India Academy', certificationStatus: 'Certified', jobRole: 'Marketing Lead', company: 'Growth Media', joiningDate: '2026-06-01', employmentType: 'Full Time', employmentStatus: 'Employed', currentIncome: 25000, previousIncome: 10000, location: 'Delhi', followupStatus: 'Pending', avatar: 'A', color: '#16a34a', verified: true },
-                { id: 'TRN004', name: 'Vikram Singh', email: 'vikram@email.com', course: 'Data Science', provider: 'Data Science Institute', certificationStatus: 'Certified', jobRole: 'Data Scientist', company: 'AI Solutions', joiningDate: '2026-07-01', employmentType: 'Full Time', employmentStatus: 'Employed', currentIncome: 35000, previousIncome: 18000, location: 'Hyderabad', followupStatus: 'Completed', avatar: 'V', color: '#d97706', verified: true },
-                { id: 'TRN005', name: 'Sneha Patel', email: 'sneha@email.com', course: 'UI/UX Design', provider: 'Design Academy', certificationStatus: 'Pending', jobRole: 'N/A', company: 'N/A', joiningDate: 'N/A', employmentType: 'N/A', employmentStatus: 'Looking for Job', currentIncome: 0, previousIncome: 8000, location: 'N/A', followupStatus: 'Pending', avatar: 'S', color: '#dc2626', verified: false },
-                { id: 'TRN006', name: 'Arjun Nair', email: 'arjun@email.com', course: 'Cloud Computing', provider: 'Cloud Academy', certificationStatus: 'Certified', jobRole: 'Cloud Engineer', company: 'Cloud Infra', joiningDate: '2026-08-01', employmentType: 'Full Time', employmentStatus: 'Employed', currentIncome: 30000, previousIncome: 14000, location: 'Chennai', followupStatus: 'Completed', avatar: 'A', color: '#0d9488', verified: true },
-                { id: 'TRN007', name: 'Kiran Joshi', email: 'kiran@email.com', course: 'Full Stack Development', provider: 'Code Institute', certificationStatus: 'Pending', jobRole: 'Junior Developer', company: 'Startup Hub', joiningDate: '2026-09-01', employmentType: 'Apprenticeship', employmentStatus: 'Apprenticeship', currentIncome: 15000, previousIncome: 5000, location: 'Pune', followupStatus: 'Pending', avatar: 'K', color: '#7c3aed', verified: false },
-                { id: 'TRN008', name: 'Divya K', email: 'divya@email.com', course: 'Data Analytics', provider: 'Analytics School', certificationStatus: 'In Progress', jobRole: 'Data Analyst Intern', company: 'Data Corp', joiningDate: '2026-08-15', employmentType: 'Internship', employmentStatus: 'Internship', currentIncome: 18000, previousIncome: 0, location: 'Bengaluru', followupStatus: 'In Progress', avatar: 'D', color: '#2563eb', verified: false }
-            ];
-        }
-
-        return records;
+        });
     }
 
     // ============================================================
-    // RENDER FUNCTIONS
+    // EMPLOYER DATA
     // ============================================================
+    async function getEmployerData() {
+        if (!_firebaseUser) return { contactPerson: '', orgName: '' };
+        const uid = _firebaseUser.uid;
+        let data = null;
+        try {
+            const snap = await db.collection('employers').doc(uid).get();
+            if (snap.exists) data = snap.data();
+        } catch (e) {}
+        if (!data && _userProfile) data = _userProfile;
+        if (!data) return { contactPerson: _firebaseUser.displayName || _firebaseUser.email || '', orgName: '' };
+        return {
+            contactPerson: data.contactPerson || data.fullName || _firebaseUser.displayName || '',
+            orgName: data.orgName || ''
+        };
+    }
 
+    // ============================================================
+    // LOAD EMPLOYMENT DATA FROM FIRESTORE
+    // — reads each trainee doc, extracts `employment` field
+    // ============================================================
+    async function loadAllData() {
+        let docs = [];
+        try {
+            const snap = await db.collection('trainees').get();
+            snap.forEach(d => docs.push({ _id: d.id, ...d.data() }));
+        } catch (e) {
+            console.warn('Could not read trainees:', e);
+            return [];
+        }
+
+        const COLOR_PALETTE = ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626'];
+
+        return docs.map((t, index) => {
+            const emp = t.employment || {};
+            let empStatus = emp.status || 'Not Updated';
+            if (empStatus === 'Not Updated' && !emp.jobRole) empStatus = 'Looking for Job';
+
+            return {
+                id: t.traineeCode || ('TRN' + (t.uid ? t.uid.substring(0, 6) : t._id.substring(0, 6))),
+                docId: t._id,
+                name: t.fullName || 'Trainee',
+                email: t.email || '',
+                course: t.skillTrade || t.qualification || 'N/A',
+                provider: t.trainingProvider || 'N/A',
+                certificationStatus: t.certificationStatus || 'Pending',
+                jobRole: emp.jobRole || 'N/A',
+                company: emp.companyName || emp.employerName || 'N/A',
+                joiningDate: emp.joiningDate || emp.startDate || 'N/A',
+                employmentType: emp.employmentType || 'N/A',
+                employmentStatus: empStatus,
+                currentIncome: Number(emp.currentIncome || emp.monthlyIncome || 0) || 0,
+                previousIncome: Number(emp.previousIncome || t.prevIncome || 0) || 0,
+                location: emp.jobCity || emp.jobLocation || (t.district ? (t.district + ', ' + (t.state || '')) : 'N/A'),
+                followupStatus: (t.followups && t.followups[0] && t.followups[0].status) || 'Pending',
+                avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
+                color: COLOR_PALETTE[index % COLOR_PALETTE.length],
+                verified: !!emp.verified
+            };
+        });
+    }
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let employerData = {};
     let allRecords = [];
     let filteredRecords = [];
     let selectedRecord = null;
     let currentPage = 1;
     const pageSize = 6;
 
-    function loadAndRender() {
-        allRecords = loadAllData();
+    // ============================================================
+    // LOAD & RENDER
+    // ============================================================
+    async function loadAndRender() {
+        allRecords = await loadAllData();
         filteredRecords = [...allRecords];
+        console.log('📊 Loaded', allRecords.length, 'employment records');
+
         renderStats();
         renderAnalytics();
         renderCards();
@@ -1549,12 +1630,16 @@
         const employed = allRecords.filter(r => r.employmentStatus === 'Employed').length;
         const unemployed = allRecords.filter(r => r.employmentStatus === 'Looking for Job' || r.employmentStatus === 'Unemployed').length;
         const salaries = allRecords.filter(r => r.currentIncome > 0).map(r => r.currentIncome);
-        const avg = salaries.length > 0 ? Math.round(salaries.reduce((a,b) => a + b, 0) / salaries.length) : 0;
+        const avg = salaries.length > 0 ? Math.round(salaries.reduce((a,b) => a+b, 0) / salaries.length) : 0;
 
         document.getElementById('totalTrainees').textContent = total;
         document.getElementById('employedCount').textContent = employed;
         document.getElementById('unemployedCount').textContent = unemployed;
         document.getElementById('avgSalary').textContent = '₹' + avg.toLocaleString();
+
+        document.getElementById('totalTrend').textContent = total > 0 ? total + ' total' : '—';
+        document.getElementById('employedTrend').textContent = total > 0 ? Math.round((employed / total) * 100) + '%' : '—';
+        document.getElementById('salaryTrend').textContent = salaries.length > 0 ? 'Avg ₹' + avg.toLocaleString() : '—';
     }
 
     function updateBanner() {
@@ -1607,7 +1692,6 @@
         const total = counts.reduce((a,b) => a + b, 0) || 1;
         const percentages = counts.map(c => Math.round((c / total) * 100));
 
-        // Calculate donut conic-gradient
         let gradient = '';
         let currentAngle = 0;
         ranges.forEach((r, i) => {
@@ -1655,7 +1739,7 @@
         });
 
         filteredRecords.sort((a, b) => {
-            switch(sort) {
+            switch (sort) {
                 case 'name': return a.name.localeCompare(b.name);
                 case 'joining': return new Date(b.joiningDate) - new Date(a.joiningDate);
                 case 'salary': return b.currentIncome - a.currentIncome;
@@ -1671,13 +1755,13 @@
 
     function renderCards() {
         const container = document.getElementById('employmentCards');
-        
+
         if (filteredRecords.length === 0) {
             container.innerHTML = `
                 <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">
                     <i class="fas fa-briefcase" style="font-size:40px;display:block;margin-bottom:12px;"></i>
                     <h3 style="color:#475569;">No Employment Records</h3>
-                    <p>Try adjusting your search or filter criteria</p>
+                    <p>Employment data will appear once trainees are placed.</p>
                 </div>
             `;
             return;
@@ -1688,37 +1772,39 @@
         const pageItems = filteredRecords.slice(start, end);
 
         container.innerHTML = pageItems.map(r => {
-            const statusClass = r.employmentStatus === 'Employed' ? 'active' : 
+            const statusClass = r.employmentStatus === 'Employed' ? 'active' :
                                r.employmentStatus === 'Looking for Job' || r.employmentStatus === 'Unemployed' ? 'inactive' : 'pending';
-            const badgeClass = r.employmentStatus === 'Employed' ? 'verified' : 
-                              r.employmentStatus === 'Internship' ? 'internship' : 'pending';
-            const growth = r.previousIncome > 0 ? Math.round(((r.currentIncome - r.previousIncome) / r.previousIncome) * 100) : 0;
-            
+                        const badgeClass = r.employmentStatus === 'Employed' ? 'verified' :
+                               r.employmentStatus === 'Internship' ? 'internship' : 'pending';
+            const salaryDisplay = r.currentIncome > 0 ? '₹' + r.currentIncome.toLocaleString() : '—';
+            const growth = r.previousIncome > 0 && r.currentIncome > 0
+                ? Math.round(((r.currentIncome - r.previousIncome) / r.previousIncome) * 100)
+                : null;
+
             return `
-                <div class="emp-card" onclick="viewRecord('${r.id}')">
-                    <div class="card-badge ${badgeClass}">${r.verified ? '✅ Verified' : '⏳ Pending'}</div>
+                <div class="emp-card" onclick="openModal('${r.docId}')">
+                    <span class="card-badge ${badgeClass}">${r.employmentStatus}</span>
                     <div class="card-top">
-                        <div class="emp-avatar" style="background:${r.color}">${r.avatar}</div>
-                        <span class="emp-status ${statusClass}">${r.employmentStatus}</span>
+                        <div class="emp-avatar" style="background:${r.color};">${r.avatar}</div>
                     </div>
                     <div class="emp-name">${r.name}</div>
                     <div class="emp-role">${r.jobRole}</div>
                     <div class="emp-details">
                         <div class="detail-item">
-                            <strong>${r.company}</strong>
                             Company
+                            <strong>${r.company}</strong>
                         </div>
                         <div class="detail-item">
+                            Type
                             <strong>${r.employmentType}</strong>
-                            Employment Type
                         </div>
                         <div class="detail-item">
-                            <strong>${r.joiningDate}</strong>
-                            Joining Date
+                            Salary
+                            <strong class="salary">${salaryDisplay}</strong>
                         </div>
                         <div class="detail-item">
-                            <strong class="salary">₹${r.currentIncome.toLocaleString()}</strong>
-                            ${growth !== 0 ? (growth > 0 ? `↑ ${growth}% growth` : `↓ ${Math.abs(growth)}% decline`) : 'No change'}
+                            ${growth !== null ? 'Growth' : 'Location'}
+                            <strong>${growth !== null ? (growth >= 0 ? '+' : '') + growth + '%' : r.location}</strong>
                         </div>
                     </div>
                 </div>
@@ -1728,148 +1814,146 @@
 
     function renderTable() {
         const tbody = document.getElementById('tableBody');
+        const total = filteredRecords.length;
 
-        if (filteredRecords.length === 0) {
+        document.getElementById('recordCount').textContent = total;
+
+        if (total === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7">
-                        <div class="empty-state">
-                            <i class="fas fa-briefcase"></i>
-                            <h3>No Employment Records Found</h3>
-                            <p>Try adjusting your search or filter criteria</p>
-                        </div>
+                    <td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">
+                        <i class="fas fa-inbox" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+                        No employment records found
                     </td>
                 </tr>
             `;
-            document.getElementById('recordCount').textContent = '0';
             document.getElementById('startCount').textContent = '0';
             document.getElementById('endCount').textContent = '0';
             document.getElementById('totalCount').textContent = '0';
+            document.getElementById('pageButtons').innerHTML = '';
             return;
         }
 
         const start = (currentPage - 1) * pageSize;
-        const end = Math.min(start + pageSize, filteredRecords.length);
+        const end = Math.min(start + pageSize, total);
         const pageItems = filteredRecords.slice(start, end);
 
-        document.getElementById('recordCount').textContent = filteredRecords.length;
+        tbody.innerHTML = pageItems.map(r => {
+            const statusClass = r.employmentStatus === 'Employed' ? 'employed' :
+                               r.employmentStatus === 'Internship' ? 'internship' :
+                               r.employmentStatus === 'Self-Employed' ? 'self-employed' : 'unemployed';
+            const salaryDisplay = r.currentIncome > 0 ? '₹' + r.currentIncome.toLocaleString() : '—';
+
+            return `
+                <tr>
+                    <td>
+                        <div class="trainee-info">
+                            <div class="avatar" style="background:${r.color};">${r.avatar}</div>
+                            <div class="details">
+                                <div class="name">${r.name}</div>
+                                <div class="sub">${r.id}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight:600;color:#0b1a33;">${r.jobRole}</div>
+                        <div style="font-size:11px;color:#64748b;">${r.company}</div>
+                    </td>
+                    <td>${r.joiningDate}</td>
+                    <td>${r.employmentType}</td>
+                    <td style="font-weight:700;color:#16a34a;">${salaryDisplay}</td>
+                    <td>
+                        <span class="status-badge ${statusClass}">
+                            <span class="dot"></span>
+                            ${r.employmentStatus}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn view" onclick="openModal('${r.docId}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="action-btn verify" onclick="quickVerify('${r.docId}')">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
         document.getElementById('startCount').textContent = start + 1;
         document.getElementById('endCount').textContent = end;
-        document.getElementById('totalCount').textContent = filteredRecords.length;
+        document.getElementById('totalCount').textContent = total;
 
-        tbody.innerHTML = pageItems.map(r => `
-            <tr>
-                <td>
-                    <div class="trainee-info">
-                        <div class="avatar" style="background:${r.color}">${r.avatar}</div>
-                        <div class="details">
-                            <div class="name">${r.name}</div>
-                            <div class="sub">${r.email}</div>
-                        </div>
-                    </div>
-                </td>
-                <td><strong>${r.jobRole}</strong><br><span style="font-size:11px;color:#64748b;">${r.company}</span></td>
-                <td>${r.joiningDate}</td>
-                <td>${r.employmentType}</td>
-                <td style="font-weight:700;color:#16a34a;">₹${r.currentIncome.toLocaleString()}</td>
-                <td>
-                    <span class="status-badge ${r.employmentStatus === 'Employed' ? 'employed' : 
-                                               r.employmentStatus === 'Internship' ? 'internship' :
-                                               r.employmentStatus === 'Self-Employed' ? 'self-employed' : 'unemployed'}">
-                        <span class="dot"></span>
-                        ${r.employmentStatus}
-                    </span>
-                </td>
-                <td>
-                    <button class="action-btn view" onclick="viewRecord('${r.id}')">
-                        <i class="fas fa-eye"></i> View
-                    </button>
-                    <button class="action-btn edit" onclick="editEmploymentFromTable('${r.id}')">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    ${!r.verified ? `
-                        <button class="action-btn verify" onclick="verifyFromTable('${r.id}')">
-                            <i class="fas fa-check"></i> Verify
-                        </button>
-                    ` : ''}
-                </td>
-            </tr>
-        `).join('');
-
-        updatePagination();
+        renderPagination(total);
     }
 
-    function updatePagination() {
-        const totalPages = Math.ceil(filteredRecords.length / pageSize);
-        const container = document.querySelector('.pages');
-        if (!container) return;
+    function renderPagination(total) {
+        const totalPages = Math.ceil(total / pageSize);
+        const container = document.getElementById('pageButtons');
+        let html = '';
 
-        let html = `<button onclick="prevPage()"><i class="fas fa-chevron-left"></i></button>`;
-        for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+        html += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
+            <i class="fas fa-chevron-left"></i>
+        </button>`;
+
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
             html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
         }
-        if (totalPages > 5) {
-            html += `<span style="padding:0 8px;color:#94a3b8;">...</span>`;
-            html += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
-        }
-        html += `<button onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>`;
+
+        html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
+            <i class="fas fa-chevron-right"></i>
+        </button>`;
+
         container.innerHTML = html;
     }
 
-    function prevPage() { if (currentPage > 1) { currentPage--; renderCards(); renderTable(); } }
-    function nextPage() { const totalPages = Math.ceil(filteredRecords.length / pageSize); if (currentPage < totalPages) { currentPage++; renderCards(); renderTable(); } }
-    function goToPage(page) { currentPage = page; renderCards(); renderTable(); }
-
-    function updateSidebar() {
-        const employerData = JSON.parse(localStorage.getItem('employerData') || '{}');
-        const initial = employerData.contactPerson ? employerData.contactPerson.charAt(0).toUpperCase() : 'E';
-        document.getElementById('sidebarAvatar').textContent = initial;
-        document.getElementById('sidebarName').textContent = employerData.contactPerson || 'Employer';
-        document.getElementById('sidebarCompany').textContent = employerData.orgName || 'Company';
-        document.getElementById('headerAvatar').textContent = initial;
-        document.getElementById('headerName').textContent = employerData.contactPerson || 'Employer';
+    function goToPage(page) {
+        const totalPages = Math.ceil(filteredRecords.length / pageSize);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderCards();
+        renderTable();
+        window.scrollTo({ top: 400, behavior: 'smooth' });
     }
 
     // ============================================================
-    // MODAL FUNCTIONS
+    // MODAL
     // ============================================================
-
-    function viewRecord(id) {
-        const record = allRecords.find(r => r.id === id);
+    function openModal(docId) {
+        const record = allRecords.find(r => r.docId === docId);
         if (!record) return;
+
         selectedRecord = record;
 
         document.getElementById('modalAvatar').textContent = record.avatar;
         document.getElementById('modalAvatar').style.background = record.color;
         document.getElementById('modalName').textContent = record.name;
-        document.getElementById('modalSub').textContent = `ID: ${record.id} · ${record.email}`;
+        document.getElementById('modalSub').textContent = 'ID: ' + record.id;
 
         document.getElementById('mJobRole').textContent = record.jobRole;
         document.getElementById('mCompany').textContent = record.company;
         document.getElementById('mJoiningDate').textContent = record.joiningDate;
         document.getElementById('mEmploymentType').textContent = record.employmentType;
-        document.getElementById('mSalary').textContent = '₹' + record.currentIncome.toLocaleString();
-        document.getElementById('mPrevSalary').textContent = record.previousIncome > 0 ? '₹' + record.previousIncome.toLocaleString() : 'N/A';
+        document.getElementById('mSalary').textContent = record.currentIncome > 0 ? '₹' + record.currentIncome.toLocaleString() : '—';
+        document.getElementById('mPrevSalary').textContent = record.previousIncome > 0 ? '₹' + record.previousIncome.toLocaleString() : '—';
         document.getElementById('mLocation').textContent = record.location;
-
-        const statusClass = record.employmentStatus === 'Employed' ? 'employed' : 
-                           record.employmentStatus === 'Internship' ? 'internship' :
-                           record.employmentStatus === 'Self-Employed' ? 'self-employed' : 'unemployed';
-        document.getElementById('mStatus').innerHTML = `
-            <span class="status-badge ${statusClass}">
-                <span class="dot"></span>
-                ${record.employmentStatus}
-                ${record.verified ? ' ✅' : ' ⏳'}
-            </span>
-        `;
-
-        const growth = record.previousIncome > 0 ? Math.round(((record.currentIncome - record.previousIncome) / record.previousIncome) * 100) : 0;
-        document.getElementById('mGrowth').innerHTML = growth !== 0 ? 
-            (growth > 0 ? `⬆ ${growth}% growth` : `⬇ ${Math.abs(growth)}% decline`) : 
-            'No change recorded';
-
+        document.getElementById('mStatus').textContent = record.employmentStatus;
         document.getElementById('mCertification').textContent = record.certificationStatus;
-        document.getElementById('mCourse').textContent = `${record.course} · ${record.provider}`;
+        document.getElementById('mCourse').textContent = record.course + ' · ' + record.provider;
+
+        const growth = record.previousIncome > 0 && record.currentIncome > 0
+            ? Math.round(((record.currentIncome - record.previousIncome) / record.previousIncome) * 100)
+            : null;
+        document.getElementById('mGrowth').textContent = growth !== null
+            ? (growth >= 0 ? '+' : '') + growth + '%'
+            : '—';
 
         document.getElementById('employmentModal').classList.add('active');
     }
@@ -1881,145 +1965,196 @@
 
     function editEmployment() {
         if (!selectedRecord) return;
-        alert(`📝 Edit Employment Details for ${selectedRecord.name}\n\n` +
-              `Current Details:\n` +
-              `Job Role: ${selectedRecord.jobRole}\n` +
-              `Company: ${selectedRecord.company}\n` +
-              `Joining Date: ${selectedRecord.joiningDate}\n` +
-              `Type: ${selectedRecord.employmentType}\n` +
-              `Salary: ₹${selectedRecord.currentIncome.toLocaleString()}\n\n` +
-              `💡 This will redirect to the employment edit page.`);
-        closeModal();
+        alert('✏️ Edit Employment\n\nTrainee: ' + selectedRecord.name + '\n\nEdit form would open here to update employment details.');
     }
 
-    function verifyEmployment() {
+    async function verifyEmployment() {
         if (!selectedRecord) return;
-        if (selectedRecord.verified) {
-            alert('✅ This employment is already verified.');
-            return;
-        }
-        if (confirm(`Verify ${selectedRecord.name}'s employment?`)) {
+        try {
+            await db.collection('trainees').doc(selectedRecord.docId).update({
+                'employment.verified': true,
+                'employment.verifiedAt': firebase.firestore.FieldValue.serverTimestamp(),
+                'employment.verifiedBy': _firebaseUser ? _firebaseUser.uid : null
+            });
             selectedRecord.verified = true;
-            const index = allRecords.findIndex(r => r.id === selectedRecord.id);
-            if (index !== -1) allRecords[index].verified = true;
-            const fIndex = filteredRecords.findIndex(r => r.id === selectedRecord.id);
-            if (fIndex !== -1) filteredRecords[fIndex].verified = true;
-            renderCards();
-            renderTable();
+            showToast('✅ Employment verified successfully');
             closeModal();
-            alert(`✅ ${selectedRecord.name}'s employment verified!`);
+        } catch (e) {
+            console.error('Verify error:', e);
+            showToast('⚠️ Could not verify: ' + e.message);
         }
     }
 
-    function verifyFromTable(id) {
-        const record = allRecords.find(r => r.id === id);
+    async function quickVerify(docId) {
+        const record = allRecords.find(r => r.docId === docId);
         if (!record) return;
         if (record.verified) {
-            alert('✅ Already verified.');
+            showToast('ℹ️ Already verified');
             return;
         }
-        if (confirm(`Verify ${record.name}'s employment?`)) {
+        try {
+            await db.collection('trainees').doc(docId).update({
+                'employment.verified': true,
+                'employment.verifiedAt': firebase.firestore.FieldValue.serverTimestamp(),
+                'employment.verifiedBy': _firebaseUser ? _firebaseUser.uid : null
+            });
             record.verified = true;
-            const fIndex = filteredRecords.findIndex(r => r.id === id);
-            if (fIndex !== -1) filteredRecords[fIndex].verified = true;
-            renderCards();
-            renderTable();
-            alert(`✅ ${record.name} verified!`);
+            showToast('✅ Verified: ' + record.name);
+        } catch (e) {
+            console.error('Verify error:', e);
+            showToast('⚠️ Could not verify: ' + e.message);
         }
     }
 
-    function editEmploymentFromTable(id) {
-        const record = allRecords.find(r => r.id === id);
-        if (!record) return;
-        alert(`📝 Edit Employment for ${record.name}\n\n` +
-              `Current: ${record.jobRole} at ${record.company}\n` +
-              `Salary: ₹${record.currentIncome.toLocaleString()}\n\n` +
-              `💡 This will redirect to the employment edit page.`);
+    // ============================================================
+    // SIDEBAR / HEADER
+    // ============================================================
+    async function updateSidebar() {
+        employerData = await getEmployerData();
+
+        const displayName = employerData.contactPerson || 'Employer';
+        const orgName = employerData.orgName || '';
+        const initial = displayName.charAt(0).toUpperCase() || 'E';
+
+        const sidebarAvatar = document.getElementById('sidebarAvatar');
+        if (sidebarAvatar) {
+            sidebarAvatar.innerHTML = `<span class="online-dot"></span>${initial}`;
+        }
+        document.getElementById('sidebarName').textContent = displayName;
+        document.getElementById('sidebarCompany').textContent = orgName;
+
+        document.getElementById('headerAvatar').textContent = initial;
+        document.getElementById('headerName').textContent = displayName;
+
+        // Pending badge (trainees awaiting verification)
+        const pendingCount = allRecords.filter(r => !r.verified && r.employmentStatus === 'Employed').length;
+        const badge = document.getElementById('pendingBadge');
+        if (badge && pendingCount > 0) {
+            badge.textContent = pendingCount;
+            badge.style.display = 'inline-block';
+        }
+
+        const notifBadge = document.getElementById('notifBadge');
+        if (notifBadge) notifBadge.textContent = pendingCount;
     }
 
-    // ============================================================
-    // UTILITY FUNCTIONS
-    // ============================================================
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
 
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    function toggleTheme() {
+        document.body.classList.toggle('dark-theme');
+    }
 
     function showNotifications() {
-        const employed = allRecords.filter(r => r.employmentStatus === 'Employed').length;
-        const pending = allRecords.filter(r => r.employmentStatus === 'Looking for Job' || r.employmentStatus === 'Unemployed').length;
-        alert(`📬 Notifications\n\n• ${employed} trainees employed\n• ${pending} trainees looking for job\n• ${allRecords.length} total records`);
+        const pending = allRecords.filter(r => !r.verified && r.employmentStatus === 'Employed').length;
+        alert(`📬 Notifications\n\n• ${pending} employment record(s) awaiting verification\n• ${allRecords.length} total records loaded`);
     }
 
-    function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
+    function toggleProfileMenu() {
+        alert('👤 Profile Menu\n\nSettings · Support · Logout');
+    }
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
-            window.location.href = '../auth/login.html';
+            auth.signOut().then(() => {
+                window.location.href = '../auth/login.html?role=employer';
+            });
         }
     }
 
+    // ============================================================
+    // ACTIONS
+    // ============================================================
     function exportData() {
         if (filteredRecords.length === 0) {
-            alert('No data to export');
+            alert('No records to export.');
             return;
         }
-        let csv = 'ID,Name,Email,Course,Job Role,Company,Joining Date,Employment Type,Status,Salary,Verified\n';
+        let csv = 'Trainee ID,Name,Email,Job Role,Company,Joining Date,Employment Type,Salary,Previous Salary,Status,Location,Course,Provider\n';
         filteredRecords.forEach(r => {
-            csv += `${r.id},${r.name},${r.email},${r.course},${r.jobRole},${r.company},${r.joiningDate},${r.employmentType},${r.employmentStatus},${r.currentIncome},${r.verified ? 'Yes' : 'No'}\n`;
+            csv += `"${r.id}","${r.name}","${r.email}","${r.jobRole}","${r.company}","${r.joiningDate}","${r.employmentType}",${r.currentIncome},${r.previousIncome},"${r.employmentStatus}","${r.location}","${r.course}","${r.provider}"\n`;
         });
+
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `employment-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `employment-records-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        alert('📥 Data exported successfully!');
+        showToast('📥 Exported ' + filteredRecords.length + ' records');
     }
 
-    function refreshData() { loadAndRender(); alert('🔄 Data refreshed!'); }
+    async function refreshData() {
+        showToast('🔄 Refreshing data…');
+        await loadAndRender();
+        showToast('✅ Data refreshed');
+    }
 
     function viewAnalytics() {
-        const total = allRecords.length;
         const employed = allRecords.filter(r => r.employmentStatus === 'Employed').length;
+        const total = allRecords.length;
         const rate = total > 0 ? Math.round((employed / total) * 100) : 0;
         const salaries = allRecords.filter(r => r.currentIncome > 0).map(r => r.currentIncome);
-        const avg = salaries.length > 0 ? Math.round(salaries.reduce((a,b) => a + b, 0) / salaries.length) : 0;
+        const avg = salaries.length > 0 ? Math.round(salaries.reduce((a,b) => a+b, 0) / salaries.length) : 0;
         const max = salaries.length > 0 ? Math.max(...salaries) : 0;
         const min = salaries.length > 0 ? Math.min(...salaries) : 0;
 
-        alert(`📊 Employment Analytics\n\n` +
-              `📈 Total Trainees: ${total}\n` +
-              `✅ Employed: ${employed} (${rate}%)\n` +
-              `❌ Unemployed: ${total - employed}\n\n` +
-              `💰 Salary Statistics:\n` +
-              `• Average: ₹${avg.toLocaleString()}\n` +
-              `• Highest: ₹${max.toLocaleString()}\n` +
-              `• Lowest: ₹${min.toLocaleString()}\n\n` +
-              `📋 Employment Types:\n` +
-              `• Full Time: ${allRecords.filter(r => r.employmentType === 'Full Time').length}\n` +
-              `• Internship: ${allRecords.filter(r => r.employmentType === 'Internship').length}\n` +
-              `• Apprenticeship: ${allRecords.filter(r => r.employmentType === 'Apprenticeship').length}`);
+        alert(`📊 EMPLOYMENT ANALYTICS\n\n` +
+              `• Total Records: ${total}\n` +
+              `• Employed: ${employed} (${rate}%)\n` +
+              `• Average Salary: ₹${avg.toLocaleString()}\n` +
+              `• Highest Salary: ₹${max.toLocaleString()}\n` +
+              `• Lowest Salary: ₹${min.toLocaleString()}`);
     }
 
     function updateDate() {
+        const el = document.getElementById('dateDisplay');
+        if (!el) return;
         const now = new Date();
-        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', options);
+        el.textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `position:fixed;bottom:30px;right:30px;background:white;padding:14px 22px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.15);border-left:4px solid #2563eb;max-width:400px;z-index:1000;font-size:13px;color:#0b1a33;display:flex;align-items:center;gap:10px;font-weight:500;`;
+        toast.innerHTML = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
     // ============================================================
-    // INITIALIZE
+    // INIT
     // ============================================================
-
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         updateDate();
-        loadAndRender();
 
+        try {
+            await requireAuth();
+        } catch (e) {
+            return; // auth guard already redirected
+        }
+
+        await loadAndRender();
+
+        // Close modal on overlay click
         document.getElementById('employmentModal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
         });
 
+        // Close modal on ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Close sidebar on outside click (mobile)
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
             const toggle = document.querySelector('.menu-toggle');
@@ -2030,9 +2165,10 @@
             }
         });
 
-        console.log('📋 Employment Details page loaded with', allRecords.length, 'records');
+        console.log('✅ Employment Details page loaded');
+        console.log('📊 Records:', allRecords.length);
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+</body>
 </html>

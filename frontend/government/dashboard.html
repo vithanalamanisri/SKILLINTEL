@@ -12,7 +12,6 @@
 
     <!-- ✅ Firebase SDK (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
@@ -1279,7 +1278,6 @@ MAIN CONTENT
     };
 
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
 
     // ============================================================
@@ -1288,53 +1286,38 @@ MAIN CONTENT
     let allRecords = [];
     let stats = {};
     let analyticsRaw = null;
-    let _firebaseUser = null;
-    let _userProfile = null;
+    let _govtOfficer = null;
 
     // ============================================================
-    // AUTH GUARD — government role only
+    // AUTH GUARD — localStorage-based (custom govt login)
     // ============================================================
-    function requireAuth() {
-        return new Promise((resolve, reject) => {
-            const unsub = auth.onAuthStateChanged(async (fbUser) => {
-                unsub();
-                if (!fbUser) {
-                    window.location.href = '../auth/login.html?role=government';
-                    reject('not-authenticated');
-                    return;
-                }
-                try {
-                    const snap = await db.collection('users').doc(fbUser.uid).get();
-                    if (!snap.exists) {
-                        window.location.href = '../auth/login.html?role=government';
-                        reject('no-profile');
-                        return;
-                    }
-                    const profile = snap.data();
-                    if (profile.role !== 'government') {
-                        await auth.signOut();
-                        window.location.href = '../auth/login.html?role=government';
-                        reject('wrong-role');
-                        return;
-                    }
-                    _firebaseUser = fbUser;
-                    _userProfile = profile;
-                    resolve(fbUser);
-                } catch (e) {
-                    console.error('Auth guard error:', e);
-                    reject(e);
-                }
-            });
-        });
+    function requireGovtAuth() {
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        const role = localStorage.getItem('userRole');
+
+        if (isLoggedIn !== 'true' || role !== 'government') {
+            window.location.href = '../auth/login.html?role=government';
+            throw new Error('not-authenticated');
+        }
+
+        // Load officer info from localStorage
+        _govtOfficer = {
+            name: localStorage.getItem('govtOfficerName') || 'Government Official',
+            accessLevel: localStorage.getItem('govtAccessLevel') || 'State',
+            department: localStorage.getItem('govtDepartment') || 'Skill Development',
+            email: localStorage.getItem('userEmail') || '',
+            officialId: localStorage.getItem('currentGovtOfficialId') || '',
+        };
+
+        console.log('✅ Government official authenticated:', _govtOfficer.name);
+        return _govtOfficer;
     }
 
     // ============================================================
     // LOAD ANALYTICS — Firestore aggregation
-    // Reads all 3 collections in parallel and computes KPIs client-side
     // ============================================================
     async function loadAnalytics() {
         try {
-            // Parallel fetches from Firestore
             const [traineesSnap, employersSnap, providersSnap] = await Promise.all([
                 db.collection('trainees').get(),
                 db.collection('employers').get(),
@@ -1386,7 +1369,7 @@ MAIN CONTENT
                 };
             });
 
-            // ---- Aggregate analytics object (same shape as old Flask API) ----
+            // ---- Aggregate ----
             const total = rows.length;
             const employed = rows.filter(r => r.status === 'employed').length;
             const selfEmployed = rows.filter(r => r.status === 'self-employed').length;
@@ -1396,7 +1379,6 @@ MAIN CONTENT
             const employedTotal = employed + selfEmployed;
             const rate = total > 0 ? Math.round((employedTotal / total) * 100) : 0;
 
-            // Income calculations
             const incomesArr = rows.filter(r => r.income > 0).map(r => r.income);
             const avgIncome = incomesArr.length > 0
                 ? Math.round(incomesArr.reduce((a, b) => a + b, 0) / incomesArr.length)
@@ -1412,7 +1394,6 @@ MAIN CONTENT
                 ? Math.round(((avgIncome - avgPrevious) / avgPrevious) * 100)
                 : 0;
 
-            // Income distribution buckets
             const incomeDistribution = {
                 zero: rows.filter(r => r.income === 0).length,
                 under_15k: rows.filter(r => r.income > 0 && r.income < 15000).length,
@@ -1421,7 +1402,6 @@ MAIN CONTENT
                 '35k_plus': rows.filter(r => r.income >= 35000).length,
             };
 
-            // Group by program
             const programMap = {};
             rows.forEach(r => {
                 const key = r.program || 'Unnamed';
@@ -1430,7 +1410,6 @@ MAIN CONTENT
                 if (r.status === 'employed' || r.status === 'self-employed') programMap[key].employed++;
             });
 
-            // Group by provider
             const providerMap = {};
             rows.forEach(r => {
                 const key = r.provider || 'Unnamed';
@@ -1439,7 +1418,6 @@ MAIN CONTENT
                 if (r.status === 'employed' || r.status === 'self-employed') providerMap[key].employed++;
             });
 
-            // Retention (basic: employed with followups marked retained)
             const followupStats = { '30d': 0, '90d': 0, '180d': 0, '365d': 0 };
             let retained180 = 0;
             rows.forEach(r => {
@@ -1458,7 +1436,6 @@ MAIN CONTENT
                 }
             });
 
-            // Retention rate approximation
             const retentionRate = employedTotal > 0 ? Math.round((retained180 / employedTotal) * 100) : 0;
 
             analyticsRaw = {
@@ -1497,7 +1474,7 @@ MAIN CONTENT
     }
 
     // ============================================================
-    // CALCULATE STATS (REAL DATA ONLY)
+    // CALCULATE STATS
     // ============================================================
     function calculateStats(rows) {
         const a = analyticsRaw || {};
@@ -1564,7 +1541,7 @@ MAIN CONTENT
         updateSidebar();
         updateNotificationBadge();
 
-        console.log('✅ Government Dashboard loaded (Firebase)');
+        console.log('✅ Government Dashboard loaded');
         console.log('   Trainees:', stats.total, '| Employed:', stats.employed);
     }
 
@@ -1845,8 +1822,9 @@ MAIN CONTENT
     }
 
     function updateSidebar() {
-        const name = _userProfile?.fullName || _userProfile?.name || 'Government';
-        const role = _userProfile?.accessLevel ? `Admin · ${_userProfile.accessLevel}` : 'Admin';
+        if (!_govtOfficer) return;
+        const name = _govtOfficer.name || 'Government';
+        const role = _govtOfficer.accessLevel ? `Admin · ${_govtOfficer.accessLevel}` : 'Admin';
         const initial = name.charAt(0).toUpperCase();
         document.getElementById('sidebarAvatar').textContent = initial;
         document.getElementById('sidebarName').textContent = name;
@@ -1898,22 +1876,23 @@ MAIN CONTENT
     }
 
     function toggleProfileMenu() {
-        alert('👤 Profile Menu\n\nSettings · Support · Logout');
+        if (!_govtOfficer) return;
+        alert(`👤 ${_govtOfficer.name}\n\nEmail: ${_govtOfficer.email}\nDepartment: ${_govtOfficer.department}\nAccess Level: ${_govtOfficer.accessLevel}\nOfficial ID: ${_govtOfficer.officialId}`);
     }
 
-    async function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            try { await auth.signOut(); } catch (e) {}
-            try {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userRole');
-                localStorage.removeItem('userId');
-                localStorage.removeItem('currentGovtOfficialId');
-                localStorage.removeItem('govtOfficerName');
-                localStorage.removeItem('govtAccessLevel');
-            } catch (e) {}
-            window.location.href = '../auth/login.html?role=government';
-        }
+    function logout() {
+        if (!confirm('Are you sure you want to logout?')) return;
+        try {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('currentGovtOfficialId');
+            localStorage.removeItem('govtOfficerName');
+            localStorage.removeItem('govtAccessLevel');
+            localStorage.removeItem('govtDepartment');
+        } catch (e) {}
+        window.location.href = '../auth/login.html?role=government';
     }
 
     function toggleTheme() {
@@ -1947,9 +1926,9 @@ MAIN CONTENT
         updateDate();
 
         try {
-            await requireAuth();
+            requireGovtAuth();
             await loadAndRender();
-            console.log('✅ Government Dashboard loaded (Firebase)!');
+            console.log('✅ Government Dashboard loaded!');
         } catch (e) {
             console.warn('Init aborted:', e);
         }

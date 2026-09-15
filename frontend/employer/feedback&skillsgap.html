@@ -10,6 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
     
     <link rel="stylesheet" href="../css/style.css">
+
+    <!-- Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         /* ===== RESET ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
@@ -287,6 +293,25 @@
         .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
         .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
 
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: #475569;
+            font-size: 16px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover {
+            background: #f1f5f9;
+            color: #06b6d4;
+            transform: rotate(15deg);
+        }
+
         /* ===== CONTAINER ===== */
         .container {
             padding: 24px 32px 32px;
@@ -403,7 +428,6 @@
         .stat-box .stat-icon.green { background: #dcfce7; color: #16a34a; }
         .stat-box .stat-icon.orange { background: #fef3c7; color: #d97706; }
         .stat-box .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
-        .stat-box .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
         .stat-box .stat-number {
             font-size: 28px;
             font-weight: 800;
@@ -615,6 +639,7 @@
             border: 1px solid #eef2f6;
             box-shadow: 0 2px 12px rgba(0,0,0,0.04);
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
         }
         .feedback-card:hover {
             transform: translateY(-4px);
@@ -1108,7 +1133,6 @@
 <body>
 
 <!-- ===== SIDEBAR ===== -->
-<!-- ===== SIDEBAR ===== -->
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
         <div class="icon"><i class="fas fa-brain"></i></div>
@@ -1120,21 +1144,19 @@
 
     <div class="sidebar-user">
         <div class="avatar" id="sidebarAvatar">
-            E
             <span class="online-dot"></span>
         </div>
         <div class="info">
-            <div class="name" id="sidebarName">Employer</div>
-            <div class="company" id="sidebarCompany">Company Name</div>
+            <div class="name" id="sidebarName"></div>
+            <div class="company" id="sidebarCompany"></div>
             <div class="role">Employer · Admin</div>
         </div>
     </div>
 
-    <!-- ✅ feedback&skillsgap is active -->
     <div class="menu">
         <div class="menu-label">Main Menu</div>
         <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
-        <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees <span class="badge">3</span></a>
+        <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees <span class="badge" id="pendingBadge" style="display:none;">0</span></a>
         <a href="employement-details.html"><i class="fas fa-briefcase"></i> Employment Details</a>
         <a href="employer-feedback-form.html"><i class="fas fa-star"></i> Submit Feedback</a>
         <a class="active" href="feedback&skillsgap.html"><i class="fas fa-chart-bar"></i> Feedback & Skill Gap</a>
@@ -1148,7 +1170,6 @@
 <!-- ===== MAIN ===== -->
 <div class="main-content">
 
-    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="toggleSidebar()">
@@ -1160,26 +1181,24 @@
             </div>
         </div>
         <div class="header-right">
-  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
-  <i class="fas fa-moon"></i>
-</button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
             <span class="date" id="dateDisplay"></span>
             <div class="notif" onclick="showNotifications()">
                 <i class="fas fa-bell"></i>
-                <span class="badge">5</span>
+                <span class="badge" id="notifBadge">0</span>
             </div>
             <button class="profile-btn" onclick="toggleProfileMenu()">
-                <div class="avatar" id="headerAvatar">E</div>
-                <span class="name" id="headerName">Employer</span>
+                <div class="avatar" id="headerAvatar"></div>
+                <span class="name" id="headerName"></span>
                 <i class="fas fa-chevron-down"></i>
             </button>
         </div>
     </header>
 
-    <!-- ===== CONTAINER ===== -->
     <div class="container">
 
-        <!-- ===== WELCOME BANNER ===== -->
         <div class="welcome-banner">
             <div class="banner-content">
                 <h2><i class="fas fa-rocket"></i> Skills & Feedback Overview</h2>
@@ -1201,12 +1220,11 @@
             </div>
         </div>
 
-        <!-- ===== STATS ROW ===== -->
         <div class="stats-row">
             <div class="stat-box">
                 <div class="stat-top">
                     <div class="stat-icon blue"><i class="fas fa-users"></i></div>
-                    <span class="stat-trend up">↑ 12%</span>
+                    <span class="stat-trend up" id="totalTrend">—</span>
                 </div>
                 <div class="stat-number" id="totalTrainees">0</div>
                 <div class="stat-label">Total Trainees</div>
@@ -1214,7 +1232,7 @@
             <div class="stat-box">
                 <div class="stat-top">
                     <div class="stat-icon green"><i class="fas fa-star"></i></div>
-                    <span class="stat-trend up">↑ 8%</span>
+                    <span class="stat-trend up" id="ratingTrend">—</span>
                 </div>
                 <div class="stat-number" id="avgRating">0.0</div>
                 <div class="stat-label">Average Rating</div>
@@ -1230,37 +1248,34 @@
             <div class="stat-box">
                 <div class="stat-top">
                     <div class="stat-icon purple"><i class="fas fa-bullseye"></i></div>
-                    <span class="stat-trend up">↑ 5%</span>
+                    <span class="stat-trend up" id="readinessTrend">—</span>
                 </div>
                 <div class="stat-number" id="jobReadiness">0%</div>
                 <div class="stat-label">Job Readiness</div>
             </div>
         </div>
 
-        <!-- ===== SKILLS CHART SECTION ===== -->
         <div class="skills-chart-section">
-            <!-- Radar Chart -->
             <div class="skills-chart-card">
                 <div class="card-title"><i class="fas fa-chart-radar"></i> Skill Assessment Overview</div>
                 <div class="radar-container" id="radarContainer">
                     <div class="radar" id="radarChart">
-                        <svg viewBox="0 0 300 300">
-                            <!-- Dynamic -->
-                        </svg>
+                        <svg viewBox="0 0 300 300"></svg>
                     </div>
                 </div>
             </div>
 
-            <!-- Skill Gaps List -->
             <div class="skills-chart-card">
                 <div class="card-title"><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i> Skill Gaps & Recommendations</div>
                 <div class="skill-gap-list" id="skillGapList">
-                    <!-- Dynamic -->
+                    <div class="empty-state" style="padding:20px;">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>Loading skill data…</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== SEARCH ===== -->
         <div class="search-section">
             <div class="search-grid">
                 <div class="search-group">
@@ -1290,12 +1305,8 @@
             </div>
         </div>
 
-        <!-- ===== FEEDBACK CARDS ===== -->
-        <div class="feedback-grid" id="feedbackCards">
-            <!-- Dynamic -->
-        </div>
+        <div class="feedback-grid" id="feedbackCards"></div>
 
-        <!-- ===== TABLE ===== -->
         <div class="table-container">
             <div class="table-header">
                 <h3>
@@ -1322,22 +1333,19 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <!-- Dynamic -->
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">
+                                Loading records from Firestore…
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
-            <!-- ===== PAGINATION ===== -->
             <div class="pagination" id="pagination">
                 <div class="info">
                     Showing <strong id="startCount">0</strong> - <strong id="endCount">0</strong> of <strong id="totalCount">0</strong> records
                 </div>
-                <div class="pages">
-                    <button onclick="prevPage()"><i class="fas fa-chevron-left"></i></button>
-                    <button class="active" id="page1">1</button>
-                    <button id="page2">2</button>
-                    <button id="page3">3</button>
-                    <button onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>
-                </div>
+                <div class="pages" id="pageButtons"></div>
             </div>
         </div>
 
@@ -1361,7 +1369,7 @@
         <div class="modal-grid">
             <div class="modal-field full">
                 <div class="label"><i class="fas fa-star"></i> Overall Rating</div>
-                <div class="value rating-stars" id="mRating">★★★★★</div>
+                <div class="value rating-stars" id="mRating">—</div>
             </div>
             <div class="modal-field">
                 <div class="label"><i class="fas fa-code"></i> Technical Skills</div>
@@ -1402,69 +1410,186 @@
 
 <script>
     // ============================================================
-    // DATA STORE
+    // FIREBASE CONFIG
     // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
 
-    function loadAllData() {
-        const traineeData = JSON.parse(localStorage.getItem('traineeData') || '{}');
-        const employmentData = JSON.parse(localStorage.getItem('employmentData') || '{}');
-        const followupData = JSON.parse(localStorage.getItem('followupData') || '{}');
-        const feedbackData = JSON.parse(localStorage.getItem('feedbackData') || '{}');
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-        let records = [];
+    let _firebaseUser = null;
+    let _userProfile = null;
 
-        // Build skill assessment data
-        const skillCategories = ['Technical Skills', 'Practical Skills', 'Communication', 'Problem Solving', 'Job Readiness'];
-
-        if (traineeData && traineeData.fullName) {
-            records.push({
-                id: traineeData.traineeId || 'TRN001',
-                name: traineeData.fullName || 'Trainee',
-                email: traineeData.email || 'trainee@email.com',
-                course: traineeData.skillTrade || 'N/A',
-                provider: traineeData.trainingProvider || 'N/A',
-                technical: parseInt(traineeData.technicalSkills) || 75,
-                practical: parseInt(traineeData.practicalSkills) || 70,
-                communication: parseInt(traineeData.communication) || 65,
-                problemSolving: parseInt(traineeData.problemSolving) || 72,
-                jobReadiness: parseInt(traineeData.jobReadiness) || 68,
-                feedback: traineeData.feedback || 'Good progress, keep improving.',
-                rating: parseInt(traineeData.rating) || 4,
-                avatar: traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T',
-                color: '#2563eb'
+    // ============================================================
+    // AUTH GUARD
+    // ============================================================
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=employer';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=employer';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'employer') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=employer';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
             });
+        });
+    }
+
+    // ============================================================
+    // EMPLOYER DATA
+    // ============================================================
+    async function getEmployerData() {
+        if (!_firebaseUser) return { contactPerson: '', orgName: '' };
+        const uid = _firebaseUser.uid;
+        let data = null;
+        try {
+            const snap = await db.collection('employers').doc(uid).get();
+            if (snap.exists) data = snap.data();
+        } catch (e) {}
+        if (!data && _userProfile) data = _userProfile;
+        if (!data) return { contactPerson: _firebaseUser.displayName || _firebaseUser.email || '', orgName: '' };
+        return {
+            contactPerson: data.contactPerson || data.fullName || _firebaseUser.displayName || '',
+            orgName: data.orgName || ''
+        };
+    }
+
+    // ============================================================
+    // LOAD RECORDS
+    // — joins trainees + their feedback entries (if any)
+    // — computes skill scores from trainee fields or feedback competencies
+    // ============================================================
+    async function loadAllData() {
+        const records = [];
+
+        let traineeDocs = [];
+        try {
+            const snap = await db.collection('trainees').get();
+            snap.forEach(d => traineeDocs.push({ _id: d.id, ...d.data() }));
+        } catch (e) {
+            console.warn('Could not read trainees:', e);
         }
 
-        // Sample data
-        if (records.length === 0) {
-            records = [
-                { id: 'TRN001', name: 'Priya Sharma', email: 'priya@email.com', course: 'Data Analytics', provider: 'Skill India Centre', technical: 85, practical: 80, communication: 75, problemSolving: 82, jobReadiness: 88, feedback: 'Excellent technical skills. Very good at data analysis and visualization.', rating: 5, avatar: 'P', color: '#2563eb' },
-                { id: 'TRN002', name: 'Rahul Verma', email: 'rahul@email.com', course: 'Full Stack Development', provider: 'NITC Training', technical: 78, practical: 72, communication: 60, problemSolving: 75, jobReadiness: 70, feedback: 'Good coding skills. Needs to improve communication and teamwork.', rating: 4, avatar: 'R', color: '#7c3aed' },
-                { id: 'TRN003', name: 'Ananya Reddy', email: 'ananya@email.com', course: 'Digital Marketing', provider: 'Digital India Academy', technical: 82, practical: 85, communication: 88, problemSolving: 78, jobReadiness: 85, feedback: 'Outstanding marketing skills. Very creative and proactive.', rating: 5, avatar: 'A', color: '#16a34a' },
-                { id: 'TRN004', name: 'Vikram Singh', email: 'vikram@email.com', course: 'Data Science', provider: 'Data Science Institute', technical: 90, practical: 85, communication: 70, problemSolving: 88, jobReadiness: 82, feedback: 'Excellent problem solver. Needs improvement in presentation skills.', rating: 4, avatar: 'V', color: '#d97706' },
-                { id: 'TRN005', name: 'Sneha Patel', email: 'sneha@email.com', course: 'UI/UX Design', provider: 'Design Academy', technical: 72, practical: 78, communication: 82, problemSolving: 68, jobReadiness: 65, feedback: 'Good design sense. Needs to work on problem-solving and job readiness.', rating: 3, avatar: 'S', color: '#dc2626' },
-                { id: 'TRN006', name: 'Arjun Nair', email: 'arjun@email.com', course: 'Cloud Computing', provider: 'Cloud Academy', technical: 88, practical: 82, communication: 72, problemSolving: 80, jobReadiness: 78, feedback: 'Strong cloud skills. Very reliable and proactive.', rating: 5, avatar: 'A', color: '#0d9488' },
-                { id: 'TRN007', name: 'Kiran Joshi', email: 'kiran@email.com', course: 'Full Stack Development', provider: 'Code Institute', technical: 65, practical: 60, communication: 58, problemSolving: 62, jobReadiness: 55, feedback: 'Needs improvement in all areas. Suggest additional training.', rating: 2, avatar: 'K', color: '#7c3aed' },
-                { id: 'TRN008', name: 'Divya K', email: 'divya@email.com', course: 'Data Analytics', provider: 'Analytics School', technical: 70, practical: 68, communication: 65, problemSolving: 72, jobReadiness: 60, feedback: 'Good fundamentals. Needs to build more confidence and practical experience.', rating: 3, avatar: 'D', color: '#2563eb' }
-            ];
+        // Get feedback entries (keyed by traineeId or traineeEmail)
+        let feedbackDocs = [];
+        try {
+            const snap = await db.collection('feedback').get();
+            snap.forEach(d => feedbackDocs.push({ _id: d.id, ...d.data() }));
+        } catch (e) {
+            console.warn('Could not read feedback collection:', e);
         }
+
+        traineeDocs.forEach((t, index) => {
+            // Match feedback to trainee
+            const fb = feedbackDocs.find(f =>
+                (f.traineeId && f.traineeId === (t.traineeCode || t._id)) ||
+                (f.traineeEmail && t.email && f.traineeEmail.toLowerCase() === t.email.toLowerCase())
+            ) || null;
+
+            // Compute skill scores: prefer feedback competencies → else trainee fields → else 0
+            let technical = 0, practical = 0, communication = 0, problemSolving = 0, jobReadiness = 0;
+
+            if (fb && Array.isArray(fb.competencies) && fb.competencies.length > 0) {
+                const c = fb.competencies;
+                const getComp = name => {
+                    const x = c.find(cc => (cc.name || '').toLowerCase().includes(name.toLowerCase()));
+                    return x && typeof x.score === 'number' ? x.score : 0;
+                };
+                technical = getComp('Technical');
+                communication = getComp('Communication');
+                problemSolving = getComp('Problem Solving');
+                practical = getComp('Practical') || getComp('Teamwork') || 0;
+                jobReadiness = getComp('Work Ethic') || getComp('Adaptability') || getComp('Time Management') || 0;
+            } else if (t.competencies && Array.isArray(t.competencies)) {
+                const c = t.competencies;
+                const getComp = name => {
+                    const x = c.find(cc => (cc.name || '').toLowerCase().includes(name.toLowerCase()));
+                    return x && typeof x.score === 'number' ? x.score : 0;
+                };
+                technical = getComp('Technical');
+                communication = getComp('Communication');
+                problemSolving = getComp('Problem Solving');
+                practical = getComp('Practical') || getComp('Teamwork') || 0;
+                jobReadiness = getComp('Work Ethic') || getComp('Adaptability') || 0;
+            } else {
+                // Fall back to top-level numeric fields if present
+                technical = Number(t.technicalSkills) || 0;
+                practical = Number(t.practicalSkills) || 0;
+                communication = Number(t.communication) || 0;
+                problemSolving = Number(t.problemSolving) || 0;
+                jobReadiness = Number(t.jobReadiness) || 0;
+            }
+
+            const rating = (fb && fb.rating) ? Number(fb.rating) : (t.rating ? Number(t.rating) : 0);
+            const feedback = (fb && (fb.text || fb.feedback)) || t.feedback || '';
+
+            records.push({
+                id: t.traineeCode || ('TRN' + (t.uid ? t.uid.substring(0, 6) : t._id.substring(0, 6))),
+                docId: t._id,
+                name: t.fullName || 'Trainee',
+                email: t.email || '',
+                course: t.skillTrade || t.qualification || 'N/A',
+                provider: t.trainingProvider || 'N/A',
+                technical, practical, communication, problemSolving, jobReadiness,
+                feedback,
+                rating,
+                feedbackDocId: fb ? fb._id : null,
+                avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
+                color: ['#2563eb', '#7c3aed', '#16a34a', '#d97706', '#dc2626'][index % 5]
+            });
+        });
 
         return records;
     }
 
     // ============================================================
-    // RENDER FUNCTIONS
+    // STATE
     // ============================================================
-
     let allRecords = [];
     let filteredRecords = [];
     let selectedRecord = null;
     let currentPage = 1;
     const pageSize = 5;
+    let employerData = {};
 
-    function loadAndRender() {
-        allRecords = loadAllData();
+    // ============================================================
+    // LOAD & RENDER
+    // ============================================================
+    async function loadAndRender() {
+        allRecords = await loadAllData();
         filteredRecords = [...allRecords];
+        console.log('📋 Loaded', allRecords.length, 'records from Firestore');
+
         renderStats();
         renderRadarChart();
         renderSkillGaps();
@@ -1472,53 +1597,79 @@
         renderTable();
         updateSidebar();
         updateBanner();
+        updateBadges();
     }
 
     function renderStats() {
         const total = allRecords.length;
-        const avgRating = total > 0 ? (allRecords.reduce((a,b) => a + b.rating, 0) / total).toFixed(1) : '0.0';
-        const gaps = allRecords.filter(r => r.technical < 60 || r.practical < 60 || r.communication < 60 || r.problemSolving < 60 || r.jobReadiness < 60).length;
-        const avgReadiness = total > 0 ? Math.round(allRecords.reduce((a,b) => a + b.jobReadiness, 0) / total) : 0;
+        const rated = allRecords.filter(r => r.rating > 0);
+        const avgRating = rated.length > 0 ? (rated.reduce((a,b) => a + b.rating, 0) / rated.length).toFixed(1) : '0.0';
+        const gaps = allRecords.filter(r =>
+            r.technical < 60 || r.practical < 60 || r.communication < 60 ||
+            r.problemSolving < 60 || r.jobReadiness < 60
+        ).length;
+        const readinessValues = allRecords.filter(r => r.jobReadiness > 0).map(r => r.jobReadiness);
+        const avgReadiness = readinessValues.length > 0
+            ? Math.round(readinessValues.reduce((a,b) => a + b, 0) / readinessValues.length)
+            : 0;
 
         document.getElementById('totalTrainees').textContent = total;
         document.getElementById('avgRating').textContent = avgRating;
         document.getElementById('skillGaps').textContent = gaps;
         document.getElementById('jobReadiness').textContent = avgReadiness + '%';
+
+        document.getElementById('totalTrend').textContent = total > 0 ? total + ' total' : '—';
+        document.getElementById('ratingTrend').textContent = avgRating > 0 ? avgRating + ' / 5' : '—';
+        document.getElementById('readinessTrend').textContent = avgReadiness > 0 ? avgReadiness + '%' : '—';
     }
 
     function updateBanner() {
         const total = allRecords.length;
-        const strong = allRecords.filter(r => r.technical >= 80 && r.practical >= 80 && r.communication >= 80 && r.problemSolving >= 80 && r.jobReadiness >= 80).length;
-        const gaps = allRecords.filter(r => r.technical < 60 || r.practical < 60 || r.communication < 60 || r.problemSolving < 60 || r.jobReadiness < 60).length;
+        const strong = allRecords.filter(r =>
+            r.technical >= 80 && r.practical >= 80 && r.communication >= 80 &&
+            r.problemSolving >= 80 && r.jobReadiness >= 80
+        ).length;
+        const gaps = allRecords.filter(r =>
+            r.technical < 60 || r.practical < 60 || r.communication < 60 ||
+            r.problemSolving < 60 || r.jobReadiness < 60
+        ).length;
         document.getElementById('bannerTotal').textContent = total;
         document.getElementById('bannerStrong').textContent = strong;
         document.getElementById('bannerGaps').textContent = gaps;
     }
 
-    function renderRadarChart() {
-        const container = document.getElementById('radarChart');
-        if (!container) return;
+    function updateBadges() {
+        const gaps = allRecords.filter(r =>
+            r.technical < 60 || r.practical < 60 || r.communication < 60 ||
+            r.problemSolving < 60 || r.jobReadiness < 60
+        ).length;
+        const badge = document.getElementById('pendingBadge');
+        if (badge) {
+            badge.textContent = gaps;
+            badge.style.display = gaps > 0 ? 'inline-block' : 'none';
+        }
+        document.getElementById('notifBadge').textContent = gaps;
+    }
 
-        const svg = container.querySelector('svg');
+    function renderRadarChart() {
+        const svg = document.querySelector('#radarChart svg');
         if (!svg) return;
 
         const cx = 150, cy = 150, radius = 100;
         const categories = ['Technical', 'Practical', 'Communication', 'Problem Solving', 'Job Readiness'];
         const angleStep = (2 * Math.PI) / categories.length;
-        
-        // Calculate average scores
+
         const avgScores = categories.map((_, i) => {
-            const sum = allRecords.reduce((a, r) => {
+            const vals = allRecords.map(r => {
                 const scores = [r.technical, r.practical, r.communication, r.problemSolving, r.jobReadiness];
-                return a + scores[i];
-            }, 0);
-            return allRecords.length > 0 ? sum / allRecords.length : 0;
+                return scores[i] || 0;
+            }).filter(v => v > 0);
+            return vals.length > 0 ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
         });
 
-        // Build SVG content
         let svgContent = '';
 
-        // Draw axes
+        // Axes
         categories.forEach((_, i) => {
             const angle = -Math.PI / 2 + i * angleStep;
             const x = cx + radius * Math.cos(angle);
@@ -1526,7 +1677,7 @@
             svgContent += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" class="axis" />`;
         });
 
-        // Draw grid rings
+        // Grid rings
         for (let ring = 1; ring <= 4; ring++) {
             const r = (radius / 4) * ring;
             let points = '';
@@ -1539,7 +1690,7 @@
             svgContent += `<polygon points="${points}" class="axis" />`;
         }
 
-        // Draw skill area
+        // Skill area
         let points = '';
         categories.forEach((_, i) => {
             const score = avgScores[i] / 100;
@@ -1551,7 +1702,7 @@
         });
         svgContent += `<polygon points="${points}" class="skill-area" />`;
 
-        // Draw skill points and labels
+        // Points + labels
         categories.forEach((_, i) => {
             const score = avgScores[i] / 100;
             const r = score * radius;
@@ -1559,7 +1710,7 @@
             const x = cx + r * Math.cos(angle);
             const y = cy + r * Math.sin(angle);
             svgContent += `<circle cx="${x}" cy="${y}" class="skill-point" />`;
-            
+
             const labelR = radius + 28;
             const lx = cx + labelR * Math.cos(angle);
             const ly = cy + labelR * Math.sin(angle);
@@ -1571,15 +1722,24 @@
 
     function renderSkillGaps() {
         const container = document.getElementById('skillGapList');
-        
-        // Aggregate skill gaps across all trainees
+
+        if (allRecords.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state" style="padding:20px;">
+                    <i class="fas fa-chart-bar"></i>
+                    <p>No skill data yet</p>
+                </div>
+            `;
+            return;
+        }
+
         const skillNames = ['Technical Skills', 'Practical Skills', 'Communication', 'Problem Solving', 'Job Readiness'];
         const skillKeys = ['technical', 'practical', 'communication', 'problemSolving', 'jobReadiness'];
         const skillIcons = ['fas fa-code', 'fas fa-tools', 'fas fa-comment', 'fas fa-lightbulb', 'fas fa-bullseye'];
-        
+
         const gapData = skillKeys.map((key, i) => {
-            const scores = allRecords.map(r => r[key]);
-            const avg = scores.reduce((a,b) => a + b, 0) / scores.length;
+            const scores = allRecords.map(r => r[key]).filter(s => s > 0);
+            const avg = scores.length > 0 ? scores.reduce((a,b) => a+b, 0) / scores.length : 0;
             const count = scores.filter(s => s < 60).length;
             return {
                 name: skillNames[i],
@@ -1590,7 +1750,6 @@
             };
         });
 
-        // Sort by gaps (highest first)
         gapData.sort((a, b) => b.gaps - a.gaps);
 
         container.innerHTML = gapData.map(g => `
@@ -1609,13 +1768,13 @@
 
     function renderFeedbackCards() {
         const container = document.getElementById('feedbackCards');
-        
+
         if (filteredRecords.length === 0) {
             container.innerHTML = `
                 <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">
                     <i class="fas fa-comment-slash" style="font-size:40px;display:block;margin-bottom:12px;"></i>
                     <h3 style="color:#475569;">No Feedback Records</h3>
-                    <p>Try adjusting your search or filter criteria</p>
+                    <p>Feedback entries will appear here once employers submit them.</p>
                 </div>
             `;
             return;
@@ -1631,22 +1790,23 @@
             const strongSkills = ['Technical', 'Practical', 'Communication', 'Problem Solving', 'Job Readiness']
                 .filter((_, i) => [r.technical, r.practical, r.communication, r.problemSolving, r.jobReadiness][i] >= 80);
             const weakSkills = ['Technical', 'Practical', 'Communication', 'Problem Solving', 'Job Readiness']
-                .filter((_, i) => [r.technical, r.practical, r.communication, r.problemSolving, r.jobReadiness][i] < 60);
+                .filter((_, i) => [r.technical, r.practical, r.communication, r.problemSolving, r.jobReadiness][i] > 0 &&
+                                  [r.technical, r.practical, r.communication, r.problemSolving, r.jobReadiness][i] < 60);
 
             return `
-                <div class="feedback-card" onclick="viewRecord('${r.id}')">
+                <div class="feedback-card" onclick="viewRecord('${escapeJs(r.docId)}')">
                     <div class="fb-header">
                         <div class="fb-user">
-                            <div class="avatar" style="background:${r.color}">${r.avatar}</div>
+                            <div class="avatar" style="background:${r.color}">${escapeHtml(r.avatar)}</div>
                             <div>
-                                <div class="name">${r.name}</div>
-                                <div class="sub">${r.course} · ${r.provider}</div>
+                                <div class="name">${escapeHtml(r.name)}</div>
+                                <div class="sub">${escapeHtml(r.course)} · ${escapeHtml(r.provider)}</div>
                             </div>
                         </div>
-                        <div class="fb-rating">${stars}</div>
+                        <div class="fb-rating">${stars || '—'}</div>
                     </div>
                     <div class="fb-body">
-                        <div class="fb-text">"${r.feedback}"</div>
+                        <div class="fb-text">"${escapeHtml(r.feedback) || 'No feedback text recorded'}"</div>
                         <div class="fb-skills">
                             ${strongSkills.map(s => `<span class="skill-tag strong">✅ ${s}</span>`).join('')}
                             ${weakSkills.map(s => `<span class="skill-tag weak">⚠️ ${s}</span>`).join('')}
@@ -1654,8 +1814,8 @@
                         </div>
                     </div>
                     <div class="fb-footer">
-                        <span><i class="fas fa-user"></i> ${r.email}</span>
-                        <span><i class="fas fa-id-card"></i> ${r.id}</span>
+                        <span><i class="fas fa-user"></i> ${escapeHtml(r.email)}</span>
+                        <span><i class="fas fa-id-card"></i> ${escapeHtml(r.id)}</span>
                     </div>
                 </div>
             `;
@@ -1681,6 +1841,7 @@
             document.getElementById('startCount').textContent = '0';
             document.getElementById('endCount').textContent = '0';
             document.getElementById('totalCount').textContent = '0';
+            document.getElementById('pageButtons').innerHTML = '';
             return;
         }
 
@@ -1693,57 +1854,29 @@
         document.getElementById('endCount').textContent = end;
         document.getElementById('totalCount').textContent = filteredRecords.length;
 
+        const barClass = v => v >= 80 ? 'high' : v >= 60 ? 'medium' : 'low';
+
         tbody.innerHTML = pageItems.map(r => `
             <tr>
                 <td>
                     <div class="trainee-info">
-                        <div class="avatar" style="background:${r.color}">${r.avatar}</div>
+                        <div class="avatar" style="background:${r.color}">${escapeHtml(r.avatar)}</div>
                         <div class="details">
-                            <div class="name">${r.name}</div>
-                            <div class="sub">${r.email}</div>
+                            <div class="name">${escapeHtml(r.name)}</div>
+                            <div class="sub">${escapeHtml(r.email)}</div>
                         </div>
                     </div>
                 </td>
+                <td>${r.technical}%<div class="skill-bar-container"><div class="fill ${barClass(r.technical)}" style="width:${r.technical}%"></div></div></td>
+                <td>${r.practical}%<div class="skill-bar-container"><div class="fill ${barClass(r.practical)}" style="width:${r.practical}%"></div></div></td>
+                <td>${r.communication}%<div class="skill-bar-container"><div class="fill ${barClass(r.communication)}" style="width:${r.communication}%"></div></div></td>
+                <td>${r.problemSolving}%<div class="skill-bar-container"><div class="fill ${barClass(r.problemSolving)}" style="width:${r.problemSolving}%"></div></div></td>
+                <td>${r.jobReadiness}%<div class="skill-bar-container"><div class="fill ${barClass(r.jobReadiness)}" style="width:${r.jobReadiness}%"></div></div></td>
                 <td>
-                    ${r.technical}%
-                    <div class="skill-bar-container">
-                        <div class="fill ${r.technical >= 80 ? 'high' : r.technical >= 60 ? 'medium' : 'low'}" 
-                             style="width:${r.technical}%"></div>
-                    </div>
-                </td>
-                <td>
-                    ${r.practical}%
-                    <div class="skill-bar-container">
-                        <div class="fill ${r.practical >= 80 ? 'high' : r.practical >= 60 ? 'medium' : 'low'}" 
-                             style="width:${r.practical}%"></div>
-                    </div>
-                </td>
-                <td>
-                    ${r.communication}%
-                    <div class="skill-bar-container">
-                        <div class="fill ${r.communication >= 80 ? 'high' : r.communication >= 60 ? 'medium' : 'low'}" 
-                             style="width:${r.communication}%"></div>
-                    </div>
-                </td>
-                <td>
-                    ${r.problemSolving}%
-                    <div class="skill-bar-container">
-                        <div class="fill ${r.problemSolving >= 80 ? 'high' : r.problemSolving >= 60 ? 'medium' : 'low'}" 
-                             style="width:${r.problemSolving}%"></div>
-                    </div>
-                </td>
-                <td>
-                    ${r.jobReadiness}%
-                    <div class="skill-bar-container">
-                        <div class="fill ${r.jobReadiness >= 80 ? 'high' : r.jobReadiness >= 60 ? 'medium' : 'low'}" 
-                             style="width:${r.jobReadiness}%"></div>
-                    </div>
-                </td>
-                <td>
-                    <button class="action-btn view" onclick="viewRecord('${r.id}')">
+                    <button class="action-btn view" onclick="viewRecord('${escapeJs(r.docId)}')">
                         <i class="fas fa-eye"></i> View
                     </button>
-                    <button class="action-btn feedback" onclick="addFeedbackFromTable('${r.id}')">
+                    <button class="action-btn feedback" onclick="addFeedbackFromTable('${escapeJs(r.docId)}')">
                         <i class="fas fa-plus"></i> Feedback
                     </button>
                 </td>
@@ -1755,34 +1888,22 @@
 
     function updatePagination() {
         const totalPages = Math.ceil(filteredRecords.length / pageSize);
-        const container = document.querySelector('.pages');
+        const container = document.getElementById('pageButtons');
         if (!container) return;
+
+        if (totalPages <= 1) { container.innerHTML = ''; return; }
 
         let html = `<button onclick="prevPage()"><i class="fas fa-chevron-left"></i></button>`;
         for (let i = 1; i <= Math.min(totalPages, 5); i++) {
             html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-        }
-        if (totalPages > 5) {
-            html += `<span style="padding:0 8px;color:#94a3b8;">...</span>`;
-            html += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
         }
         html += `<button onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>`;
         container.innerHTML = html;
     }
 
     function prevPage() { if (currentPage > 1) { currentPage--; renderFeedbackCards(); renderTable(); } }
-    function nextPage() { const totalPages = Math.ceil(filteredRecords.length / pageSize); if (currentPage < totalPages) { currentPage++; renderFeedbackCards(); renderTable(); } }
+    function nextPage() { const tp = Math.ceil(filteredRecords.length / pageSize); if (currentPage < tp) { currentPage++; renderFeedbackCards(); renderTable(); } }
     function goToPage(page) { currentPage = page; renderFeedbackCards(); renderTable(); }
-
-    function updateSidebar() {
-        const employerData = JSON.parse(localStorage.getItem('employerData') || '{}');
-        const initial = employerData.contactPerson ? employerData.contactPerson.charAt(0).toUpperCase() : 'E';
-        document.getElementById('sidebarAvatar').textContent = initial;
-        document.getElementById('sidebarName').textContent = employerData.contactPerson || 'Employer';
-        document.getElementById('sidebarCompany').textContent = employerData.orgName || 'Company';
-        document.getElementById('headerAvatar').textContent = initial;
-        document.getElementById('headerName').textContent = employerData.contactPerson || 'Employer';
-    }
 
     function filterData() {
         const search = document.getElementById('searchInput').value.toLowerCase();
@@ -1791,25 +1912,23 @@
 
         filteredRecords = allRecords.filter(r => {
             const matchSearch = r.name.toLowerCase().includes(search) ||
-                               r.email.toLowerCase().includes(search) ||
-                               r.course.toLowerCase().includes(search);
+                                r.email.toLowerCase().includes(search) ||
+                                r.course.toLowerCase().includes(search);
             const avgSkill = (r.technical + r.practical + r.communication + r.problemSolving + r.jobReadiness) / 5;
-            
+
             let matchSkill = true;
             if (skillFilter === 'high') matchSkill = avgSkill >= 75;
             else if (skillFilter === 'medium') matchSkill = avgSkill >= 50 && avgSkill < 75;
             else if (skillFilter === 'low') matchSkill = avgSkill < 50;
-            
+
             return matchSearch && matchSkill;
         });
 
         filteredRecords.sort((a, b) => {
-            const avgA = (a.technical + a.practical + a.communication + a.problemSolving + a.jobReadiness) / 5;
-            const avgB = (b.technical + b.practical + b.communication + b.problemSolving + b.jobReadiness) / 5;
-            const gapsA = [a.technical, a.practical, a.communication, a.problemSolving, a.jobReadiness].filter(s => s < 60).length;
-            const gapsB = [b.technical, b.practical, b.communication, b.problemSolving, b.jobReadiness].filter(s => s < 60).length;
-            
-            switch(sort) {
+            const gapsA = [a.technical, a.practical, a.communication, a.problemSolving, a.jobReadiness].filter(s => s > 0 && s < 60).length;
+            const gapsB = [b.technical, b.practical, b.communication, b.problemSolving, b.jobReadiness].filter(s => s > 0 && s < 60).length;
+
+            switch (sort) {
                 case 'name': return a.name.localeCompare(b.name);
                 case 'rating': return b.rating - a.rating;
                 case 'gaps': return gapsB - gapsA;
@@ -1823,11 +1942,34 @@
     }
 
     // ============================================================
-    // MODAL FUNCTIONS
+    // SIDEBAR
     // ============================================================
+    function updateSidebar() {
+        const initial = (employerData.contactPerson || _firebaseUser?.email || '').charAt(0).toUpperCase();
 
-    function viewRecord(id) {
-        const record = allRecords.find(r => r.id === id);
+        const sidebarAvatar = document.getElementById('sidebarAvatar');
+        if (sidebarAvatar) {
+            const onlineDot = sidebarAvatar.querySelector('.online-dot');
+            sidebarAvatar.innerHTML = initial || '';
+            if (onlineDot) sidebarAvatar.appendChild(onlineDot);
+            else {
+                const dot = document.createElement('span');
+                dot.className = 'online-dot';
+                sidebarAvatar.appendChild(dot);
+            }
+        }
+
+        document.getElementById('sidebarName').textContent = employerData.contactPerson || '';
+        document.getElementById('sidebarCompany').textContent = employerData.orgName || '';
+        document.getElementById('headerAvatar').textContent = initial || '';
+        document.getElementById('headerName').textContent = employerData.contactPerson || '';
+    }
+
+    // ============================================================
+    // MODAL
+    // ============================================================
+    function viewRecord(docId) {
+        const record = allRecords.find(r => r.docId === docId);
         if (!record) return;
         selectedRecord = record;
 
@@ -1836,16 +1978,19 @@
         document.getElementById('modalName').textContent = record.name;
         document.getElementById('modalSub').textContent = `${record.course} · ID: ${record.id}`;
 
-        const stars = '★'.repeat(record.rating) + '☆'.repeat(5 - record.rating);
+        const stars = record.rating > 0 ? ('★'.repeat(record.rating) + '☆'.repeat(5 - record.rating)) : 'Not rated';
         document.getElementById('mRating').textContent = stars;
-        document.getElementById('mTechnical').innerHTML = `${record.technical}%<div class="skill-bar-container"><div class="fill ${record.technical >= 80 ? 'high' : record.technical >= 60 ? 'medium' : 'low'}" style="width:${record.technical}%"></div></div>`;
-        document.getElementById('mPractical').innerHTML = `${record.practical}%<div class="skill-bar-container"><div class="fill ${record.practical >= 80 ? 'high' : record.practical >= 60 ? 'medium' : 'low'}" style="width:${record.practical}%"></div></div>`;
-        document.getElementById('mCommunication').innerHTML = `${record.communication}%<div class="skill-bar-container"><div class="fill ${record.communication >= 80 ? 'high' : record.communication >= 60 ? 'medium' : 'low'}" style="width:${record.communication}%"></div></div>`;
-        document.getElementById('mProblemSolving').innerHTML = `${record.problemSolving}%<div class="skill-bar-container"><div class="fill ${record.problemSolving >= 80 ? 'high' : record.problemSolving >= 60 ? 'medium' : 'low'}" style="width:${record.problemSolving}%"></div></div>`;
-        document.getElementById('mJobReadiness').innerHTML = `${record.jobReadiness}%<div class="skill-bar-container"><div class="fill ${record.jobReadiness >= 80 ? 'high' : record.jobReadiness >= 60 ? 'medium' : 'low'}" style="width:${record.jobReadiness}%"></div></div>`;
+
+        const barClass = v => v >= 80 ? 'high' : v >= 60 ? 'medium' : 'low';
+        document.getElementById('mTechnical').innerHTML = `${record.technical}%<div class="skill-bar-container"><div class="fill ${barClass(record.technical)}" style="width:${record.technical}%"></div></div>`;
+        document.getElementById('mPractical').innerHTML = `${record.practical}%<div class="skill-bar-container"><div class="fill ${barClass(record.practical)}" style="width:${record.practical}%"></div></div>`;
+        document.getElementById('mCommunication').innerHTML = `${record.communication}%<div class="skill-bar-container"><div class="fill ${barClass(record.communication)}" style="width:${record.communication}%"></div></div>`;
+        document.getElementById('mProblemSolving').innerHTML = `${record.problemSolving}%<div class="skill-bar-container"><div class="fill ${barClass(record.problemSolving)}" style="width:${record.problemSolving}%"></div></div>`;
+        document.getElementById('mJobReadiness').innerHTML = `${record.jobReadiness}%<div class="skill-bar-container"><div class="fill ${barClass(record.jobReadiness)}" style="width:${record.jobReadiness}%"></div></div>`;
 
         const gaps = ['Technical', 'Practical', 'Communication', 'Problem Solving', 'Job Readiness']
-            .filter((_, i) => [record.technical, record.practical, record.communication, record.problemSolving, record.jobReadiness][i] < 60);
+            .filter((_, i) => [record.technical, record.practical, record.communication, record.problemSolving, record.jobReadiness][i] > 0 &&
+                              [record.technical, record.practical, record.communication, record.problemSolving, record.jobReadiness][i] < 60);
         document.getElementById('mSkillGaps').innerHTML = gaps.length > 0 ? gaps.join(', ') : '✅ No significant gaps identified';
 
         document.getElementById('mComments').textContent = record.feedback || 'No comments available.';
@@ -1858,75 +2003,119 @@
         selectedRecord = null;
     }
 
-    function addFeedback() {
+    async function addFeedback() {
         if (!selectedRecord) return;
         const feedback = prompt(`Add feedback for ${selectedRecord.name}:`, selectedRecord.feedback || '');
         if (feedback !== null && feedback.trim() !== '') {
-            selectedRecord.feedback = feedback;
-            const index = allRecords.findIndex(r => r.id === selectedRecord.id);
-            if (index !== -1) allRecords[index].feedback = feedback;
-            const fIndex = filteredRecords.findIndex(r => r.id === selectedRecord.id);
-            if (fIndex !== -1) filteredRecords[fIndex].feedback = feedback;
-            
-            // Save to localStorage
-            const feedbackData = JSON.parse(localStorage.getItem('feedbackData') || '{}');
-            feedbackData[selectedRecord.id] = feedback;
-            localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
-            
-            renderFeedbackCards();
-            renderTable();
-            closeModal();
-            alert(`✅ Feedback added for ${selectedRecord.name}`);
+            try {
+                if (selectedRecord.feedbackDocId) {
+                    // Update existing feedback doc
+                    await db.collection('feedback').doc(selectedRecord.feedbackDocId).update({
+                        text: feedback,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    // Create new feedback doc
+                    await db.collection('feedback').add({
+                        traineeId: selectedRecord.id,
+                        traineeEmail: selectedRecord.email,
+                        traineeName: selectedRecord.name,
+                        text: feedback,
+                        rating: selectedRecord.rating || 0,
+                        employerUid: _firebaseUser ? _firebaseUser.uid : null,
+                        employerName: employerData.contactPerson || '',
+                        employerOrg: employerData.orgName || '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                selectedRecord.feedback = feedback;
+                const idx = allRecords.findIndex(r => r.docId === selectedRecord.docId);
+                if (idx !== -1) allRecords[idx].feedback = feedback;
+
+                renderFeedbackCards();
+                renderTable();
+                closeModal();
+                alert(`✅ Feedback saved for ${selectedRecord.name}`);
+            } catch (e) {
+                console.error('Save feedback failed:', e);
+                alert('❌ Could not save feedback. Check Firestore rules.');
+            }
         }
     }
 
-    function addFeedbackFromTable(id) {
-        const record = allRecords.find(r => r.id === id);
+    async function addFeedbackFromTable(docId) {
+        const record = allRecords.find(r => r.docId === docId);
         if (!record) return;
         const feedback = prompt(`Add feedback for ${record.name}:`, record.feedback || '');
         if (feedback !== null && feedback.trim() !== '') {
-            record.feedback = feedback;
-            const fIndex = filteredRecords.findIndex(r => r.id === id);
-            if (fIndex !== -1) filteredRecords[fIndex].feedback = feedback;
-            
-            const feedbackData = JSON.parse(localStorage.getItem('feedbackData') || '{}');
-            feedbackData[id] = feedback;
-            localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
-            
-            renderFeedbackCards();
-            renderTable();
-            alert(`✅ Feedback added for ${record.name}`);
+            try {
+                if (record.feedbackDocId) {
+                    await db.collection('feedback').doc(record.feedbackDocId).update({
+                        text: feedback,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    const newRef = await db.collection('feedback').add({
+                        traineeId: record.id,
+                        traineeEmail: record.email,
+                        traineeName: record.name,
+                        text: feedback,
+                        rating: record.rating || 0,
+                        employerUid: _firebaseUser ? _firebaseUser.uid : null,
+                        employerName: employerData.contactPerson || '',
+                        employerOrg: employerData.orgName || '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    record.feedbackDocId = newRef.id;
+                }
+                record.feedback = feedback;
+                const idx = allRecords.findIndex(r => r.docId === docId);
+                if (idx !== -1) allRecords[idx].feedback = feedback;
+
+                renderFeedbackCards();
+                renderTable();
+                alert(`✅ Feedback saved for ${record.name}`);
+            } catch (e) {
+                console.error('Save feedback failed:', e);
+                alert('❌ Could not save feedback. Check Firestore rules.');
+            }
         }
     }
 
     // ============================================================
-    // UTILITY FUNCTIONS
+    // UTILITIES
     // ============================================================
-
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
     function showNotifications() {
-        const gaps = allRecords.filter(r => r.technical < 60 || r.practical < 60 || r.communication < 60 || r.problemSolving < 60 || r.jobReadiness < 60).length;
+        const gaps = allRecords.filter(r =>
+            r.technical < 60 || r.practical < 60 || r.communication < 60 ||
+            r.problemSolving < 60 || r.jobReadiness < 60
+        ).length;
         alert(`📬 Notifications\n\n• ${gaps} trainees have skill gaps\n• ${allRecords.filter(r => r.rating >= 4).length} high-rated trainees\n• ${allRecords.length} total records`);
     }
 
     function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
 
-    function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
-            window.location.href = '../auth/login.html';
+    async function logout() {
+        if (confirm('Logout?')) {
+            try { await auth.signOut(); } catch (e) {}
+            try {
+                localStorage.removeItem('currentEmployerEmail');
+                localStorage.removeItem('currentEmployerId');
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userId');
+            } catch (e) {}
+            window.location.href = '../auth/login.html?role=employer';
         }
     }
 
     function exportData() {
-        if (filteredRecords.length === 0) {
-            alert('No data to export');
-            return;
-        }
+        if (filteredRecords.length === 0) { alert('No data to export'); return; }
         let csv = 'ID,Name,Email,Course,Technical,Practical,Communication,Problem Solving,Job Readiness,Rating,Feedback\n';
         filteredRecords.forEach(r => {
-            csv += `${r.id},${r.name},${r.email},${r.course},${r.technical},${r.practical},${r.communication},${r.problemSolving},${r.jobReadiness},${r.rating},"${r.feedback}"\n`;
+            csv += `${r.id},${r.name},${r.email},${r.course},${r.technical},${r.practical},${r.communication},${r.problemSolving},${r.jobReadiness},${r.rating},"${(r.feedback||'').replace(/"/g,'""')}"\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
@@ -1938,17 +2127,24 @@
         alert('📥 Data exported successfully!');
     }
 
-    function refreshData() { loadAndRender(); alert('🔄 Data refreshed!'); }
+    async function refreshData() { await loadAndRender(); alert('🔄 Data refreshed!'); }
 
     function generateReport() {
         const total = allRecords.length;
-        const strong = allRecords.filter(r => r.technical >= 80 && r.practical >= 80 && r.communication >= 80 && r.problemSolving >= 80 && r.jobReadiness >= 80).length;
-        const gaps = allRecords.filter(r => r.technical < 60 || r.practical < 60 || r.communication < 60 || r.problemSolving < 60 || r.jobReadiness < 60).length;
+        if (total === 0) { alert('No records to report'); return; }
+        const strong = allRecords.filter(r =>
+            r.technical >= 80 && r.practical >= 80 && r.communication >= 80 &&
+            r.problemSolving >= 80 && r.jobReadiness >= 80
+        ).length;
+        const gaps = allRecords.filter(r =>
+            r.technical < 60 || r.practical < 60 || r.communication < 60 ||
+            r.problemSolving < 60 || r.jobReadiness < 60
+        ).length;
         const avgTech = Math.round(allRecords.reduce((a,b) => a + b.technical, 0) / total);
         const avgPrac = Math.round(allRecords.reduce((a,b) => a + b.practical, 0) / total);
         const avgComm = Math.round(allRecords.reduce((a,b) => a + b.communication, 0) / total);
         const avgProb = Math.round(allRecords.reduce((a,b) => a + b.problemSolving, 0) / total);
-        const avgReadiness = Math.round(allRecords.reduce((a,b) => a + b.jobReadiness, 0) / total);
+        const avgReady = Math.round(allRecords.reduce((a,b) => a + b.jobReadiness, 0) / total);
 
         alert(`📊 Skills & Feedback Report\n\n` +
               `📈 Overview:\n` +
@@ -1960,26 +2156,63 @@
               `• Practical: ${avgPrac}%\n` +
               `• Communication: ${avgComm}%\n` +
               `• Problem Solving: ${avgProb}%\n` +
-              `• Job Readiness: ${avgReadiness}%\n\n` +
-              `💡 Recommendations:\n` +
-              `${gaps > 0 ? '• Provide additional training for trainees with skill gaps' : '• All trainees are meeting minimum skill requirements'}\n` +
-              `${avgComm < 70 ? '• Consider communication workshops' : '• Communication skills are adequate'}\n` +
-              `${avgReadiness < 70 ? '• Focus on job readiness programs' : '• Job readiness is on track'}`);
+              `• Job Readiness: ${avgReady}%`);
     }
 
     function updateDate() {
         const now = new Date();
-        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', options);
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US',
+            { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
     // ============================================================
-    // INITIALIZE
+    // SAFETY HELPERS
     // ============================================================
+    function escapeHtml(str) {
+        if (str === undefined || str === null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    function escapeJs(str) {
+        return String(str || '').replace(/'/g, "\\'");
+    }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
+
         updateDate();
-        loadAndRender();
+
+        try {
+            await requireAuth();
+            employerData = await getEmployerData();
+            updateSidebar();
+            await loadAndRender();
+            console.log('✅ Feedback & Skills page ready');
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
 
         document.getElementById('feedbackModal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
@@ -1994,10 +2227,9 @@
                 }
             }
         });
-
-        console.log('📋 Feedback & Skill Gap page loaded with', allRecords.length, 'records');
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

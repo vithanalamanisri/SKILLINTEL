@@ -7,6 +7,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
 
@@ -381,7 +387,6 @@
 </div>
 
 <div class="container" id="container">
-  <!-- Loading state -->
   <div class="loading-box" id="loadingBox">
     <div class="spinner"></div>
     <p style="color:#64748b;font-size:14px;">Loading trainee record…</p>
@@ -390,399 +395,492 @@
 
 <script>
 /* ============================================================
-   REAL DATA SOURCE — same localStorage keys as verify-trainee.html
-   ------------------------------------------------------------
-   allTrainees   → registered trainee master records
-   allEmployment → employment details captured later
-   allFollowups  → 30/90/180/365-day follow-up data
+   FIREBASE CONFIG
    ============================================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let _firebaseUser = null;
+let _userProfile = null;
 
 /* ============================================================
-   1. READ traineeId FROM URL
+   AUTH GUARD
+   ============================================================ */
+function requireAuth() {
+    return new Promise((resolve, reject) => {
+        const unsub = auth.onAuthStateChanged(async (fbUser) => {
+            unsub();
+            if (!fbUser) {
+                window.location.href = '../auth/login.html?role=employer';
+                reject('not-authenticated');
+                return;
+            }
+            try {
+                const snap = await db.collection('users').doc(fbUser.uid).get();
+                if (!snap.exists) {
+                    window.location.href = '../auth/login.html?role=employer';
+                    reject('no-profile');
+                    return;
+                }
+                const profile = snap.data();
+                if (profile.role !== 'employer') {
+                    await auth.signOut();
+                    window.location.href = '../auth/login.html?role=employer';
+                    reject('wrong-role');
+                    return;
+                }
+                _firebaseUser = fbUser;
+                _userProfile = profile;
+                resolve(fbUser);
+            } catch (e) {
+                console.error('Auth guard error:', e);
+                reject(e);
+            }
+        });
+    });
+}
+
+/* ============================================================
+   URL PARAMS
    ============================================================ */
 const params = new URLSearchParams(window.location.search);
 const traineeId = params.get('traineeId');
-const roleParam = params.get('role') || 'employer';  // employer | provider | government
+const roleParam = params.get('role') || 'employer';
 
 document.getElementById('roleBadge').innerHTML = {
-  employer:   '<i class="fas fa-user-tie"></i> Employer View',
-  provider:   '<i class="fas fa-chalkboard-teacher"></i> Provider View',
-  government: '<i class="fas fa-landmark"></i> Government View'
+    employer:   '<i class="fas fa-user-tie"></i> Employer View',
+    provider:   '<i class="fas fa-chalkboard-teacher"></i> Provider View',
+    government: '<i class="fas fa-landmark"></i> Government View'
 }[roleParam] || '<i class="fas fa-user-tie"></i> Employer View';
 
 /* ============================================================
-   2. LOAD REAL DATA FROM localStorage
+   FIND TRAINEE IN FIRESTORE
+   — match by traineeCode (e.g. TRN123456) OR by doc id (uid)
    ============================================================ */
-function findTraineeById(id) {
-  if (!id) return null;
+async function findTraineeById(id) {
+    if (!id) return null;
 
-  const allTrainees   = JSON.parse(localStorage.getItem('allTrainees')   || '[]');
-  const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-  const allFollowups  = JSON.parse(localStorage.getItem('allFollowups')  || '[]');
+    console.log('🔍 Searching for traineeId:', id);
 
-  console.log('🔍 Searching for traineeId:', id);
-  console.log('   Total trainees in storage:', allTrainees.length);
+    let docData = null;
+    let docId = null;
 
-  // Match by traineeId OR by index-based ID (TRN + number) OR by email (fallback)
-  let index = allTrainees.findIndex(t =>
-    t.traineeId === id ||
-    t.id === id
-  );
+    // 1. Try direct doc ID
+    try {
+        const snap = await db.collection('trainees').doc(id).get();
+        if (snap.exists) {
+            docData = snap.data();
+            docId = snap.id;
+        }
+    } catch (e) { console.warn('Direct doc lookup failed:', e); }
 
-  // If not found by ID, try matching by generated ID pattern TRN + index
-  if (index === -1 && /^TRN\d+$/.test(id)) {
-    const num = parseInt(id.replace('TRN', ''), 10) - 1;
-    if (num >= 0 && num < allTrainees.length) index = num;
-  }
+    // 2. Try traineeCode field
+    if (!docData) {
+        try {
+            const q = await db.collection('trainees').where('traineeCode', '==', id).limit(1).get();
+            if (!q.empty) {
+                docData = q.docs[0].data();
+                docId = q.docs[0].id;
+            }
+        } catch (e) { console.warn('traineeCode lookup failed:', e); }
+    }
 
-  if (index === -1) {
-    console.warn('❌ Trainee not found:', id);
-    return null;
-  }
+    // 3. Try uid field
+    if (!docData) {
+        try {
+            const q = await db.collection('trainees').where('uid', '==', id).limit(1).get();
+            if (!q.empty) {
+                docData = q.docs[0].data();
+                docId = q.docs[0].id;
+            }
+        } catch (e) { console.warn('uid lookup failed:', e); }
+    }
 
-  const t   = allTrainees[index];
-  const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
-  const fol = allFollowups.find(f => f.traineeEmail === t.email)  || {};
+    if (!docData) {
+        console.warn('❌ Trainee not found:', id);
+        return null;
+    }
 
-  console.log('✅ Found trainee:', t.fullName || t.name);
+    const t = docData;
+    const emp = t.employment || {};
+    const fol = (t.followups && t.followups[0]) || {};
 
-  // Compute verification status
-  let verStatus = t.verificationStatus || 'pending';
-  if (verStatus === 'verified' || emp.verified) verStatus = 'verified';
+    let verStatus = t.verificationStatus || 'pending';
+    if (verStatus === 'verified' || emp.verified) verStatus = 'verified';
 
-  return {
-    // -------- Master record --------
-    raw: t,
-    employment: emp,
-    followup: fol,
+    console.log('✅ Found trainee:', t.fullName);
 
-    // -------- Basic --------
-    id: t.traineeId || id,
-    name: t.fullName || t.name || 'Unnamed Trainee',
-    dob: t.dateOfBirth || t.dob || '',
-    gender: t.gender || '',
-    phone: t.mobile || t.phone || '',
-    email: t.email || '',
-    location: [t.district, t.state].filter(Boolean).join(', ') || t.location || '',
-    category: t.category || t.socialCategory || '',
-    address: t.address || '',
+    return {
+        docId: docId,
+        raw: t,
+        employment: emp,
+        followup: fol,
 
-    // -------- Education --------
-    qualification: t.qualification || t.highestQualification || '',
-    institution: t.institution || t.school || '',
-    passYear: t.yearOfPassing || t.passYear || '',
-    score: t.percentage || t.cgpa || t.score || '',
+        id: t.traineeCode || id,
+        name: t.fullName || 'Unnamed Trainee',
+        dob: t.dob || t.dateOfBirth || '',
+        gender: t.gender || '',
+        phone: t.mobile || t.phone || '',
+        email: t.email || '',
+        location: [t.district, t.state].filter(Boolean).join(', ') || '',
+        category: t.category || t.socialCategory || '',
+        address: t.address || '',
 
-    // -------- Training --------
-    course: t.skillTrade || t.course || '',
-    provider: t.trainingProvider || t.provider || '',
-    batch: t.batchId || t.batch || '',
-    trainingStatus: t.trainingStatus || t.certificationStatus || '',
+        qualification: t.qualification || t.highestQualification || '',
+        institution: t.institution || t.school || '',
+        passYear: t.passYear || t.yearOfPassing || '',
+        score: t.score || t.percentage || t.cgpa || '',
 
-    // -------- Skills --------
-    skills: t.skills || [],
-    certifications: t.certifications || t.certs || [],
+        course: t.skillTrade || t.course || '',
+        provider: t.trainingProvider || t.provider || '',
+        batch: t.batchId || t.batch || '',
+        trainingStatus: t.trainingStatus || t.certificationStatus || '',
 
-    // -------- Assessment --------
-    assessmentScore: t.assessmentScore || '',
-    assessmentDate: t.assessmentDate || '',
-    assessmentResult: t.assessmentResult || '',
+        skills: t.skills || [],
+        certifications: t.certifications || [],
 
-    // -------- Career --------
-    prefRole: t.preferredRole || t.prefRole || '',
-    prefLocation: t.preferredLocation || t.prefLoc || '',
-    prefSalary: t.expectedSalary || t.prefSalary || '',
+        assessmentScore: t.assessmentScore || '',
+        assessmentDate: t.assessmentDate || '',
+        assessmentResult: t.assessmentResult || '',
 
-    // -------- Employment --------
-    empStatus: emp.status || '',
-    empCompany: emp.companyName || '',
-    empRole: emp.jobRole || '',
-    empType: emp.employmentType || '',
-    empJoining: emp.joiningDate || '',
-    empLocation: emp.jobCity || '',
-    empIncome: emp.currentIncome || '',
-    empPrevIncome: emp.previousIncome || '',
+        prefRole: t.preferredRole || '',
+        prefLocation: t.preferredLocation || '',
+        prefSalary: t.expectedSalary || t.preferredSalary || '',
 
-    // -------- Registration --------
-    regDate: t.registrationDate || t.registeredAt || '',
-    regBy: t.registeredBy || t.regBy || 'Self (Online Portal)',
+        empStatus: emp.status || '',
+        empCompany: emp.companyName || emp.employerName || '',
+        empRole: emp.jobRole || '',
+        empType: emp.employmentType || '',
+        empJoining: emp.joiningDate || emp.startDate || '',
+        empLocation: emp.jobCity || emp.jobLocation || '',
+        empIncome: emp.currentIncome || emp.monthlyIncome || '',
+        empPrevIncome: emp.previousIncome || t.prevIncome || '',
 
-    // -------- Verification --------
-    verificationStatus: verStatus,
-    verifiedBy: t.verifiedBy || '',
-    verifiedAt: t.verifiedAt || ''
-  };
+        regDate: t.registeredAt ? String(t.registeredAt).split('T')[0] :
+                 (t.createdAt && t.createdAt.toDate ? t.createdAt.toDate().toISOString().split('T')[0] : ''),
+        regBy: t.registeredBy || 'Self (Online Portal)',
+
+        verificationStatus: verStatus,
+        verifiedBy: t.verifiedByName || t.verifiedByEmail || t.verifiedBy || '',
+        verifiedAt: t.verifiedAt && t.verifiedAt.toDate ? t.verifiedAt.toDate().toLocaleString() : (t.verifiedAt || '')
+    };
 }
 
 /* ============================================================
-   3. RENDER
+   RENDER
    ============================================================ */
-function render() {
-  const container = document.getElementById('container');
+function render(t) {
+    const container = document.getElementById('container');
+    const initial = (t.name || 'T').charAt(0).toUpperCase();
+    const muted = v => v ? escapeHtml(v) : '<span class="value muted">Not provided</span>';
 
-  if (!traineeId) {
-    container.innerHTML = notFoundHTML('No trainee ID provided in the URL.');
-    return;
-  }
+    const skillsHTML = Array.isArray(t.skills) && t.skills.length
+        ? t.skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')
+        : '<span class="value muted">No skills recorded</span>';
 
-  const t = findTraineeById(traineeId);
+    const certsHTML = Array.isArray(t.certifications) && t.certifications.length
+        ? t.certifications.map(c => `<span class="skill-tag">${escapeHtml(c)}</span>`).join('')
+        : '<span class="value muted">No certifications recorded</span>';
 
-  if (!t) {
-    container.innerHTML = notFoundHTML(
-      'This trainee record could not be found in the system.',
-      traineeId
-    );
-    return;
-  }
+    const statusClass = t.verificationStatus === 'verified' ? 'verified'
+                      : t.verificationStatus === 'pending'  ? 'pending'
+                      : 'interview';
 
-  const initial = (t.name || 'T').charAt(0).toUpperCase();
-  const muted = v => v ? escapeHtml(v) : '<span class="value muted">Not provided</span>';
-
-  const skillsHTML = Array.isArray(t.skills) && t.skills.length
-    ? t.skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')
-    : '<span class="value muted">No skills recorded</span>';
-
-  const certsHTML = Array.isArray(t.certifications) && t.certifications.length
-    ? t.certifications.map(c => `<span class="skill-tag">${escapeHtml(c)}</span>`).join('')
-    : '<span class="value muted">No certifications recorded</span>';
-
-  const statusClass = t.verificationStatus === 'verified' ? 'verified'
-                    : t.verificationStatus === 'pending'  ? 'pending'
-                    : 'interview';
-
-  container.innerHTML = `
-    <div class="profile-header">
-      <div class="profile-avatar">${escapeHtml(initial)}</div>
-      <div class="profile-info">
-        <h1>${escapeHtml(t.name)}</h1>
-        <div class="sub">
-          <span><i class="fas fa-id-card"></i> ${escapeHtml(t.id)}</span>
-          ${t.course ? `<span><i class="fas fa-graduation-cap"></i> ${escapeHtml(t.course)}</span>` : ''}
-          ${t.location ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(t.location)}</span>` : ''}
+    container.innerHTML = `
+      <div class="profile-header">
+        <div class="profile-avatar">${escapeHtml(initial)}</div>
+        <div class="profile-info">
+          <h1>${escapeHtml(t.name)}</h1>
+          <div class="sub">
+            <span><i class="fas fa-id-card"></i> ${escapeHtml(t.id)}</span>
+            ${t.course ? `<span><i class="fas fa-graduation-cap"></i> ${escapeHtml(t.course)}</span>` : ''}
+            ${t.location ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(t.location)}</span>` : ''}
+          </div>
         </div>
-      </div>
-      <div class="profile-status">
-        <span class="badge">
-          <span class="dot"></span>
-          ${t.verificationStatus.charAt(0).toUpperCase() + t.verificationStatus.slice(1)}
-        </span>
-      </div>
-    </div>
-
-    <!-- BASIC -->
-    <div class="section">
-      <h2><i class="fas fa-user"></i> Basic Information</h2>
-      <div class="grid">
-        <div class="field"><span class="label">Trainee ID</span><span class="value">${escapeHtml(t.id)}</span></div>
-        <div class="field"><span class="label">Full Name</span><span class="value">${escapeHtml(t.name)}</span></div>
-        <div class="field"><span class="label">Date of Birth</span><span class="value">${muted(t.dob)}</span></div>
-        <div class="field"><span class="label">Gender</span><span class="value">${muted(t.gender)}</span></div>
-        <div class="field"><span class="label">Phone</span><span class="value">${muted(t.phone)}</span></div>
-        <div class="field"><span class="label">Email</span><span class="value">${muted(t.email)}</span></div>
-        <div class="field"><span class="label">District / State</span><span class="value">${muted(t.location)}</span></div>
-        <div class="field"><span class="label">Category</span><span class="value">${muted(t.category)}</span></div>
-      </div>
-    </div>
-
-    <!-- EDUCATION -->
-    <div class="section">
-      <h2><i class="fas fa-book"></i> Education Details</h2>
-      <div class="grid">
-        <div class="field"><span class="label">Highest Qualification</span><span class="value">${muted(t.qualification)}</span></div>
-        <div class="field"><span class="label">Institution</span><span class="value">${muted(t.institution)}</span></div>
-        <div class="field"><span class="label">Year of Passing</span><span class="value">${muted(t.passYear)}</span></div>
-        <div class="field"><span class="label">Percentage / CGPA</span><span class="value">${muted(t.score)}</span></div>
-      </div>
-    </div>
-
-    <!-- TRAINING -->
-    <div class="section">
-      <h2><i class="fas fa-chalkboard-teacher"></i> Training Details</h2>
-      <div class="grid">
-        <div class="field"><span class="label">Course Name</span><span class="value">${muted(t.course)}</span></div>
-        <div class="field"><span class="label">Training Provider</span><span class="value">${muted(t.provider)}</span></div>
-        <div class="field"><span class="label">Batch / Duration</span><span class="value">${muted(t.batch)}</span></div>
-        <div class="field"><span class="label">Training Status</span><span class="value">${muted(t.trainingStatus)}</span></div>
-      </div>
-    </div>
-
-    <!-- SKILLS -->
-    <div class="section">
-      <h2><i class="fas fa-star"></i> Skills & Certifications</h2>
-      <div class="grid">
-        <div class="field" style="grid-column:1/-1;">
-          <span class="label">Primary Skills</span>
-          <div class="skills-list" style="margin-top:6px;">${skillsHTML}</div>
-        </div>
-        <div class="field" style="grid-column:1/-1;">
-          <span class="label">Certifications</span>
-          <div class="skills-list" style="margin-top:6px;">${certsHTML}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ASSESSMENT -->
-    <div class="section">
-      <h2><i class="fas fa-clipboard-check"></i> Assessment Details</h2>
-      <div class="grid">
-        <div class="field"><span class="label">Assessment Score</span><span class="value">${muted(t.assessmentScore)}</span></div>
-        <div class="field"><span class="label">Assessment Date</span><span class="value">${muted(t.assessmentDate)}</span></div>
-        <div class="field"><span class="label">Result</span><span class="value">${muted(t.assessmentResult)}</span></div>
-      </div>
-    </div>
-
-    <!-- CAREER -->
-    <div class="section">
-      <h2><i class="fas fa-bullseye"></i> Career Preferences</h2>
-      <div class="grid">
-        <div class="field"><span class="label">Preferred Job Role</span><span class="value">${muted(t.prefRole)}</span></div>
-        <div class="field"><span class="label">Preferred Location</span><span class="value">${muted(t.prefLocation)}</span></div>
-        <div class="field"><span class="label">Expected Salary</span><span class="value">${muted(t.prefSalary)}</span></div>
-      </div>
-    </div>
-
-    <!-- EMPLOYMENT -->
-    <div class="section">
-      <h2><i class="fas fa-briefcase"></i> Employment Status</h2>
-      <div class="grid">
-        <div class="field"><span class="label">Current Status</span><span class="value">${muted(t.empStatus)}</span></div>
-        <div class="field"><span class="label">Employer</span><span class="value">${muted(t.empCompany)}</span></div>
-        <div class="field"><span class="label">Job Role</span><span class="value">${muted(t.empRole)}</span></div>
-        <div class="field"><span class="label">Employment Type</span><span class="value">${muted(t.empType)}</span></div>
-        <div class="field"><span class="label">Joining Date</span><span class="value">${muted(t.empJoining)}</span></div>
-        <div class="field"><span class="label">Job Location</span><span class="value">${muted(t.empLocation)}</span></div>
-        <div class="field"><span class="label">Monthly Income</span><span class="value">${t.empIncome ? '₹' + Number(t.empIncome).toLocaleString() : '<span class="value muted">Not updated</span>'}</span></div>
-        <div class="field"><span class="label">Previous Income</span><span class="value">${t.empPrevIncome ? '₹' + Number(t.empPrevIncome).toLocaleString() : '<span class="value muted">Not recorded</span>'}</span></div>
-      </div>
-    </div>
-
-    <!-- REGISTRATION -->
-    <div class="section">
-      <h2><i class="fas fa-file-alt"></i> Registration Information</h2>
-      <div class="grid">
-        <div class="field"><span class="label">Registered On</span><span class="value">${muted(t.regDate)}</span></div>
-        <div class="field"><span class="label">Registered By</span><span class="value">${muted(t.regBy)}</span></div>
-      </div>
-
-      <div class="action-bar">
-        <button class="btn btn-outline" onclick="toggleRegDetails()">
-          <i class="fas fa-file-alt"></i> View Registration Details
-        </button>
-      </div>
-
-      <div id="regDetails">
-        <strong>Authorized Registration Data (Read-Only)</strong><br>
-        This information was submitted by the trainee during registration.
-        Employers, providers, and government users can view it, but cannot edit it.
-        It is sourced from the central trainee master record.
-        <table>
-          <tr><td>Registration Date</td><td>${escapeHtml(t.regDate) || '—'}</td></tr>
-          <tr><td>Registered By</td><td>${escapeHtml(t.regBy) || '—'}</td></tr>
-          <tr><td>Email</td><td>${escapeHtml(t.email) || '—'}</td></tr>
-          <tr><td>Mobile</td><td>${escapeHtml(t.phone) || '—'}</td></tr>
-          <tr><td>Course</td><td>${escapeHtml(t.course) || '—'}</td></tr>
-          <tr><td>Training Provider</td><td>${escapeHtml(t.provider) || '—'}</td></tr>
-          <tr><td>Batch</td><td>${escapeHtml(t.batch) || '—'}</td></tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- VERIFICATION -->
-    <div class="section">
-      <h2><i class="fas fa-shield-alt"></i> Verification Status</h2>
-      <div class="grid">
-        <div class="field">
-          <span class="label">Current Status</span>
-          <span class="value">
-            <span class="badge ${statusClass}" style="background:#dcfce7;color:#16a34a;">
-              ${t.verificationStatus.charAt(0).toUpperCase() + t.verificationStatus.slice(1)}
-            </span>
+        <div class="profile-status">
+          <span class="badge">
+            <span class="dot"></span>
+            ${t.verificationStatus.charAt(0).toUpperCase() + t.verificationStatus.slice(1)}
           </span>
         </div>
-        <div class="field">
-          <span class="label">Verified By</span>
-          <span class="value">${muted(t.verifiedBy)}</span>
-        </div>
-        <div class="field">
-          <span class="label">Verified At</span>
-          <span class="value">${muted(t.verifiedAt)}</span>
+      </div>
+
+      <!-- BASIC -->
+      <div class="section">
+        <h2><i class="fas fa-user"></i> Basic Information</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Trainee ID</span><span class="value">${escapeHtml(t.id)}</span></div>
+          <div class="field"><span class="label">Full Name</span><span class="value">${escapeHtml(t.name)}</span></div>
+          <div class="field"><span class="label">Date of Birth</span><span class="value">${muted(t.dob)}</span></div>
+          <div class="field"><span class="label">Gender</span><span class="value">${muted(t.gender)}</span></div>
+          <div class="field"><span class="label">Phone</span><span class="value">${muted(t.phone)}</span></div>
+          <div class="field"><span class="label">Email</span><span class="value">${muted(t.email)}</span></div>
+          <div class="field"><span class="label">District / State</span><span class="value">${muted(t.location)}</span></div>
+          <div class="field"><span class="label">Category</span><span class="value">${muted(t.category)}</span></div>
         </div>
       </div>
 
-      <div class="action-bar">
-        ${t.verificationStatus !== 'verified' ? `
-          <button class="btn btn-success" onclick="verifyTrainee()">
-            <i class="fas fa-check"></i> Verify This Trainee
-          </button>
-        ` : ''}
-        <a href="verify-trainee.html" class="btn btn-outline">
-          <i class="fas fa-arrow-left"></i> Back to Trainees
-        </a>
+      <!-- EDUCATION -->
+      <div class="section">
+        <h2><i class="fas fa-book"></i> Education Details</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Highest Qualification</span><span class="value">${muted(t.qualification)}</span></div>
+          <div class="field"><span class="label">Institution</span><span class="value">${muted(t.institution)}</span></div>
+          <div class="field"><span class="label">Year of Passing</span><span class="value">${muted(t.passYear)}</span></div>
+          <div class="field"><span class="label">Percentage / CGPA</span><span class="value">${muted(t.score)}</span></div>
+        </div>
       </div>
-    </div>
-  `;
+
+      <!-- TRAINING -->
+      <div class="section">
+        <h2><i class="fas fa-chalkboard-teacher"></i> Training Details</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Course Name</span><span class="value">${muted(t.course)}</span></div>
+          <div class="field"><span class="label">Training Provider</span><span class="value">${muted(t.provider)}</span></div>
+          <div class="field"><span class="label">Batch / Duration</span><span class="value">${muted(t.batch)}</span></div>
+          <div class="field"><span class="label">Training Status</span><span class="value">${muted(t.trainingStatus)}</span></div>
+        </div>
+      </div>
+
+      <!-- SKILLS -->
+      <div class="section">
+        <h2><i class="fas fa-star"></i> Skills & Certifications</h2>
+        <div class="grid">
+          <div class="field" style="grid-column:1/-1;">
+            <span class="label">Primary Skills</span>
+            <div class="skills-list" style="margin-top:6px;">${skillsHTML}</div>
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <span class="label">Certifications</span>
+            <div class="skills-list" style="margin-top:6px;">${certsHTML}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSESSMENT -->
+      <div class="section">
+        <h2><i class="fas fa-clipboard-check"></i> Assessment Details</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Assessment Score</span><span class="value">${muted(t.assessmentScore)}</span></div>
+          <div class="field"><span class="label">Assessment Date</span><span class="value">${muted(t.assessmentDate)}</span></div>
+          <div class="field"><span class="label">Result</span><span class="value">${muted(t.assessmentResult)}</span></div>
+        </div>
+      </div>
+
+      <!-- CAREER -->
+      <div class="section">
+        <h2><i class="fas fa-bullseye"></i> Career Preferences</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Preferred Job Role</span><span class="value">${muted(t.prefRole)}</span></div>
+          <div class="field"><span class="label">Preferred Location</span><span class="value">${muted(t.prefLocation)}</span></div>
+          <div class="field"><span class="label">Expected Salary</span><span class="value">${muted(t.prefSalary)}</span></div>
+        </div>
+      </div>
+
+      <!-- EMPLOYMENT -->
+      <div class="section">
+        <h2><i class="fas fa-briefcase"></i> Employment Status</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Current Status</span><span class="value">${muted(t.empStatus)}</span></div>
+          <div class="field"><span class="label">Employer</span><span class="value">${muted(t.empCompany)}</span></div>
+          <div class="field"><span class="label">Job Role</span><span class="value">${muted(t.empRole)}</span></div>
+          <div class="field"><span class="label">Employment Type</span><span class="value">${muted(t.empType)}</span></div>
+          <div class="field"><span class="label">Joining Date</span><span class="value">${muted(t.empJoining)}</span></div>
+          <div class="field"><span class="label">Job Location</span><span class="value">${muted(t.empLocation)}</span></div>
+          <div class="field"><span class="label">Monthly Income</span><span class="value">${t.empIncome ? '₹' + Number(t.empIncome).toLocaleString() : '<span class="value muted">Not updated</span>'}</span></div>
+          <div class="field"><span class="label">Previous Income</span><span class="value">${t.empPrevIncome ? '₹' + Number(t.empPrevIncome).toLocaleString() : '<span class="value muted">Not recorded</span>'}</span></div>
+        </div>
+      </div>
+
+      <!-- REGISTRATION -->
+      <div class="section">
+        <h2><i class="fas fa-file-alt"></i> Registration Information</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Registered On</span><span class="value">${muted(t.regDate)}</span></div>
+          <div class="field"><span class="label">Registered By</span><span class="value">${muted(t.regBy)}</span></div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-outline" onclick="toggleRegDetails()">
+            <i class="fas fa-file-alt"></i> View Registration Details
+          </button>
+        </div>
+
+        <div id="regDetails">
+          <strong>Authorized Registration Data (Read-Only)</strong><br>
+          This information was submitted by the trainee during registration.
+          Employers, providers, and government users can view it, but cannot edit it.
+          It is sourced from the central trainee master record.
+          <table>
+            <tr><td>Registration Date</td><td>${escapeHtml(t.regDate) || '—'}</td></tr>
+            <tr><td>Registered By</td><td>${escapeHtml(t.regBy) || '—'}</td></tr>
+            <tr><td>Email</td><td>${escapeHtml(t.email) || '—'}</td></tr>
+            <tr><td>Mobile</td><td>${escapeHtml(t.phone) || '—'}</td></tr>
+            <tr><td>Course</td><td>${escapeHtml(t.course) || '—'}</td></tr>
+            <tr><td>Training Provider</td><td>${escapeHtml(t.provider) || '—'}</td></tr>
+            <tr><td>Batch</td><td>${escapeHtml(t.batch) || '—'}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- VERIFICATION -->
+      <div class="section">
+        <h2><i class="fas fa-shield-alt"></i> Verification Status</h2>
+        <div class="grid">
+          <div class="field">
+            <span class="label">Current Status</span>
+            <span class="value">
+              <span class="badge ${statusClass}" style="background:#dcfce7;color:#16a34a;">
+                ${t.verificationStatus.charAt(0).toUpperCase() + t.verificationStatus.slice(1)}
+              </span>
+            </span>
+          </div>
+          <div class="field">
+            <span class="label">Verified By</span>
+            <span class="value">${muted(t.verifiedBy)}</span>
+          </div>
+          <div class="field">
+            <span class="label">Verified At</span>
+            <span class="value">${muted(t.verifiedAt)}</span>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          ${t.verificationStatus !== 'verified' ? `
+            <button class="btn btn-success" onclick="verifyTrainee('${escapeJs(t.docId)}')">
+              <i class="fas fa-check"></i> Verify This Trainee
+            </button>
+          ` : ''}
+          <a href="verify-trainee.html" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Trainees
+          </a>
+        </div>
+      </div>
+    `;
 }
 
 /* ============================================================
-   4. ACTIONS
+   ACTIONS
    ============================================================ */
 function toggleRegDetails() {
-  document.getElementById('regDetails').classList.toggle('show');
+    document.getElementById('regDetails').classList.toggle('show');
 }
 
-function verifyTrainee() {
-  if (!traineeId) return;
-  if (!confirm('Mark this trainee as verified by your organization?')) return;
+async function verifyTrainee(docId) {
+    if (!docId) return;
+    if (!confirm('Mark this trainee as verified by your organization?')) return;
 
-  const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
-  const idx = allTrainees.findIndex(t => t.traineeId === traineeId || t.id === traineeId);
+    try {
+        const employerData = await getEmployerData();
+        await db.collection('trainees').doc(docId).update({
+            verificationStatus: 'verified',
+            verifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            verifiedBy: _firebaseUser ? _firebaseUser.uid : null,
+            verifiedByEmail: _firebaseUser ? _firebaseUser.email : null,
+            verifiedByName: employerData.contactPerson || null,
+            verifiedByOrg: employerData.orgName || null
+        });
+        alert('✅ Trainee verified successfully.');
+        // Reload the page data
+        const t = await findTraineeById(traineeId);
+        if (t) render(t);
+    } catch (e) {
+        console.error('Verify failed:', e);
+        alert('❌ Could not verify. Check Firestore rules.');
+    }
+}
 
-  if (idx !== -1) {
-    allTrainees[idx].verificationStatus = 'verified';
-    allTrainees[idx].verifiedAt = new Date().toISOString();
-    allTrainees[idx].verifiedBy = 'Employer Portal';
-    localStorage.setItem('allTrainees', JSON.stringify(allTrainees));
-  }
-
-  alert('✅ Trainee verified successfully.');
-  render();
+async function getEmployerData() {
+    if (!_firebaseUser) return { contactPerson: '', orgName: '' };
+    const uid = _firebaseUser.uid;
+    let data = null;
+    try {
+        const empSnap = await db.collection('employers').doc(uid).get();
+        if (empSnap.exists) data = empSnap.data();
+    } catch (e) {}
+    if (!data && _userProfile) data = _userProfile;
+    if (!data) return { contactPerson: _firebaseUser.displayName || _firebaseUser.email || '', orgName: '' };
+    return {
+        contactPerson: data.contactPerson || data.fullName || _firebaseUser.displayName || '',
+        orgName: data.orgName || ''
+    };
 }
 
 /* ============================================================
-   5. HELPERS
+   HELPERS
    ============================================================ */
 function escapeHtml(str) {
-  if (str === undefined || str === null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    if (str === undefined || str === null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+function escapeJs(str) {
+    return String(str || '').replace(/'/g, "\\'");
 }
 
 function notFoundHTML(message, id) {
-  return `
-    <div class="notfound-box">
-      <i class="fas fa-user-slash"></i>
-      <h2>Trainee Not Found</h2>
-      <p>${escapeHtml(message)}</p>
-      <p>The trainee record you are looking for may not have been registered yet, or the ID is incorrect.</p>
-      ${id ? `<div class="id">ID: ${escapeHtml(id)}</div>` : ''}
-      <div style="margin-top:24px;">
-        <a href="verify-trainee.html" class="btn btn-primary">
-          <i class="fas fa-arrow-left"></i> Back to Trainee List
-        </a>
+    return `
+      <div class="notfound-box">
+        <i class="fas fa-user-slash"></i>
+        <h2>Trainee Not Found</h2>
+        <p>${escapeHtml(message)}</p>
+        <p>The trainee record you are looking for may not have been registered yet, or the ID is incorrect.</p>
+        ${id ? `<div class="id">ID: ${escapeHtml(id)}</div>` : ''}
+        <div style="margin-top:24px;">
+          <a href="verify-trainee.html" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back to Trainee List
+          </a>
+        </div>
       </div>
-    </div>
-  `;
+    `;
 }
 
 /* ============================================================
-   6. INIT
+   INIT
    ============================================================ */
-render();
+(async function init() {
+    try {
+        await requireAuth();
+    } catch (e) {
+        console.warn('Auth aborted:', e);
+        return;
+    }
+
+    const container = document.getElementById('container');
+
+    if (!traineeId) {
+        container.innerHTML = notFoundHTML('No trainee ID provided in the URL.');
+        return;
+    }
+
+    const t = await findTraineeById(traineeId);
+
+    if (!t) {
+        container.innerHTML = notFoundHTML(
+            'This trainee record could not be found in Firestore.',
+            traineeId
+        );
+        return;
+    }
+
+    render(t);
+})();
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

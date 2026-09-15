@@ -6,9 +6,13 @@
   <title>Trainee 360° Profile · Government Portal</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+
   <link rel="stylesheet" href="../css/style.css">
-  <script src="../js/api.js"></script>
+
+  <!-- ✅ Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
     body { background: #f0f4f9; min-height: 100vh; color: #0b1a33; }
@@ -245,233 +249,230 @@
 
 <script>
 /* ============================================================
-   TRAINEE 360° PROFILE — Backend-first
-   ------------------------------------------------------------
-   Loads full trainee profile from /api/govt/trainee/<id>/full
-   Fallback: localStorage-based lookup (for offline / demo)
+   FIREBASE CONFIG
    ============================================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 /* ============================================================
-   1. READ traineeId FROM URL (can be numeric id OR trainee_code)
+   1. READ traineeId FROM URL
    ============================================================ */
 const params = new URLSearchParams(window.location.search);
 const traineeId = params.get('traineeId');
 
 /* ============================================================
-   2. LOAD FROM BACKEND (primary) OR localStorage (fallback)
+   2. LOAD TRAINEE FROM FIRESTORE
+   Accepts: traineeCode (TRNxxxx) OR uid OR email
    ============================================================ */
 async function loadTrainee(id) {
   if (!id) return null;
 
-  // --- Try backend first ---
+  console.log('🔍 Looking up trainee:', id);
+
+  // --- Strategy 1: Direct doc ID (Firebase UID) ---
   try {
-    // The govt dashboard passes trainee_code like "TRN10001" OR numeric id.
-    // Backend route is /api/govt/trainee/<int:tid>/full — expects numeric id.
-    // So: if the id is non-numeric, we resolve it via /api/trainees?search=
-    let numericId = null;
-
-    if (/^\d+$/.test(id)) {
-      numericId = parseInt(id, 10);
-    } else {
-      // Try /api/trainees?search=<code> to find it
-      const searchRes = await apiCall('/api/trainees?search=' + encodeURIComponent(id));
-      if (searchRes.ok && Array.isArray(searchRes.data)) {
-        const found = searchRes.data.find(t =>
-          t.trainee_code === id || String(t.id) === String(id)
-        );
-        if (found) numericId = found.id;
-      }
+    const directSnap = await db.collection('trainees').doc(id).get();
+    if (directSnap.exists) {
+      console.log('✅ Found by direct UID:', id);
+      return normalizeTrainee({ _id: directSnap.id, ...directSnap.data() });
     }
+  } catch (e) {
+    console.warn('Direct lookup failed:', e.message);
+  }
 
-    if (numericId) {
-      const res = await apiCall('/api/govt/trainee/' + numericId + '/full');
-      if (res.ok && res.data && !res.data.error) {
-        return normalizeBackendTrainee(res.data);
+  // --- Strategy 2: Query by traineeCode ---
+  try {
+    const codeSnap = await db.collection('trainees')
+      .where('traineeCode', '==', id)
+      .limit(1)
+      .get();
+    if (!codeSnap.empty) {
+      const doc = codeSnap.docs[0];
+      console.log('✅ Found by traineeCode:', id);
+      return normalizeTrainee({ _id: doc.id, ...doc.data() });
+    }
+  } catch (e) {
+    console.warn('traineeCode lookup failed:', e.message);
+  }
+
+  // --- Strategy 3: Query by email ---
+  try {
+    const emailSnap = await db.collection('trainees')
+      .where('email', '==', id)
+      .limit(1)
+      .get();
+    if (!emailSnap.empty) {
+      const doc = emailSnap.docs[0];
+      console.log('✅ Found by email:', id);
+      return normalizeTrainee({ _id: doc.id, ...doc.data() });
+    }
+  } catch (e) {
+    console.warn('email lookup failed:', e.message);
+  }
+
+  // --- Strategy 4: Query by uid field ---
+  try {
+    const uidSnap = await db.collection('trainees')
+      .where('uid', '==', id)
+      .limit(1)
+      .get();
+    if (!uidSnap.empty) {
+      const doc = uidSnap.docs[0];
+      console.log('✅ Found by uid field:', id);
+      return normalizeTrainee({ _id: doc.id, ...doc.data() });
+    }
+  } catch (e) {
+    console.warn('uid field lookup failed:', e.message);
+  }
+
+  // --- Strategy 5: Search all trainees (client-side match) ---
+  try {
+    const allSnap = await db.collection('trainees').get();
+    for (const doc of allSnap.docs) {
+      const d = doc.data();
+      if (d.traineeCode === id || d.email === id || d.uid === id || doc.id === id) {
+        console.log('✅ Found by client-side search:', id);
+        return normalizeTrainee({ _id: doc.id, ...d });
       }
     }
   } catch (e) {
-    console.warn('Backend trainee 360 load failed, using localStorage:', e);
+    console.warn('Full search failed:', e.message);
   }
 
-  // --- Fallback: localStorage ---
-  return findTraineeInLocalStorage(id);
+  console.warn('❌ Trainee not found in any strategy:', id);
+  return null;
 }
 
 /* ============================================================
-   3. NORMALIZE BACKEND RESPONSE → internal shape
+   3. NORMALIZE FIRESTORE DOC → internal shape
    ============================================================ */
-function normalizeBackendTrainee(raw) {
+function normalizeTrainee(raw) {
   const t = raw || {};
-  const empList = Array.isArray(t.employments) ? t.employments : [];
-  const folList = Array.isArray(t.followups) ? t.followups : [];
-  const retList = Array.isArray(t.retention) ? t.retention : [];
+  const emp = t.employment || null;
 
-  const emp = empList[0] || {};
-  // Find earliest pending follow-up or the first one
-  const fol = folList.find(f => f.status === 'due' || f.status === 'pending') || folList[0] || {};
+  // Determine employment status
+  let empStatus = '';
+  if (emp) {
+    const s = (emp.status || '').toLowerCase();
+    if (s.includes('employ') || s.includes('verified') || s.includes('full')) empStatus = 'Employed';
+    else if (s.includes('self')) empStatus = 'Self-Employed';
+    else if (s.includes('intern') || s.includes('apprentice')) empStatus = 'Internship';
+    else if (s.includes('pending')) empStatus = 'Pending Verification';
+    else if (s) empStatus = emp.status;
+  }
 
-  // Verification: employment status verified OR verificationStatus field
-  let verStatus = 'pending';
-  if (emp.status === 'verified') verStatus = 'verified';
+  // Followups
+  const fuList = Array.isArray(t.followups) ? t.followups : [];
+  const fu = fuList.find(f => f.status === 'due' || f.status === 'pending') || fuList[0] || {};
 
-  // Retention: retained at any period → 1
-  const retainedAt = {};
-  retList.forEach(r => { retainedAt[r.days] = r.retained; });
-
-  // Skills can be comma-separated string or array
+  // Skills (may be comma-separated string OR array)
   const skillsArr = Array.isArray(t.skills)
     ? t.skills
-    : (typeof t.skills === 'string' && t.skills.trim()
-        ? t.skills.split(',').map(s => s.trim()).filter(Boolean)
-        : []);
+    : (typeof t.skillTrade === 'string' && t.skillTrade.trim()
+        ? t.skillTrade.split(',').map(s => s.trim()).filter(Boolean)
+        : (typeof t.skills === 'string' && t.skills.trim()
+            ? t.skills.split(',').map(s => s.trim()).filter(Boolean)
+            : []));
 
+  // Certifications
   const certsArr = Array.isArray(t.certifications)
     ? t.certifications
-    : (typeof t.certifications === 'string' && t.certifications.trim()
-        ? t.certifications.split(',').map(s => s.trim()).filter(Boolean)
+    : (t.certificationStatus === 'Certified'
+        ? [t.certificateName || 'Certified']
         : []);
 
   // Location
-  const loc = [t.district, t.state].filter(Boolean).join(', ');
+  const loc = [t.district, t.state].filter(Boolean).join(', ') || t.location || '';
 
-  // Compute training progress from assessment_score if present
-  const progress = t.assessment_score ? Math.round(t.assessment_score) : 0;
-
-  return {
-    // -------- Basic --------
-    id: t.trainee_code || ('TRN' + t.id),
-    backendId: t.id,
-    name: t.full_name || 'Unnamed Trainee',
-    dob: t.dob || '',
-    gender: t.gender || '',
-    phone: t.phone || '',
-    email: t.email || '',
-    location: loc,
-    category: t.category || '',
-
-    // -------- Education --------
-    qualification: t.qualification || '',
-    institution: t.institution || '',
-    passYear: t.pass_year || '',
-    score: t.score || '',
-
-    // -------- Training --------
-    course: t.skills || t.qualification || '',
-    provider: '',
-    batch: '',
-    trainingStatus: t.training_status || '',
-    trainingProgress: progress,
-
-    // -------- Skills --------
-    skills: skillsArr,
-    certifications: certsArr,
-
-    // -------- Assessment --------
-    assessmentScore: t.assessment_score || '',
-    assessmentDate: t.assessment_date || '',
-    assessmentResult: t.assessment_result || '',
-
-    // -------- Employment --------
-    empStatus: emp.status === 'verified' ? 'Employed'
-             : emp.status === 'pending' ? 'Pending Verification'
-             : emp.status || '',
-    empCompany: emp.employer_name || '',
-    empRole: emp.job_role || '',
-    empType: emp.employment_type || '',
-    empJoining: emp.start_date || '',
-    empLocation: emp.job_location || '',
-    empIncome: emp.monthly_income || '',
-    empPrevIncome: emp.pre_training_income || '',
-
-    // -------- Follow-up --------
-    followupStatus: fol.status || '',
-    followupPeriod: fol.period_days ? fol.period_days + ' Days' : '',
-    followupDate: fol.due_date || '',
-
-    // -------- Registration --------
-    regDate: (t.created_at || '').split('T')[0] || '',
-    regBy: 'Self (Online Portal)',
-
-    // -------- Verification --------
-    verificationStatus: verStatus,
-    verifiedBy: emp.verified_by || '',
-    verifiedAt: emp.verified_at || '',
-
-    // -------- Retention --------
-    retention: retainedAt,
-    enrollments: t.enrollments || [],
-  };
-}
-
-/* ============================================================
-   4. FALLBACK — localStorage lookup
-   ============================================================ */
-function findTraineeInLocalStorage(id) {
-  const allTrainees   = JSON.parse(localStorage.getItem('allTrainees')   || '[]');
-  const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-  const allFollowups  = JSON.parse(localStorage.getItem('allFollowups')  || '[]');
-
-  let index = allTrainees.findIndex(t => t.traineeId === id || t.id === id || t.email === id);
-  if (index === -1 && /^TRN\d+$/.test(id)) {
-    const num = parseInt(id.replace('TRN', ''), 10) - 1;
-    if (num >= 0 && num < allTrainees.length) index = num;
-  }
-  if (index === -1) return null;
-
-  const t   = allTrainees[index];
-  const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
-  const fol = allFollowups.find(f => f.traineeEmail === t.email)  || {};
-
-  let verStatus = t.verificationStatus || 'pending';
-  if (verStatus === 'verified' || emp.verified) verStatus = 'verified';
+  // Progress
+  const progress = Number(t.trainingProgress) || 0;
 
   return {
-    id: t.traineeId || id,
-    backendId: t.id,
+    // Basic
+    id: t.traineeCode || ('TRN' + (t.uid ? t.uid.substring(0, 6) : t._id ? t._id.substring(0, 6) : 'XX')),
+    backendId: t._id || t.uid,
+    uid: t.uid || t._id,
     name: t.fullName || t.name || 'Unnamed Trainee',
-    dob: t.dateOfBirth || t.dob || '',
+    dob: t.dob || t.dateOfBirth || '',
     gender: t.gender || '',
     phone: t.mobile || t.phone || '',
     email: t.email || '',
-    location: [t.district, t.state].filter(Boolean).join(', ') || t.location || '',
+    location: loc,
     category: t.category || t.socialCategory || '',
-    qualification: t.qualification || t.highestQualification || '',
+
+    // Education
+    qualification: t.qualification || t.education || '',
     institution: t.institution || '',
-    passYear: t.yearOfPassing || t.passYear || '',
-    score: t.percentage || t.cgpa || t.score || '',
-    course: t.skillTrade || t.course || '',
+    passYear: t.passYear || t.yearOfPassing || '',
+    score: t.score || t.percentage || t.cgpa || '',
+
+    // Training
+    course: t.skillTrade || t.course || t.trainingProgram || '',
     provider: t.trainingProvider || t.provider || '',
     batch: t.batchId || t.batch || '',
+    enrollmentId: t.enrollmentId || '',
+    trainingMode: t.trainingMode || '',
     trainingStatus: t.trainingStatus || t.certificationStatus || '',
-    trainingProgress: t.trainingProgress || 0,
-    skills: Array.isArray(t.skills) ? t.skills : (t.skills ? String(t.skills).split(',').map(s => s.trim()).filter(Boolean) : []),
-    certifications: Array.isArray(t.certifications) ? t.certifications : (t.certifications ? String(t.certifications).split(',').map(s => s.trim()).filter(Boolean) : []),
+    trainingProgress: progress,
+    startDate: t.startDate || '',
+    completionDate: t.completionDate || '',
+
+    // Skills
+    skills: skillsArr,
+    certifications: certsArr,
+
+    // Assessment
     assessmentScore: t.assessmentScore || '',
     assessmentDate: t.assessmentDate || '',
-    assessmentResult: t.assessmentResult || '',
-    empStatus: emp.status || '',
-    empCompany: emp.companyName || '',
-    empRole: emp.jobRole || '',
-    empType: emp.employmentType || '',
-    empJoining: emp.joiningDate || '',
-    empLocation: emp.jobCity || '',
-    empIncome: emp.currentIncome || '',
-    empPrevIncome: emp.previousIncome || '',
-    followupStatus: fol.status || '',
-    followupPeriod: fol.period || '',
-    followupDate: fol.date || '',
-    regDate: t.registrationDate || t.registeredAt || '',
+    assessmentResult: t.assessmentResult || t.certificationStatus || '',
+
+    // Employment
+    empStatus: empStatus,
+    empCompany: emp ? (emp.companyName || emp.employerName || '') : '',
+    empRole: emp ? (emp.jobRole || '') : '',
+    empType: emp ? (emp.employmentType || '') : '',
+    empJoining: emp ? (emp.joiningDate || emp.startDate || '') : '',
+    empLocation: emp ? (emp.jobCity || emp.jobLocation || '') : '',
+    empIncome: emp ? (emp.currentIncome || emp.monthlyIncome || '') : '',
+    empPrevIncome: emp ? (emp.previousIncome || '') : (t.prevIncome || ''),
+
+    // Follow-up
+    followupStatus: fu.status || 'Pending',
+    followupPeriod: fu.periodDays ? fu.periodDays + ' Days' : (fu.period || ''),
+    followupDate: fu.dueDate || fu.date || '',
+
+    // Registration
+    regDate: t.registeredAt
+      ? t.registeredAt.split('T')[0]
+      : (t.createdAt?.toDate ? t.createdAt.toDate().toISOString().split('T')[0] : ''),
     regBy: t.registeredBy || 'Self (Online Portal)',
-    verificationStatus: verStatus,
-    verifiedBy: t.verifiedBy || '',
-    verifiedAt: t.verifiedAt || '',
-    retention: {},
-    enrollments: [],
+
+    // Verification
+    verificationStatus: t.verificationStatus || (emp && emp.verified ? 'verified' : 'pending'),
+    verifiedBy: emp ? (emp.verifiedBy || '') : '',
+    verifiedAt: emp ? (emp.verifiedAt || '') : '',
+
+    // Career
+    careerGoal: t.careerGoal || '',
+    preferredRole: t.preferredRole || '',
+    preferredLocation: t.preferredLocation || '',
+
+    // Raw for debugging
+    _raw: t,
   };
 }
 
 /* ============================================================
-   5. RENDER
+   4. RENDER
    ============================================================ */
 async function render() {
   const container = document.getElementById('container');
@@ -481,11 +482,16 @@ async function render() {
     return;
   }
 
-  const t = await loadTrainee(traineeId);
+  let t = null;
+  try {
+    t = await loadTrainee(traineeId);
+  } catch (err) {
+    console.error('Load error:', err);
+  }
 
   if (!t) {
     container.innerHTML = notFoundHTML(
-      'This trainee record could not be found in the system.',
+      'This trainee record could not be found in Firestore.',
       traineeId
     );
     return;
@@ -524,7 +530,7 @@ async function render() {
       <div class="profile-status">
         <span class="badge">
           <span class="dot"></span>
-          ${t.verificationStatus.charAt(0).toUpperCase() + t.verificationStatus.slice(1)}
+          ${escapeHtml((t.verificationStatus || 'pending').charAt(0).toUpperCase() + (t.verificationStatus || 'pending').slice(1))}
         </span>
       </div>
     </div>
@@ -595,6 +601,7 @@ async function render() {
         <div class="field"><span class="label">Batch / Duration</span><span class="value">${muted(t.batch)}</span></div>
         <div class="field"><span class="label">Training Status</span><span class="value">${muted(t.trainingStatus)}</span></div>
         <div class="field"><span class="label">Progress</span><span class="value">${t.trainingProgress ? t.trainingProgress + '%' : '<span class="value muted">Not tracked</span>'}</span></div>
+        <div class="field"><span class="label">Training Mode</span><span class="value">${muted(t.trainingMode)}</span></div>
       </div>
     </div>
 
@@ -654,6 +661,18 @@ async function render() {
       </div>
     </div>
 
+    <!-- CAREER GOAL -->
+    ${(t.careerGoal || t.preferredRole || t.preferredLocation) ? `
+    <div class="section">
+      <h2><i class="fas fa-bullseye"></i> Career Goal</h2>
+      <div class="grid">
+        <div class="field"><span class="label">Primary Goal</span><span class="value">${muted(t.careerGoal)}</span></div>
+        <div class="field"><span class="label">Preferred Role</span><span class="value">${muted(t.preferredRole)}</span></div>
+        <div class="field"><span class="label">Preferred Location</span><span class="value">${muted(t.preferredLocation)}</span></div>
+      </div>
+    </div>
+    ` : ''}
+
     <!-- REGISTRATION -->
     <div class="section">
       <h2><i class="fas fa-file-alt"></i> Registration Information</h2>
@@ -679,6 +698,7 @@ async function render() {
           <tr><td>Course</td><td>${escapeHtml(t.course) || '—'}</td></tr>
           <tr><td>Training Provider</td><td>${escapeHtml(t.provider) || '—'}</td></tr>
           <tr><td>Batch</td><td>${escapeHtml(t.batch) || '—'}</td></tr>
+          <tr><td>Enrollment ID</td><td>${escapeHtml(t.enrollmentId) || '—'}</td></tr>
         </table>
       </div>
     </div>
@@ -689,7 +709,7 @@ async function render() {
       <div class="grid">
         <div class="field">
           <span class="label">Current Status</span>
-          <span class="value">${escapeHtml(t.verificationStatus.charAt(0).toUpperCase() + t.verificationStatus.slice(1))}</span>
+          <span class="value">${escapeHtml((t.verificationStatus || 'pending').charAt(0).toUpperCase() + (t.verificationStatus || 'pending').slice(1))}</span>
         </div>
         <div class="field"><span class="label">Verified By</span><span class="value">${muted(t.verifiedBy)}</span></div>
         <div class="field"><span class="label">Verified At</span><span class="value">${muted(t.verifiedAt)}</span></div>
@@ -705,14 +725,14 @@ async function render() {
 }
 
 /* ============================================================
-   6. ACTIONS
+   5. ACTIONS
    ============================================================ */
 function toggleRegDetails() {
   document.getElementById('regDetails').classList.toggle('show');
 }
 
 /* ============================================================
-   7. HELPERS
+   6. HELPERS
    ============================================================ */
 function escapeHtml(str) {
   if (str === undefined || str === null) return '';
@@ -742,7 +762,7 @@ function notFoundHTML(message, id) {
 }
 
 /* ============================================================
-   8. INIT
+   7. INIT
    ============================================================ */
 render();
 </script>

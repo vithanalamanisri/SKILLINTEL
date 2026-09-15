@@ -1080,408 +1080,384 @@
     </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <script>
     // ============================================================
-    // BACKEND STATE
+    // FIREBASE CONFIG
     // ============================================================
-    let _traineeBackendId = null;
-    let _backendFollowups = [];
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
+    let _firebaseUser = null;
+    let _traineeData = null;
+    let _employmentData = null;
 
     // ============================================================
-    // LOAD USER DATA — backend-first
+    // AUTH GUARD
     // ============================================================
-    async function loadUserData() {
-        const currentEmail = localStorage.getItem('currentTraineeEmail') ||
-                             (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
-
-        // Try backend
-        try {
-            const res = await apiCall('/api/trainees?search=' + encodeURIComponent(currentEmail || ''));
-            if (res.ok && Array.isArray(res.data)) {
-                const found = res.data.find(t =>
-                    (t.email || '').toLowerCase() === (currentEmail || '').toLowerCase()
-                );
-                if (found) {
-                    _traineeBackendId = found.id;
-                    localStorage.setItem('currentTraineeId', String(found.id));
-
-                    const initial = (found.full_name || 'T').charAt(0).toUpperCase();
-                    document.getElementById('userAvatar').textContent = initial;
-                    document.getElementById('userName').textContent = found.full_name || 'Trainee';
-                    console.log('👋 Welcome, ' + (found.full_name || found.email));
-                    return found;
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    if (localStorage.getItem('isLoggedIn') === 'true' &&
+                        localStorage.getItem('userRole') === 'trainee') {
+                        resolve(null);
+                        return;
+                    }
+                    window.location.href = '../auth/login.html?role=trainee';
+                    reject('not-authenticated');
+                    return;
                 }
-            }
-        } catch (e) {
-            console.warn('Backend trainee load failed:', e);
-        }
-
-        // Fallback localStorage
-        const storedData = localStorage.getItem('traineeData');
-        if (storedData) {
-            try {
-                const data = JSON.parse(storedData);
-                if (data.fullName) {
-                    document.getElementById('userAvatar').textContent = data.fullName.charAt(0).toUpperCase();
-                    document.getElementById('userName').textContent = data.fullName;
-                }
-            } catch (e) {}
-        }
-        return null;
+                _firebaseUser = fbUser;
+                resolve(fbUser);
+            });
+        });
     }
 
     // ============================================================
-    // LOAD EXISTING FOLLOW-UPS FROM BACKEND
+    // LOAD ALL DATA FROM FIRESTORE
     // ============================================================
-    async function loadBackendFollowups() {
-        if (!_traineeBackendId) return;
+    async function loadAllData() {
+        const result = { traineeData: null, employmentData: null, followupData: null };
+        if (!_firebaseUser) return result;
 
         try {
-            const res = await apiCall('/api/trainees/' + _traineeBackendId + '/360');
-            if (res.ok && res.data && res.data.followups) {
-                _backendFollowups = res.data.followups;
-                console.log('📂 Loaded', _backendFollowups.length, 'follow-ups from backend');
+            let snap = await db.collection('trainees').doc(_firebaseUser.uid).get();
+            let data = snap.exists ? snap.data() : null;
 
-                // Render real timeline from backend data
-                renderRealTimeline(_backendFollowups);
+            if (!data) {
+                snap = await db.collection('users').doc(_firebaseUser.uid).get();
+                data = snap.exists ? snap.data() : null;
+            }
 
-                // Load latest follow-up into form
-                const latest = _backendFollowups.find(f => f.status !== 'completed') || _backendFollowups[0];
-                if (latest) {
-                    if (latest.period_days) {
-                        document.getElementById('followupPeriod').value = latest.period_days + ' Days';
-                    }
-                    if (latest.due_date) {
-                        document.getElementById('followupDate').value = latest.due_date;
-                    }
-                    if (latest.status) {
-                        const statusMap = {
-                            'completed': 'Completed',
-                            'due': 'Pending',
-                            'pending': 'Pending',
-                            'overdue': 'Pending',
-                        };
-                        document.getElementById('followupStatus').value = statusMap[latest.status] || 'Pending';
-                    }
+            if (data) {
+                result.traineeData = {
+                    fullName: data.fullName || 'Trainee',
+                    email: data.email || '',
+                    skillTrade: data.skillTrade || '',
+                    trainingProvider: data.trainingProvider || '',
+                    trainingProgress: data.trainingProgress || 100,
+                    certificationStatus: data.certificationStatus || 'Certified',
+                    prevIncome: Number(data.prevIncome) || 0,
+                };
+
+                if (data.employment) {
+                    const e = data.employment;
+                    result.employmentData = {
+                        status: e.status || 'N/A',
+                        companyName: e.companyName || 'N/A',
+                        jobRole: e.jobRole || 'N/A',
+                        employmentType: e.employmentType || 'N/A',
+                        joiningDate: e.joiningDate || '',
+                        jobCity: e.jobCity || 'N/A',
+                        currentIncome: Number(e.currentIncome) || 0,
+                        previousIncome: Number(e.previousIncome) || Number(data.prevIncome) || 0,
+                        prevCompany: e.prevCompany || '',
+                        prevRole: e.prevRole || '',
+                        prevSalary: Number(e.prevSalary) || 0,
+                        leavingDate: e.leavingDate || '',
+                    };
+                } else {
+                    result.employmentData = {
+                        status: 'N/A', companyName: 'N/A', jobRole: 'N/A',
+                        employmentType: 'N/A', joiningDate: '', jobCity: 'N/A',
+                        currentIncome: 0, previousIncome: Number(data.prevIncome) || 0,
+                        prevCompany: '', prevRole: '', prevSalary: 0, leavingDate: '',
+                    };
+                }
+
+                if (data.followup) {
+                    result.followupData = data.followup;
                 }
             }
+
+            _traineeData = result.traineeData;
+            _employmentData = result.employmentData;
         } catch (e) {
-            console.warn('Backend followup load failed:', e);
+            console.warn('loadAllData failed:', e);
+        }
+        return result;
+    }
+
+    // ============================================================
+    // UPDATE FUNCTIONS (same as before, but sourced from Firestore)
+    // ============================================================
+    function updateUserInfo(t) {
+        if (t && t.fullName) {
+            document.getElementById('userAvatar').textContent = t.fullName.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = t.fullName;
         }
     }
 
-    function renderRealTimeline(followups) {
-        const container = document.getElementById('timelineContainer');
-        if (!container) return;
-
-        container.innerHTML = followups.map(f => {
-            const isCompleted = f.status === 'completed';
-            const isDue = f.status === 'due' || f.status === 'pending' || f.status === 'overdue';
-            const cls = isCompleted ? 'completed' : isDue ? 'active' : 'locked';
-            const icon = isCompleted ? '✅' : isDue ? '📅' : '🔒';
-            const statusText = isCompleted ? 'Completed' : isDue ? 'Upcoming' : 'Pending';
-
-            return `
-                <div class="timeline-step ${cls}">
-                    <div class="step-circle">${icon}</div>
-                    <div class="step-name">${f.period_days} Days</div>
-                    <div class="step-status">${statusText}</div>
-                </div>
-            `;
-        }).join('');
-
-        // Update completed count
-        const completed = followups.filter(f => f.status === 'completed').length;
-        document.getElementById('completedCount').textContent = completed + ' / ' + followups.length;
+    function updateHeroBadges(t, e) {
+        if (t && t.trainingProgress) {
+            document.getElementById('heroTraining').textContent = '🎓 Training ' + (t.trainingProgress >= 100 ? 'Completed' : 'In Progress');
+        }
+        if (e && e.status && e.status !== 'N/A') {
+            document.getElementById('heroEmployment').textContent = '💼 ' + e.status;
+        }
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        if (prev > 0 && curr > 0) {
+            const growth = Math.round(((curr - prev) / prev) * 100);
+            document.getElementById('heroGrowth').textContent = '📈 ' + growth + '% Growth';
+            if (growth > 20) document.getElementById('heroRetention').textContent = '🏆 Strong Retention';
+        }
     }
 
-    // ============================================================
-    // CALCULATE INCOME GROWTH
-    // ============================================================
-    function calculateIncome() {
-        const previous = parseFloat(document.getElementById('prevIncome').value) || 0;
-        const current = parseFloat(document.getElementById('currIncome').value) || 0;
+    function updateStats(t, e) {
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        const growth = prev > 0 ? Math.round(((curr - prev) / prev) * 100) : 0;
+        const jobs = (e.prevCompany ? 1 : 0) + (e.companyName && e.companyName !== 'N/A' ? 1 : 0);
 
-        let growthText = '';
-        let growthPercent = 0;
+        document.getElementById('totalJobs').textContent = String(jobs).padStart(2, '0');
+        document.getElementById('currentIncomeDisplay').textContent = curr > 0 ? '₹' + (curr >= 1000 ? (curr/1000).toFixed(0) + 'K' : curr) : '₹0';
+        document.getElementById('incomeGrowthDisplay').textContent = (growth > 0 ? '+' : '') + growth + '%';
+        document.getElementById('retentionDisplay').textContent = e.status === 'Employed' ? '90%' : '0%';
+    }
 
-        if (previous > 0 && current > 0) {
-            growthPercent = ((current - previous) / previous) * 100;
-            growthPercent = Math.round(growthPercent);
+    function updateTimeline(t, e) {
+        if (t.trainingProgress) {
+            document.getElementById('timelineTraining').textContent = t.trainingProgress >= 100 ? '✅ Completed' : '⏳ ' + t.trainingProgress + '%';
+        }
+        if (t.certificationStatus) {
+            document.getElementById('timelineCert').textContent = t.certificationStatus === 'Certified' ? '✅ Received' : '⏳ Pending';
+        }
+        if (e.companyName && e.companyName !== 'N/A') {
+            document.getElementById('timelineFirstJob').textContent = '✅ ' + e.companyName;
+        }
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        if (prev > 0 && curr > 0) {
+            const growth = Math.round(((curr - prev) / prev) * 100);
+            document.getElementById('growthPercent').textContent = (growth > 0 ? '+' : '') + growth + '%';
+        }
+        if (e.companyName && e.companyName !== 'N/A') {
+            document.getElementById('timelineCareer').textContent = '🚀 Progressing';
+        }
+        if (e.status === 'Employed') {
+            document.getElementById('timelineRetention').textContent = 'Retained';
+        }
+    }
 
-            if (growthPercent > 0) {
-                growthText = '⬆ ' + growthPercent + '% growth';
-            } else if (growthPercent < 0) {
-                growthText = '⬇ ' + Math.abs(growthPercent) + '% decrease';
-            } else {
-                growthText = '➡ No change';
+    function updateCurrentJob(e, t) {
+        if (e.companyName && e.companyName !== 'N/A') {
+            document.getElementById('currentCompany').textContent = '🏢 ' + e.companyName;
+            document.getElementById('currentRole').textContent = e.jobRole || 'N/A';
+            document.getElementById('jobLocation').textContent = '📍 ' + (e.jobCity || 'N/A');
+            document.getElementById('jobType').textContent = '🕒 ' + (e.employmentType || 'N/A');
+            if (e.joiningDate) {
+                const d = new Date(e.joiningDate);
+                document.getElementById('jobDate').textContent = '📅 ' + d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
             }
-        } else if (current > 0 && previous === 0) {
-            growthText = '⬆ New income recorded';
-        } else {
-            growthText = 'Enter both incomes to calculate';
+            document.getElementById('currentSalary').textContent = '₹' + (e.currentIncome || 0).toLocaleString();
         }
-
-        document.getElementById('incomeGrowth').value = growthText;
     }
 
-    // ============================================================
-    // SAVE FOLLOW-UP — backend-first
-    // ============================================================
-    async function saveFollowup() {
-        const saveBtn = document.getElementById('saveBtn');
-        const currentEmail = localStorage.getItem('currentTraineeEmail') ||
-                             (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
+    function updateScore(e, t) {
+        let score = 0;
+        if (e.companyName && e.companyName !== 'N/A') score += 30;
+        if (e.currentIncome > 0) score += 30;
+        if (e.status === 'Employed') score += 20;
+        if (t.trainingProgress >= 100) score += 20;
 
-        if (!currentEmail) {
-            alert('⚠️ No trainee logged in. Please login first.');
+        document.getElementById('overallScore').textContent = score + '%';
+        const el = document.getElementById('scoreStatus');
+        if (score >= 80) { el.textContent = '✨ Excellent'; el.style.background = '#dcfce7'; el.style.color = '#15803d'; }
+        else if (score >= 50) { el.textContent = '📈 Good Progress'; el.style.background = '#dbeafe'; el.style.color = '#1d4ed8'; }
+        else if (score >= 30) { el.textContent = '⏳ Needs Improvement'; el.style.background = '#fef3c7'; el.style.color = '#b45309'; }
+        else { el.textContent = '🔴 No Data'; el.style.background = '#fee2e2'; el.style.color = '#dc2626'; }
+    }
+
+    function updateIncomeChart(e, t) {
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        const mid = Math.round((prev + curr) / 2) || 0;
+
+        document.getElementById('income1').textContent = prev > 0 ? '₹' + (prev/1000).toFixed(0) + 'K' : '₹0';
+        document.getElementById('income2').textContent = mid > 0 ? '₹' + (mid/1000).toFixed(0) + 'K' : '₹0';
+        document.getElementById('income3').textContent = curr > 0 ? '₹' + (curr/1000).toFixed(0) + 'K' : '₹0';
+        document.getElementById('income4').textContent = curr > 0 ? '₹' + (curr/1000).toFixed(0) + 'K' : '₹0';
+
+        document.getElementById('summaryBefore').textContent = '₹' + prev.toLocaleString();
+        document.getElementById('summaryFirst').textContent = '₹' + mid.toLocaleString();
+        document.getElementById('summaryCurrent').textContent = '₹' + curr.toLocaleString();
+        const growth = prev > 0 ? Math.round(((curr - prev) / prev) * 100) : 0;
+        document.getElementById('summaryGrowth').textContent = (growth > 0 ? '+' : '') + growth + '%';
+
+        const maxVal = Math.max(prev, curr, mid, 1);
+        const bars = document.querySelectorAll('.chart-bar');
+        const values = [prev, mid, curr, curr];
+        bars.forEach((bar, i) => {
+            bar.style.height = Math.max((values[i] / maxVal) * 180, 20) + 'px';
+        });
+    }
+
+    function updateEmploymentHistory(e, t) {
+        const list = document.getElementById('historyList');
+        const jobs = [];
+
+        if (e.companyName && e.companyName !== 'N/A') {
+            jobs.push({
+                company: e.companyName,
+                role: e.jobRole || 'N/A',
+                location: e.jobCity || 'N/A',
+                date: e.joiningDate ? new Date(e.joiningDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : 'N/A',
+                type: e.employmentType || 'Full Time',
+                salary: e.currentIncome || 0,
+                status: 'Current Job',
+                icon: '🏢',
+            });
+        }
+        if (e.prevCompany) {
+            jobs.push({
+                company: e.prevCompany,
+                role: e.prevRole || 'N/A',
+                location: 'N/A',
+                date: e.leavingDate ? new Date(e.leavingDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : 'N/A',
+                type: 'Previous',
+                salary: e.prevSalary || 0,
+                status: 'Completed',
+                icon: '💻',
+            });
+        }
+
+        if (jobs.length === 0) {
+            list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;">
+                <i class="fas fa-briefcase" style="font-size:40px;display:block;margin-bottom:10px;"></i>
+                No employment records yet. Please update your employment details.
+            </div>`;
             return;
         }
 
-        const periodValue = document.getElementById('followupPeriod').value;
-        const periodDays = parseInt(periodValue) || 90;
+        list.innerHTML = jobs.map((job, i) => `
+            <div class="history-card">
+                <div class="history-left">
+                    <div class="company-icon">${job.icon}</div>
+                    <div class="company-info">
+                        <h3>${job.company}</h3>
+                        <p>${job.role}</p>
+                        <div class="history-meta">
+                            <span class="meta">📍 ${job.location}</span>
+                            <span class="meta">📅 ${job.date}</span>
+                            <span class="meta">💼 ${job.type}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="history-right">
+                    <h3>₹${job.salary.toLocaleString()}</h3>
+                    <span class="status-badge ${i === 0 ? 'active-status' : 'old-status'}">${job.status}</span>
+                </div>
+            </div>
+        `).join('');
+    }
 
-        const followupData = {
-            traineeEmail: currentEmail,
-            period: periodValue,
-            periodDays: periodDays,
-            date: document.getElementById('followupDate').value,
-            status: document.getElementById('followupStatus').value,
-            contactMethod: document.getElementById('contactMethod').value,
-            notes: document.getElementById('followupNotes').value,
-            empStatus: document.getElementById('empStatus').value,
-            retentionStatus: document.getElementById('retentionStatus').value,
-            companyName: document.getElementById('companyName').value,
-            jobRole: document.getElementById('jobRole').value,
-            empStartDate: document.getElementById('empStartDate').value,
-            empType: document.getElementById('empType').value,
-            prevIncome: document.getElementById('prevIncome').value,
-            currIncome: document.getElementById('currIncome').value,
-            incomeSource: document.getElementById('incomeSource').value,
-            incomeStability: document.getElementById('incomeStability').value,
-            incomeGrowth: document.getElementById('incomeGrowth').value,
-            careerRating: document.getElementById('careerRating').value,
-            skillsImproved: document.getElementById('skillsImproved').value,
-            careerFeedback: document.getElementById('careerFeedback').value,
-            savedDate: new Date().toISOString()
-        };
+    function updateRetention(e) {
+        const stages = [
+            { id: 'ret30', statusId: 'ret30Status', days: 30 },
+            { id: 'ret90', statusId: 'ret90Status', days: 90 },
+            { id: 'ret180', statusId: 'ret180Status', days: 180 },
+            { id: 'ret365', statusId: 'ret365Status', days: 365 },
+        ];
+        const hasJob = e.companyName && e.companyName !== 'N/A';
+        const joinDate = e.joiningDate ? new Date(e.joiningDate) : null;
 
-        // Lock button
-        saveBtn.disabled = true;
-        const originalHTML = saveBtn.innerHTML;
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-        // --- localStorage save first ---
-        try {
-            let allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
-            const existingIndex = allFollowups.findIndex(f => f.traineeEmail === currentEmail);
-            if (existingIndex !== -1) {
-                allFollowups[existingIndex] = { ...allFollowups[existingIndex], ...followupData };
+        stages.forEach(s => {
+            const el = document.getElementById(s.id);
+            const st = document.getElementById(s.statusId);
+            el.textContent = s.days;
+            if (hasJob && joinDate) {
+                const days = Math.floor((new Date() - joinDate) / 86400000);
+                if (days >= s.days) { st.textContent = '✅ Completed'; st.className = 'retention-status completed'; }
+                else if (days >= s.days - 15) { st.textContent = '🔄 In Progress'; st.className = 'retention-status inprogress'; }
+                else { st.textContent = '⏳ Upcoming'; st.className = 'retention-status upcoming'; }
             } else {
-                allFollowups.push(followupData);
+                st.textContent = '🔒 Locked';
+                st.className = 'retention-status upcoming';
             }
-            localStorage.setItem('allFollowups', JSON.stringify(allFollowups));
-            localStorage.setItem('followupData', JSON.stringify(followupData));
-        } catch (e) {
-            console.warn('localStorage save failed:', e);
+        });
+    }
+
+    function updateAchievements(t, e) {
+        const grid = document.getElementById('achievementGrid');
+        const items = [];
+
+        if (t.trainingProgress >= 100) items.push({ icon: '🎓', title: 'Training Completed', desc: 'Successfully completed' });
+        if (t.certificationStatus === 'Certified') items.push({ icon: '📜', title: 'Certified', desc: 'Certificate earned' });
+        if (e.companyName && e.companyName !== 'N/A') items.push({ icon: '💼', title: 'Employment Achieved', desc: e.companyName });
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        if (prev > 0 && curr > prev) {
+            const g = Math.round(((curr - prev) / prev) * 100);
+            items.push({ icon: '📈', title: 'Income Growth', desc: g + '% increase' });
+        }
+        if (e.status === 'Employed') items.push({ icon: '🏆', title: 'Retention', desc: 'Currently employed' });
+
+        if (items.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">
+                Complete training & employment to unlock achievements.
+            </div>`;
+            return;
         }
 
-        // --- backend save: update follow-up status ---
-        try {
-            if (_traineeBackendId) {
-                // Find the matching backend follow-up to update
-                const target = _backendFollowups.find(f => f.period_days === periodDays);
-                if (target) {
-                    const result = await apiCall('/api/followups/' + target.id + '/submit', {
-                        method: 'POST',
-                        body: {
-                            status: 'completed',
-                            submitted_at: new Date().toISOString(),
-                            data: JSON.stringify({
-                                empStatus: followupData.empStatus,
-                                companyName: followupData.companyName,
-                                jobRole: followupData.jobRole,
-                                currIncome: followupData.currIncome,
-                                prevIncome: followupData.prevIncome,
-                                careerRating: followupData.careerRating,
-                                notes: followupData.notes,
-                            }),
-                        },
-                    });
-
-                    if (result.ok) {
-                        console.log('✅ Follow-up saved to backend');
-                        // Reload follow-ups
-                        _backendFollowups = [];
-                        await loadBackendFollowups();
-                    } else {
-                        console.warn('Backend follow-up save failed:', result.data);
-                    }
-                } else {
-                    console.warn('No matching backend follow-up for period', periodDays);
-                }
-            } else {
-                console.warn('No backend trainee id — saved only to localStorage');
-            }
-        } catch (e) {
-            console.warn('Backend followup save error:', e);
-        }
-
-        // Restore button
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = originalHTML;
-
-        alert('✅ Follow-up details saved successfully!');
-        updateDashboard(followupData);
+        grid.innerHTML = items.map(a => `
+            <div class="achievement">
+                <div class="achievement-icon">${a.icon}</div>
+                <h4>${a.title}</h4>
+                <p style="font-size:8px;color:#888;margin-top:4px;">${a.desc}</p>
+            </div>
+        `).join('');
     }
 
     // ============================================================
-    // SAVE DRAFT (localStorage only)
+    // BUTTONS
     // ============================================================
-    function saveDraft() {
-        const followupData = {
-            period: document.getElementById('followupPeriod').value,
-            date: document.getElementById('followupDate').value,
-            status: document.getElementById('followupStatus').value,
-            contactMethod: document.getElementById('contactMethod').value,
-            notes: document.getElementById('followupNotes').value,
-            empStatus: document.getElementById('empStatus').value,
-            retentionStatus: document.getElementById('retentionStatus').value,
-            companyName: document.getElementById('companyName').value,
-            jobRole: document.getElementById('jobRole').value,
-            empStartDate: document.getElementById('empStartDate').value,
-            empType: document.getElementById('empType').value,
-            prevIncome: document.getElementById('prevIncome').value,
-            currIncome: document.getElementById('currIncome').value,
-            incomeSource: document.getElementById('incomeSource').value,
-            incomeStability: document.getElementById('incomeStability').value,
-            careerRating: document.getElementById('careerRating').value,
-            skillsImproved: document.getElementById('skillsImproved').value,
-            careerFeedback: document.getElementById('careerFeedback').value,
-            isDraft: true,
-            savedDate: new Date().toISOString()
-        };
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    function showNotifications() { alert('📬 No new notifications.'); }
+    function viewJourney() { alert('View Journey'); }
+    function viewAllHistory() { alert('View All History'); }
+    function generateSummary() { alert('Summary generated'); }
+    function downloadReport() { alert('Downloading report...'); }
 
-        try {
-            localStorage.setItem('followupDraft', JSON.stringify(followupData));
-            alert('📝 Draft saved successfully!');
-        } catch (e) {
-            alert('❌ Error saving draft.');
-        }
-    }
-
-    // ============================================================
-    // CLEAR FORM
-    // ============================================================
-    function clearForm() {
-        if (confirm('Are you sure you want to clear all fields?')) {
-            document.getElementById('followupForm').reset();
-            document.getElementById('incomeGrowth').value = '';
-            alert('✅ Form cleared successfully!');
-        }
-    }
-
-    // ============================================================
-    // UPDATE DASHBOARD
-    // ============================================================
-    function updateDashboard(data) {
-        if (data) {
-            if (data.period) {
-                document.getElementById('nextPeriodDays').textContent = data.period;
-                document.getElementById('nextFollowupTag').textContent = '📅 Next Follow-up: ' + data.period;
-            }
-            if (data.status) {
-                document.getElementById('nextPeriodStatus').textContent = data.status;
-            }
-
-            const hasEmployment = data.empStatus || data.companyName;
-            const hasIncome = data.currIncome > 0;
-            const hasFeedback = data.careerFeedback;
-
-            let score = 0;
-
-            if (hasEmployment) {
-                score += 35;
-                document.getElementById('item1').textContent = '✅ Employment Updated';
-            } else {
-                document.getElementById('item1').textContent = '⚠️ Employment Pending';
-            }
-
-            if (hasIncome) {
-                score += 30;
-                document.getElementById('item2').textContent = '✅ Income Updated';
-            } else {
-                document.getElementById('item2').textContent = '⚠️ Income Pending';
-            }
-
-            if (data.status === 'Completed') {
-                score += 20;
-                document.getElementById('item3').textContent = '✅ Follow-up Completed';
-            } else if (data.status === 'In Progress') {
-                score += 10;
-                document.getElementById('item3').textContent = '🔄 Follow-up In Progress';
-            } else {
-                document.getElementById('item3').textContent = '🔵 Follow-up Pending';
-            }
-
-            if (hasFeedback) {
-                score += 15;
-                document.getElementById('item4').textContent = '✅ Feedback Provided';
-            } else {
-                document.getElementById('item4').textContent = '⚠️ Feedback Pending';
-            }
-
-            document.getElementById('healthScore').textContent = score + '%';
-            document.getElementById('scoreInner').textContent = score + '%';
-            document.querySelector('.score-ring').style.background =
-                `conic-gradient(#2563eb 0deg ${score * 3.6}deg, #e2e8f0 ${score * 3.6}deg)`;
-
-            if (score >= 80) {
-                document.getElementById('healthStatus').textContent = 'Excellent';
-                document.getElementById('healthTitle').textContent = 'Excellent Progress 🎉';
-                document.getElementById('healthDescription').textContent = 'Your follow-up information is fully up to date!';
-            } else if (score >= 60) {
-                document.getElementById('healthStatus').textContent = 'Good';
-                document.getElementById('healthTitle').textContent = 'Good Progress 📈';
-                document.getElementById('healthDescription').textContent = 'Your employment and follow-up information is mostly up to date.';
-            } else if (score >= 40) {
-                document.getElementById('healthStatus').textContent = 'Average';
-                document.getElementById('healthTitle').textContent = 'Needs Attention ⚠️';
-                document.getElementById('healthDescription').textContent = 'Please update your employment and income details.';
-            } else {
-                document.getElementById('healthStatus').textContent = 'Needs Update';
-                document.getElementById('healthTitle').textContent = 'Action Required 🔴';
-                document.getElementById('healthDescription').textContent = 'Please complete your follow-up information.';
-            }
-        }
-    }
-
-    // ============================================================
-    // NOTIFICATIONS
-    // ============================================================
-    function showNotifications() {
-        alert('📬 No new notifications.');
-    }
-
-    // ============================================================
-    // LOGOUT
-    // ============================================================
     async function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+        if (!confirm('Are you sure you want to logout?')) return;
+        try {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
             localStorage.removeItem('currentTraineeEmail');
             localStorage.removeItem('currentTraineeId');
-            window.location.href = '../../auth/login.html';
-        }
+            await auth.signOut();
+        } catch (e) {}
+        window.location.href = '../auth/login.html?role=trainee';
     }
 
-    // ============================================================
-    // THEME
-    // ============================================================
     function toggleTheme() {
         const html = document.documentElement;
-        const current = html.getAttribute('data-theme') || 'light';
-        const next = current === 'dark' ? 'light' : 'dark';
+        const next = (html.getAttribute('data-theme') || 'light') === 'dark' ? 'light' : 'dark';
         html.setAttribute('data-theme', next);
         try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
         const icon = document.querySelector('.theme-toggle i');
@@ -1489,42 +1465,9 @@
     }
 
     // ============================================================
-    // LOAD SAVED DATA (localStorage fallback for form)
-    // ============================================================
-    function loadLocalSavedData() {
-        const savedData = localStorage.getItem('followupData');
-        if (savedData) {
-            try {
-                const data = JSON.parse(savedData);
-                Object.keys(data).forEach(key => {
-                    const element = document.getElementById(key);
-                    if (element && data[key]) element.value = data[key];
-                });
-                calculateIncome();
-                updateDashboard(data);
-            } catch (e) { console.error('Error loading saved data:', e); }
-        }
-
-        const draftData = localStorage.getItem('followupDraft');
-        if (draftData && !savedData) {
-            try {
-                const data = JSON.parse(draftData);
-                Object.keys(data).forEach(key => {
-                    const element = document.getElementById(key);
-                    if (element && data[key] && key !== 'isDraft' && key !== 'savedDate') {
-                        element.value = data[key];
-                    }
-                });
-                calculateIncome();
-            } catch (e) { console.error('Error loading draft:', e); }
-        }
-    }
-
-    // ============================================================
     // INIT
     // ============================================================
     document.addEventListener('DOMContentLoaded', async function() {
-        // Apply theme
         try {
             const saved = localStorage.getItem('skillintel-theme') || 'light';
             document.documentElement.setAttribute('data-theme', saved);
@@ -1532,65 +1475,37 @@
             if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         } catch (e) {}
 
-        await loadUserData();
-        await loadBackendFollowups();
-        loadLocalSavedData();
-        calculateIncome();
-    });
+        try {
+            await requireAuth();
+            const { traineeData, employmentData } = await loadAllData();
 
-    // ============================================================
-    // MOBILE SIDEBAR TOGGLE
-    // ============================================================
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebar = document.getElementById('sidebar');
-
-        const toggleBtn = document.createElement('button');
-        toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-        toggleBtn.style.cssText = `
-            display: none;
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 200;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            color: white;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(37,99,235,0.3);
-        `;
-        toggleBtn.id = 'menuToggle';
-        document.body.appendChild(toggleBtn);
-
-        toggleBtn.addEventListener('click', function() {
-            sidebar.classList.toggle('open');
-        });
-
-        if (window.innerWidth <= 768) {
-            toggleBtn.style.display = 'block';
+            if (traineeData) {
+                updateUserInfo(traineeData);
+                updateHeroBadges(traineeData, employmentData || {});
+                updateStats(traineeData, employmentData || {});
+                updateTimeline(traineeData, employmentData || {});
+                updateCurrentJob(employmentData || {}, traineeData);
+                updateScore(employmentData || {}, traineeData);
+                updateIncomeChart(employmentData || {}, traineeData);
+                updateEmploymentHistory(employmentData || {}, traineeData);
+                updateRetention(employmentData || {});
+                updateAchievements(traineeData, employmentData || {});
+            }
+        } catch (e) {
+            console.warn('Init aborted:', e);
         }
 
-        window.addEventListener('resize', function() {
-            if (window.innerWidth <= 768) {
-                toggleBtn.style.display = 'block';
-            } else {
-                toggleBtn.style.display = 'none';
-                sidebar.classList.remove('open');
-            }
-        });
-
-        document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 768) {
-                if (!sidebar.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
-                    sidebar.classList.remove('open');
+        document.addEventListener('click', function(ev) {
+            const sb = document.getElementById('sidebar');
+            const tg = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sb.classList.contains('open')) {
+                if (!sb.contains(ev.target) && ev.target !== tg && !tg.contains(ev.target)) {
+                    sb.classList.remove('open');
                 }
             }
         });
     });
 </script>
-
 <script src="../js/script.js"></script>
 </body>
 </html>

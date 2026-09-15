@@ -1,5 +1,5 @@
 // ============================================================
-// SkillBridge · api.js
+// SkillBridge · api.js  (v2.0 · session-safe)
 // Safe wrapper around fetch that:
 //   - ALWAYS sends cookies (credentials: 'include')
 //   - NEVER throws — always returns { ok, data, status }
@@ -34,7 +34,6 @@
                 cache: 'no-store',
             });
 
-            // Try to parse JSON, fall back to text
             let data = null;
             const text = await res.text();
             if (text) {
@@ -42,12 +41,10 @@
                 catch (e) { data = { raw: text }; }
             }
 
-            // Success = 2xx
             if (res.ok) {
                 return { ok: true, status: res.status, data: data };
             }
 
-            // Non-2xx → still return data so UI can show the error
             return {
                 ok: false,
                 status: res.status,
@@ -65,20 +62,12 @@
     }
 
     // ------------------------------------------------------------
-    // CONVENIENCE: apiGet / apiPost / apiPut / apiDelete
+    // CONVENIENCE HELPERS
     // ------------------------------------------------------------
-    function apiGet(url) {
-        return apiCall(url, { method: 'GET' });
-    }
-    function apiPost(url, body) {
-        return apiCall(url, { method: 'POST', body: body });
-    }
-    function apiPut(url, body) {
-        return apiCall(url, { method: 'PUT', body: body });
-    }
-    function apiDelete(url) {
-        return apiCall(url, { method: 'DELETE' });
-    }
+    function apiGet(url)        { return apiCall(url, { method: 'GET' }); }
+    function apiPost(url, body) { return apiCall(url, { method: 'POST',   body: body }); }
+    function apiPut(url, body)  { return apiCall(url, { method: 'PUT',    body: body }); }
+    function apiDelete(url)     { return apiCall(url, { method: 'DELETE' }); }
 
     // ------------------------------------------------------------
     // SESSION HELPERS
@@ -91,14 +80,23 @@
 
     function clearSession() {
         try {
-            ['isLoggedIn','userRole','userId','userName','userEmail',
-             'currentTraineeEmail','currentEmployerEmail','currentProviderEmail',
-             'currentGovtOfficialId','govtOfficerName','govtAccessLevel']
-                .forEach(function (k) { localStorage.removeItem(k); });
+            [
+                'isLoggedIn', 'userRole', 'userId', 'userName', 'userEmail',
+                'currentTraineeEmail', 'currentEmployerEmail',
+                'currentProviderEmail', 'currentGovtOfficialId',
+                'govtOfficerName', 'govtAccessLevel', 'govtDepartment',
+                'selectedRole'
+            ].forEach(function (k) { localStorage.removeItem(k); });
         } catch (e) {}
     }
 
     async function logout() {
+        // Prefer the shared skillintelLogout (from script.js) if present
+        if (typeof global.skillintelLogout === 'function') {
+            return global.skillintelLogout();
+        }
+
+        // Fallback
         try { await apiPost('/api/auth/logout', {}); } catch (e) {}
         clearSession();
         window.location.href = '../auth/login.html';
@@ -107,14 +105,14 @@
     // ------------------------------------------------------------
     // EXPORT TO GLOBAL SCOPE
     // ------------------------------------------------------------
-    global.apiCall = apiCall;
-    global.apiGet = apiGet;
-    global.apiPost = apiPost;
-    global.apiPut = apiPut;
-    global.apiDelete = apiDelete;
+    global.apiCall       = apiCall;
+    global.apiGet        = apiGet;
+    global.apiPost       = apiPost;
+    global.apiPut        = apiPut;
+    global.apiDelete     = apiDelete;
     global.getCurrentUser = getCurrentUser;
-    global.clearSession = clearSession;
-    global.logout = logout;
+    global.clearSession  = clearSession;
+    global.logout        = logout;
 
     console.log('✅ api.js loaded — cookies enabled, safe wrapper active');
 

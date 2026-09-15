@@ -12,6 +12,11 @@
 
     <link rel="stylesheet" href="../css/style.css">
 
+    <!-- Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
         body {
@@ -704,10 +709,12 @@
     </div>
 
     <div class="sidebar-user">
-        <div class="avatar" id="sidebarAvatar">E</div>
+        <div class="avatar" id="sidebarAvatar">
+            <span class="online-dot"></span>
+        </div>
         <div class="info">
-            <div class="name" id="sidebarName">Employer</div>
-            <div class="company" id="sidebarCompany">Company Name</div>
+            <div class="name" id="sidebarName"></div>
+            <div class="company" id="sidebarCompany"></div>
             <div class="role">Employer</div>
         </div>
     </div>
@@ -716,7 +723,7 @@
         <div class="menu-label">Main Menu</div>
         <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
         <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees</a>
-        <a href="employment-details.html"><i class="fas fa-briefcase"></i> Employment Details</a>
+        <a href="employement-details.html"><i class="fas fa-briefcase"></i> Employment Details</a>
         <a class="active" href="employer-feedback-form.html"><i class="fas fa-star"></i> Submit Feedback</a>
         <a href="feedback&skillsgap.html"><i class="fas fa-chart-bar"></i> Feedback & Skill Gap</a>
     </div>
@@ -729,7 +736,6 @@
 <!-- ===== MAIN CONTENT ===== -->
 <div class="main-content">
 
-    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
@@ -742,25 +748,23 @@
         </div>
         <div class="header-right">
             <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
-  <i class="fas fa-moon"></i>
-</button>
+                <i class="fas fa-moon"></i>
+            </button>
             <span class="date" id="dateDisplay"></span>
             <div class="notif" onclick="showNotifications()">
                 <i class="fas fa-bell"></i>
                 <span class="badge" id="notifBadge">0</span>
             </div>
             <button class="profile-btn" onclick="toggleProfileMenu()">
-                <div class="avatar" id="headerAvatar">E</div>
-                <span class="name" id="headerName">Employer</span>
+                <div class="avatar" id="headerAvatar"></div>
+                <span class="name" id="headerName"></span>
                 <i class="fas fa-chevron-down"></i>
             </button>
         </div>
     </header>
 
-    <!-- ===== CONTAINER ===== -->
     <div class="container">
 
-        <!-- WELCOME -->
         <div class="welcome">
             <div class="welcome-content">
                 <h2><i class="fas fa-hand-peace"></i> Share Your Feedback</h2>
@@ -773,13 +777,11 @@
             </div>
         </div>
 
-        <!-- ALERT -->
         <div class="alert" id="alertBox">
             <i class="fas fa-check-circle" id="alertIcon"></i>
             <div class="alert-msg" id="alertMessage">Feedback submitted successfully!</div>
         </div>
 
-        <!-- FORM PROGRESS -->
         <div class="form-progress" id="formProgress">
             <div class="progress-step">
                 <div class="step-circle active" id="step1Circle">1</div>
@@ -802,10 +804,9 @@
             </div>
         </div>
 
-        <!-- ===== FEEDBACK FORM ===== -->
         <form id="feedbackForm" onsubmit="return false;">
 
-            <!-- STEP 1: EMPLOYER & TRAINEE DETAILS -->
+            <!-- STEP 1 -->
             <div class="form-section" id="section1">
                 <div class="section-title">
                     <i class="fas fa-user"></i>
@@ -882,7 +883,7 @@
                 </div>
             </div>
 
-            <!-- STEP 2: RATING SECTION -->
+            <!-- STEP 2 -->
             <div class="form-section" id="section2" style="display:none;">
                 <div class="section-title">
                     <i class="fas fa-star"></i>
@@ -950,7 +951,7 @@
                 </div>
             </div>
 
-            <!-- STEP 3: COMPETENCY RATINGS -->
+            <!-- STEP 3 -->
             <div class="form-section" id="section3" style="display:none;">
                 <div class="section-title">
                     <i class="fas fa-chart-bar"></i>
@@ -1021,7 +1022,7 @@
                 </div>
             </div>
 
-            <!-- STEP 4: FEEDBACK TEXT -->
+            <!-- STEP 4 -->
             <div class="form-section" id="section4" style="display:none;">
                 <div class="section-title">
                     <i class="fas fa-comment-dots"></i>
@@ -1046,7 +1047,6 @@
                     <span class="helper-text"><i class="fas fa-info-circle"></i> Constructive feedback is valuable for growth</span>
                 </div>
 
-                <!-- Quick Feedback Tags -->
                 <div style="margin-top:16px;">
                     <label style="font-weight:600; font-size:13px; color:#334155; display:block; margin-bottom:8px;">
                         <i class="fas fa-tags"></i> Quick Feedback Tags
@@ -1085,55 +1085,107 @@
 
 <script>
     // ============================================================
-    // DATA LOADER
+    // FIREBASE CONFIG
     // ============================================================
-    function getEmployerData() {
-        let data = localStorage.getItem('employerData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing employerData:', e); }
-        }
-        return null;
-    }
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
 
-    function getFeedbackData() {
-        let data = localStorage.getItem('employerFeedbackData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing feedback data:', e); }
-        }
-        return [];
-    }
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let _firebaseUser = null;
+    let _userProfile = null;
 
     // ============================================================
-    // UPDATE SIDEBAR
+    // AUTH GUARD
     // ============================================================
-    function updateSidebar() {
-        const employerData = getEmployerData();
-        if (employerData && employerData.contactPerson) {
-            const initial = employerData.contactPerson.charAt(0).toUpperCase();
-            document.getElementById('sidebarAvatar').textContent = initial;
-            document.getElementById('sidebarName').textContent = employerData.contactPerson;
-            document.getElementById('sidebarCompany').textContent = employerData.orgName || 'Company';
-            document.getElementById('headerAvatar').textContent = initial;
-            document.getElementById('headerName').textContent = employerData.contactPerson;
-        }
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=employer';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=employer';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'employer') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=employer';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
+            });
+        });
     }
+
+    // ============================================================
+    // EMPLOYER DATA
+    // ============================================================
+    async function getEmployerData() {
+        if (!_firebaseUser) return { contactPerson: '', orgName: '', email: '', mobile: '' };
+        const uid = _firebaseUser.uid;
+        let data = null;
+        try {
+            const snap = await db.collection('employers').doc(uid).get();
+            if (snap.exists) data = snap.data();
+        } catch (e) {}
+        if (!data && _userProfile) data = _userProfile;
+        if (!data) {
+            return {
+                contactPerson: _firebaseUser.displayName || _firebaseUser.email || '',
+                orgName: '',
+                email: _firebaseUser.email || '',
+                mobile: ''
+            };
+        }
+        return {
+            contactPerson: data.contactPerson || data.fullName || _firebaseUser.displayName || '',
+            orgName: data.orgName || '',
+            email: data.email || _firebaseUser.email || '',
+            mobile: data.mobile || ''
+        };
+    }
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let employerData = {};
+    let currentStep = 1;
+    const totalSteps = 4;
+    let selectedTags = [];
+    let selectedRating = 0;
 
     // ============================================================
     // STEP NAVIGATION
     // ============================================================
-    let currentStep = 1;
-    const totalSteps = 4;
-    let selectedTags = [];
-
     function goToStep(step) {
         if (step > currentStep) {
             if (currentStep === 1 && !validateStep1()) return;
             if (currentStep === 2 && !validateStep2()) return;
             if (currentStep === 3 && !validateStep3()) return;
         }
-
         currentStep = step;
         updateSteps();
     }
@@ -1141,11 +1193,8 @@
     function updateSteps() {
         for (let i = 1; i <= totalSteps; i++) {
             const section = document.getElementById('section' + i);
-            if (section) {
-                section.style.display = (i === currentStep) ? 'block' : 'none';
-            }
+            if (section) section.style.display = (i === currentStep) ? 'block' : 'none';
         }
-
         for (let i = 1; i <= totalSteps; i++) {
             const circle = document.getElementById('step' + i + 'Circle');
             const label = document.getElementById('step' + i + 'Label');
@@ -1160,14 +1209,10 @@
                 else if (i < currentStep) label.classList.add('completed');
             }
         }
-
         for (let i = 1; i < totalSteps; i++) {
             const line = document.getElementById('line' + i);
-            if (line) {
-                line.classList.toggle('completed', i < currentStep);
-            }
+            if (line) line.classList.toggle('completed', i < currentStep);
         }
-
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -1189,24 +1234,20 @@
         const traineeName = document.getElementById('traineeName').value.trim();
 
         if (!employerOrg) { setError('wrapOrg', 'errOrg', true); valid = false; }
-        else { setError('wrapOrg', 'errOrg', false); }
+        else setError('wrapOrg', 'errOrg', false);
 
         if (!employerName) { setError('wrapName', 'errName', true); valid = false; }
-        else { setError('wrapName', 'errName', false); }
+        else setError('wrapName', 'errName', false);
 
         if (!employerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(employerEmail)) {
             setError('wrapEmail', 'errEmail', true);
             valid = false;
-        } else {
-            setError('wrapEmail', 'errEmail', false);
-        }
+        } else setError('wrapEmail', 'errEmail', false);
 
         if (!traineeName) { setError('wrapTrainee', 'errTrainee', true); valid = false; }
-        else { setError('wrapTrainee', 'errTrainee', false); }
+        else setError('wrapTrainee', 'errTrainee', false);
 
-        if (!valid) {
-            showAlert('Please fill all required fields in <strong>Employer & Trainee Details</strong>.', 'error');
-        }
+        if (!valid) showAlert('Please fill all required fields in <strong>Employer & Trainee Details</strong>.', 'error');
         return valid;
     }
 
@@ -1220,18 +1261,14 @@
         return true;
     }
 
-    function validateStep3() {
-        return true;
-    }
+    function validateStep3() { return true; }
 
     // ============================================================
     // STAR RATING
     // ============================================================
-    let selectedRating = 0;
     const stars = document.querySelectorAll('.star');
     const ratingLabel = document.getElementById('ratingLabel');
     const ratingEmoji = document.getElementById('ratingEmoji');
-
     const ratingEmojis = { 1: '😞', 2: '😕', 3: '😐', 4: '😊', 5: '🌟' };
 
     stars.forEach(star => {
@@ -1240,12 +1277,9 @@
             updateStars(selectedRating);
             document.getElementById('errRating').style.display = 'none';
         });
-
         star.addEventListener('mouseenter', function() {
-            const value = parseInt(this.dataset.value);
-            updateStarsHover(value);
+            updateStarsHover(parseInt(this.dataset.value));
         });
-
         star.addEventListener('mouseleave', function() {
             updateStars(selectedRating);
         });
@@ -1292,23 +1326,13 @@
             const id = this.id;
             const val = parseInt(this.value);
             document.getElementById(id + 'Val').textContent = val + '%';
-
             const statusEl = document.getElementById(id + 'Status');
             if (statusEl) {
                 statusEl.className = 'comp-status';
-                if (val >= 85) {
-                    statusEl.textContent = 'Excellent';
-                    statusEl.classList.add('excellent');
-                } else if (val >= 70) {
-                    statusEl.textContent = 'Good';
-                    statusEl.classList.add('good');
-                } else if (val >= 50) {
-                    statusEl.textContent = 'Average';
-                    statusEl.classList.add('average');
-                } else {
-                    statusEl.textContent = 'Needs Improvement';
-                    statusEl.classList.add('needs');
-                }
+                if (val >= 85) { statusEl.textContent = 'Excellent'; statusEl.classList.add('excellent'); }
+                else if (val >= 70) { statusEl.textContent = 'Good'; statusEl.classList.add('good'); }
+                else if (val >= 50) { statusEl.textContent = 'Average'; statusEl.classList.add('average'); }
+                else { statusEl.textContent = 'Needs Improvement'; statusEl.classList.add('needs'); }
             }
         });
     });
@@ -1328,7 +1352,7 @@
     }
 
     // ============================================================
-    // DATE DISPLAY
+    // DATE
     // ============================================================
     function updateDate() {
         const now = new Date();
@@ -1337,24 +1361,83 @@
         });
         document.getElementById('feedbackDate').value = now.toISOString().split('T')[0];
     }
-    updateDate();
+
+    // ============================================================
+    // SIDEBAR
+    // ============================================================
+    function updateSidebar() {
+        const initial = (employerData.contactPerson || _firebaseUser?.email || '').charAt(0).toUpperCase();
+
+        const sidebarAvatar = document.getElementById('sidebarAvatar');
+        if (sidebarAvatar) {
+            const onlineDot = sidebarAvatar.querySelector('.online-dot');
+            sidebarAvatar.innerHTML = initial || '';
+            if (onlineDot) sidebarAvatar.appendChild(onlineDot);
+            else {
+                const dot = document.createElement('span');
+                dot.className = 'online-dot';
+                sidebarAvatar.appendChild(dot);
+            }
+        }
+        document.getElementById('sidebarName').textContent = employerData.contactPerson || '';
+        document.getElementById('sidebarCompany').textContent = employerData.orgName || '';
+        document.getElementById('headerAvatar').textContent = initial || '';
+        document.getElementById('headerName').textContent = employerData.contactPerson || '';
+    }
+
+    // ============================================================
+    // AUTO-FILL EMPLOYER FIELDS
+    // ============================================================
+    function autoFillEmployerData() {
+        if (employerData.orgName) document.getElementById('employerOrg').value = employerData.orgName;
+        if (employerData.contactPerson) document.getElementById('employerName').value = employerData.contactPerson;
+        if (employerData.email) document.getElementById('employerEmail').value = employerData.email;
+        if (employerData.mobile) document.getElementById('employerPhone').value = employerData.mobile;
+    }
+
+    // ============================================================
+    // UPDATE WELCOME STATS (count from Firestore)
+    // ============================================================
+    async function updateWelcomeStats() {
+        try {
+            const snap = await db.collection('feedback')
+                .where('employerUid', '==', _firebaseUser.uid)
+                .get();
+            const feedback = [];
+            snap.forEach(d => feedback.push(d.data()));
+
+            document.getElementById('totalFeedback').textContent = feedback.length;
+            const avg = feedback.length > 0
+                ? (feedback.reduce((a,b) => a + (b.rating || 0), 0) / feedback.length)
+                : 0;
+            document.getElementById('avgRating').textContent = avg.toFixed(1);
+            document.getElementById('feedbackStatus').textContent = feedback.length > 0 ? '✅ Active' : 'Ready';
+            document.getElementById('notifBadge').textContent = feedback.length;
+        } catch (e) {
+            console.warn('Could not load feedback stats:', e);
+        }
+    }
 
     // ============================================================
     // NOTIFICATIONS / PROFILE / LOGOUT
     // ============================================================
     function showNotifications() {
-        const feedback = getFeedbackData();
-        alert(`📬 Notifications\n\n• ${feedback.length} feedback entries submitted\n• ${feedback.filter(f => f.rating >= 4).length} positive ratings\n• ${feedback.filter(f => f.rating < 3).length} low ratings`);
+        alert(`📬 Notifications\n\n• Check your submitted feedback in the Feedback & Skill Gap page.`);
     }
 
-    function toggleProfileMenu() {
-        alert('👤 Profile Menu\n\nSettings · Support · Logout');
-    }
+    function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
 
-    function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
-            window.location.href = '../../auth/login.html';
+    async function logout() {
+        if (confirm('Logout?')) {
+            try { await auth.signOut(); } catch (e) {}
+            try {
+                localStorage.removeItem('currentEmployerEmail');
+                localStorage.removeItem('currentEmployerId');
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userId');
+            } catch (e) {}
+            window.location.href = '../auth/login.html?role=employer';
         }
     }
 
@@ -1379,9 +1462,9 @@
     }
 
     // ============================================================
-    // FORM SUBMISSION
+    // FORM SUBMISSION — writes to Firestore `feedback` collection
     // ============================================================
-    function submitFeedback() {
+    async function submitFeedback() {
         if (!validateStep1()) { goToStep(1); return; }
         if (!validateStep2()) { goToStep(2); return; }
         if (!validateStep3()) { goToStep(3); return; }
@@ -1392,29 +1475,31 @@
             showAlert('Please provide <strong>detailed feedback</strong> (minimum 10 characters).', 'error');
             goToStep(4);
             return;
-        } else {
-            setError('wrapFeedback', 'errFeedback', false);
-        }
+        } else setError('wrapFeedback', 'errFeedback', false);
 
         const competencies = [
-            { name: 'Technical Skills', score: parseInt(document.getElementById('compTechnical').value) },
-            { name: 'Communication', score: parseInt(document.getElementById('compCommunication').value) },
-            { name: 'Problem Solving', score: parseInt(document.getElementById('compProblemSolving').value) },
-            { name: 'Teamwork', score: parseInt(document.getElementById('compTeamwork').value) },
-            { name: 'Work Ethic', score: parseInt(document.getElementById('compWorkEthic').value) },
-            { name: 'Adaptability', score: parseInt(document.getElementById('compAdaptability').value) },
-            { name: 'Leadership', score: parseInt(document.getElementById('compLeadership').value) },
-            { name: 'Time Management', score: parseInt(document.getElementById('compTimeManagement').value) }
+            { name: 'Technical Skills',   score: parseInt(document.getElementById('compTechnical').value) },
+            { name: 'Communication',      score: parseInt(document.getElementById('compCommunication').value) },
+            { name: 'Problem Solving',    score: parseInt(document.getElementById('compProblemSolving').value) },
+            { name: 'Practical Skills',   score: parseInt(document.getElementById('compTeamwork').value) },
+            { name: 'Work Ethic',         score: parseInt(document.getElementById('compWorkEthic').value) },
+            { name: 'Adaptability',       score: parseInt(document.getElementById('compAdaptability').value) },
+            { name: 'Leadership',         score: parseInt(document.getElementById('compLeadership').value) },
+            { name: 'Time Management',    score: parseInt(document.getElementById('compTimeManagement').value) }
         ];
 
+        const traineeName = document.getElementById('traineeName').value.trim();
+        const traineeId = document.getElementById('traineeId').value.trim() || ('TRN' + Date.now().toString().slice(-6));
+
         const feedbackData = {
-            id: 'FB' + Date.now().toString().slice(-6),
-            employerOrg: document.getElementById('employerOrg').value.trim(),
+            traineeId,
+            traineeName,
+            traineeEmail: '',
+            employerUid: _firebaseUser ? _firebaseUser.uid : null,
             employerName: document.getElementById('employerName').value.trim(),
+            employerOrg: document.getElementById('employerOrg').value.trim(),
             employerEmail: document.getElementById('employerEmail').value.trim(),
             employerPhone: document.getElementById('employerPhone').value.trim() || '',
-            traineeName: document.getElementById('traineeName').value.trim(),
-            traineeId: document.getElementById('traineeId').value.trim() || 'TRN' + Date.now().toString().slice(-4),
             programScheme: document.getElementById('programScheme').value || '',
             employmentDuration: document.getElementById('employmentDuration').value || '',
             overallExperience: document.getElementById('overallExperience').value || '',
@@ -1423,52 +1508,42 @@
             text: feedbackText,
             improvementAreas: document.getElementById('improvementAreas').value.trim() || '',
             tags: selectedTags,
-            competencies: competencies,
-            avatar: document.getElementById('traineeName').value.trim().charAt(0).toUpperCase() || 'T',
-            color: '#2563eb',
-            timestamp: new Date().toISOString()
+            competencies,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        try {
-            let allFeedback = JSON.parse(localStorage.getItem('employerFeedbackData') || '[]');
-            allFeedback.push(feedbackData);
-            localStorage.setItem('employerFeedbackData', JSON.stringify(allFeedback));
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
-            console.log('✅ Feedback saved:', feedbackData);
+        try {
+            await db.collection('feedback').add(feedbackData);
+
             showAlert(`
                 <strong>✅ Feedback Submitted Successfully!</strong><br>
-                Trainee: ${feedbackData.traineeName} · Rating: ${'★'.repeat(feedbackData.rating)}${'☆'.repeat(5-feedbackData.rating)}<br>
+                Trainee: ${traineeName} · Rating: ${'★'.repeat(selectedRating)}${'☆'.repeat(5-selectedRating)}<br>
                 Thank you for your valuable feedback!
             `, 'success');
 
-            document.getElementById('notifBadge').textContent = allFeedback.length;
-            updateWelcomeStats();
-
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            await updateWelcomeStats();
 
             setTimeout(() => {
                 resetForm();
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
                 goToStep(1);
-            }, 3000);
-
+            }, 2500);
         } catch (e) {
-            console.error('Error saving feedback:', e);
-            showAlert('Error saving feedback. Please try again.', 'error');
+            console.error('Feedback submission failed:', e);
+            showAlert('❌ Could not submit feedback. Check Firestore rules.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
         }
     }
 
-    function updateWelcomeStats() {
-        const feedback = getFeedbackData();
-        document.getElementById('totalFeedback').textContent = feedback.length;
-        const avg = feedback.length > 0 ? (feedback.reduce((a,b) => a + b.rating, 0) / feedback.length) : 0;
-        document.getElementById('avgRating').textContent = avg.toFixed(1);
-        document.getElementById('feedbackStatus').textContent = feedback.length > 0 ? '✅ Active' : 'Ready';
-    }
-
+    // ============================================================
+    // RESET
+    // ============================================================
     function resetForm() {
         document.getElementById('feedbackForm').reset();
         selectedRating = 0;
@@ -1480,14 +1555,9 @@
         document.querySelectorAll('.tag-option').forEach(el => el.classList.remove('selected'));
 
         const defaults = {
-            compTechnical: 75,
-            compCommunication: 70,
-            compProblemSolving: 72,
-            compTeamwork: 78,
-            compWorkEthic: 80,
-            compAdaptability: 68,
-            compLeadership: 60,
-            compTimeManagement: 72
+            compTechnical: 75, compCommunication: 70, compProblemSolving: 72,
+            compTeamwork: 78, compWorkEthic: 80, compAdaptability: 68,
+            compLeadership: 60, compTimeManagement: 72
         };
         Object.keys(defaults).forEach(key => {
             const el = document.getElementById(key);
@@ -1514,54 +1584,14 @@
         autoFillEmployerData();
     }
 
-    function autoFillEmployerData() {
-        const employerData = getEmployerData();
-        if (employerData) {
-            if (employerData.orgName) document.getElementById('employerOrg').value = employerData.orgName;
-            if (employerData.contactPerson) document.getElementById('employerName').value = employerData.contactPerson;
-            if (employerData.email) document.getElementById('employerEmail').value = employerData.email;
-        }
-        updateWelcomeStats();
-    }
-
-    // ============================================================
-    // SET ACTIVE SIDEBAR
-    // ============================================================
-    function setActiveSidebar() {
-        const currentPage = window.location.pathname.split('/').pop() || 'employer-feedback-form.html';
-        const pageMap = {
-            'employer-feedback-form.html': 'feedback-form',
-            'dashboard.html': 'overview',
-            'verify-trainee.html': 'verify',
-            'employment-details.html': 'employment',
-            'feedback&skillsgap.html': 'skills'
-        };
-        const currentId = pageMap[currentPage] || 'feedback-form';
-
-        document.querySelectorAll('.menu a').forEach(link => {
-            link.classList.remove('active');
-            const href = link.getAttribute('href');
-            if (href) {
-                const page = href.split('/').pop();
-                const pageId = pageMap[page] || '';
-                if (pageId === currentId) {
-                    link.classList.add('active');
-                }
-            }
-        });
-    }
-
     // ============================================================
     // KEYBOARD SHORTCUTS
     // ============================================================
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault();
-            if (currentStep === totalSteps) {
-                submitFeedback();
-            } else {
-                goToStep(currentStep + 1);
-            }
+            if (currentStep === totalSteps) submitFeedback();
+            else goToStep(currentStep + 1);
         }
         if (e.key === 'Escape') {
             if (confirm('Are you sure you want to clear the form?')) {
@@ -1572,16 +1602,42 @@
     });
 
     // ============================================================
+    // THEME
+    // ============================================================
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    // ============================================================
     // INIT
     // ============================================================
-    document.addEventListener('DOMContentLoaded', function() {
-        updateSidebar();
-        setActiveSidebar();
-        autoFillEmployerData();
-        updateSteps();
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
 
-        const feedback = getFeedbackData();
-        document.getElementById('notifBadge').textContent = feedback.length;
+        updateDate();
+
+        try {
+            await requireAuth();
+            employerData = await getEmployerData();
+            updateSidebar();
+            autoFillEmployerData();
+            updateSteps();
+            await updateWelcomeStats();
+            console.log('✅ Employer Feedback form ready');
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
 
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
@@ -1592,11 +1648,6 @@
                 }
             }
         });
-
-        console.log('📝 Enhanced Employer Feedback Form loaded!');
-        console.log('📋 Existing feedback:', feedback.length);
-        console.log('💡 Keyboard shortcuts: Ctrl+Enter to submit, Escape to clear');
-        console.log('📂 Location: frontend/employer/');
     });
 </script>
 

@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="../css/style.css">
 
-    <!-- ✅ Firebase SDK (compat — works directly in <script> tags) -->
+    <!-- ✅ Firebase SDK (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -76,6 +76,212 @@
             box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
         }
 
+        .contact-admin-float {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 190;
+            padding: 0.85rem 1.4rem;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 12px 30px -8px rgba(37, 99, 235, 0.5);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: inherit;
+        }
+        .contact-admin-float:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 18px 40px -10px rgba(37, 99, 235, 0.6);
+        }
+        .contact-admin-float i { font-size: 1rem; }
+
+        .contact-admin-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 18, 32, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .contact-admin-overlay.show { display: flex; }
+
+        .contact-admin-modal {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 2rem 2.2rem 1.8rem;
+            max-width: 540px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.5);
+            animation: contactModalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+        html[data-theme="dark"] .contact-admin-modal {
+            background: #151E32;
+            color: #F1F5F9;
+        }
+        @keyframes contactModalIn {
+            from { opacity: 0; transform: scale(0.92) translateY(20px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .contact-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.4rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        html[data-theme="dark"] .contact-header { border-bottom-color: rgba(255,255,255,0.08); }
+
+        .contact-header h3 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            letter-spacing: -0.02em;
+        }
+        html[data-theme="dark"] .contact-header h3 { color: #F1F5F9; }
+        .contact-header h3 i { color: #2563eb; font-size: 1.1rem; }
+
+        .contact-header-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 0.9rem;
+            display: grid;
+            place-items: center;
+            transition: 0.15s;
+        }
+        html[data-theme="dark"] .contact-header-close {
+            background: #1E293B; color: #94A3B8;
+        }
+        .contact-header-close:hover { background: #e2e8f0; color: #0b1a33; }
+        html[data-theme="dark"] .contact-header-close:hover { background: #334155; color: #F1F5F9; }
+
+        .contact-intro {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-bottom: 1.4rem;
+            padding: 0.7rem 1rem;
+            background: #eff6ff;
+            border-left: 3px solid #2563eb;
+            border-radius: 10px;
+            line-height: 1.5;
+        }
+        html[data-theme="dark"] .contact-intro {
+            background: rgba(37, 99, 235, 0.12);
+            color: #93C5FD;
+        }
+
+        .contact-field { margin-bottom: 1rem; }
+        .contact-field label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.4rem;
+        }
+        html[data-theme="dark"] .contact-field label { color: #E2E8F0; }
+
+        .contact-field input,
+        .contact-field select,
+        .contact-field textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            font-weight: 500;
+            color: #0b1a33;
+            background: #f8fafc;
+            outline: none;
+            transition: 0.15s;
+        }
+        .contact-field input:focus,
+        .contact-field select:focus,
+        .contact-field textarea:focus {
+            border-color: #2563eb;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+        }
+        html[data-theme="dark"] .contact-field input,
+        html[data-theme="dark"] .contact-field select,
+        html[data-theme="dark"] .contact-field textarea {
+            background: #1A2338;
+            border-color: rgba(255,255,255,0.12);
+            color: #F1F5F9;
+        }
+        .contact-field textarea { resize: vertical; min-height: 100px; }
+
+        .contact-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.9rem;
+        }
+
+        .contact-actions {
+            display: flex;
+            gap: 0.7rem;
+            justify-content: flex-end;
+            margin-top: 1.4rem;
+            padding-top: 1.2rem;
+            border-top: 2px solid #f1f5f9;
+        }
+        html[data-theme="dark"] .contact-actions { border-top-color: rgba(255,255,255,0.08); }
+
+        .contact-btn {
+            padding: 0.75rem 1.4rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: 0.2s;
+        }
+        .contact-btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid #e2e8f0;
+        }
+        .contact-btn-cancel:hover { background: #e2e8f0; }
+        .contact-btn-send {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            box-shadow: 0 8px 20px -8px rgba(37, 99, 235, 0.5);
+        }
+        .contact-btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px -8px rgba(37, 99, 235, 0.6);
+        }
+        .contact-btn-send:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
         .register-wrapper {
             width: 100%;
             max-width: 880px;
@@ -91,7 +297,6 @@
         .register-wrapper::-webkit-scrollbar { width: 5px; }
         .register-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         .register-wrapper::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 10px; }
-        .register-wrapper::-webkit-scrollbar-thumb:hover { background: #a5b4fc; }
 
         .header {
             display: flex;
@@ -304,7 +509,7 @@
             box-shadow: 0 6px 20px -8px rgba(26,86,219,0.4);
             flex: 2;
         }
-        .btn-primary:hover { background: #1e40af; transform: translateY(-1px); box-shadow: 0 10px 28px -10px rgba(26,86,219,0.5); }
+        .btn-primary:hover { background: #1e40af; transform: translateY(-1px); }
         .btn-secondary {
             background: #f1f5f9; color: #475569;
             border: 1.5px solid #e2e8f0;
@@ -365,6 +570,7 @@
         }
         .firebase-status.online { background: #dcfce7; color: #15803d; }
         .firebase-status.offline { background: #fef3c7; color: #b45309; }
+        .firebase-status.error { background: #fee2e2; color: #b91c1c; }
         .firebase-status .status-dot {
             width: 8px;
             height: 8px;
@@ -387,6 +593,9 @@
             .page-title h2 { font-size: 1.2rem; }
             .brand-text { font-size: 1rem; }
             .firebase-status { top: 0.5rem; right: 0.5rem; padding: 0.3rem 0.7rem; font-size: 0.6rem; }
+            .contact-admin-float { bottom: 16px; right: 16px; padding: 0.7rem 1.1rem; font-size: 0.78rem; }
+            .contact-admin-modal { padding: 1.5rem 1.4rem; border-radius: 18px; }
+            .contact-row { grid-template-columns: 1fr; }
         }
         @media (max-width: 480px) {
             .register-wrapper { padding: 1.2rem 0.8rem; border-radius: 1.2rem; }
@@ -396,6 +605,8 @@
                 font-size: 0.78rem; padding: 0.55rem 0.7rem 0.55rem 2.2rem;
             }
             .input-wrap .field-icon { left: 0.7rem; font-size: 0.7rem; }
+            .contact-admin-float span { display: none; }
+            .contact-admin-float { padding: 0.8rem; border-radius: 50%; width: 52px; height: 52px; justify-content: center; }
         }
 
         html[data-theme="dark"] body {
@@ -444,6 +655,66 @@
 <div class="firebase-status offline" id="firebaseStatus">
     <span class="status-dot"></span>
     <span id="firebaseStatusText">Checking Firebase...</span>
+</div>
+
+<button class="contact-admin-float" onclick="openContactAdmin()" title="Contact Admin">
+    <i class="fas fa-envelope"></i> <span>Contact Admin</span>
+</button>
+
+<div class="contact-admin-overlay" id="contactAdminOverlay" onclick="if(event.target===this)closeContactAdmin()">
+    <div class="contact-admin-modal">
+        <div class="contact-header">
+            <h3><i class="fas fa-envelope"></i> Contact Admin</h3>
+            <button class="contact-header-close" onclick="closeContactAdmin()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="contact-intro">
+            <i class="fas fa-info-circle" style="color:#2563eb; margin-right:4px;"></i>
+            Send a message to the platform administrator. They will receive it in the Admin Panel.
+        </div>
+
+        <div class="contact-row">
+            <div class="contact-field">
+                <label><i class="fas fa-user"></i> Your Name *</label>
+                <input type="text" id="contactName" placeholder="Full name">
+            </div>
+            <div class="contact-field">
+                <label><i class="fas fa-envelope"></i> Email *</label>
+                <input type="email" id="contactEmail" placeholder="your@email.com">
+            </div>
+        </div>
+
+        <div class="contact-field">
+            <label><i class="fas fa-tag"></i> Subject *</label>
+            <input type="text" id="contactSubject" placeholder="Brief subject of your message">
+        </div>
+
+        <div class="contact-field">
+            <label><i class="fas fa-exclamation-triangle"></i> Priority</label>
+            <select id="contactPriority">
+                <option value="low">Low</option>
+                <option value="normal" selected>Normal</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+            </select>
+        </div>
+
+        <div class="contact-field">
+            <label><i class="fas fa-comment-dots"></i> Message *</label>
+            <textarea id="contactMessage" placeholder="Describe your issue or question in detail..."></textarea>
+        </div>
+
+        <div class="contact-actions">
+            <button class="contact-btn contact-btn-cancel" onclick="closeContactAdmin()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="contact-btn contact-btn-send" id="contactSendBtn" onclick="sendContactMessage()">
+                <i class="fas fa-paper-plane"></i> Send Message
+            </button>
+        </div>
+    </div>
 </div>
 
 <div class="register-wrapper">
@@ -900,7 +1171,7 @@
             <button type="button" class="btn btn-secondary" onclick="resetForm()">
                 <i class="fas fa-undo"></i> Reset
             </button>
-            <button type="submit" class="btn btn-success" id="submitBtn" onclick="registerTrainee()">
+            <button type="submit" class="btn btn-success" id="submitBtn">
                 <i class="fas fa-user-plus"></i> Register & Go to Dashboard
             </button>
         </div>
@@ -919,7 +1190,7 @@
 
 <script>
     // ============================================================
-    // FIREBASE CONFIG (SkillBridge project)
+    // FIREBASE CONFIG
     // ============================================================
     const firebaseConfig = {
         apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
@@ -935,7 +1206,7 @@
     const db = firebase.firestore();
 
     // ============================================================
-    // TOGGLE PASSWORD
+    // UTILS
     // ============================================================
     function togglePassword(inputId, btn) {
         const input = document.getElementById(inputId);
@@ -952,9 +1223,6 @@
         }
     }
 
-    // ============================================================
-    // SHOW ALERT
-    // ============================================================
     function showAlert(message, type = 'success') {
         const alertBox = document.getElementById('alertBox');
         const alertMsg = document.getElementById('alertMessage');
@@ -967,16 +1235,23 @@
 
         alertMsg.innerHTML = message;
         alertBox.style.display = 'flex';
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        clearTimeout(window.alertTimeout);
-        window.alertTimeout = setTimeout(() => {
-            alertBox.style.display = 'none';
-        }, 8000);
+        if (type !== 'error') {
+            clearTimeout(window.alertTimeout);
+            window.alertTimeout = setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 10000);
+        }
     }
 
-    // ============================================================
-    // VALIDATION HELPERS
-    // ============================================================
+    function setStatus(state, text) {
+        const el = document.getElementById('firebaseStatus');
+        const txt = document.getElementById('firebaseStatusText');
+        el.className = 'firebase-status ' + state;
+        txt.textContent = text;
+    }
+
     function setError(wrapId, errId, show) {
         const wrap = document.getElementById(wrapId);
         const err = document.getElementById(errId);
@@ -984,24 +1259,14 @@
         if (err) err.classList.toggle('show', show);
     }
 
-    function validateEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-    function validateMobile(mobile) {
-        return /^[0-9]{10}$/.test(mobile);
-    }
-    function validatePassword(pw) {
-        return pw.length >= 8 && /[a-zA-Z]/.test(pw) && /[0-9]/.test(pw);
-    }
+    function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+    function validateMobile(mobile) { return /^[0-9]{10}$/.test(mobile); }
+    function validatePassword(pw) { return pw.length >= 8 && /[a-zA-Z]/.test(pw) && /[0-9]/.test(pw); }
 
-    // ============================================================
-    // RESET FORM
-    // ============================================================
     function resetForm() {
         if (confirm('Are you sure you want to reset all fields?')) {
             document.getElementById('registerForm').reset();
             document.getElementById('alertBox').style.display = 'none';
-
             document.querySelectorAll('.toggle-pw').forEach(btn => {
                 const input = btn.closest('.input-wrap').querySelector('input');
                 if (input) {
@@ -1015,27 +1280,109 @@
     }
 
     // ============================================================
-    // CHECK FIREBASE CONNECTION
+    // CONTACT ADMIN
     // ============================================================
-    function checkBackend() {
-        const statusEl = document.getElementById('firebaseStatus');
-        const statusText = document.getElementById('firebaseStatusText');
-        if (auth && db) {
-            statusEl.className = 'firebase-status online';
-            statusText.textContent = 'Firebase Connected';
-        } else {
-            statusEl.className = 'firebase-status offline';
-            statusText.textContent = 'Firebase Unavailable';
+    function openContactAdmin() {
+        const overlay = document.getElementById('contactAdminOverlay');
+        overlay.classList.add('show');
+
+        const nameField = document.getElementById('contactName');
+        const emailField = document.getElementById('contactEmail');
+        if (nameField && !nameField.value) {
+            const regName = document.getElementById('fullName').value.trim();
+            if (regName) nameField.value = regName;
+        }
+        if (emailField && !emailField.value) {
+            const regEmail = document.getElementById('email').value.trim();
+            if (regEmail) emailField.value = regEmail;
+        }
+        setTimeout(() => document.getElementById('contactSubject').focus(), 100);
+    }
+
+    function closeContactAdmin() {
+        document.getElementById('contactAdminOverlay').classList.remove('show');
+    }
+
+    async function sendContactMessage() {
+        const name = document.getElementById('contactName').value.trim();
+        const email = document.getElementById('contactEmail').value.trim().toLowerCase();
+        const subject = document.getElementById('contactSubject').value.trim();
+        const priority = document.getElementById('contactPriority').value;
+        const message = document.getElementById('contactMessage').value.trim();
+
+        if (!name || !email || !subject || !message) {
+            alert('Please fill all required fields.');
+            return;
+        }
+        if (!validateEmail(email)) {
+            alert('Please enter a valid email address.');
+            return;
+        }
+
+        const btn = document.getElementById('contactSendBtn');
+        btn.disabled = true;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            const currentUser = auth.currentUser;
+            await db.collection('contactMessages').add({
+                name, email, subject, priority, message,
+                role: currentUser ? (localStorage.getItem('userRole') || 'trainee') : 'guest',
+                userId: currentUser ? currentUser.uid : null,
+                pageUrl: window.location.href,
+                userAgent: navigator.userAgent,
+                read: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert('✅ Message sent successfully!');
+            document.getElementById('contactSubject').value = '';
+            document.getElementById('contactMessage').value = '';
+            document.getElementById('contactPriority').value = 'normal';
+            closeContactAdmin();
+        } catch (err) {
+            console.error('Contact message send failed:', err);
+            let msg = 'Failed to send message.';
+            if (err.code === 'permission-denied') msg = 'Firestore rules block this. Please ask admin to update rules.';
+            else if (err.code === 'unavailable') msg = 'Network error. Please check your internet connection.';
+            else if (err.message) msg = err.message;
+            alert('❌ ' + msg);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
         }
     }
 
     // ============================================================
-    // REGISTER TRAINEE — Firebase Auth + Firestore
-    // All the fields are saved so dashboards can read them.
+    // SAFE FIRESTORE WRITE — retries once on transient failure
+    // ============================================================
+    async function safeSet(ref, data, label) {
+        try {
+            await ref.set(data, { merge: true });
+            console.log(`✅ Firestore write OK: ${label}`);
+            return true;
+        } catch (err) {
+            console.error(`❌ Firestore write FAILED: ${label}`, err.code, err.message);
+            // Retry once after short delay (transient network blips)
+            try {
+                await new Promise(r => setTimeout(r, 800));
+                await ref.set(data, { merge: true });
+                console.log(`✅ Firestore write OK (retry): ${label}`);
+                return true;
+            } catch (err2) {
+                console.error(`❌ Firestore write FAILED (retry): ${label}`, err2.code, err2.message);
+                throw err2;
+            }
+        }
+    }
+
+    // ============================================================
+    // REGISTER TRAINEE
     // ============================================================
     async function registerTrainee() {
-        console.log('📝 Starting trainee registration (Firebase)...');
+        console.log('📝 Starting trainee registration...');
 
+        // Collect all values
         const fullName = document.getElementById('fullName').value.trim();
         const email = document.getElementById('email').value.trim().toLowerCase();
         const mobile = document.getElementById('mobile').value.trim();
@@ -1070,90 +1417,43 @@
         const consentFollowup = document.getElementById('consentFollowup').checked;
         const consentAnalysis = document.getElementById('consentAnalysis').checked;
 
+        // Validate
         let valid = true;
-
-        if (!fullName) { setError('wrapFullName', 'errFullName', true); valid = false; }
-        else { setError('wrapFullName', 'errFullName', false); }
-
-        if (!validateEmail(email)) { setError('wrapEmail', 'errEmail', true); valid = false; }
-        else { setError('wrapEmail', 'errEmail', false); }
-
-        if (!validateMobile(mobile)) { setError('wrapMobile', 'errMobile', true); valid = false; }
-        else { setError('wrapMobile', 'errMobile', false); }
-
-        if (!validatePassword(password)) { setError('wrapPassword', 'errPassword', true); valid = false; }
-        else { setError('wrapPassword', 'errPassword', false); }
-
-        if (password !== confirmPassword || !confirmPassword) { setError('wrapConfirm', 'errConfirm', true); valid = false; }
-        else { setError('wrapConfirm', 'errConfirm', false); }
-
-        if (!dob) { setError('wrapDob', 'errDob', true); valid = false; }
-        else { setError('wrapDob', 'errDob', false); }
-
-        if (!gender) { setError('wrapGender', 'errGender', true); valid = false; }
-        else { setError('wrapGender', 'errGender', false); }
-
-        if (!education) { setError('wrapEducation', 'errEducation', true); valid = false; }
-        else { setError('wrapEducation', 'errEducation', false); }
-
-        if (!state) { setError('wrapState', 'errState', true); valid = false; }
-        else { setError('wrapState', 'errState', false); }
-
-        if (!district) { setError('wrapDistrict', 'errDistrict', true); valid = false; }
-        else { setError('wrapDistrict', 'errDistrict', false); }
-
-        if (!village) { setError('wrapVillage', 'errVillage', true); valid = false; }
-        else { setError('wrapVillage', 'errVillage', false); }
-
-        if (!pincode || pincode.length < 6) { setError('wrapPincode', 'errPincode', true); valid = false; }
-        else { setError('wrapPincode', 'errPincode', false); }
-
-        if (!areaType) { setError('wrapAreaType', 'errAreaType', true); valid = false; }
-        else { setError('wrapAreaType', 'errAreaType', false); }
-
-        if (!trainingProgram) { setError('wrapProgram', 'errProgram', true); valid = false; }
-        else { setError('wrapProgram', 'errProgram', false); }
-
-        if (!skillTrade) { setError('wrapSkill', 'errSkill', true); valid = false; }
-        else { setError('wrapSkill', 'errSkill', false); }
-
-        if (!trainingProvider) { setError('wrapProvider', 'errProvider', true); valid = false; }
-        else { setError('wrapProvider', 'errProvider', false); }
-
-        if (!batchId) { setError('wrapBatch', 'errBatch', true); valid = false; }
-        else { setError('wrapBatch', 'errBatch', false); }
-
-        if (!enrollmentId) { setError('wrapEnrollment', 'errEnrollment', true); valid = false; }
-        else { setError('wrapEnrollment', 'errEnrollment', false); }
-
-        if (!trainingMode) { setError('wrapMode', 'errMode', true); valid = false; }
-        else { setError('wrapMode', 'errMode', false); }
-
-        if (!startDate) { setError('wrapStartDate', 'errStartDate', true); valid = false; }
-        else { setError('wrapStartDate', 'errStartDate', false); }
-
-        if (!completionDate) { setError('wrapCompletion', 'errCompletion', true); valid = false; }
-        else { setError('wrapCompletion', 'errCompletion', false); }
-
-        if (!employmentStatus) { setError('wrapEmploymentStatus', 'errEmploymentStatus', true); valid = false; }
-        else { setError('wrapEmploymentStatus', 'errEmploymentStatus', false); }
-
-        if (prevIncome === '' || prevIncome < 0) { setError('wrapPrevIncome', 'errPrevIncome', true); valid = false; }
-        else { setError('wrapPrevIncome', 'errPrevIncome', false); }
-
-        if (!careerGoal) { setError('wrapCareerGoal', 'errCareerGoal', true); valid = false; }
-        else { setError('wrapCareerGoal', 'errCareerGoal', false); }
-
-        if (!preferredLocation) { setError('wrapPreferredLocation', 'errPreferredLocation', true); valid = false; }
-        else { setError('wrapPreferredLocation', 'errPreferredLocation', false); }
+        const checks = [
+            ['wrapFullName','errFullName', !!fullName],
+            ['wrapEmail','errEmail', validateEmail(email)],
+            ['wrapMobile','errMobile', validateMobile(mobile)],
+            ['wrapPassword','errPassword', validatePassword(password)],
+            ['wrapConfirm','errConfirm', password === confirmPassword && !!confirmPassword],
+            ['wrapDob','errDob', !!dob],
+            ['wrapGender','errGender', !!gender],
+            ['wrapEducation','errEducation', !!education],
+            ['wrapState','errState', !!state],
+            ['wrapDistrict','errDistrict', !!district],
+            ['wrapVillage','errVillage', !!village],
+            ['wrapPincode','errPincode', pincode.length === 6],
+            ['wrapAreaType','errAreaType', !!areaType],
+            ['wrapProgram','errProgram', !!trainingProgram],
+            ['wrapSkill','errSkill', !!skillTrade],
+            ['wrapProvider','errProvider', !!trainingProvider],
+            ['wrapBatch','errBatch', !!batchId],
+            ['wrapEnrollment','errEnrollment', !!enrollmentId],
+            ['wrapMode','errMode', !!trainingMode],
+            ['wrapStartDate','errStartDate', !!startDate],
+            ['wrapCompletion','errCompletion', !!completionDate],
+            ['wrapEmploymentStatus','errEmploymentStatus', !!employmentStatus],
+            ['wrapPrevIncome','errPrevIncome', prevIncome !== '' && Number(prevIncome) >= 0],
+            ['wrapCareerGoal','errCareerGoal', !!careerGoal],
+            ['wrapPreferredLocation','errPreferredLocation', !!preferredLocation]
+        ];
+        checks.forEach(([w, e, ok]) => { setError(w, e, !ok); if (!ok) valid = false; });
 
         if (!consentInfo || !consentFollowup || !consentAnalysis) {
             showAlert('Please <strong>accept all consent terms</strong> to register.', 'error');
             return;
         }
-
         if (!valid) {
-            showAlert('Please fix all <strong>errors</strong> before registering.', 'error');
+            showAlert('Please fix all <strong>highlighted errors</strong> before registering.', 'error');
             return;
         }
 
@@ -1162,44 +1462,35 @@
         const originalHTML = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
 
-        try {
-            // ============================================================
-            // STEP 1 — Create Firebase Auth user (permanent, never expires)
-            // ============================================================
-            console.log('📤 Step 1: Creating Firebase Auth user...');
-            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-            const fbUser = userCredential.user;
+        let fbUser = null;
 
-            // Update Firebase display name
+        try {
+            // ── STEP 1 — Create Firebase Auth user ──
+            console.log('📤 Step 1/3: Creating Firebase Auth user...');
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            fbUser = userCredential.user;
+            console.log('✅ Auth user created:', fbUser.uid);
+
             try { await fbUser.updateProfile({ displayName: fullName }); } catch (e) {}
 
-            // ============================================================
-            // STEP 2 — Save all trainee details to Firestore
-            // Everything below is used by dashboards + government analytics.
-            // ============================================================
-            console.log('📤 Step 2: Saving trainee profile to Firestore...');
+            // ── STEP 2 — Build profile object ──
+            const traineeCode = 'TRN' + fbUser.uid.substring(0, 6).toUpperCase();
             const traineeProfile = {
-                // Account
                 uid: fbUser.uid,
                 role: 'trainee',
+                traineeCode: traineeCode,
                 email: email,
                 fullName: fullName,
                 mobile: mobile,
-
-                // Personal
                 dob: dob,
                 gender: gender,
                 qualification: education,
-
-                // Location
                 state: state,
                 district: district,
                 mandal: mandal,
                 village: village,
                 pincode: pincode,
                 areaType: areaType,
-
-                // Training
                 trainingProgram: trainingProgram,
                 skillTrade: skillTrade,
                 trainingProvider: trainingProvider,
@@ -1208,20 +1499,14 @@
                 trainingMode: trainingMode,
                 startDate: startDate,
                 completionDate: completionDate,
-
-                // Baseline
                 employmentStatus: employmentStatus,
                 prevJobRole: prevJobRole,
                 prevExperience: prevExperience,
                 prevSkill: prevSkill,
                 prevIncome: Number(prevIncome),
-
-                // Career
                 careerGoal: careerGoal,
                 preferredRole: preferredRole,
                 preferredLocation: preferredLocation,
-
-                // Meta
                 consentInfo: consentInfo,
                 consentFollowup: consentFollowup,
                 consentAnalysis: consentAnalysis,
@@ -1230,35 +1515,27 @@
                 registeredAt: new Date().toISOString(),
             };
 
-            // Save to Firestore under /users/{uid}
-            await db.collection('users').doc(fbUser.uid).set(traineeProfile);
+            // ── STEP 3 — Write to Firestore (users + trainees) ──
+            console.log('📤 Step 2/3: Writing profile to Firestore...');
+            await safeSet(db.collection('users').doc(fbUser.uid), traineeProfile, 'users/{uid}');
+            await safeSet(db.collection('trainees').doc(fbUser.uid), traineeProfile, 'trainees/{uid}');
+            console.log('✅ Step 3/3: Firestore profile saved.');
 
-            // Also save to /trainees/{uid} for dashboards that look up trainees specifically
-            await db.collection('trainees').doc(fbUser.uid).set(traineeProfile);
-
-            // Save the trainee code so it can be displayed
-            const traineeCode = 'TRN' + fbUser.uid.substring(0, 6).toUpperCase();
-            await db.collection('users').doc(fbUser.uid).update({ traineeCode: traineeCode });
-            await db.collection('trainees').doc(fbUser.uid).update({ traineeCode: traineeCode });
-
+            // Update traineeId field in the form
             document.getElementById('traineeId').value = traineeCode;
 
-            console.log('✅ Registered in Firebase:', fbUser.uid);
-
-            // ============================================================
-            // STEP 3 — Show success and redirect to login
-            // ============================================================
+            // ── SUCCESS ──
             showAlert(`
                 <strong>✅ Registration Successful!</strong><br>
                 <span style="font-size:0.75rem;">
                     Trainee: ${fullName} (${traineeCode})<br>
                     Program: ${skillTrade} · ${trainingProgram}<br>
                     📍 ${district}, ${state}<br><br>
-                    <strong>Now please log in with your email and password.</strong>
+                    <strong>Redirecting to login…</strong>
                 </span>
             `, 'success');
 
-            // Sign the user out so they log in manually (clean flow)
+            // Sign out so user logs in fresh
             await auth.signOut();
 
             setTimeout(() => {
@@ -1266,22 +1543,100 @@
             }, 2000);
 
         } catch (err) {
-            console.error('❌ Firebase registration failed:', err);
+            console.error('❌ Registration failed:', err);
+            console.error('Error code:', err.code);
+            console.error('Error message:', err.message);
+
             let msg = err.message || 'Registration failed. Please try again.';
+
             if (err.code === 'auth/email-already-in-use') {
-                msg = 'This email is already registered. Please log in instead.';
-            } else if (err.code === 'auth/invalid-email') {
-                msg = 'Invalid email address.';
-            } else if (err.code === 'auth/weak-password') {
-                msg = 'Password is too weak. Use at least 8 characters with letters and numbers.';
-            } else if (err.code === 'auth/network-request-failed') {
-                msg = 'Network error. Please check your internet connection.';
-            } else if (err.code === 'permission-denied') {
-                msg = 'Firestore permission denied. Please contact the administrator.';
+                // The Auth user exists but Firestore profile might be missing.
+                // Try to auto-heal: sign in, then write the profile.
+                console.warn('⚠️ Email already in Auth — attempting auto-heal...');
+                try {
+                    const healed = await attemptAutoHeal(email, password);
+                    if (healed) {
+                        showAlert(`<strong>✅ Account repaired!</strong><br><span style="font-size:0.75rem;">Your profile was missing. We've fixed it. Redirecting to login…</span>`, 'success');
+                        await auth.signOut();
+                        setTimeout(() => window.location.href = 'login.html?role=trainee', 2000);
+                        return;
+                    }
+                    msg = 'This email is already registered. Please log in instead, or use a different email.';
+                } catch (healErr) {
+                    console.error('Auto-heal failed:', healErr);
+                    msg = 'This email is already registered but the profile is incomplete. Please contact admin or use a different email.';
+                }
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHTML;
+                showAlert(`<strong>Registration Failed</strong><br><span style="font-size:0.75rem;">${msg}</span>`, 'error');
+                return;
             }
+
+            if (err.code === 'auth/invalid-email') msg = 'Invalid email address.';
+            else if (err.code === 'auth/weak-password') msg = 'Password is too weak. Use at least 8 characters with letters and numbers.';
+            else if (err.code === 'auth/network-request-failed') msg = 'Network error. Please check your internet connection.';
+            else if (err.code === 'auth/operation-not-allowed') msg = 'Email/password sign-in is disabled in Firebase Console. Enable it under Authentication → Sign-in method.';
+            else if (err.code === 'permission-denied') {
+                msg = 'Firestore permission denied. Please check your Firestore rules in Firebase Console — they must allow writes to users/ and trainees/ collections.';
+            } else if (err.code === 'unavailable') {
+                msg = 'Firestore is unavailable. Please check your internet connection.';
+            }
+
+            // ⚠️ CRITICAL: If Auth user was created but Firestore write failed,
+            // delete the orphan Auth user so the user can retry with the same email.
+            if (fbUser && (err.code === 'permission-denied' || err.code === 'unavailable' || !err.code || err.message?.includes('permission'))) {
+                console.warn('⚠️ Deleting orphan Auth user so email can be reused...');
+                try {
+                    await fbUser.delete();
+                    console.log('✅ Orphan Auth user deleted.');
+                    msg += ' The account has been rolled back — you can try again with the same email.';
+                } catch (delErr) {
+                    console.error('Could not delete orphan Auth user:', delErr);
+                    msg += ' (Note: you may need to delete this email from Firebase Console → Authentication.)';
+                }
+            }
+
             showAlert(`<strong>Registration Failed</strong><br><span style="font-size:0.75rem;">${msg}</span>`, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalHTML;
+        }
+    }
+
+    // ============================================================
+    // AUTO-HEAL — if Auth user exists but Firestore profile missing
+    // ============================================================
+    async function attemptAutoHeal(email, password) {
+        try {
+            const cred = await auth.signInWithEmailAndPassword(email, password);
+            const uid = cred.user.uid;
+
+            // Check if profile exists
+            const snap = await db.collection('users').doc(uid).get();
+            if (snap.exists) {
+                console.log('ℹ️ Profile already exists — no heal needed.');
+                return false;
+            }
+
+            // Rebuild minimal profile from form
+            const fullName = document.getElementById('fullName').value.trim();
+            const traineeCode = 'TRN' + uid.substring(0, 6).toUpperCase();
+            const minimal = {
+                uid,
+                role: 'trainee',
+                traineeCode,
+                email,
+                fullName: fullName || cred.user.displayName || email,
+                status: 'Active',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                healedAt: new Date().toISOString(),
+            };
+            await db.collection('users').doc(uid).set(minimal, { merge: true });
+            await db.collection('trainees').doc(uid).set(minimal, { merge: true });
+            console.log('✅ Auto-heal complete for', uid);
+            return true;
+        } catch (e) {
+            console.error('Auto-heal error:', e);
+            return false;
         }
     }
 
@@ -1291,6 +1646,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('🚀 Trainee registration ready (Firebase mode)');
 
+        // Set default dates
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('startDate').max = today;
         document.getElementById('startDate').value = today;
@@ -1299,6 +1655,7 @@
         compDate.setMonth(compDate.getMonth() + 3);
         document.getElementById('completionDate').value = compDate.toISOString().split('T')[0];
 
+        // Clear errors on focus
         document.querySelectorAll('.input-wrap input, .input-wrap select, .input-wrap textarea').forEach(el => {
             el.addEventListener('focus', function() {
                 const wrap = this.closest('.input-wrap');
@@ -1308,8 +1665,22 @@
             });
         });
 
+        // Escape closes contact modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeContactAdmin();
+        });
+
+        // Digit-only inputs
+        document.getElementById('mobile').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        });
+        document.getElementById('pincode').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+        });
+
+        // Check Firebase connectivity
+        setStatus('online', 'Firebase Connected');
         updateThemeIcon();
-        checkBackend();
     });
 
     document.getElementById('registerForm').addEventListener('submit', function(e) {
@@ -1317,13 +1688,9 @@
         registerTrainee();
     });
 
-    document.getElementById('mobile').addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
-    });
-    document.getElementById('pincode').addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
-    });
-
+    // ============================================================
+    // THEME
+    // ============================================================
     function updateThemeIcon() {
         const btn = document.querySelector('.theme-toggle-float i');
         if (!btn) return;
@@ -1340,6 +1707,13 @@
             updateThemeIcon();
         };
     }
+
+    // Expose contact functions globally
+    window.openContactAdmin = openContactAdmin;
+    window.closeContactAdmin = closeContactAdmin;
+    window.sendContactMessage = sendContactMessage;
+    window.togglePassword = togglePassword;
+    window.resetForm = resetForm;
 </script>
 
 </body>

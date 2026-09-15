@@ -881,7 +881,7 @@
 
 <script>
     // ============================================================
-    // FIREBASE CONFIG (SkillBridge project)
+    // FIREBASE CONFIG
     // ============================================================
     const firebaseConfig = {
         apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
@@ -896,7 +896,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Ensure permanent session (survives browser close)
+    // ✅ Persistence — keeps you logged in forever (until you click Logout)
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
 
     // ============================================================
@@ -964,10 +964,18 @@
     // ROLE SETUP
     // ============================================================
     function setRole(role) {
+        role = (role || '').toLowerCase().trim();
+        if (!roleMetadata[role]) role = 'trainee';
         currentRole = role;
         const meta = roleMetadata[role];
-        if (!meta) return;
         hideAlert();
+
+        roleBtns.forEach(b => {
+            b.classList.remove('active', 'govt-active');
+            if ((b.dataset.role || '').toLowerCase() === role) {
+                b.classList.add(role === 'government' ? 'govt-active' : 'active');
+            }
+        });
 
         if (role === 'government') {
             standardFields.style.display = 'none';
@@ -989,11 +997,6 @@
             socialLogin.classList.add('hidden');
             registerLink.innerHTML = `<span class="govt-note"><i class="fas fa-lock"></i> Authorized Government Officials Only</span>`;
             forgotLink.innerHTML = '<i class="fas fa-key"></i> Contact admin for access';
-
-            roleBtns.forEach(b => {
-                b.classList.remove('govt-active');
-                if (b.dataset.role === 'government') b.classList.add('govt-active');
-            });
             return;
         }
 
@@ -1020,21 +1023,31 @@
 
         registerLink.innerHTML = `Don't have an account? <a href="${roleMap[role] || 'trainee-register.html'}" id="registerLinkBtn">Create one</a>`;
         forgotLink.innerHTML = '<i class="fas fa-key"></i> Forgot password?';
-
-        roleBtns.forEach(b => b.classList.remove('govt-active'));
     }
 
-    // ============================================================
-    // ROLE BUTTONS
-    // ============================================================
     roleBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-            roleBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            const role = this.dataset.role;
+            const role = (this.dataset.role || '').toLowerCase();
             if (role && roleMetadata[role]) setRole(role);
         });
     });
+
+    // ============================================================
+    // ROLE NORMALIZER
+    // ============================================================
+    function normalizeRole(value, fallback = 'trainee') {
+        if (!value) return fallback;
+        let v = value.toString().trim().toLowerCase();
+        const aliases = {
+            'trainee': 'trainee', 'student': 'trainee', 'user': 'trainee', 'trainees': 'trainee',
+            'employer': 'employer', 'employers': 'employer', 'company': 'employer', 'recruiter': 'employer',
+            'provider': 'provider', 'training provider': 'provider', 'trainingprovider': 'provider',
+            'training_provider': 'provider', 'providers': 'provider', 'institute': 'provider',
+            'government': 'government', 'govt': 'government', 'govt.': 'government', 'gov': 'government',
+            'admin': 'government', 'government official': 'government', 'officer': 'government'
+        };
+        return aliases[v] || v || fallback;
+    }
 
     // ============================================================
     // STANDARD LOGIN — Firebase Auth (trainee/employer/provider)
@@ -1052,47 +1065,79 @@
             return;
         }
 
-        const meta = roleMetadata[currentRole];
-
         loginBtn.disabled = true;
         const originalText = loginBtnText.textContent;
         loginBtnText.textContent = 'Signing in…';
 
         try {
-            // STEP 1 — Firebase Auth
+            await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
             const userCredential = await auth.signInWithEmailAndPassword(email, pw);
             const firebaseUser = userCredential.user;
 
-            // STEP 2 — Role verification via Firestore
-            let storedRole = currentRole;
             let profile = null;
+            let storedRole = currentRole;
+
             try {
                 const docSnap = await db.collection('users').doc(firebaseUser.uid).get();
                 if (docSnap.exists) {
                     profile = docSnap.data();
-                    storedRole = profile.role || currentRole;
+                    storedRole = normalizeRole(profile.role, currentRole);
+                } else {
+                    const roleCollections = ['trainees', 'employers', 'providers'];
+                    for (const col of roleCollections) {
+                        try {
+                            const snap = await db.collection(col)
+                                .where('email', '==', email).limit(1).get();
+                            if (!snap.empty) {
+                                profile = snap.docs[0].data();
+                                storedRole = normalizeRole(profile.role || col.slice(0, -1), currentRole);
+                                db.collection('users').doc(firebaseUser.uid).set({
+                                    uid: firebaseUser.uid,
+                                    email,
+                                    role: storedRole,
+                                    ...profile
+                                }, { merge: true }).catch(() => {});
+                                break;
+                            }
+                        } catch (e) {}
+                    }
                 }
-            } catch (e) { console.warn('Firestore lookup failed:', e); }
-
-            if (storedRole !== currentRole) {
-                await auth.signOut();
-                showAlert(`This account is registered as "${storedRole}", not "${currentRole}". Please select the correct role tab.`, 'error');
-                loginBtn.disabled = false;
-                loginBtnText.textContent = originalText;
-                return;
+            } catch (e) {
+                console.warn('Firestore lookup failed:', e);
             }
 
-            // STEP 3 — Save session
+            if (storedRole !== currentRole) {
+                currentRole = storedRole;
+                roleBtns.forEach(b => {
+                    b.classList.remove('active', 'govt-active');
+                    if ((b.dataset.role || '').toLowerCase() === storedRole) {
+                        b.classList.add(storedRole === 'government' ? 'govt-active' : 'active');
+                    }
+                });
+                showAlert(`Signed in as ${roleMetadata[storedRole].name} (account role). Redirecting…`, 'info', 2000);
+            }
+
+            const meta = roleMetadata[storedRole] || roleMetadata[currentRole];
+
             try {
                 localStorage.setItem(meta.sessionKey, email);
                 localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userRole', currentRole);
+                localStorage.setItem('userRole', storedRole);
                 localStorage.setItem('userId', firebaseUser.uid);
-                localStorage.setItem('userName', profile?.fullName || profile?.orgName || profile?.contactPerson || firebaseUser.displayName || email);
+                localStorage.setItem('userName',
+                    profile?.fullName ||
+                    profile?.name ||
+                    profile?.orgName ||
+                    profile?.organizationName ||
+                    profile?.contactPerson ||
+                    firebaseUser.displayName ||
+                    email
+                );
                 localStorage.setItem('userEmail', email);
             } catch (e) {}
 
-            showAlert(`Login successful! Welcome, ${firebaseUser.displayName || email}. Redirecting…`, 'success', 0);
+            showAlert(`Login successful! Welcome, ${profile?.fullName || firebaseUser.displayName || email}. Redirecting…`, 'success', 0);
             loginBtnText.textContent = 'Success ✓';
 
             setTimeout(() => {
@@ -1103,13 +1148,14 @@
             console.error('Login error:', err);
             let msg = 'Invalid credentials. Please check your email and password.';
             switch (err.code) {
-                case 'auth/user-not-found':      msg = 'No account found with this email.'; break;
+                case 'auth/user-not-found':      msg = 'No account found with this email. Please register first.'; break;
                 case 'auth/wrong-password':
-                case 'auth/invalid-credential':  msg = 'Incorrect password.'; break;
+                case 'auth/invalid-credential':  msg = 'Incorrect email or password. If you just registered, try "Forgot password" or re-register.'; break;
                 case 'auth/invalid-email':       msg = 'Invalid email address.'; break;
                 case 'auth/too-many-requests':   msg = 'Too many attempts. Please try again later.'; break;
                 case 'auth/network-request-failed': msg = 'Network error. Check your internet connection.'; break;
                 case 'auth/user-disabled':       msg = 'This account has been disabled.'; break;
+                case 'auth/operation-not-allowed': msg = 'Email/password sign-in is disabled in Firebase Console. Enable it under Authentication → Sign-in method.'; break;
             }
             showAlert(msg, 'error');
             loginBtn.disabled = false;
@@ -1118,7 +1164,8 @@
     }
 
     // ============================================================
-    // GOVERNMENT LOGIN — Firebase Auth + Firestore verification
+    // ✅ GOVERNMENT LOGIN — PURE FIRESTORE (no Firebase Auth)
+    // This reads from govtOfficials collection written by admin panel
     // ============================================================
     async function handleGovtLogin() {
         const officialId = govtId.value.trim();
@@ -1133,100 +1180,101 @@
             showAlert('Please enter a valid official email address.', 'error');
             return;
         }
-        if (password.length < 6) {
-            showAlert('Password must be at least 6 characters.', 'error');
-            return;
-        }
 
         loginBtn.disabled = true;
         const originalText = loginBtnText.textContent;
-        loginBtnText.textContent = 'Verifying official credentials…';
+        loginBtnText.textContent = 'Verifying…';
 
         try {
-            // STEP 1 — Firebase Auth
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            const fbUser = userCredential.user;
-
-            // STEP 2 — Firestore role check
-            let profile = null;
+            // ✅ STEP 1 — Fetch official record from Firestore (NOT Firebase Auth)
+            let snap;
             try {
-                const snap = await db.collection('users').doc(fbUser.uid).get();
-                if (snap.exists) profile = snap.data();
-            } catch (e) {
-                console.warn('Firestore lookup failed:', e);
+                snap = await db.collection('govtOfficials')
+                    .where('email', '==', email)
+                    .limit(1)
+                    .get();
+            } catch (err) {
+                console.error('Firestore read failed:', err);
+                if (err.code === 'permission-denied') {
+                    throw new Error('Firestore rules block reading govtOfficials. Please update the rules in Firebase Console.');
+                }
+                if (err.code === 'unavailable' || err.code === 'failed-precondition') {
+                    throw new Error('Network error. Please check your internet connection.');
+                }
+                throw err;
             }
 
-            if (!profile || profile.role !== 'government') {
-                await auth.signOut();
-                showAlert('This account is not registered as a Government Official.', 'error');
+            if (snap.empty) {
+                showAlert('No government official found with this email. Please contact the admin.', 'error');
                 loginBtn.disabled = false;
                 loginBtnText.textContent = originalText;
                 return;
             }
 
-            if (profile.status && String(profile.status).toLowerCase() === 'suspended') {
-                await auth.signOut();
-                showAlert('This Government account is suspended. Contact your administrator.', 'error');
+            const doc = snap.docs[0];
+            const govtData = doc.data();
+            const docId = doc.id;
+
+            // ✅ STEP 2 — Check status
+            if (govtData.status === 'suspended') {
+                showAlert('This account is suspended. Please contact the administrator.', 'error');
                 loginBtn.disabled = false;
                 loginBtnText.textContent = originalText;
                 return;
             }
 
-            if (profile.officialId && profile.officialId.toUpperCase() !== officialId.toUpperCase()) {
-                await auth.signOut();
-                showAlert('Official ID does not match our records. Please check and try again.', 'error');
+            // ✅ STEP 3 — Check expiry
+            if (govtData.expiresAt && new Date(govtData.expiresAt) < new Date()) {
+                showAlert('This account has expired. Please contact the administrator.', 'error');
                 loginBtn.disabled = false;
                 loginBtnText.textContent = originalText;
                 return;
             }
 
-            // STEP 3 — Save session
-            const officerName = profile.fullName || fbUser.displayName || 'Official';
-            const accessLevel = profile.accessLevel || 'State';
-            const department  = profile.department  || 'Skill Development';
-            const resolvedId  = profile.officialId  || officialId;
+            // ✅ STEP 4 — Check Official ID matches
+            if (govtData.officialId &&
+                govtData.officialId.toString().toUpperCase() !== officialId.toUpperCase()) {
+                showAlert('Official ID does not match our records.', 'error');
+                loginBtn.disabled = false;
+                loginBtnText.textContent = originalText;
+                return;
+            }
 
+            // ✅ STEP 5 — Check password (plain text comparison — same as what admin typed)
+            if (govtData.password !== password) {
+                showAlert('Incorrect password. Please try again or contact admin.', 'error');
+                loginBtn.disabled = false;
+                loginBtnText.textContent = originalText;
+                return;
+            }
+
+            // ✅ STEP 6 — SUCCESS — save session
             try {
-                localStorage.setItem(GOVT_SESSION_KEY, resolvedId);
+                localStorage.setItem(GOVT_SESSION_KEY, govtData.officialId || officialId);
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('userRole', 'government');
-                localStorage.setItem('userId', fbUser.uid);
                 localStorage.setItem('userEmail', email);
-                localStorage.setItem('govtOfficerName', officerName);
-                localStorage.setItem('govtAccessLevel', accessLevel);
-                localStorage.setItem('govtDepartment', department);
-                localStorage.setItem('govtOfficialId', resolvedId);
+                localStorage.setItem('userId', docId);
+                localStorage.setItem('govtOfficerName', govtData.fullName || 'Official');
+                localStorage.setItem('govtAccessLevel', govtData.accessLevel || 'State');
+                localStorage.setItem('govtDepartment', govtData.department || '');
             } catch (e) {}
 
-            showAlert(
-                `Access granted. Welcome, ${officerName} · ${accessLevel} level · ${department}. Redirecting…`,
-                'success',
-                0
-            );
-            loginBtnText.textContent = 'Access granted ✓';
-
-            // Best-effort: record last login
-            db.collection('users').doc(fbUser.uid).update({
+            // Update last login (fire and forget)
+            db.collection('govtOfficials').doc(docId).update({
                 lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(() => {});
 
+            showAlert(`Access granted. Welcome, ${govtData.fullName || 'Official'} (${govtData.accessLevel || 'State'} level). Redirecting…`, 'success', 0);
+            loginBtnText.textContent = 'Access granted ✓';
+
             setTimeout(() => {
-                window.location.href = roleMetadata.government.redirect;
+                window.location.href = '../government/dashboard.html';
             }, 1000);
 
         } catch (err) {
             console.error('Government login error:', err);
-            let msg = 'Invalid government credentials. Please try again.';
-            switch (err.code) {
-                case 'auth/user-not-found':      msg = 'No government account found with this email.'; break;
-                case 'auth/wrong-password':
-                case 'auth/invalid-credential':  msg = 'Incorrect password.'; break;
-                case 'auth/invalid-email':       msg = 'Invalid official email address.'; break;
-                case 'auth/too-many-requests':   msg = 'Too many failed attempts. Please wait a few minutes and try again.'; break;
-                case 'auth/network-request-failed': msg = 'Network error. Please check your internet connection.'; break;
-                case 'auth/user-disabled':       msg = 'This government account has been disabled.'; break;
-                case 'permission-denied':        msg = 'Firestore permission denied. Contact the administrator.'; break;
-            }
+            let msg = err.message || 'Login failed. Please try again.';
             showAlert(msg, 'error');
             loginBtn.disabled = false;
             loginBtnText.textContent = originalText;
@@ -1314,16 +1362,24 @@
 
     // ============================================================
     // AUTO-REDIRECT if already signed in
-    // (Only when no ?role= param — so users can switch roles on purpose)
+    // ✅ Only when no ?role= param AND localStorage has a session.
     // ============================================================
     auth.onAuthStateChanged(function(firebaseUser) {
         if (!firebaseUser) return;
+
         const params = new URLSearchParams(window.location.search);
         if (params.get('role')) return;
+
+        const savedRole = localStorage.getItem('userRole');
+        if (savedRole && roleMetadata[savedRole]) {
+            window.location.href = roleMetadata[savedRole].redirect;
+            return;
+        }
+
         db.collection('users').doc(firebaseUser.uid).get()
             .then(snap => {
                 if (!snap.exists) return;
-                const role = snap.data().role;
+                const role = normalizeRole(snap.data().role);
                 if (role && roleMetadata[role]) {
                     window.location.href = roleMetadata[role].redirect;
                 }
@@ -1332,41 +1388,48 @@
     });
 
     // ============================================================
-    // DEV HELPER — Seed a government account (run once in console)
-    // Usage:
-    //   await __seedGovtAccount('GOV20260001','officer@gov.in','Gov@2026','Demo Officer','National','Skill Development')
+    // DEV HELPER — Inspect current user
     // ============================================================
-    window.__seedGovtAccount = async function(officialId, email, password, fullName = 'Demo Officer', accessLevel = 'National', department = 'Skill Development') {
+    window.__whoami = async function() {
+        const u = auth.currentUser;
+        if (!u) { console.log('Not signed in.'); return; }
+        console.log('Auth UID:', u.uid, '| Email:', u.email);
         try {
-            let cred;
-            try {
-                cred = await auth.createUserWithEmailAndPassword(email, password);
-            } catch (e) {
-                if (e.code === 'auth/email-already-in-use') {
-                    cred = await auth.signInWithEmailAndPassword(email, password);
-                } else throw e;
+            const snap = await db.collection('users').doc(u.uid).get();
+            console.log('users/{uid} exists:', snap.exists, snap.data());
+        } catch (e) { console.warn('users read failed:', e.code); }
+        try {
+            const g = await db.collection('govtOfficials')
+                .where('email', '==', u.email).limit(1).get();
+            console.log('govtOfficials match:', g.size, g.docs[0]?.data());
+        } catch (e) { console.warn('govtOfficials read failed:', e.code); }
+    };
+
+    // ============================================================
+    // DEV HELPER — Inspect any govt official by email
+    // Usage: await __checkGovt("raji@gmail.com")
+    // ============================================================
+    window.__checkGovt = async function(email) {
+        email = (email || '').toLowerCase().trim();
+        if (!email) { console.log('Provide an email.'); return; }
+        try {
+            const snap = await db.collection('govtOfficials')
+                .where('email', '==', email).limit(1).get();
+            if (snap.empty) {
+                console.log('❌ No official found for', email);
+                return;
             }
-            const uid = cred.user.uid;
-            await db.collection('users').doc(uid).set({
-                uid,
-                role: 'government',
-                email,
-                officialId: officialId.toUpperCase(),
-                fullName,
-                accessLevel,
-                department,
-                status: 'Active',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            }, { merge: true });
-            await auth.signOut();
-            console.log('✅ Government account ready!');
-            console.log('   Official ID  :', officialId.toUpperCase());
-            console.log('   Email        :', email);
-            console.log('   Password     :', password);
-            return true;
+            const data = snap.docs[0].data();
+            console.log('✅ Official found:');
+            console.log('  Doc ID:', snap.docs[0].id);
+            console.log('  Official ID:', data.officialId);
+            console.log('  Email:', data.email);
+            console.log('  Password:', data.password);
+            console.log('  Status:', data.status);
+            console.log('  Access Level:', data.accessLevel);
+            console.log('  Expires:', data.expiresAt);
         } catch (e) {
-            console.error('❌ Seed failed:', e);
-            return false;
+            console.error('Read failed:', e);
         }
     };
 
@@ -1376,26 +1439,34 @@
     document.addEventListener('DOMContentLoaded', function() {
         const params = new URLSearchParams(window.location.search);
         let role = params.get('role') || localStorage.getItem('selectedRole') || sessionStorage.getItem('selectedRole');
+        role = (role || '').toLowerCase().trim();
 
         if (role && roleMetadata[role]) {
-            document.querySelectorAll('.role-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.role === role) btn.classList.add('active');
-            });
             setRole(role);
             try {
                 localStorage.removeItem('selectedRole');
                 sessionStorage.removeItem('selectedRole');
             } catch (e) {}
         } else {
-            document.querySelector('.role-btn[data-role="trainee"]').classList.add('active');
             setRole('trainee');
         }
 
+        try {
+            const prefillEmail = sessionStorage.getItem('prefillLoginEmail');
+            const prefillRole  = sessionStorage.getItem('prefillLoginRole');
+            if (prefillEmail && prefillRole === currentRole) {
+                emailInput.value = prefillEmail;
+                setTimeout(() => pwInput.focus(), 200);
+                showAlert('Account created! Enter your password to sign in.', 'info', 6000);
+                sessionStorage.removeItem('prefillLoginEmail');
+                sessionStorage.removeItem('prefillLoginRole');
+            }
+        } catch (e) {}
+
         updateThemeIcon();
-        console.log('🔐 Login page ready — Firebase Auth (permanent sessions).');
-        console.log('💡 To create a government account, run in console:');
-        console.log('   await __seedGovtAccount("GOV20260001","officer@gov.in","Gov@2026")');
+        console.log('🔐 Login page ready — Firebase Auth + Firestore.');
+        console.log('💡 Government login now reads from Firestore (govtOfficials collection).');
+        console.log('💡 To inspect an official, run: await __checkGovt("email@gov.in")');
     });
 
     // ============================================================

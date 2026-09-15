@@ -29,9 +29,6 @@
     </script>
 
     <style>
-        /* ═══════════════════════════════════════════════════════
-           ADMIN PANEL v3.0 — Firebase-integrated
-           ═══════════════════════════════════════════════════════ */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
 
         :root {
@@ -1414,6 +1411,12 @@
             <i class="fas fa-chart-bar"></i> Reports &amp; Analytics
         </a>
 
+        <div class="sidebar-section">Messages</div>
+        <a class="sidebar-link" data-module="contacts">
+            <i class="fas fa-envelope"></i> Contact Messages
+            <span class="badge" id="contactsBadge">0</span>
+        </a>
+
         <div class="sidebar-section">Access Control</div>
         <a class="sidebar-link" data-module="govtAccess">
             <i class="fas fa-landmark"></i> Government Access
@@ -1899,6 +1902,33 @@
                 </div>
             </div>
 
+            <!-- ═══ CONTACT MESSAGES MODULE ═══ -->
+            <div class="module" data-module="contacts">
+                <div class="module-header">
+                    <div>
+                        <h2><i class="fas fa-envelope"></i> Contact Messages</h2>
+                        <p>Messages sent by users via the Contact Admin form</p>
+                    </div>
+                    <div class="module-header-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="loadContactMessages()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="clearAllContactMessages()">
+                            <i class="fas fa-trash"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="contactStats"></div>
+
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3><i class="fas fa-inbox"></i> Inbox</h3>
+                    </div>
+                    <div id="contactMessagesList" style="display: flex; flex-direction: column; gap: 0.8rem;"></div>
+                </div>
+            </div>
+
             <!-- ═══ GOVERNMENT ACCESS CONTROL MODULE ═══ -->
             <div class="module" data-module="govtAccess">
                 <div class="module-header">
@@ -1917,7 +1947,7 @@
                     <i class="fas fa-shield-alt" style="font-size: 1.3rem; color: #2563eb; flex-shrink: 0;"></i>
                     <div>
                         <strong style="color: #1e3a8a;">Exclusive Admin Control:</strong>
-                        Only Super Admins can create Government Official accounts. These write directly to Firebase Auth + Firestore with role "government".
+                        Officials log in with the email + password you set. Share credentials securely — they work immediately.
                     </div>
                 </div>
 
@@ -2212,8 +2242,11 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   SKILLINTEL · SUPER ADMIN PANEL v3.0
-   Firebase-integrated — Auth + Firestore
+   SKILLINTEL · SUPER ADMIN PANEL v3.2 — FIXED
+   Government password now works correctly:
+   · Password shown at creation = password saved
+   · Reset password uses a proper modal (not browser prompt)
+   · Old draft never leaks into new officials
    ═══════════════════════════════════════════════════════════════ */
 
 const firebaseConfig = {
@@ -2234,7 +2267,7 @@ const GOVT_ACTIVITY_KEY = 'govtActivityLog';
 const ADMIN_ACTIVITY_KEY = 'adminActivities';
 
 /* ═══════════════════════════════════════════════════════════════
-   STATE CACHE — loaded from Firestore
+   STATE CACHE
    ═══════════════════════════════════════════════════════════════ */
 let _firebaseUser = null;
 let _userProfile = null;
@@ -2248,10 +2281,11 @@ let _backendCache = {
 
 async function loadRealDataFromBackend() {
     try {
-        const [tSnap, eSnap, pSnap] = await Promise.all([
+        const [tSnap, eSnap, pSnap, gSnap] = await Promise.all([
             db.collection('trainees').get(),
             db.collection('employers').get(),
             db.collection('providers').get(),
+            db.collection('govtOfficials').get(),
         ]);
 
         const trainees = [];
@@ -2263,33 +2297,19 @@ async function loadRealDataFromBackend() {
         const providers = [];
         pSnap.forEach(d => providers.push({ _id: d.id, _role: 'provider', orgName: d.data().orgName, ...d.data() }));
 
-        // Government officials = users with role 'government'
         const govtOfficials = [];
-        const usersSnap = await db.collection('users').where('role', '==', 'government').get();
-        usersSnap.forEach(d => {
-            const data = d.data();
-            govtOfficials.push({
-                id: d.id,
-                officialId: data.officialId,
-                fullName: data.fullName,
-                email: data.email,
-                mobile: data.mobile,
-                department: data.department,
-                accessLevel: data.accessLevel,
-                region: data.region,
-                status: data.status || 'active',
-                expiresAt: data.expiresAt,
-                lastLogin: data.lastLoginAt,
-                loginCount: data.loginCount || 0,
-                createdAt: data.createdAt,
-                createdBy: data.createdBy,
-            });
-        });
+        gSnap.forEach(d => govtOfficials.push({ id: d.id, ...d.data() }));
 
         _backendCache = {
             trainees, employers, providers, govtOfficials,
             loaded: true
         };
+        console.log('📦 Loaded from Firestore:', {
+            trainees: trainees.length,
+            employers: employers.length,
+            providers: providers.length,
+            govtOfficials: govtOfficials.length
+        });
     } catch (err) {
         console.warn('Firestore load failed:', err);
         _backendCache.loaded = false;
@@ -2297,9 +2317,9 @@ async function loadRealDataFromBackend() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LOGIN — with direct credential fallback
+   LOGIN
    ═══════════════════════════════════════════════════════════════ */
-    async function adminLogin() {
+async function adminLogin() {
     const user = document.getElementById('adminUser').value.trim().toLowerCase();
     const pass = document.getElementById('adminPass').value;
     const errorBox = document.getElementById('loginError');
@@ -2316,80 +2336,6 @@ async function loadRealDataFromBackend() {
     const originalHTML = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
 
-    // ═══════════════════════════════════════════════════════════
-    // DIRECT CREDENTIAL BYPASS — works even if Firebase Auth fails
-    // ═══════════════════════════════════════════════════════════
-    const DIRECT_ADMIN = {
-        email: 'vithanalamanisri@gmail.com',
-        password: 'vManisri@1512',
-        fullName: 'VITHANALA MANI SRI',
-        role: 'super_admin'
-    };
-
-    if (user === DIRECT_ADMIN.email && pass === DIRECT_ADMIN.password) {
-        console.log('✅ Direct credential match — bypassing Firebase');
-
-        // Try to also sign in via Firebase in the background for Firestore access
-        try {
-            const cred = await auth.signInWithEmailAndPassword(user, pass);
-            const fbUser = cred.user;
-            _firebaseUser = fbUser;
-
-            const snap = await db.collection('users').doc(fbUser.uid).get();
-            if (snap.exists) {
-                _userProfile = snap.data();
-                // Auto-fix role if it's still "trainee"
-                if (_userProfile.role !== 'super_admin' && _userProfile.role !== 'admin' && _userProfile.role !== 'verifier') {
-                    await db.collection('users').doc(fbUser.uid).update({ role: 'super_admin' });
-                    _userProfile.role = 'super_admin';
-                    console.log('✅ Auto-updated role to super_admin');
-                }
-            } else {
-                await db.collection('users').doc(fbUser.uid).set({
-                    uid: fbUser.uid,
-                    role: 'super_admin',
-                    email: user,
-                    fullName: DIRECT_ADMIN.fullName,
-                    status: 'active',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                _userProfile = { role: 'super_admin', email: user, fullName: DIRECT_ADMIN.fullName };
-            }
-        } catch (fbErr) {
-            console.warn('Firebase Auth failed but direct login succeeds:', fbErr.code);
-            // Force-construct a minimal user profile for the panel
-            _userProfile = {
-                role: 'super_admin',
-                email: user,
-                fullName: DIRECT_ADMIN.fullName
-            };
-        }
-
-        logAudit('Admin Login', 'Direct credential login');
-        logActivity('Admin logged in (direct)', 'success');
-
-        // Show panel immediately
-        try {
-            await showPanel();
-        } catch (panelErr) {
-            // If showPanel fails (e.g., Firestore rules), still show the panel shell
-            console.warn('Panel init error:', panelErr);
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('adminPanel').classList.add('show');
-            if (_userProfile) {
-                const n = _userProfile.fullName || _userProfile.email || 'Admin';
-                document.getElementById('adminAvatar').textContent = n.charAt(0).toUpperCase();
-                document.getElementById('adminName').textContent = n.split('@')[0];
-            }
-        }
-
-        toast(`Welcome back, ${DIRECT_ADMIN.fullName}!`, 'success');
-        return;
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // NORMAL FIREBASE LOGIN for other admins
-    // ═══════════════════════════════════════════════════════════
     try {
         const cred = await auth.signInWithEmailAndPassword(user, pass);
         const fbUser = cred.user;
@@ -2397,7 +2343,7 @@ async function loadRealDataFromBackend() {
         const snap = await db.collection('users').doc(fbUser.uid).get();
         if (!snap.exists) {
             await auth.signOut();
-            errorText.textContent = 'No admin profile found.';
+            errorText.textContent = 'No admin profile found in Firestore.';
             errorBox.classList.add('show');
             btn.disabled = false;
             btn.innerHTML = originalHTML;
@@ -2435,6 +2381,7 @@ async function loadRealDataFromBackend() {
         else if (err.code === 'auth/invalid-email')   msg = 'Invalid email address.';
         else if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
         else if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your internet.';
+        else if (err.code === 'auth/unauthorized-domain') msg = 'This domain is not authorized. Add it in Firebase Console.';
 
         logSecurityEvent('Failed admin login attempt', `Email: ${user}`);
         errorText.textContent = msg;
@@ -2489,7 +2436,6 @@ async function showPanel() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminPanel').classList.add('show');
 
-    // Update admin identity from profile
     if (_userProfile) {
         const name = _userProfile.fullName || _userProfile.email || 'Admin';
         const initial = name.charAt(0).toUpperCase();
@@ -2562,6 +2508,7 @@ function initPanel() {
     renderGovtOfficials();
     renderGovtActivityLog();
     renderAIInsights();
+    loadContactMessages();
     updateCounts();
     updateNotifBadge();
     updateThemeIcon();
@@ -2581,6 +2528,7 @@ const MODULE_TITLES = {
     outcomes: { title: 'Outcome Management', subtitle: 'Employment and placement data' },
     verify: { title: 'Verification Center', subtitle: 'Review pending items' },
     ai: { title: 'AI Insights', subtitle: 'AI-detected patterns and recommendations' },
+    contacts: { title: 'Contact Messages', subtitle: 'Messages sent by users via the Contact Admin form' },
     reports: { title: 'Reports & Analytics', subtitle: 'Generate platform reports' },
     govtAccess: { title: 'Government Access Control', subtitle: 'Provision and manage authorized Government Official accounts' },
     passwords: { title: 'Password Reset', subtitle: 'Assist users with password recovery' },
@@ -2618,6 +2566,7 @@ function switchModule(module) {
         outcomes: renderOutcomes,
         verify: renderPending,
         ai: renderAIInsights,
+        contacts: loadContactMessages,
         govtAccess: () => { renderGovtOfficials(); renderGovtActivityLog(); },
         passwords: renderPasswordReset,
         audit: renderAuditLogs,
@@ -2640,7 +2589,7 @@ function filterSidebar(query) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DATA ACCESS — Firestore cache
+   DATA ACCESS
    ═══════════════════════════════════════════════════════════════ */
 function getData(key) {
     if (key === 'allTrainees')  return _backendCache.trainees || [];
@@ -2945,7 +2894,7 @@ function renderUsers() {
             <div class="empty-state">
                 <i class="fas fa-users"></i>
                 <h3>No users found</h3>
-                <p>${users.length === 0 ? 'Register a trainee/employer/provider first — real users will appear here' : 'Try adjusting your search or filters'}</p>
+                <p>${users.length === 0 ? 'Register a trainee/employer/provider first' : 'Try adjusting your search or filters'}</p>
             </div>
         </td></tr>`;
         return;
@@ -3285,7 +3234,197 @@ function renderAIInsights() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   GOVERNMENT ACCESS CONTROL — Firebase
+   CONTACT MESSAGES
+   ═══════════════════════════════════════════════════════════════ */
+let _contactMessages = [];
+
+async function loadContactMessages() {
+    try {
+        const snap = await db.collection('contactMessages')
+            .orderBy('createdAt', 'desc')
+            .limit(100)
+            .get();
+
+        _contactMessages = [];
+        snap.forEach(d => _contactMessages.push({ _id: d.id, ...d.data() }));
+
+        renderContactMessages();
+        console.log('📬 Loaded', _contactMessages.length, 'contact messages');
+    } catch (err) {
+        console.warn('Contact messages load failed, trying without orderBy:', err);
+        try {
+            const snap = await db.collection('contactMessages').limit(100).get();
+            _contactMessages = [];
+            snap.forEach(d => _contactMessages.push({ _id: d.id, ...d.data() }));
+            _contactMessages.sort((a, b) => {
+                const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+                const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
+                return tb - ta;
+            });
+            renderContactMessages();
+        } catch (e) {
+            console.error('Contact messages fallback failed:', e);
+        }
+    }
+}
+
+function renderContactMessages() {
+    const container = document.getElementById('contactMessagesList');
+    if (!container) return;
+
+    const unread = _contactMessages.filter(m => !m.read).length;
+    const badge = document.getElementById('contactsBadge');
+    if (badge) {
+        badge.textContent = unread || _contactMessages.length;
+        badge.style.display = (_contactMessages.length > 0) ? 'inline-block' : 'none';
+    }
+
+    const stats = document.getElementById('contactStats');
+    if (stats) {
+        const today = new Date().toDateString();
+        const todayCount = _contactMessages.filter(m => {
+            const d = m.createdAt?.toDate ? m.createdAt.toDate() : new Date(m.createdAt || 0);
+            return d.toDateString() === today;
+        }).length;
+
+        stats.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon blue"><i class="fas fa-inbox"></i></div>
+                </div>
+                <div class="stat-value">${_contactMessages.length}</div>
+                <div class="stat-label">Total Messages</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon orange"><i class="fas fa-envelope-open"></i></div>
+                </div>
+                <div class="stat-value">${unread}</div>
+                <div class="stat-label">Unread</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon green"><i class="fas fa-calendar-day"></i></div>
+                </div>
+                <div class="stat-value">${todayCount}</div>
+                <div class="stat-label">Today</div>
+            </div>
+        `;
+    }
+
+    if (_contactMessages.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>No contact messages yet</h3>
+                <p>Messages sent via the "Contact Admin" button will appear here</p>
+            </div>
+        `;
+        return;
+    }
+
+    const icons = {
+        general: 'fa-comment',
+        bug: 'fa-bug',
+        feature: 'fa-lightbulb',
+        urgent: 'fa-exclamation-triangle',
+        other: 'fa-question'
+    };
+
+    container.innerHTML = _contactMessages.map(m => {
+        const time = m.createdAt?.toDate
+            ? m.createdAt.toDate().toLocaleString()
+            : new Date(m.createdAt || 0).toLocaleString();
+
+        const priorityColors = {
+            low: '#64748b',
+            normal: '#2563eb',
+            high: '#d97706',
+            urgent: '#dc2626'
+        };
+        const pColor = priorityColors[m.priority || 'normal'] || '#2563eb';
+        const unreadDot = !m.read ? '<span style="display:inline-block;width:8px;height:8px;background:#dc2626;border-radius:50%;margin-right:6px;"></span>' : '';
+
+        return `
+            <div class="activity-item ${m.priority === 'urgent' ? 'error' : m.priority === 'high' ? 'warning' : 'info'}"
+                 style="flex-direction: column; align-items: flex-start; padding: 1rem 1.2rem;">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.6rem;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <div class="activity-icon" style="background: ${pColor}20; color: ${pColor};">
+                            <i class="fas ${icons[m.type] || 'fa-comment'}"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.85rem; color: var(--adm-text);">
+                                ${unreadDot}${m.subject || 'No Subject'}
+                            </div>
+                            <div style="font-size: 0.7rem; color: var(--adm-text-3); margin-top: 2px;">
+                                From: <strong>${m.name || 'Anonymous'}</strong> · ${m.email || 'No email'}
+                                ${m.role ? ' · <span style="text-transform: capitalize;">' + m.role + '</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.68rem; color: var(--adm-text-4);">${time}</div>
+                        <span class="badge ${m.priority === 'urgent' ? 'suspended' : m.priority === 'high' ? 'pending' : 'active'}"
+                              style="font-size: 0.6rem; margin-top: 3px;">
+                            ${(m.priority || 'normal').toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--adm-text-2); line-height: 1.5; padding: 0.6rem 0.8rem; background: var(--adm-bg-3); border-radius: 8px; width: 100%;">
+                    ${(m.message || '').replace(/</g, '&lt;').replace(/\n/g, '<br>')}
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.6rem; width: 100%; justify-content: flex-end;">
+                    ${m.email ? `<a href="mailto:${m.email}" class="btn btn-primary btn-sm"><i class="fas fa-reply"></i> Reply</a>` : ''}
+                    ${!m.read ? `<button class="btn btn-success btn-sm" onclick="markMessageRead('${m._id}')"><i class="fas fa-check"></i> Mark Read</button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="deleteContactMessage('${m._id}')"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function markMessageRead(id) {
+    try {
+        await db.collection('contactMessages').doc(id).update({ read: true });
+        const msg = _contactMessages.find(m => m._id === id);
+        if (msg) msg.read = true;
+        renderContactMessages();
+        toast('Marked as read', 'success');
+    } catch (err) {
+        toast('Failed: ' + err.message, 'error');
+    }
+}
+
+async function deleteContactMessage(id) {
+    if (!confirm('Delete this message?')) return;
+    try {
+        await db.collection('contactMessages').doc(id).delete();
+        _contactMessages = _contactMessages.filter(m => m._id !== id);
+        renderContactMessages();
+        toast('Message deleted', 'info');
+    } catch (err) {
+        toast('Failed: ' + err.message, 'error');
+    }
+}
+
+async function clearAllContactMessages() {
+    if (!confirm(`Delete ALL ${_contactMessages.length} contact messages? This cannot be undone.`)) return;
+    if (!confirm('Final confirmation — delete everything?')) return;
+    try {
+        const batch = db.batch();
+        _contactMessages.forEach(m => batch.delete(db.collection('contactMessages').doc(m._id)));
+        await batch.commit();
+        _contactMessages = [];
+        renderContactMessages();
+        toast('All messages cleared', 'info');
+    } catch (err) {
+        toast('Failed: ' + err.message, 'error');
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GOVERNMENT ACCESS CONTROL
    ═══════════════════════════════════════════════════════════════ */
 function getGovtOfficials() {
     return _backendCache.govtOfficials || [];
@@ -3425,6 +3564,9 @@ function renderGovtOfficials() {
             <td>${expires}</td>
             <td>
                 <div class="action-btns">
+                    <button class="action-btn" title="Reset Password" onclick="resetGovtPassword('${o.id}')" style="background:#fef3c7;color:#d97706;">
+                        <i class="fas fa-key"></i>
+                    </button>
                     <button class="action-btn delete" title="Delete" onclick="deleteGovtOfficial('${o.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -3434,9 +3576,11 @@ function renderGovtOfficials() {
     }).join('');
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   ADD OFFICIAL — clean password field, no auto-regen
+   ═══════════════════════════════════════════════════════════════ */
 function openAddGovtOfficialModal() {
     const autoId = generateOfficialId();
-    const autoPw = generateGovtPassword();
     const defaultExpiry = new Date();
     defaultExpiry.setFullYear(defaultExpiry.getFullYear() + 1);
 
@@ -3447,7 +3591,7 @@ function openAddGovtOfficialModal() {
         </div>
         <p style="font-size: 0.82rem; color: var(--adm-text-3); margin-bottom: 1.2rem; padding: 0.6rem 0.9rem; background: var(--adm-bg-3); border-radius: 10px; border-left: 3px solid #2563eb;">
             <i class="fas fa-info-circle" style="color: #2563eb;"></i>
-            This creates a Firebase Auth account + Firestore profile with role "government".
+            <strong>Type the password you want</strong> — it saves exactly as typed. Or click 🔄 to auto-generate.
         </p>
         <div class="form-row">
             <div class="form-group"><label>Full Name *</label><input type="text" id="govtFullName" placeholder="e.g. Ramesh Kumar"></div>
@@ -3473,26 +3617,33 @@ function openAddGovtOfficialModal() {
             <div class="form-group"><label>Valid Until</label><input type="date" id="govtExpiresAt" value="${defaultExpiry.toISOString().split('T')[0]}"></div>
         </div>
         <div class="form-group">
-            <label>Initial Password *</label>
+            <label>Login Password * (you choose this)</label>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <input type="text" id="govtPasswordInput" value="${autoPw}" style="flex: 1; font-family: monospace; letter-spacing: 0.05em; background: var(--adm-bg-3);" readonly>
-                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('govtPasswordInput').value = generateGovtPassword();">
+                <input type="text" id="govtPasswordInput" placeholder="Type password here..."
+                       style="flex: 1; font-family: monospace; letter-spacing: 0.05em; font-weight: 700; color: #1d4ed8;">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('govtPasswordInput').value = generateGovtPassword();" title="Auto-generate">
                     <i class="fas fa-sync-alt"></i>
                 </button>
-                <button class="btn btn-secondary btn-sm" onclick="copyToClipboard(document.getElementById('govtPasswordInput').value);">
+                <button class="btn btn-secondary btn-sm" onclick="copyToClipboard(document.getElementById('govtPasswordInput').value);" title="Copy">
                     <i class="fas fa-copy"></i>
                 </button>
             </div>
             <div style="font-size: 0.72rem; color: var(--adm-text-3); margin-top: 0.4rem;">
-                <i class="fas fa-exclamation-triangle" style="color: #d97706;"></i>
-                Share this password securely. Official can change it after first login.
+                <i class="fas fa-lock" style="color: #10b981;"></i>
+                Type your own password OR click 🔄 to auto-generate. Exactly what's in this box is what the official uses to log in.
             </div>
         </div>
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveGovtOfficial()"><i class="fas fa-save"></i> Create Official</button>
+            <button class="btn btn-primary" id="createGovtBtn" onclick="saveGovtOfficial()"><i class="fas fa-save"></i> Create Official</button>
         </div>
     `);
+
+    // Focus the password field so you can type immediately
+    setTimeout(() => {
+        const pwField = document.getElementById('govtPasswordInput');
+        if (pwField) pwField.focus();
+    }, 200);
 }
 
 async function saveGovtOfficial() {
@@ -3504,10 +3655,10 @@ async function saveGovtOfficial() {
     const accessLevel = document.getElementById('govtAccessLevel').value;
     const region = document.getElementById('govtRegion').value.trim();
     const expiresAt = document.getElementById('govtExpiresAt').value;
-    const password = document.getElementById('govtPasswordInput').value;
+    const password = document.getElementById('govtPasswordInput').value.trim();
 
-    if (!fullName || !email || !department) {
-        toast('Fill all required fields', 'error');
+    if (!fullName || !email || !department || !password) {
+        toast('Fill all required fields (including password)', 'error');
         return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -3519,52 +3670,45 @@ async function saveGovtOfficial() {
         return;
     }
 
+    const existing = getGovtOfficials().find(o => (o.email || '').toLowerCase() === email);
+    if (existing) {
+        toast('An official with this email already exists', 'error');
+        return;
+    }
+
+    const createBtn = document.getElementById('createGovtBtn');
+    createBtn.disabled = true;
+    const originalHTML = createBtn.innerHTML;
+    createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
     try {
-        // Create Firebase Auth user (temporary app instance so we don't log out current admin)
-        const secondaryApp = firebase.apps.find(a => a.name === 'Secondary') ||
-                            firebase.initializeApp(firebaseConfig, 'Secondary');
-        const secondaryAuth = secondaryApp.auth();
+        const docId = 'govt_' + email.replace(/[^a-z0-9]/g, '_');
 
-        let cred;
-        try {
-            cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
-        } catch (e) {
-            if (e.code === 'auth/email-already-in-use') {
-                toast('This email is already registered', 'error');
-                return;
-            }
-            throw e;
-        }
-
-        const govtUid = cred.user.uid;
-
-        // Save profile to Firestore users collection
         const profile = {
-            uid: govtUid,
+            uid: docId,
             role: 'government',
-            email,
-            fullName,
+            email: email,
+            fullName: fullName,
             officialId: officialId.toUpperCase(),
             mobile: mobile || '',
-            department,
-            accessLevel,
+            department: department,
+            accessLevel: accessLevel,
             region: region || '',
             status: 'active',
+            password: password,   // ← exact value from the input box
             expiresAt: expiresAt || '',
             createdBy: _userProfile?.email || 'admin',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             registeredAt: new Date().toISOString(),
         };
-        await db.collection('users').doc(govtUid).set(profile);
 
-        // Sign out of secondary auth so it doesn't interfere
-        try { await secondaryAuth.signOut(); } catch (e) {}
+        await db.collection('govtOfficials').doc(docId).set(profile);
+        await db.collection('users').doc(docId).set(profile);
 
-        logAudit('Added Govt Official', `${fullName} (${officialId})`);
+        logAudit('Added Govt Official', `${fullName} (${email})`);
         logActivity(`Government official added: ${fullName}`, 'success');
         logGovtActivity(`Created: ${fullName} · ${officialId} · ${accessLevel} level`, 'success');
 
-        // Reload Firestore cache
         _backendCache.loaded = false;
         await loadRealDataFromBackend();
 
@@ -3572,27 +3716,166 @@ async function saveGovtOfficial() {
         renderGovtOfficials();
         renderGovtActivityLog();
         updateCounts();
-        toast(`Official created: ${officialId}`, 'success');
+
+        showModal(`
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle" style="color:#10b981;"></i> Official Added</h3>
+                <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--adm-text-3); margin-bottom: 1rem;">
+                These are the exact credentials for <strong>${fullName}</strong>:
+            </p>
+            <div style="background: rgba(37, 99, 235, 0.08); border: 2px dashed #2563eb; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
+                <div style="font-size: 0.7rem; color: var(--adm-text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Official ID</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: #1d4ed8; font-family: monospace; margin-bottom: 0.8rem;">${officialId.toUpperCase()}</div>
+                <div style="font-size: 0.7rem; color: var(--adm-text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Email</div>
+                <div style="font-size: 0.95rem; font-weight: 600; color: var(--adm-text); margin-bottom: 0.8rem;">${email}</div>
+                <div style="font-size: 0.7rem; color: var(--adm-text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Password</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: #1d4ed8; font-family: monospace; letter-spacing: 0.1em;">${password}</div>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--adm-text-3); margin-bottom: 1rem;">
+                <i class="fas fa-info-circle" style="color: #2563eb;"></i>
+                Login URL: <strong>auth/login.html?role=government</strong>
+            </p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="copyToClipboard('Official ID: ${officialId} | Email: ${email} | Password: ${password}')">
+                    <i class="fas fa-copy"></i> Copy All
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            </div>
+        `);
 
     } catch (err) {
         console.error('Govt official creation failed:', err);
         let msg = 'Failed to create official.';
-        if (err.code === 'auth/email-already-in-use') msg = 'Email already in use.';
-        else if (err.code === 'auth/weak-password') msg = 'Password too weak.';
-        else if (err.code === 'permission-denied') msg = 'Firestore permission denied.';
+        if (err.code === 'permission-denied') msg = 'Firestore rules block this write. Check rules.';
+        else if (err.message) msg = err.message;
+        toast(msg, 'error');
+        createBtn.disabled = false;
+        createBtn.innerHTML = originalHTML;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESET PASSWORD — proper modal, no browser prompt
+   ═══════════════════════════════════════════════════════════════ */
+function resetGovtPassword(docId) {
+    const official = getGovtOfficials().find(o => o.id === docId);
+    if (!official) { toast('Official not found', 'error'); return; }
+
+    showModal(`
+        <div class="modal-header">
+            <h3><i class="fas fa-key"></i> Reset Password</h3>
+            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--adm-text-3); margin-bottom: 1rem;">
+            Set a new password for <strong>${official.fullName}</strong>
+            <br><span style="font-size: 0.75rem;">(${official.officialId} · ${official.email})</span>
+        </p>
+        <div class="form-group">
+            <label>New Password *</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="newGovtPassword" placeholder="Type new password here..."
+                       style="flex: 1; font-family: monospace; letter-spacing: 0.05em; font-weight: 700; color: #1d4ed8;">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('newGovtPassword').value = generateGovtPassword();" title="Auto-generate">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="copyToClipboard(document.getElementById('newGovtPassword').value);" title="Copy">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--adm-text-3); margin-top: 0.4rem;">
+                <i class="fas fa-lock" style="color: #10b981;"></i>
+                Type your own OR click 🔄 to auto-generate. Minimum 6 characters.
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveNewGovtPassword('${docId}')">
+                <i class="fas fa-save"></i> Save Password
+            </button>
+        </div>
+    `);
+
+    setTimeout(() => {
+        const f = document.getElementById('newGovtPassword');
+        if (f) f.focus();
+    }, 200);
+}
+
+async function saveNewGovtPassword(docId) {
+    const newPassword = document.getElementById('newGovtPassword').value.trim();
+    const official = getGovtOfficials().find(o => o.id === docId);
+
+    if (!official) { toast('Official not found', 'error'); return; }
+    if (!newPassword) { toast('Password cannot be empty', 'error'); return; }
+    if (newPassword.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+
+    try {
+        await db.collection('govtOfficials').doc(docId).update({ password: newPassword });
+        await db.collection('users').doc(docId).update({ password: newPassword }).catch(() => {});
+
+        if (official) official.password = newPassword;
+
+        logGovtActivity(`Password reset for ${official.fullName}`, 'warning');
+        logAudit('Reset Govt Password', `${official.fullName} (${official.officialId})`);
+
+        _backendCache.loaded = false;
+        await loadRealDataFromBackend();
+
+        closeModal();
+        renderGovtOfficials();
+
+        toast(`Password updated for ${official.fullName}`, 'success');
+
+        setTimeout(() => {
+            showModal(`
+                <div class="modal-header">
+                    <h3><i class="fas fa-check-circle" style="color:#10b981;"></i> Password Updated</h3>
+                    <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--adm-text-3); margin-bottom: 1rem;">
+                    New password for <strong>${official.fullName}</strong> — use this to log in:
+                </p>
+                <div style="background: rgba(16, 185, 129, 0.08); border: 2px dashed #10b981; border-radius: 12px; padding: 1.2rem; text-align: center; margin-bottom: 1rem;">
+                    <div style="font-size: 0.7rem; color: var(--adm-text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">New Password</div>
+                    <div style="font-size: 1.4rem; font-weight: 800; color: #059669; font-family: monospace; letter-spacing: 0.1em;">${newPassword}</div>
+                </div>
+                <div style="background: #f0fdf4; border-left: 3px solid #10b981; padding: 0.8rem 1rem; border-radius: 10px; font-size: 0.78rem; color: #065f46; line-height: 1.6;">
+                    <i class="fas fa-sign-in-alt"></i> <strong>Login details:</strong><br>
+                    URL: <strong>auth/login.html?role=government</strong><br>
+                    Official ID: <strong>${official.officialId}</strong><br>
+                    Email: <strong>${official.email}</strong><br>
+                    Password: <strong>${newPassword}</strong>
+                </div>
+                <div class="modal-actions" style="margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="copyToClipboard('ID: ${official.officialId} | Email: ${official.email} | Password: ${newPassword}')">
+                        <i class="fas fa-copy"></i> Copy All
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                </div>
+            `);
+        }, 300);
+
+    } catch (err) {
+        console.error('Password reset failed:', err);
+        let msg = 'Failed to update password.';
+        if (err.code === 'permission-denied') msg = 'Firestore rules block this update.';
         else if (err.message) msg = err.message;
         toast(msg, 'error');
     }
 }
 
-async function deleteGovtOfficial(uid) {
-    const o = getGovtOfficials().find(x => x.id === uid);
+async function deleteGovtOfficial(docId) {
+    const o = getGovtOfficials().find(x => x.id === docId);
     if (!o) { toast('Not found', 'error'); return; }
 
-    if (!confirm(`Remove ${o.fullName} (${o.officialId})? This deletes the Firestore profile.`)) return;
+    if (!confirm(`Remove ${o.fullName} (${o.email})? They will no longer be able to log in.`)) return;
 
     try {
-        await db.collection('users').doc(uid).delete();
+        await db.collection('govtOfficials').doc(docId).delete().catch(() => {});
+        await db.collection('users').doc(docId).delete().catch(() => {});
+
         logGovtActivity(`Deleted: ${o.fullName} (${o.officialId})`, 'error');
         logAudit('Deleted Govt Official', `${o.fullName} (${o.officialId})`);
 
@@ -3602,7 +3885,7 @@ async function deleteGovtOfficial(uid) {
         renderGovtOfficials();
         renderGovtActivityLog();
         updateCounts();
-        toast('Official deleted', 'info');
+        toast('Official removed', 'info');
     } catch (err) {
         console.error('Delete failed:', err);
         toast('Failed to delete: ' + err.message, 'error');
@@ -3666,7 +3949,7 @@ function clearGovtActivityLog() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PASSWORD RESET — Firebase sendPasswordResetEmail
+   PASSWORD RESET
    ═══════════════════════════════════════════════════════════════ */
 function renderPasswordReset() {
     const users = getAllUsers();
@@ -3807,7 +4090,7 @@ function clearSecurityLogs() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   NOTIFICATIONS — Firestore + local cache
+   NOTIFICATIONS
    ═══════════════════════════════════════════════════════════════ */
 async function sendNotification() {
     const recipients = document.getElementById('notifRecipients').value;
@@ -3859,7 +4142,7 @@ function showNotifications() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   USER ACTIONS — Firestore writes
+   USER ACTIONS
    ═══════════════════════════════════════════════════════════════ */
 function viewUser(uid, role) {
     const key = role === 'trainee' ? 'allTrainees' : role === 'employer' ? 'allEmployers' : 'allProviders';
@@ -3928,7 +4211,7 @@ async function deleteUser(uid, role) {
 
     try {
         const collection = role === 'trainee' ? 'trainees' : role === 'employer' ? 'employers' : 'providers';
-        await db.collection(collection).doc(uid).delete();
+        await db.collection(collection).doc(uid).delete().catch(() => {});
         await db.collection('users').doc(uid).delete().catch(() => {});
 
         logAudit('Deleted User', `${user.email} (${role})`);
@@ -4102,7 +4385,7 @@ function generateReport(type) {
             <div style="font-size: 0.8rem; color: var(--adm-text-3); margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">${s.detail}</div>
         </div>
         <p style="font-size: 0.8rem; color: var(--adm-text-3); text-align: center;">
-            ${s.count === 0 ? 'No data available yet — real data will appear here' : 'Based on actual platform data from Firestore'}
+            ${s.count === 0 ? 'No data available yet' : 'Based on actual platform data from Firestore'}
         </p>
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="closeModal()">Close</button>
@@ -4245,11 +4528,11 @@ function handleSearchSelect(index) {
    TOUR
    ═══════════════════════════════════════════════════════════════ */
 const TOUR_STEPS = [
-    { icon: 'fa-shield-halved', title: 'Welcome to Admin Panel', text: 'This is your central control center for the SKILLINTEL platform. All data shown here comes from REAL Firebase users.' },
+    { icon: 'fa-shield-halved', title: 'Welcome to Admin Panel', text: 'This is your central control center for the SKILLINTEL platform. All data comes from REAL Firebase users.' },
     { icon: 'fa-users', title: 'User Management', text: 'Manage all Trainees, Employers, and Training Providers from a single screen.' },
-    { icon: 'fa-landmark', title: 'Government Access', text: 'Provision authorized Government Officials. These are Firebase Auth accounts with role "government".' },
+    { icon: 'fa-landmark', title: 'Government Access', text: 'Provision authorized Government Officials. Password you type = password they use.' },
+    { icon: 'fa-envelope', title: 'Contact Messages', text: 'Users can send messages via the Contact Admin form on any page. They appear here.' },
     { icon: 'fa-key', title: 'Password Reset', text: 'Send Firebase password reset emails to any user instantly.' },
-    { icon: 'fa-chart-line', title: 'Outcome Management', text: 'Track employment, income, retention, and follow-up data.' },
     { icon: 'fa-brain', title: 'AI Insights', text: 'AI analyzes real platform data to surface skill gaps, risks, and opportunities.' },
     { icon: 'fa-search', title: 'Global Search', text: 'Press Ctrl+K to instantly search users, programs, and modules.' },
     { icon: 'fa-moon', title: 'Dark Mode', text: 'Click the moon icon to switch to dark mode.' }
@@ -4314,6 +4597,7 @@ async function refreshAll() {
     renderAIInsights();
     renderGovtOfficials();
     renderGovtActivityLog();
+    loadContactMessages();
     updateCounts();
     updateNotifBadge();
     toast('Refreshed with live Firestore data', 'info');
@@ -4336,6 +4620,10 @@ function toggleTheme() {
     html.setAttribute('data-theme', next);
     try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
     updateThemeIcon();
+}
+
+function importData() {
+    toast('Import feature disabled (Firestore is source of truth)', 'info');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -4371,6 +4659,8 @@ window.deleteUser = deleteUser;
 window.approveUser = approveUser;
 window.rejectUser = rejectUser;
 window.deleteGovtOfficial = deleteGovtOfficial;
+window.resetGovtPassword = resetGovtPassword;
+window.saveNewGovtPassword = saveNewGovtPassword;
 window.exportGovtOfficials = exportGovtOfficials;
 window.clearGovtActivityLog = clearGovtActivityLog;
 window.regenerateAIInsights = regenerateAIInsights;
@@ -4404,18 +4694,14 @@ window.getData = getData;
 window.initPanel = initPanel;
 window.loadRealDataFromBackend = loadRealDataFromBackend;
 window.showPanel = showPanel;
+window.loadContactMessages = loadContactMessages;
+window.renderContactMessages = renderContactMessages;
+window.markMessageRead = markMessageRead;
+window.deleteContactMessage = deleteContactMessage;
+window.clearAllContactMessages = clearAllContactMessages;
 
-function importData() {
-    toast('Import feature disabled (Firestore is source of truth)', 'info');
-}
-
-console.log('%c[SKILLINTEL Admin] Firebase panel loaded',
-    'color: #22c55e; font-weight: bold; font-size: 14px;');
-console.log('%cCreate your admin account via Firebase Console:',
-    'color: #f59e0b; font-weight: bold;');
-console.log('1. Go to Firebase Console → Authentication → Add User');
-console.log('2. Then in Firestore → users/{uid} → set: { role: "super_admin", fullName: "Your Name", email: "..." }');
-console.log('3. Login here with that email + password');
+console.log('%c[SKILLINTEL Admin] v3.2 loaded', 'color: #22c55e; font-weight: bold; font-size: 14px;');
+console.log('%c✅ Password field now works — type exactly what you want to save', 'color: #10b981; font-weight: 700;');
 </script>
 
 </body>

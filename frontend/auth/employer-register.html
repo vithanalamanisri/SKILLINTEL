@@ -85,6 +85,233 @@
             box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
         }
 
+        /* ═══ CONTACT ADMIN FLOATING BUTTON ═══ */
+        .contact-admin-float {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 190;
+            padding: 0.85rem 1.4rem;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 12px 30px -8px rgba(37, 99, 235, 0.5);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: inherit;
+        }
+        .contact-admin-float:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 18px 40px -10px rgba(37, 99, 235, 0.6);
+        }
+        .contact-admin-float i { font-size: 1rem; }
+
+        /* ═══ CONTACT ADMIN MODAL ═══ */
+        .contact-admin-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 18, 32, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .contact-admin-overlay.show { display: flex; }
+
+        .contact-admin-modal {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 2rem 2.2rem 1.8rem;
+            max-width: 540px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.5);
+            animation: contactModalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+        html[data-theme="dark"] .contact-admin-modal {
+            background: #151E32;
+            color: #F1F5F9;
+        }
+        @keyframes contactModalIn {
+            from { opacity: 0; transform: scale(0.92) translateY(20px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .contact-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.4rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        html[data-theme="dark"] .contact-header { border-bottom-color: rgba(255,255,255,0.08); }
+
+        .contact-header h3 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #0b1a33;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            letter-spacing: -0.02em;
+        }
+        html[data-theme="dark"] .contact-header h3 { color: #F1F5F9; }
+        .contact-header h3 i { color: #2563eb; font-size: 1.1rem; }
+
+        .contact-header-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 0.9rem;
+            display: grid;
+            place-items: center;
+            transition: 0.15s;
+        }
+        html[data-theme="dark"] .contact-header-close {
+            background: #1E293B; color: #94A3B8;
+        }
+        .contact-header-close:hover { background: #e2e8f0; color: #0b1a33; }
+        html[data-theme="dark"] .contact-header-close:hover { background: #334155; color: #F1F5F9; }
+
+        .contact-intro {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-bottom: 1.4rem;
+            padding: 0.7rem 1rem;
+            background: #eff6ff;
+            border-left: 3px solid #2563eb;
+            border-radius: 10px;
+            line-height: 1.5;
+        }
+        html[data-theme="dark"] .contact-intro {
+            background: rgba(37, 99, 235, 0.12);
+            color: #93C5FD;
+        }
+
+        .contact-field {
+            margin-bottom: 1rem;
+        }
+        .contact-field label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.4rem;
+        }
+        html[data-theme="dark"] .contact-field label { color: #E2E8F0; }
+
+        .contact-field input,
+        .contact-field select,
+        .contact-field textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            font-weight: 500;
+            color: #0b1a33;
+            background: #f8fafc;
+            outline: none;
+            transition: 0.15s;
+        }
+        .contact-field input:focus,
+        .contact-field select:focus,
+        .contact-field textarea:focus {
+            border-color: #2563eb;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+        }
+        html[data-theme="dark"] .contact-field input,
+        html[data-theme="dark"] .contact-field select,
+        html[data-theme="dark"] .contact-field textarea {
+            background: #1A2338;
+            border-color: rgba(255,255,255,0.12);
+            color: #F1F5F9;
+        }
+        html[data-theme="dark"] .contact-field input:focus,
+        html[data-theme="dark"] .contact-field select:focus,
+        html[data-theme="dark"] .contact-field textarea:focus {
+            border-color: #60A5FA;
+            background: #1E293B;
+        }
+
+        .contact-field textarea { resize: vertical; min-height: 100px; }
+
+        .contact-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.9rem;
+        }
+
+        .contact-actions {
+            display: flex;
+            gap: 0.7rem;
+            justify-content: flex-end;
+            margin-top: 1.4rem;
+            padding-top: 1.2rem;
+            border-top: 2px solid #f1f5f9;
+        }
+        html[data-theme="dark"] .contact-actions { border-top-color: rgba(255,255,255,0.08); }
+
+        .contact-btn {
+            padding: 0.75rem 1.4rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: 0.2s;
+        }
+        .contact-btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid #e2e8f0;
+        }
+        html[data-theme="dark"] .contact-btn-cancel {
+            background: #1E293B; color: #CBD5E1;
+            border-color: rgba(255,255,255,0.10);
+        }
+        .contact-btn-cancel:hover { background: #e2e8f0; }
+
+        .contact-btn-send {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            box-shadow: 0 8px 20px -8px rgba(37, 99, 235, 0.5);
+        }
+        .contact-btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px -8px rgba(37, 99, 235, 0.6);
+        }
+        .contact-btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        /* ═══ END CONTACT ADMIN STYLES ═══ */
+
         .register-wrapper {
             width: 100%;
             max-width: 880px;
@@ -621,6 +848,9 @@
                 font-size: 1rem;
             }
             .firebase-status { top: 0.5rem; right: 0.5rem; padding: 0.3rem 0.7rem; font-size: 0.6rem; }
+            .contact-admin-float { bottom: 16px; right: 16px; padding: 0.7rem 1.1rem; font-size: 0.78rem; }
+            .contact-admin-modal { padding: 1.5rem 1.4rem; border-radius: 18px; }
+            .contact-row { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 480px) {
@@ -644,6 +874,8 @@
                 left: 0.7rem;
                 font-size: 0.7rem;
             }
+            .contact-admin-float span { display: none; }
+            .contact-admin-float { padding: 0.8rem; border-radius: 50%; width: 52px; height: 52px; justify-content: center; }
         }
 
         @media print {
@@ -842,6 +1074,68 @@
 <div class="firebase-status offline" id="firebaseStatus">
     <span class="status-dot"></span>
     <span id="firebaseStatusText">Checking Firebase...</span>
+</div>
+
+<!-- ═══ CONTACT ADMIN FLOATING BUTTON ═══ -->
+<button class="contact-admin-float" onclick="openContactAdmin()" title="Contact Admin">
+    <i class="fas fa-envelope"></i> <span>Contact Admin</span>
+</button>
+
+<!-- ═══ CONTACT ADMIN MODAL ═══ -->
+<div class="contact-admin-overlay" id="contactAdminOverlay" onclick="if(event.target===this)closeContactAdmin()">
+    <div class="contact-admin-modal">
+        <div class="contact-header">
+            <h3><i class="fas fa-envelope"></i> Contact Admin</h3>
+            <button class="contact-header-close" onclick="closeContactAdmin()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="contact-intro">
+            <i class="fas fa-info-circle" style="color:#2563eb; margin-right:4px;"></i>
+            Send a message to the platform administrator. They will receive it in the Admin Panel.
+        </div>
+
+        <div class="contact-row">
+            <div class="contact-field">
+                <label><i class="fas fa-user"></i> Your Name *</label>
+                <input type="text" id="contactName" placeholder="Full name">
+            </div>
+            <div class="contact-field">
+                <label><i class="fas fa-envelope"></i> Email *</label>
+                <input type="email" id="contactEmail" placeholder="your@email.com">
+            </div>
+        </div>
+
+        <div class="contact-field">
+            <label><i class="fas fa-tag"></i> Subject *</label>
+            <input type="text" id="contactSubject" placeholder="Brief subject of your message">
+        </div>
+
+        <div class="contact-field">
+            <label><i class="fas fa-exclamation-triangle"></i> Priority</label>
+            <select id="contactPriority">
+                <option value="low">Low</option>
+                <option value="normal" selected>Normal</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+            </select>
+        </div>
+
+        <div class="contact-field">
+            <label><i class="fas fa-comment-dots"></i> Message *</label>
+            <textarea id="contactMessage" placeholder="Describe your issue or question in detail..."></textarea>
+        </div>
+
+        <div class="contact-actions">
+            <button class="contact-btn contact-btn-cancel" onclick="closeContactAdmin()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="contact-btn contact-btn-send" id="contactSendBtn" onclick="sendContactMessage()">
+                <i class="fas fa-paper-plane"></i> Send Message
+            </button>
+        </div>
+    </div>
 </div>
 
 <div class="register-wrapper">
@@ -1316,6 +1610,97 @@
     }
 
     // ============================================================
+    // CONTACT ADMIN — open/close/send
+    // ============================================================
+    function openContactAdmin() {
+        const overlay = document.getElementById('contactAdminOverlay');
+        overlay.classList.add('show');
+
+        // Pre-fill name/email from the registration form
+        const nameField = document.getElementById('contactName');
+        const emailField = document.getElementById('contactEmail');
+        if (nameField && !nameField.value) {
+            const regName = document.getElementById('contactPerson').value.trim();
+            if (regName) nameField.value = regName;
+        }
+        if (emailField && !emailField.value) {
+            const regEmail = document.getElementById('email').value.trim();
+            if (regEmail) emailField.value = regEmail;
+        }
+
+        setTimeout(() => {
+            document.getElementById('contactSubject').focus();
+        }, 100);
+    }
+
+    function closeContactAdmin() {
+        document.getElementById('contactAdminOverlay').classList.remove('show');
+    }
+
+    async function sendContactMessage() {
+        const name = document.getElementById('contactName').value.trim();
+        const email = document.getElementById('contactEmail').value.trim().toLowerCase();
+        const subject = document.getElementById('contactSubject').value.trim();
+        const priority = document.getElementById('contactPriority').value;
+        const message = document.getElementById('contactMessage').value.trim();
+
+        if (!name || !email || !subject || !message) {
+            alert('Please fill all required fields (Name, Email, Subject, Message).');
+            return;
+        }
+        if (!validateEmail(email)) {
+            alert('Please enter a valid email address.');
+            return;
+        }
+
+        const btn = document.getElementById('contactSendBtn');
+        btn.disabled = true;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            const currentUser = auth.currentUser;
+
+            await db.collection('contactMessages').add({
+                name: name,
+                email: email,
+                subject: subject,
+                priority: priority,
+                message: message,
+                role: currentUser ? (localStorage.getItem('userRole') || 'employer') : 'guest',
+                userId: currentUser ? currentUser.uid : null,
+                pageUrl: window.location.href,
+                userAgent: navigator.userAgent,
+                read: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            alert('✅ Message sent successfully!\n\nThe admin will receive your message and reply soon.');
+
+            document.getElementById('contactSubject').value = '';
+            document.getElementById('contactMessage').value = '';
+            document.getElementById('contactPriority').value = 'normal';
+
+            closeContactAdmin();
+
+        } catch (err) {
+            console.error('Contact message send failed:', err);
+            let msg = 'Failed to send message.';
+            if (err.code === 'permission-denied') {
+                msg = 'Firestore rules block this. Please ask admin to update rules.';
+            } else if (err.code === 'unavailable') {
+                msg = 'Network error. Please check your internet connection.';
+            } else if (err.message) {
+                msg = err.message;
+            }
+            alert('❌ ' + msg);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    }
+
+    // ============================================================
     // REGISTER EMPLOYER (Firebase Auth + Firestore)
     // ============================================================
     async function registerEmployer() {
@@ -1387,18 +1772,12 @@
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
 
         try {
-            // ============================================================
-            // STEP 1 — Create Firebase Auth user (permanent)
-            // ============================================================
             console.log('📤 Step 1: Creating Firebase Auth user...');
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             const fbUser = userCredential.user;
 
             try { await fbUser.updateProfile({ displayName: contactPerson }); } catch (e) {}
 
-            // ============================================================
-            // STEP 2 — Save all employer details to Firestore
-            // ============================================================
             console.log('📤 Step 2: Saving employer profile to Firestore...');
             const employerProfile = {
                 uid: fbUser.uid,
@@ -1490,6 +1869,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         updateThemeIcon();
         checkBackend();
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeContactAdmin();
+        });
+
         console.log('🚀 Employer registration ready (Firebase mode)');
     });
 
@@ -1528,6 +1912,11 @@
             updateThemeIcon();
         };
     }
+
+    // Expose contact functions globally
+    window.openContactAdmin = openContactAdmin;
+    window.closeContactAdmin = closeContactAdmin;
+    window.sendContactMessage = sendContactMessage;
 </script>
 
 <script src="../js/script.js"></script>

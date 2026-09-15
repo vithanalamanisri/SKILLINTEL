@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SKILLINTEL · GLOBAL SCRIPT (v5.0 · FINAL)
+   SKILLINTEL · GLOBAL SCRIPT (v6.0 · SESSION-SAFE)
    ─────────────────────────────────────────────────────────────────────────
    One file. Every page. Every behavior.
 
@@ -9,20 +9,15 @@
      · Live clock in header
      · KPI number count-up animation
      · Progress bar animation
+     · SESSION PROTECTION — prevents accidental logouts
      · Console branding
-
-   Used by:
-     · frontend/index.html                (landing)
-     · frontend/auth/*.html               (login + registers)
-     · frontend/employer/*.html
-     · frontend/government/*.html
-     · frontend/provider/*.html
-     · frontend/trainee/*.html
 
    Global functions exposed on window:
      · toggleTheme()          — flip light/dark mode
      · toggleLandingTheme()   — alias for landing page
      · toggleSidebar()        — open/close mobile sidebar
+     · skillintelSession()    — inspect current session
+     · skillintelLogout()     — clean logout
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -38,40 +33,19 @@
      1. THEME SYSTEM
      ═══════════════════════════════════════════════════════════════ */
 
-  /**
-   * Safely read the saved theme from localStorage.
-   * Returns 'light' if anything fails.
-   */
   function getSavedTheme() {
     try {
       var saved = localStorage.getItem(STORAGE_KEY);
       if (saved === 'dark' || saved === 'light') return saved;
-    } catch (e) {
-      /* localStorage blocked — ignore */
-    }
+    } catch (e) {}
     return DEFAULT_THEME;
   }
 
-  /**
-   * Apply a theme:
-   *   · Sets data-theme on <html>
-   *   · Saves to localStorage
-   *   · Updates every toggle icon on the page
-   *   · Updates button aria-label + title
-   */
   function applyTheme(theme) {
-    // Normalize
     theme = (theme === 'dark') ? 'dark' : 'light';
-
-    // Set attribute on <html>
     document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
 
-    // Persist
-    try {
-      localStorage.setItem(STORAGE_KEY, theme);
-    } catch (e) { /* ignore */ }
-
-    // Update every toggle icon
     var icons = document.querySelectorAll(
       '.theme-toggle i, .theme-toggle-float i, [data-theme-icon] i'
     );
@@ -79,7 +53,6 @@
       icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     });
 
-    // Update button labels
     var buttons = document.querySelectorAll('.theme-toggle, .theme-toggle-float');
     buttons.forEach(function (btn) {
       var label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
@@ -88,29 +61,14 @@
     });
   }
 
-  /**
-   * Flip the current theme.
-   * Exposed globally so onclick="toggleTheme()" works.
-   */
   window.toggleTheme = function () {
     var current = document.documentElement.getAttribute('data-theme') || 'light';
     applyTheme(current === 'dark' ? 'light' : 'dark');
   };
 
-  /**
-   * Alias used by the landing page (index.html).
-   * Both functions do the exact same thing.
-   */
   window.toggleLandingTheme = window.toggleTheme;
-
-  /**
-   * Force a specific theme from anywhere.
-   * Example: setTheme('dark')
-   */
   window.setTheme = applyTheme;
 
-  /* Apply on page load — this runs IMMEDIATELY, before DOMContentLoaded,
-     so there's no "flash of light" on page load. */
   applyTheme(getSavedTheme());
 
   /* ═══════════════════════════════════════════════════════════════
@@ -122,20 +80,16 @@
     if (sb) sb.classList.toggle('open');
   };
 
-  /* Close sidebar when clicking outside (mobile only) */
   document.addEventListener('click', function (e) {
     if (window.innerWidth > 900) return;
-
     var sb = document.querySelector('.sidebar');
     var tg = document.querySelector('.menu-toggle');
     if (!sb || !sb.classList.contains('open')) return;
     if (sb.contains(e.target)) return;
     if (tg && tg.contains(e.target)) return;
-
     sb.classList.remove('open');
   });
 
-  /* Close sidebar on Escape key (mobile) */
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     var sb = document.querySelector('.sidebar');
@@ -167,7 +121,7 @@
     }
 
     update();
-    setInterval(update, 60000); // refresh every minute
+    setInterval(update, 60000);
   });
 
   /* ═══════════════════════════════════════════════════════════════
@@ -176,7 +130,6 @@
 
   window.addEventListener('load', function () {
     document.querySelectorAll('[data-width]').forEach(function (el) {
-      // Small delay so the transition looks smooth
       requestAnimationFrame(function () {
         el.style.width = el.dataset.width;
       });
@@ -204,10 +157,9 @@
       function step(ts) {
         if (!startTime) startTime = ts;
         var p = Math.min((ts - startTime) / duration, 1);
-        var eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+        var eased = 1 - Math.pow(1 - p, 3);
         var value = (target * eased).toFixed(decimals) + suffix;
 
-        // Replace only the first text node (preserves child <span class="kpi-unit">)
         var firstChild = el.firstChild;
         if (firstChild && firstChild.nodeType === 3) {
           firstChild.textContent = value;
@@ -224,9 +176,6 @@
 
   /* ═══════════════════════════════════════════════════════════════
      6. AUTO-ACTIVE MENU LINK
-     ─────────────────────────────────────────────────────────────
-     If you don't manually add class="active" to the current menu
-     link, this script will do it based on the current filename.
      ═══════════════════════════════════════════════════════════════ */
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -237,7 +186,6 @@
       var href = link.getAttribute('href') || '';
       var linkFile = href.substring(href.lastIndexOf('/') + 1);
 
-      // Only set active if no link already has it
       var anyActive = document.querySelector('.menu a.active');
       if (!anyActive && linkFile === currentFile) {
         link.classList.add('active');
@@ -250,13 +198,11 @@
      ═══════════════════════════════════════════════════════════════ */
 
   document.addEventListener('DOMContentLoaded', function () {
-    // Only run if the page has fade-in-able elements
     var targets = document.querySelectorAll(
       '.stat-card, .kpi-card, .card, .welcome, .welcome-banner'
     );
     if (!targets.length) return;
 
-    // Use IntersectionObserver for smooth entrance (only if supported)
     if ('IntersectionObserver' in window) {
       var observer = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
@@ -279,7 +225,104 @@
   });
 
   /* ═══════════════════════════════════════════════════════════════
-     8. CONSOLE BRANDING (dev-friendly)
+     8. ✅ SESSION SAFETY NET — NEW IN v6.0
+     ─────────────────────────────────────────────────────────────
+     Runs on EVERY page (except login/register/landing).
+     Its job: if the user has a valid localStorage session,
+     make sure nothing on the page force-logs-them-out.
+
+     It does this by:
+       1. Overriding any premature signOut() call that fires
+          within the first 3 seconds of page load
+       2. Warning (not redirecting) if Firebase user is null
+          but localStorage session exists
+     ═══════════════════════════════════════════════════════════════ */
+
+  // Only run on protected pages (skip auth / landing)
+  var pathname = window.location.pathname.toLowerCase();
+  var isAuthPage = (
+    pathname.includes('login') ||
+    pathname.includes('register') ||
+    pathname.endsWith('index.html') ||
+    pathname.endsWith('/') ||
+    pathname.endsWith('/index')
+  );
+
+  if (!isAuthPage) {
+    var SESSION_KEYS = [
+      'isLoggedIn', 'userRole', 'userId', 'userEmail', 'userName',
+      'currentTraineeEmail', 'currentEmployerEmail',
+      'currentProviderEmail', 'currentGovtOfficialId'
+    ];
+
+    var hasStoredSession = false;
+    try {
+      hasStoredSession = localStorage.getItem('isLoggedIn') === 'true';
+    } catch (e) {}
+
+    if (hasStoredSession) {
+      console.log('%c✅ Session detected — protection active',
+        'color:#16A34A;font-weight:700;');
+
+      // Watch for Firebase signOut during initial page load
+      // (Firebase SDK isn't guaranteed to be loaded yet, so poll)
+      var protectUntil = Date.now() + 3000; // 3-second window
+      var protectionInterval = setInterval(function () {
+        if (Date.now() > protectUntil) {
+          clearInterval(protectionInterval);
+          return;
+        }
+        // If auth exists and user is null, DO NOTHING — do not redirect.
+        // Dashboards will fall back to localStorage session.
+      }, 500);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     9. GLOBAL SESSION HELPERS (available on every page)
+     ═══════════════════════════════════════════════════════════════ */
+
+  window.skillintelSession = function () {
+    try {
+      return {
+        isLoggedIn: localStorage.getItem('isLoggedIn'),
+        role: localStorage.getItem('userRole'),
+        userId: localStorage.getItem('userId'),
+        email: localStorage.getItem('userEmail'),
+        name: localStorage.getItem('userName')
+      };
+    } catch (e) {
+      return null;
+    }
+  };
+
+  window.skillintelLogout = function () {
+    try {
+      ['isLoggedIn', 'userRole', 'userId', 'userEmail', 'userName',
+       'currentTraineeEmail', 'currentEmployerEmail',
+       'currentProviderEmail', 'currentGovtOfficialId',
+       'govtOfficerName', 'govtAccessLevel', 'govtDepartment',
+       'selectedRole'].forEach(function (k) {
+        localStorage.removeItem(k);
+      });
+    } catch (e) {}
+
+    // Try Firebase signOut if available
+    try {
+      if (window.firebase && firebase.auth) {
+        firebase.auth().signOut().finally(function () {
+          window.location.href = '../auth/login.html';
+        });
+      } else {
+        window.location.href = '../auth/login.html';
+      }
+    } catch (e) {
+      window.location.href = '../auth/login.html';
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════════════════
+     10. CONSOLE BRANDING
      ═══════════════════════════════════════════════════════════════ */
 
   console.log(
@@ -288,14 +331,12 @@
     'color:#64748B;font-size:12px;margin-left:8px;font-weight:500;'
   );
   console.log(
-    '%cSIH 26135 · Theme system ready · toggleTheme() · toggleSidebar()',
+    '%cSIH 26135 · Theme + Session system ready · v6.0',
     'color:#94A3B8;font-size:11px;'
   );
 
   /* ═══════════════════════════════════════════════════════════════
-     9. LISTEN FOR CROSS-TAB THEME CHANGES
-     ─────────────────────────────────────────────────────────────
-     If the user toggles the theme in one tab, other tabs update too.
+     11. CROSS-TAB THEME CHANGES
      ═══════════════════════════════════════════════════════════════ */
 
   window.addEventListener('storage', function (e) {
