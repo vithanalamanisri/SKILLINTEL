@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SecurePass · Login</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="../css/style.css">
+        <script src="../js/api.js"></script>
+
+    <!-- ✅ Apply theme BEFORE page renders -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('skillintel-theme') || 'light';
+          document.documentElement.setAttribute('data-theme', saved);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e8f0fe 0%, #d9e3f0 50%, #c7d8ec 100%);
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(26,86,219,0.08) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 70%, rgba(79,70,229,0.06) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ─── THEME TOGGLE ─── */
+        .theme-toggle-float {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 200;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s;
+        }
+        .theme-toggle-float:hover {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+            transform: rotate(15deg) scale(1.05);
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 3.5rem;
+            padding: 3rem 2.8rem 2.8rem;
+            box-shadow: 0 40px 80px -20px rgba(0, 20, 60, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.7) inset;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+        }
+
+        .login-container:hover {
+            transform: translateY(-3px) scale(1.002);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 1.6rem;
+            justify-content: center;
+        }
+
+        .brand-icon {
+            background: linear-gradient(145deg, #1a56db, #4f46e5);
+            width: 48px;
+            height: 48px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            box-shadow: 0 10px 24px -8px rgba(26, 86, 219, 0.4);
+        }
+
+        .brand-text {
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #0b1a33 40%, #1a56db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .brand-text span {
+            background: linear-gradient(135deg, #1a56db, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            text-align: center;
+            font-size: 0.78rem;
+            color: #64748b;
+            margin-top: -0.4rem;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+            padding-bottom: 1.2rem;
+        }
+
+        .tagline i {
+            color: #4f46e5;
+            margin-right: 0.3rem;
+        }
+
+        .login-heading {
+            margin-bottom: 1.8rem;
+        }
+
+        .login-heading h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #0b1a33;
+            letter-spacing: -0.03em;
+        }
+
+        .login-heading p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+            font-weight: 450;
+        }
+
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1.8rem;
+            background: #f1f5f9;
+            padding: 0.4rem;
+            border-radius: 60px;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .role-btn {
+            padding: 0.55rem 0.2rem;
+            border: none;
+            background: transparent;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+        }
+
+        .role-btn i {
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .role-btn:hover {
+            color: #1e293b;
+        }
+
+        .role-btn.active {
+            background: white;
+            color: #0b1a33;
+            box-shadow: 0 4px 16px rgba(26, 86, 219, 0.12), 0 0 0 1px rgba(26, 86, 219, 0.05);
+        }
+
+        .role-btn.active i {
+            color: #1a56db;
+        }
+
+        .role-btn.govt-active {
+            background: #1a56db;
+            color: white;
+            box-shadow: 0 4px 16px rgba(26, 86, 219, 0.3);
+        }
+        .role-btn.govt-active i {
+            color: white;
+        }
+
+        .credential-hint {
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+            border-radius: 1.4rem;
+            padding: 0.9rem 1.4rem;
+            margin: 1rem 0 1.8rem;
+            border-left: 5px solid #4f46e5;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.8rem;
+            color: #1e293b;
+            transition: 0.2s ease;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.06);
+        }
+
+        .credential-hint.hidden {
+            display: none !important;
+        }
+
+        .credential-hint i {
+            color: #4f46e5;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .credential-hint .creds {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem 0.8rem;
+            font-weight: 500;
+        }
+
+        .credential-hint .creds span {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            padding: 0.15rem 0.9rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            color: #0b1a33;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            font-family: 'Inter', monospace;
+            font-weight: 500;
+        }
+
+        .credential-hint .creds span i {
+            color: #4f46e5;
+            font-size: 0.6rem;
+            margin-right: 0.25rem;
+        }
+
+        .govt-field {
+            display: none;
+        }
+        .govt-field.show {
+            display: block;
+        }
+
+        .govt-field .input-wrap {
+            margin-bottom: 1rem;
+        }
+
+        .govt-badge {
+            background: #1a56db;
+            color: white;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #1e293b;
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.01em;
+        }
+
+        .form-group label i {
+            color: #4f46e5;
+            width: 1.3rem;
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border-radius: 60px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .input-wrap:focus-within {
+            border-color: #4f46e5;
+            background: white;
+            box-shadow: 0 0 0 5px rgba(79, 70, 229, 0.08);
+        }
+
+        .input-wrap i {
+            position: absolute;
+            left: 1.2rem;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .input-wrap:focus-within i {
+            color: #4f46e5;
+        }
+
+        .input-wrap input {
+            width: 100%;
+            padding: 0.9rem 1.2rem 0.9rem 3rem;
+            border: none;
+            background: transparent;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #0b1a33;
+            outline: none;
+        }
+
+        .input-wrap input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .input-wrap .toggle-pw {
+            position: absolute;
+            right: 1.2rem;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0.2rem;
+            transition: 0.2s;
+        }
+
+        .input-wrap .toggle-pw:hover {
+            color: #4f46e5;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.8rem 0 1.6rem;
+            font-size: 0.85rem;
+        }
+
+        .form-options label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #475569;
+            font-weight: 450;
+            cursor: pointer;
+        }
+
+        .form-options label input[type="checkbox"] {
+            accent-color: #4f46e5;
+            width: 17px;
+            height: 17px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .form-options a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .form-options a:hover {
+            text-decoration: underline;
+            color: #1a56db;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 0.95rem;
+            background: linear-gradient(135deg, #1a56db, #4f46e5);
+            border: none;
+            border-radius: 60px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 28px -10px rgba(26, 86, 219, 0.45);
+        }
+
+        .login-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 16px 36px -12px rgba(26, 86, 219, 0.55);
+            background: linear-gradient(135deg, #1e40af, #4338ca);
+        }
+
+        .login-btn:active {
+            transform: scale(0.97);
+        }
+
+        .login-btn i {
+            font-size: 1rem;
+        }
+
+        .login-btn.govt-btn {
+            background: linear-gradient(135deg, #1a56db, #0b1a33);
+            box-shadow: 0 10px 28px -10px rgba(26, 86, 219, 0.5);
+        }
+        .login-btn.govt-btn:hover {
+            background: linear-gradient(135deg, #1e40af, #0b1a33);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 1.8rem;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .register-link a {
+            color: #4f46e5;
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: 0.15s;
+        }
+
+        .register-link a:hover {
+            border-bottom-color: #4f46e5;
+        }
+
+        .register-link .govt-note {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .register-link .govt-note i {
+            color: #1a56db;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.8rem 0 1.2rem;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .divider.hidden {
+            display: none;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+        }
+
+        .social-login {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .social-login.hidden {
+            display: none;
+        }
+
+        .social-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.65rem;
+            border-radius: 60px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .social-btn:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            transform: scale(1.02);
+        }
+
+        .social-btn.google i { color: #ea4335; font-size: 1.1rem; }
+        .social-btn.microsoft i { color: #0078d4; font-size: 1.1rem; }
+
+        .footer-note {
+            margin-top: 2.2rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            letter-spacing: 0.02em;
+        }
+
+        .footer-note i {
+            color: #4f46e5;
+        }
+
+        /* ── Inline alert ── */
+        .inline-alert {
+            display: none;
+            padding: 0.8rem 1.1rem;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            align-items: flex-start;
+            gap: 0.7rem;
+            line-height: 1.5;
+            animation: slideDown 0.3s ease;
+        }
+        .inline-alert.show { display: flex; }
+        .inline-alert.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+        .inline-alert.success {
+            background: #f0fdf4;
+            color: #166534;
+            border-left: 4px solid #22c55e;
+        }
+        .inline-alert.info {
+            background: #eff6ff;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+        .inline-alert i { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 520px) {
+            .login-container { padding: 2rem 1.5rem; border-radius: 2.2rem; }
+            .role-selector { grid-template-columns: 1fr 1fr; gap: 0.3rem; border-radius: 30px; padding: 0.3rem; }
+            .role-btn { font-size: 0.6rem; padding: 0.4rem 0.15rem; }
+            .brand-text { font-size: 1.1rem; }
+            .login-heading h2 { font-size: 1.4rem; }
+            .credential-hint { flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.8rem 1rem; }
+        }
+
+        @media (max-width: 380px) {
+            .role-btn span { display: none; }
+            .role-btn i { font-size: 1rem; }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           DARK MODE
+           ═══════════════════════════════════════════════════════ */
+        html[data-theme="dark"] body {
+            background: linear-gradient(135deg, #0B1220 0%, #0F172A 50%, #0B1220 100%) !important;
+            color: #F1F5F9 !important;
+        }
+        html[data-theme="dark"] body::before {
+            background: radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 70%, rgba(124, 58, 237, 0.12) 0%, transparent 60%) !important;
+        }
+        html[data-theme="dark"] .theme-toggle-float {
+            background: #1E293B !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            color: #F1F5F9 !important;
+        }
+        html[data-theme="dark"] .theme-toggle-float:hover {
+            background: #4f46e5 !important;
+            color: white !important;
+            border-color: #4f46e5 !important;
+        }
+        html[data-theme="dark"] .login-container {
+            background: rgba(21, 30, 50, 0.92) !important;
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06) inset !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        }
+        html[data-theme="dark"] .brand-text {
+            background: linear-gradient(135deg, #F1F5F9 40%, #60A5FA 100%) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+        }
+        html[data-theme="dark"] .brand-text span {
+            background: linear-gradient(135deg, #60A5FA, #A78BFA) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+        }
+        html[data-theme="dark"] .tagline {
+            color: #94A3B8 !important;
+            border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html[data-theme="dark"] .tagline i { color: #A78BFA !important; }
+        html[data-theme="dark"] .login-heading h2 { color: #F1F5F9 !important; }
+        html[data-theme="dark"] .login-heading p { color: #94A3B8 !important; }
+        html[data-theme="dark"] .role-selector {
+            background: #1E293B !important;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+        }
+        html[data-theme="dark"] .role-btn { color: #94A3B8 !important; }
+        html[data-theme="dark"] .role-btn:hover { color: #F1F5F9 !important; }
+        html[data-theme="dark"] .role-btn.active {
+            background: #0B1220 !important;
+            color: #F1F5F9 !important;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25), 0 0 0 1px rgba(37, 99, 235, 0.3) !important;
+        }
+        html[data-theme="dark"] .role-btn.active i { color: #60A5FA !important; }
+        html[data-theme="dark"] .role-btn.govt-active { background: #1a56db !important; color: white !important; }
+        html[data-theme="dark"] .role-btn.govt-active i { color: white !important; }
+        html[data-theme="dark"] .credential-hint {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(79, 70, 229, 0.12)) !important;
+            border-left-color: #60A5FA !important;
+            color: #E2E8F0 !important;
+        }
+        html[data-theme="dark"] .credential-hint i { color: #60A5FA !important; }
+        html[data-theme="dark"] .credential-hint .creds span {
+            background: rgba(15, 23, 42, 0.7) !important;
+            color: #E2E8F0 !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html[data-theme="dark"] .credential-hint .creds span i { color: #A78BFA !important; }
+        html[data-theme="dark"] .form-group label { color: #E2E8F0 !important; }
+        html[data-theme="dark"] .form-group label i { color: #60A5FA !important; }
+        html[data-theme="dark"] .input-wrap {
+            background: #1A2338 !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        html[data-theme="dark"] .input-wrap:focus-within {
+            border-color: #60A5FA !important;
+            background: #1E293B !important;
+            box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.15) !important;
+        }
+        html[data-theme="dark"] .input-wrap i { color: #64748B !important; }
+        html[data-theme="dark"] .input-wrap:focus-within i { color: #60A5FA !important; }
+        html[data-theme="dark"] .input-wrap input { color: #F1F5F9 !important; background: transparent !important; }
+        html[data-theme="dark"] .input-wrap input::placeholder { color: #64748B !important; }
+        html[data-theme="dark"] .input-wrap .toggle-pw { color: #64748B !important; }
+        html[data-theme="dark"] .input-wrap .toggle-pw:hover { color: #60A5FA !important; }
+        html[data-theme="dark"] .form-options label { color: #CBD5E1 !important; }
+        html[data-theme="dark"] .form-options a { color: #60A5FA !important; }
+        html[data-theme="dark"] .form-options a:hover { color: #93C5FD !important; }
+        html[data-theme="dark"] .govt-badge { background: #2563EB !important; color: white !important; }
+        html[data-theme="dark"] .register-link { color: #94A3B8 !important; }
+        html[data-theme="dark"] .register-link a { color: #60A5FA !important; }
+        html[data-theme="dark"] .register-link a:hover { border-bottom-color: #60A5FA !important; }
+        html[data-theme="dark"] .register-link .govt-note { color: #94A3B8 !important; }
+        html[data-theme="dark"] .register-link .govt-note i { color: #60A5FA !important; }
+        html[data-theme="dark"] .divider { color: #64748B !important; }
+        html[data-theme="dark"] .divider::before,
+        html[data-theme="dark"] .divider::after {
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.10), transparent) !important;
+        }
+        html[data-theme="dark"] .social-btn {
+            background: #1A2338 !important;
+            border-color: rgba(255, 255, 255, 0.10) !important;
+            color: #E2E8F0 !important;
+        }
+        html[data-theme="dark"] .social-btn:hover {
+            background: #1E293B !important;
+            border-color: rgba(255, 255, 255, 0.20) !important;
+        }
+        html[data-theme="dark"] .footer-note { color: #64748B !important; }
+        html[data-theme="dark"] .footer-note i { color: #60A5FA !important; }
+        html[data-theme="dark"] #govtFields > div[style*="background"] {
+            background: #1A2338 !important;
+            color: #CBD5E1 !important;
+            border-left-color: #60A5FA !important;
+        }
+        html[data-theme="dark"] #govtFields > div[style*="background"] strong { color: #93C5FD !important; }
+        html[data-theme="dark"] #govtFields > div[style*="background"] div { color: #94A3B8 !important; }
+        html[data-theme="dark"] .inline-alert.error { background: rgba(239, 68, 68, 0.15) !important; color: #FCA5A5 !important; }
+        html[data-theme="dark"] .inline-alert.success { background: rgba(34, 197, 94, 0.15) !important; color: #86EFAC !important; }
+        html[data-theme="dark"] .inline-alert.info { background: rgba(59, 130, 246, 0.15) !important; color: #93C5FD !important; }
+    </style>
+    <script src="../js/api.js"></script>
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle-float" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+    <i class="fas fa-moon"></i>
+</button>
+
+<div class="login-container">
+
+    <!-- Brand -->
+    <div class="brand">
+        <div class="brand-icon"><i class="fas fa-brain"></i></div>
+        <div class="brand-text">secure<span>pass</span></div>
+    </div>
+    <div class="tagline">
+        <i class="fas fa-chart-line"></i> AI-Powered Skill Training · SIH26135
+    </div>
+
+    <!-- Heading -->
+    <div class="login-heading">
+        <h2 id="headingTitle">Welcome back</h2>
+        <p id="headingSub">Sign in to track your training outcomes</p>
+    </div>
+
+    <!-- Inline alert -->
+    <div class="inline-alert" id="inlineAlert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="inlineAlertText"></span>
+    </div>
+
+    <!-- Role Selector -->
+    <div class="role-selector" id="roleSelector">
+        <button class="role-btn active" data-role="trainee" type="button"><i class="fas fa-user-graduate"></i> <span>Trainee</span></button>
+        <button class="role-btn" data-role="employer" type="button"><i class="fas fa-briefcase"></i> <span>Employer</span></button>
+        <button class="role-btn" data-role="provider" type="button"><i class="fas fa-chalkboard-teacher"></i> <span>Provider</span></button>
+        <button class="role-btn" data-role="government" type="button"><i class="fas fa-landmark"></i> <span>Govt.</span></button>
+    </div>
+
+    <!-- Credential Hint Box -->
+    <div class="credential-hint hidden" id="credentialHint">
+        <i class="fas fa-info-circle"></i>
+        <div class="creds" id="credsContainer">
+            <span><i class="fas fa-info-circle"></i> Enter your credentials to sign in</span>
+        </div>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm" onsubmit="return false;">
+
+        <!-- Standard fields -->
+        <div id="standardFields">
+            <div class="form-group">
+                <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
+                <div class="input-wrap">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" placeholder="name@example.com" value="" autocomplete="email" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Government specific fields -->
+        <div id="govtFields" class="govt-field">
+            <div class="govt-badge"><i class="fas fa-lock"></i> Authorized Government Access</div>
+            <div class="form-group">
+                <label><i class="fas fa-id-card"></i> Official ID <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                    <i class="fas fa-id-card"></i>
+                    <input type="text" id="govtId" placeholder="e.g. GOV20260001" value="" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Official Email <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="govtEmail" placeholder="official@gov.in" value="" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="govtPassword" placeholder="••••••••" value="" />
+                    <button type="button" class="toggle-pw" onclick="toggleGovtPassword()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div style="background:#f1f5f9; border-radius:10px; padding:0.6rem 1rem; margin-bottom:1rem; font-size:0.75rem; color:#475569; border-left:3px solid #1a56db;">
+                <i class="fas fa-shield-alt" style="color:#1a56db;"></i>
+                <strong>Secure Government Access</strong> · Authorized Officials Only
+                <div style="font-size:0.65rem; margin-top:0.2rem; color:#94a3b8;">
+                    Access Level: National · State · District based on credentials
+                </div>
+            </div>
+        </div>
+
+        <!-- Password field -->
+        <div id="standardPassword">
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> Password</label>
+                <div class="input-wrap">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="••••••••" value="" autocomplete="current-password" />
+                    <button type="button" class="toggle-pw" id="togglePw">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Options -->
+        <div class="form-options" id="formOptions">
+            <label>
+                <input type="checkbox" checked id="rememberMe" /> Remember me
+            </label>
+            <a href="#" id="forgotLink"><i class="fas fa-key"></i> Forgot password?</a>
+        </div>
+
+        <!-- Login Button -->
+        <button type="submit" class="login-btn" id="loginBtn">
+            <i class="fas fa-arrow-right-to-bracket"></i> <span id="loginBtnText">Sign in</span>
+        </button>
+    </form>
+
+    <!-- Divider -->
+    <div class="divider" id="divider">or continue with</div>
+
+    <!-- Social Login -->
+    <div class="social-login" id="socialLogin">
+        <button class="social-btn google" type="button"><i class="fab fa-google"></i> Google</button>
+        <button class="social-btn microsoft" type="button"><i class="fab fa-microsoft"></i> Microsoft</button>
+    </div>
+
+    <!-- Register Link -->
+    <div class="register-link" id="registerLink">
+        Don't have an account? <a href="#" id="registerLinkBtn">Create one</a>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-note">
+        <i class="fas fa-shield-alt"></i> Secured &amp; encrypted · v2.0
+    </div>
+
+</div>
+
+<script>
+    // ============================================================
+    // STORAGE KEYS
+    // ============================================================
+    const GOVT_STORAGE_KEY = 'govtOfficials';
+    const GOVT_ACTIVITY_KEY = 'govtActivityLog';
+    const GOVT_SESSION_KEY = 'currentGovtOfficialId';
+
+    // ============================================================
+    // ROLE METADATA
+    // ============================================================
+    const roleMetadata = {
+        trainee:    { name: 'Trainee',            redirect: '../trainee/dashboard.html',    storageKey: 'allTrainees',  sessionKey: 'currentTraineeEmail'  },
+        employer:   { name: 'Employer',           redirect: '../employer/dashboard.html',   storageKey: 'allEmployers', sessionKey: 'currentEmployerEmail' },
+        provider:   { name: 'Training Provider',  redirect: '../provider/dashboard.html',   storageKey: 'allProviders', sessionKey: 'currentProviderEmail' },
+        government: { name: 'Government',         redirect: '../government/dashboard.html', storageKey: GOVT_STORAGE_KEY, sessionKey: GOVT_SESSION_KEY }
+    };
+
+    // ============================================================
+    // DOM REFS
+    // ============================================================
+    const roleBtns = document.querySelectorAll('.role-btn');
+    const emailInput = document.getElementById('email');
+    const pwInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnText = document.getElementById('loginBtnText');
+    const togglePw = document.getElementById('togglePw');
+    const credsContainer = document.getElementById('credsContainer');
+    const credentialHint = document.getElementById('credentialHint');
+    const headingTitle = document.getElementById('headingTitle');
+    const headingSub = document.getElementById('headingSub');
+    const standardFields = document.getElementById('standardFields');
+    const standardPassword = document.getElementById('standardPassword');
+    const govtFields = document.getElementById('govtFields');
+    const govtId = document.getElementById('govtId');
+    const govtEmail = document.getElementById('govtEmail');
+    const govtPassword = document.getElementById('govtPassword');
+    const formOptions = document.getElementById('formOptions');
+    const divider = document.getElementById('divider');
+    const socialLogin = document.getElementById('socialLogin');
+    const registerLink = document.getElementById('registerLink');
+    const forgotLink = document.getElementById('forgotLink');
+    const inlineAlert = document.getElementById('inlineAlert');
+    const inlineAlertText = document.getElementById('inlineAlertText');
+
+    let currentRole = 'trainee';
+
+    // ============================================================
+    // INLINE ALERT HELPERS
+    // ============================================================
+    function showAlert(message, type = 'error', autoHideMs = 5000) {
+        inlineAlert.className = 'inline-alert ' + type + ' show';
+        const icon = inlineAlert.querySelector('i');
+        icon.className = type === 'success' ? 'fas fa-check-circle' :
+                         type === 'info'    ? 'fas fa-info-circle' :
+                                              'fas fa-exclamation-circle';
+        inlineAlertText.textContent = message;
+        clearTimeout(window._alertTimer);
+        if (autoHideMs > 0) {
+            window._alertTimer = setTimeout(() => {
+                inlineAlert.classList.remove('show');
+            }, autoHideMs);
+        }
+    }
+    function hideAlert() {
+        inlineAlert.classList.remove('show');
+    }
+
+    // ============================================================
+    // GOVERNMENT — localStorage helpers (fallback)
+    // ============================================================
+    function getGovtOfficials() {
+        try { return JSON.parse(localStorage.getItem(GOVT_STORAGE_KEY) || '[]'); }
+        catch (e) { return []; }
+    }
+    function saveGovtOfficials(list) {
+        localStorage.setItem(GOVT_STORAGE_KEY, JSON.stringify(list));
+    }
+    function logGovtActivity(message, type = 'info') {
+        try {
+            const logs = JSON.parse(localStorage.getItem(GOVT_ACTIVITY_KEY) || '[]');
+            logs.unshift({ message, type, timestamp: new Date().toISOString() });
+            if (logs.length > 100) logs.length = 100;
+            localStorage.setItem(GOVT_ACTIVITY_KEY, JSON.stringify(logs));
+        } catch (e) {}
+    }
+    function isExpired(official) {
+        if (!official.expiresAt) return false;
+        return new Date(official.expiresAt) < new Date();
+    }
+
+    // ============================================================
+    // SET ROLE
+    // ============================================================
+    function setRole(role) {
+        currentRole = role;
+        const meta = roleMetadata[role];
+        if (!meta) return;
+        hideAlert();
+
+        // ===== GOVERNMENT =====
+        if (role === 'government') {
+            standardFields.style.display = 'none';
+            standardPassword.style.display = 'none';
+            govtFields.classList.add('show');
+            credentialHint.classList.add('hidden');
+
+            loginBtnText.textContent = 'Secure Government Login';
+            loginBtn.classList.add('govt-btn');
+
+            headingTitle.textContent = 'Government Official Access';
+            headingSub.textContent = 'Authorized Government Officials Only';
+
+            govtId.value = '';
+            govtEmail.value = '';
+            govtPassword.value = '';
+
+            divider.classList.add('hidden');
+            socialLogin.classList.add('hidden');
+            registerLink.innerHTML = `<span class="govt-note"><i class="fas fa-lock"></i> Authorized Government Officials Only</span>`;
+            forgotLink.innerHTML = '<i class="fas fa-key"></i> Contact admin for access';
+
+            roleBtns.forEach(b => {
+                b.classList.remove('govt-active');
+                if (b.dataset.role === 'government') b.classList.add('govt-active');
+            });
+            return;
+        }
+
+        // ===== STANDARD ROLES =====
+        standardFields.style.display = 'block';
+        standardPassword.style.display = 'block';
+        govtFields.classList.remove('show');
+        loginBtnText.textContent = 'Sign in';
+        loginBtn.classList.remove('govt-btn');
+
+        headingTitle.textContent = `Welcome back, ${meta.name}`;
+        headingSub.textContent = 'Sign in to track your training outcomes';
+
+        emailInput.value = '';
+        pwInput.value = '';
+        emailInput.placeholder = 'name@example.com';
+
+        // Hide credential hint — backend now handles validation
+        credentialHint.classList.add('hidden');
+
+        divider.classList.remove('hidden');
+        socialLogin.classList.remove('hidden');
+
+        const roleMap = {
+            trainee: 'trainee-register.html',
+            employer: 'employer-register.html',
+            provider: 'provider-register.html'
+        };
+
+        registerLink.innerHTML = `Don't have an account? <a href="${roleMap[role] || 'trainee-register.html'}" id="registerLinkBtn">Create one</a>`;
+        forgotLink.innerHTML = '<i class="fas fa-key"></i> Forgot password?';
+
+        roleBtns.forEach(b => b.classList.remove('govt-active'));
+    }
+
+    // ============================================================
+    // ROLE BUTTONS
+    // ============================================================
+    roleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            roleBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const role = this.dataset.role;
+            if (role && roleMetadata[role]) setRole(role);
+        });
+    });
+
+    // ============================================================
+    // LOGIN HANDLER — NOW CALLS BACKEND
+    // ============================================================
+    loginBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        if (loginBtn.disabled) return;
+
+        // ===== GOVERNMENT =====
+        if (currentRole === 'government') {
+            handleGovtLogin();
+            return;
+        }
+
+        // ===== STANDARD ROLES (trainee / employer / provider) =====
+        const email = emailInput.value.trim().toLowerCase();
+        const pw = pwInput.value.trim();
+
+        if (!email || !pw) {
+            showAlert('Please enter both email and password.', 'error');
+            return;
+        }
+
+        const meta = roleMetadata[currentRole];
+        if (!meta) {
+            showAlert('Invalid role selected.', 'error');
+            return;
+        }
+
+        // Lock button
+        loginBtn.disabled = true;
+        const originalText = loginBtnText.textContent;
+        loginBtnText.textContent = 'Signing in...';
+
+        try {
+            // ✅ CALL THE BACKEND — this works across all devices
+            const result = await apiCall('/api/auth/login', {
+                method: 'POST',
+                body: {
+                    username: email,
+                    email: email,
+                    password: pw,
+                    role: currentRole,
+                },
+            });
+
+            // ── Success ──
+            if (result.ok && result.data && !result.data.error) {
+                const user = result.data;
+
+                // Save session info locally (for quick page loads)
+                try {
+                    localStorage.setItem(meta.sessionKey, email);
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userRole', currentRole);
+                    localStorage.setItem('userId', user.id || '');
+                    localStorage.setItem('userName', user.full_name || user.username || 'User');
+                    localStorage.setItem('userEmail', user.email || email);
+                } catch (e) {}
+
+                const userName = user.full_name || user.username || 'User';
+                showAlert(`Login successful! Welcome, ${userName}. Redirecting...`, 'success', 0);
+
+                loginBtnText.textContent = 'Success ✓';
+                setTimeout(() => {
+                    window.location.href = meta.redirect;
+                }, 900);
+                return;
+            }
+
+            // ── Backend rejected ──
+            const errMsg = (result.data && result.data.error) || `Invalid credentials for ${meta.name}`;
+            showAlert(errMsg, 'error');
+            loginBtn.disabled = false;
+            loginBtnText.textContent = originalText;
+
+        } catch (err) {
+            console.error('Login error:', err);
+            showAlert('Cannot reach server. Please check your connection and try again.', 'error');
+            loginBtn.disabled = false;
+            loginBtnText.textContent = originalText;
+        }
+    });
+
+    // ============================================================
+    // GOVERNMENT LOGIN — BACKEND FIRST, localStorage FALLBACK
+    // ============================================================
+    async function handleGovtLogin() {
+        const id = govtId.value.trim();
+        const email = govtEmail.value.trim().toLowerCase();
+        const password = govtPassword.value.trim();
+
+        if (!id || !email || !password) {
+            showAlert('Please enter your Official ID, Official Email, and Password.', 'error');
+            return;
+        }
+
+        loginBtn.disabled = true;
+        const originalText = loginBtnText.textContent;
+        loginBtnText.textContent = 'Verifying…';
+
+        try {
+            const { ok, data } = await apiCall('/api/auth/login', {
+                method: 'POST',
+                body: { role: 'government', officialId: id, email, password }
+            });
+
+            if (ok && data.role === 'government') {
+                try {
+                    localStorage.setItem(GOVT_SESSION_KEY, data.officialId);
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userRole', 'government');
+                    localStorage.setItem('govtOfficerName', data.fullName || 'Official');
+                    localStorage.setItem('govtAccessLevel', data.accessLevel || 'State');
+                } catch (e) {}
+
+                logGovtActivity(
+                    `Login success (backend) — ${data.fullName} (${data.officialId}, ${data.accessLevel})`,
+                    'success'
+                );
+
+                showAlert(
+                    `Access granted. Welcome, ${data.fullName} (${data.accessLevel} level). Redirecting...`,
+                    'success',
+                    0
+                );
+                loginBtnText.textContent = 'Access granted ✓';
+                setTimeout(() => {
+                    window.location.href = roleMetadata.government.redirect;
+                }, 1000);
+                return;
+            }
+
+            if (data && data.error) {
+                showAlert(data.error, 'error');
+                logGovtActivity(`Login rejected by backend (ID: ${id}): ${data.error}`, 'error');
+                loginBtn.disabled = false;
+                loginBtnText.textContent = originalText;
+                return;
+            }
+
+            throw new Error('Unexpected backend response');
+
+        } catch (err) {
+            console.warn('Backend unreachable, using offline check:', err);
+            handleGovtLoginOffline(id, email, password);
+        }
+    }
+
+    // ============================================================
+    // OFFLINE FALLBACK — govt login via localStorage
+    // ============================================================
+    function handleGovtLoginOffline(id, email, password) {
+        setTimeout(() => {
+            const officials = getGovtOfficials();
+
+            if (officials.length === 0) {
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'Secure Government Login';
+                logGovtActivity(`Login attempt — no officials provisioned (ID: ${id})`, 'error');
+                showAlert(
+                    'No government accounts are provisioned yet. Please contact the platform administrator.',
+                    'error'
+                );
+                return;
+            }
+
+            const official = officials.find(o =>
+                o.officialId === id && (o.email || '').toLowerCase() === email
+            );
+
+            if (!official) {
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'Secure Government Login';
+                logGovtActivity(`Failed login — unknown ID/email (${id}, ${email})`, 'error');
+                showAlert('Invalid Official ID or Email. Access denied.', 'error');
+                return;
+            }
+
+            if (official.password !== password) {
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'Secure Government Login';
+                logGovtActivity(`Failed login — wrong password for ${official.officialId}`, 'error');
+                showAlert('Incorrect password. Please try again.', 'error');
+                return;
+            }
+
+            if (official.status !== 'active') {
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'Secure Government Login';
+                logGovtActivity(`Login blocked — suspended ${official.officialId}`, 'error');
+                showAlert(
+                    'Your government access has been suspended. Please contact the platform administrator.',
+                    'error'
+                );
+                return;
+            }
+
+            if (isExpired(official)) {
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'Secure Government Login';
+                logGovtActivity(`Login blocked — expired ${official.officialId}`, 'error');
+                showAlert(
+                    'Your government access has expired. Please contact the platform administrator to renew.',
+                    'error'
+                );
+                return;
+            }
+
+            const officials2 = getGovtOfficials();
+            const idx = officials2.findIndex(o => o.officialId === official.officialId);
+            if (idx !== -1) {
+                officials2[idx].lastLogin = new Date().toISOString();
+                officials2[idx].loginCount = (officials2[idx].loginCount || 0) + 1;
+                saveGovtOfficials(officials2);
+            }
+
+            try {
+                localStorage.setItem(GOVT_SESSION_KEY, official.officialId);
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userRole', 'government');
+                localStorage.setItem('govtOfficerName', official.fullName || 'Official');
+                localStorage.setItem('govtAccessLevel', official.accessLevel || 'State');
+            } catch (e) {}
+
+            logGovtActivity(
+                `Login success (offline) — ${official.fullName} (${official.officialId}, ${official.accessLevel})`,
+                'success'
+            );
+
+            showAlert(
+                `Access granted (offline mode). Welcome, ${official.fullName}.`,
+                'success',
+                0
+            );
+
+            loginBtnText.textContent = 'Access granted ✓';
+            setTimeout(() => {
+                window.location.href = roleMetadata.government.redirect;
+            }, 1000);
+        }, 200);
+    }
+
+    // ============================================================
+    // TOGGLE PASSWORDS
+    // ============================================================
+    togglePw.addEventListener('click', function() {
+        const type = pwInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        pwInput.setAttribute('type', type);
+        const icon = this.querySelector('i');
+        if (type === 'text') {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+
+    window.toggleGovtPassword = function() {
+        const type = govtPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+        govtPassword.setAttribute('type', type);
+        const icon = document.querySelector('#govtFields .toggle-pw i');
+        if (type === 'text') {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    };
+
+    // ============================================================
+    // ENTER KEY
+    // ============================================================
+    document.getElementById('loginForm').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            loginBtn.click();
+        }
+    });
+
+    // ============================================================
+    // SOCIAL LOGIN
+    // ============================================================
+    document.querySelectorAll('.social-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (currentRole === 'government') {
+                showAlert('Social login is not available for Government access.', 'error');
+            } else {
+                showAlert('Social login is not enabled in this environment.', 'info');
+            }
+        });
+    });
+
+    // ============================================================
+    // REGISTER LINK
+    // ============================================================
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('#registerLinkBtn');
+        if (!btn) return;
+        e.preventDefault();
+
+        if (currentRole === 'government') {
+            showAlert('Government accounts are created internally by the platform administrator.', 'info');
+            return;
+        }
+
+        const roleMap = {
+            trainee: 'trainee-register.html',
+            employer: 'employer-register.html',
+            provider: 'provider-register.html'
+        };
+
+        window.location.href = roleMap[currentRole] || 'trainee-register.html';
+    });
+
+    // ============================================================
+    // FORGOT PASSWORD
+    // ============================================================
+    forgotLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (currentRole === 'government') {
+            showAlert('Please contact your Government administrator to reset access.', 'info');
+        } else {
+            showAlert('Password reset requires admin assistance. Please contact the platform administrator.', 'info');
+        }
+    });
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        let role = params.get('role') || localStorage.getItem('selectedRole') || sessionStorage.getItem('selectedRole');
+
+        if (role && roleMetadata[role]) {
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.role === role) btn.classList.add('active');
+            });
+            setRole(role);
+            localStorage.removeItem('selectedRole');
+            sessionStorage.removeItem('selectedRole');
+        } else {
+            document.querySelector('.role-btn[data-role="trainee"]').classList.add('active');
+            setRole('trainee');
+        }
+
+        updateThemeIcon();
+
+        console.log('🔐 Login page ready — all roles now validate against backend.');
+    });
+
+    // ============================================================
+    // THEME
+    // ============================================================
+    function updateThemeIcon() {
+        const btn = document.querySelector('.theme-toggle-float i');
+        if (!btn) return;
+        const theme = document.documentElement.getAttribute('data-theme') || 'light';
+        btn.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    if (typeof window.toggleTheme !== 'function') {
+        window.toggleTheme = function () {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme') || 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+            updateThemeIcon();
+        };
+    }
+</script>
+
+</body>
+</html>
