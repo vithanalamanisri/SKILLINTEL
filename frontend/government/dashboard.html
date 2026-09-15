@@ -949,7 +949,6 @@ MAIN CONTENT
 ============================================================ -->
 <div class="main-content">
 
-    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
@@ -977,7 +976,6 @@ MAIN CONTENT
         </div>
     </header>
 
-    <!-- ===== CONTAINER ===== -->
     <div class="container">
 
         <!-- ===== DATA SOURCE BANNER ===== -->
@@ -1264,230 +1262,162 @@ MAIN CONTENT
 
 <script>
     // ============================================================
-    // BACKEND CACHE
-    // ============================================================
-    let _govtBackend = null;
-
-    // ============================================================
-    // LOAD ALL TRAINEES FROM BACKEND (with employment status)
-    // ============================================================
-    async function getAllTraineesFromBackend() {
-        try {
-            const [traineesRes, employersRes, providersRes] = await Promise.all([
-                apiCall('/api/trainees'),
-                apiCall('/api/employers'),
-                apiCall('/api/providers'),
-            ]);
-
-            if (traineesRes.ok && Array.isArray(traineesRes.data) && traineesRes.data.length > 0) {
-                // Also grab trainee 360 detail for each to get employment info
-                const trainees = traineesRes.data;
-
-                // Fetch 360 for each (parallel, but limited)
-                const detailed = await Promise.all(trainees.slice(0, 100).map(async (t) => {
-                    try {
-                        const r = await apiCall('/api/trainees/' + t.id + '/360');
-                        return r.ok ? r.data : t;
-                    } catch (e) { return t; }
-                }));
-
-                return detailed.map((t, index) => {
-                    // Determine employment status from employments
-                    let empStatus = 'unemployed';
-                    let currentIncome = 0;
-                    let joiningDate = 'N/A';
-                    let district = t.district || 'N/A';
-
-                    if (t.employments && t.employments.length > 0) {
-                        const emp = t.employments[0];
-                        const empType = (emp.employment_type || '').toLowerCase();
-                        if (empType === 'self') empStatus = 'self-employed';
-                        else if (empType === 'intern' || empType === 'apprentice') empStatus = 'internship';
-                        else if (emp.status === 'verified') empStatus = 'employed';
-                        else empStatus = 'employed'; // if any record exists, count as employed
-
-                        currentIncome = emp.monthly_income || 0;
-                        joiningDate = emp.start_date || 'N/A';
-                    }
-
-                    return {
-                        id: t.trainee_code || ('TRN' + t.id),
-                        backendId: t.id,
-                        name: t.full_name || 'Trainee',
-                        email: t.email || '',
-                        program: t.skills || t.qualification || 'N/A',
-                        provider: 'N/A',
-                        district: district,
-                        status: empStatus,
-                        income: currentIncome,
-                        joiningDate: joiningDate,
-                        avatar: (t.full_name || 'T').charAt(0).toUpperCase(),
-                        color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
-                        isRealData: true,
-                    };
-                });
-            }
-        } catch (e) {
-            console.warn('Backend govt data load failed:', e);
-        }
-        return [];
-    }
-
-    async function getEmployersCount() {
-        try {
-            const r = await apiCall('/api/employers');
-            if (r.ok && Array.isArray(r.data)) return r.data.length;
-        } catch (e) {}
-        return JSON.parse(localStorage.getItem('allEmployers') || '[]').length;
-    }
-
-    async function getProvidersCount() {
-        try {
-            const r = await apiCall('/api/providers');
-            if (r.ok && Array.isArray(r.data)) return r.data.length;
-        } catch (e) {}
-        return JSON.parse(localStorage.getItem('allProviders') || '[]').length;
-    }
-
-    function getGovernmentData() {
-        try { return JSON.parse(localStorage.getItem('governmentData') || 'null'); }
-        catch (e) { return null; }
-    }
-
-    // ============================================================
-    // FALLBACK SAMPLE DATA
-    // ============================================================
-    function getFallbackRecords() {
-        return [
-            { id: 'TRN001', name: 'Priya Sharma', program: 'Data Analytics', provider: 'Skill India Centre', district: 'Bengaluru', status: 'employed', income: 28000, joiningDate: '2026-04-12', avatar: 'P', color: '#2563eb' },
-            { id: 'TRN002', name: 'Rahul Verma', program: 'Full Stack Development', provider: 'NITC Training', district: 'Mumbai', status: 'employed', income: 32000, joiningDate: '2026-05-15', avatar: 'R', color: '#7c3aed' },
-            { id: 'TRN003', name: 'Ananya Reddy', program: 'Digital Marketing', provider: 'Digital India Academy', district: 'Delhi', status: 'self-employed', income: 25000, joiningDate: '2026-06-01', avatar: 'A', color: '#16a34a' },
-            { id: 'TRN004', name: 'Vikram Singh', program: 'Data Science', provider: 'Data Science Institute', district: 'Hyderabad', status: 'employed', income: 35000, joiningDate: '2026-07-01', avatar: 'V', color: '#d97706' },
-            { id: 'TRN005', name: 'Sneha Patel', program: 'UI/UX Design', provider: 'Design Academy', district: 'Bengaluru', status: 'unemployed', income: 0, joiningDate: 'N/A', avatar: 'S', color: '#dc2626' },
-            { id: 'TRN006', name: 'Arjun Nair', program: 'Cloud Computing', provider: 'Cloud Academy', district: 'Chennai', status: 'employed', income: 30000, joiningDate: '2026-08-01', avatar: 'A', color: '#0d9488' }
-        ];
-    }
-
-    async function getAllRecords() {
-        const realRecords = await getAllTraineesFromBackend();
-
-        if (realRecords.length > 0) {
-            console.log('✅ Using REAL data from backend:', realRecords.length, 'records');
-            return { records: realRecords, isRealData: true };
-        }
-
-        // Try localStorage fallback
-        const localTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
-        if (localTrainees.length > 0) {
-            const localRecords = localTrainees.map((t, index) => {
-                const allEmp = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-                const emp = allEmp.find(e => e.traineeEmail === t.email) || {};
-                const empStatus = emp.status || t.employmentStatusDisplay || '';
-                let status = 'unemployed';
-                if (empStatus === 'Employed') status = 'employed';
-                else if (empStatus === 'Self-Employed') status = 'self-employed';
-                else if (empStatus === 'Internship' || empStatus === 'Apprenticeship') status = 'internship';
-
-                return {
-                    id: t.traineeId || 'TRN' + (index + 1),
-                    name: t.fullName || 'Unknown',
-                    program: t.skillTrade || 'N/A',
-                    provider: t.trainingProvider || 'N/A',
-                    district: emp.jobCity || t.district || 'N/A',
-                    status: status,
-                    income: parseInt(emp.currentIncome) || 0,
-                    joiningDate: emp.joiningDate || 'N/A',
-                    avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
-                    color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
-                    isRealData: true
-                };
-            });
-            return { records: localRecords, isRealData: true };
-        }
-
-        console.log('⚠️ No real data found - using fallback');
-        return { records: getFallbackRecords(), isRealData: false };
-    }
-
-    // ============================================================
-    // CALCULATE STATISTICS
-    // ============================================================
-    function calculateStats(records) {
-        const total = records.length;
-        const employed = records.filter(r => r.status === 'employed').length;
-        const selfEmployed = records.filter(r => r.status === 'self-employed').length;
-        const internship = records.filter(r => r.status === 'internship').length;
-        const unemployed = records.filter(r => r.status === 'unemployed').length;
-        const totalEmployed = employed + selfEmployed + internship;
-        const rate = total > 0 ? Math.round((totalEmployed / total) * 100) : 0;
-
-        const incomes = records.filter(r => r.income > 0).map(r => r.income);
-        const avgIncome = incomes.length > 0 ? Math.round(incomes.reduce((a,b) => a + b, 0) / incomes.length) : 0;
-
-        const now = new Date();
-        const retained = records.filter(r => {
-            if (r.status !== 'employed' && r.status !== 'self-employed') return false;
-            if (!r.joiningDate || r.joiningDate === 'N/A') return false;
-            const joinDate = new Date(r.joiningDate);
-            const diff = (now - joinDate) / (1000 * 60 * 60 * 24);
-            return diff > 180;
-        }).length;
-        const retentionRate = totalEmployed > 0 ? Math.round((retained / totalEmployed) * 100) : 0;
-
-        const programs = {};
-        records.forEach(r => {
-            if (r.program && r.program !== 'N/A') {
-                if (!programs[r.program]) programs[r.program] = { total: 0, employed: 0 };
-                programs[r.program].total++;
-                if (r.status === 'employed' || r.status === 'self-employed' || r.status === 'internship') {
-                    programs[r.program].employed++;
-                }
-            }
-        });
-
-        const providers = {};
-        records.forEach(r => {
-            if (r.provider && r.provider !== 'N/A') {
-                if (!providers[r.provider]) providers[r.provider] = { total: 0, employed: 0 };
-                providers[r.provider].total++;
-                if (r.status === 'employed' || r.status === 'self-employed' || r.status === 'internship') {
-                    providers[r.provider].employed++;
-                }
-            }
-        });
-
-        const incomeDistribution = {
-            '₹0': records.filter(r => r.income === 0).length,
-            '₹0-15K': records.filter(r => r.income > 0 && r.income <= 15000).length,
-            '₹15K-25K': records.filter(r => r.income > 15000 && r.income <= 25000).length,
-            '₹25K-35K': records.filter(r => r.income > 25000 && r.income <= 35000).length,
-            '₹35K+': records.filter(r => r.income > 35000).length
-        };
-
-        return {
-            total, employed, selfEmployed, internship, unemployed, totalEmployed, rate,
-            avgIncome, retentionRate, retained,
-            programs, providers, incomeDistribution
-        };
-    }
-
-    // ============================================================
-    // STATE
+    // BACKEND STATE — real data only
     // ============================================================
     let allRecords = [];
     let stats = {};
-    let isRealData = false;
-    let _employerCount = 0;
-    let _providerCount = 0;
+    let analyticsRaw = null;
 
+    // ============================================================
+    // LOAD REAL ANALYTICS FROM BACKEND
+    // Uses /api/govt/analytics (fast aggregate) +
+    //      /api/trainees (detailed rows for the table)
+    // NO FALLBACK TO SAMPLE DATA
+    // ============================================================
+    async function loadAnalytics() {
+        try {
+            const [analyticsRes, traineesRes] = await Promise.all([
+                apiCall('/api/govt/analytics'),
+                apiCall('/api/trainees'),
+            ]);
+
+            if (!analyticsRes.ok) {
+                console.warn('Analytics endpoint failed:', analyticsRes.data);
+                return { ok: false };
+            }
+
+            analyticsRaw = analyticsRes.data || {};
+            const trainees = (traineesRes.ok && Array.isArray(traineesRes.data)) ? traineesRes.data : [];
+
+            // Build the detailed rows for the table
+            const rows = trainees.map((t, index) => {
+                // Determine status — will be enriched if we have employment info
+                let status = 'unemployed';
+                let income = 0;
+                let joiningDate = 'N/A';
+                let provider = t.skills || t.qualification || 'N/A';
+
+                // Match against recent_employments from analytics response
+                const emp = (analyticsRaw.recent_employments || []).find(e =>
+                    String(e.trainee_id) === String(t.id)
+                );
+                if (emp) {
+                    const empType = (emp.employment_type || '').toLowerCase();
+                    if (empType === 'self') status = 'self-employed';
+                    else if (empType === 'intern' || empType === 'apprentice') status = 'internship';
+                    else status = 'employed';
+                    income = emp.monthly_income || 0;
+                    joiningDate = emp.start_date || 'N/A';
+                }
+
+                return {
+                    id: t.trainee_code || ('TRN' + t.id),
+                    backendId: t.id,
+                    name: t.full_name || 'Trainee',
+                    email: t.email || '',
+                    program: t.skills || t.qualification || 'N/A',
+                    provider: provider,
+                    district: t.district || 'N/A',
+                    state: t.state || 'N/A',
+                    status: status,
+                    income: income,
+                    joiningDate: joiningDate,
+                    avatar: (t.full_name || 'T').charAt(0).toUpperCase(),
+                    color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
+                };
+            });
+
+            return { ok: true, analytics: analyticsRaw, rows };
+        } catch (e) {
+            console.error('Failed to load analytics:', e);
+            return { ok: false };
+        }
+    }
+
+    // ============================================================
+    // CALCULATE STATS (REAL DATA ONLY)
+    // ============================================================
+    function calculateStats(rows) {
+        const a = analyticsRaw || {};
+
+        // Extract from backend analytics — this is the source of truth
+        const total = a.totals?.trainees || 0;
+        const completed = a.totals?.completed || 0;
+        const employed = a.totals?.employed || 0;
+        const selfEmployed = a.totals?.self_employed || 0;
+        const fullTime = a.totals?.full_time || 0;
+        const partTime = a.totals?.part_time || 0;
+        const contract = a.totals?.contract || 0;
+        const rate = a.totals?.employment_rate || 0;
+
+        const avgIncome = a.income?.avg_current || 0;
+        const avgPrevious = a.income?.avg_previous || 0;
+        const growthPct = a.income?.growth_percent || 0;
+
+        // Retention: highest available period's rate
+        const retention = a.retention || {};
+        const retentionRate = retention['180d']?.rate || retention['90d']?.rate || 0;
+
+        // Program breakdown (from by_program)
+        const programs = {};
+        (a.by_program || []).forEach(p => {
+            const name = p.program_name || 'Unnamed';
+            const enrolled = p.enrolled || 0;
+            const emp = p.employed || 0;
+            programs[name] = {
+                total: enrolled,
+                employed: emp,
+            };
+        });
+
+        // Provider breakdown (from by_provider)
+        const providers = {};
+        (a.by_provider || []).forEach(p => {
+            const name = p.provider_name || 'Unnamed';
+            const total = p.total_trainees || 0;
+            const emp = p.employed || 0;
+            providers[name] = {
+                total: total,
+                employed: emp,
+            };
+        });
+
+        // Income distribution (from backend)
+        const inc = a.income_distribution || {};
+        const incomeDistribution = {
+            '₹0': inc.zero || 0,
+            '₹0-15K': inc.under_15k || 0,
+            '₹15K-25K': inc['15k_25k'] || 0,
+            '₹25K-35K': inc['25k_35k'] || 0,
+            '₹35K+': inc['35k_plus'] || 0,
+        };
+
+        // Assessment distribution
+        const assessment = a.assessment_distribution || {};
+
+        // Follow-up stats
+        const followups = a.followups || {};
+
+        return {
+            total, completed, employed, selfEmployed, fullTime, partTime, contract,
+            rate, avgIncome, avgPrevious, growthPct, retentionRate, retention,
+            programs, providers, incomeDistribution, assessment, followups,
+        };
+    }
+
+    // ============================================================
+    // MAIN LOAD & RENDER
+    // ============================================================
     async function loadAndRender() {
-        const result = await getAllRecords();
-        allRecords = result.records;
-        isRealData = result.isRealData;
-        stats = calculateStats(allRecords);
+        const result = await loadAnalytics();
 
-        _employerCount = await getEmployersCount();
-        _providerCount = await getProvidersCount();
+        if (!result.ok) {
+            renderErrorState();
+            return;
+        }
+
+        allRecords = result.rows;
+        stats = calculateStats(allRecords);
 
         renderDataSourceBanner();
         renderBanner();
@@ -1500,34 +1430,53 @@ MAIN CONTENT
         renderTraineeTable();
         updateSidebar();
         updateNotificationBadge();
+
+        console.log('✅ Government Dashboard loaded with REAL data');
+        console.log('   Trainees:', stats.total, '| Employed:', stats.employed);
     }
 
+    function renderErrorState() {
+        document.getElementById('traineeTableBody').innerHTML = `
+            <tr>
+                <td colspan="7">
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i>
+                        <h3>Could not load data</h3>
+                        <p>Please check your connection and refresh the page.</p>
+                        <a href="javascript:location.reload()"><i class="fas fa-sync"></i> Retry</a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
     function renderDataSourceBanner() {
         const banner = document.getElementById('dataSourceBanner');
         const icon = document.getElementById('dsIcon');
         const title = document.getElementById('dsTitle');
         const sub = document.getElementById('dsSub');
 
-        document.getElementById('dsTrainees').textContent = allRecords.length;
-        document.getElementById('dsEmployers').textContent = _employerCount;
-        document.getElementById('dsProviders').textContent = _providerCount;
+        const employerCount = stats.providers ? Object.keys(stats.providers).length : 0;
+        const providerCount = analyticsRaw?.totals?.providers || 0;
+        const employerTotal = analyticsRaw?.totals?.employers || 0;
 
-        if (isRealData) {
-            banner.className = 'data-source-banner';
-            icon.textContent = '🟢';
-            title.textContent = 'Live Data Connected';
-            sub.textContent = 'Real-time data from trainee, employer, and provider registrations';
-        } else {
-            banner.className = 'data-source-banner warning';
-            icon.textContent = '⚠️';
-            title.textContent = 'No Real Data Found — Using Sample Data';
-            sub.textContent = 'Register as trainee, employer, or provider to see live data here';
-        }
+        document.getElementById('dsTrainees').textContent = stats.total;
+        document.getElementById('dsEmployers').textContent = employerTotal;
+        document.getElementById('dsProviders').textContent = providerCount;
+
+        // Always green — real data only
+        banner.className = 'data-source-banner';
+        icon.textContent = '🟢';
+        title.textContent = 'Live Data Connected';
+        sub.textContent = 'Real-time data from trainee, employer, and provider registrations';
     }
 
     function renderBanner() {
         document.getElementById('bannerTrainees').textContent = stats.total;
-        document.getElementById('bannerEmployed').textContent = stats.totalEmployed;
+        document.getElementById('bannerEmployed').textContent = stats.employed + stats.selfEmployed;
         document.getElementById('bannerRate').textContent = stats.rate + '%';
         document.getElementById('bannerIncome').textContent = '₹' + (stats.avgIncome >= 1000 ? (stats.avgIncome/1000).toFixed(0) + 'K' : stats.avgIncome);
     }
@@ -1538,16 +1487,30 @@ MAIN CONTENT
         document.getElementById('kpiEmploymentRate').textContent = stats.rate + '%';
         document.getElementById('kpiRetentionRate').textContent = stats.retentionRate + '%';
         document.getElementById('kpiAvgIncome').textContent = '₹' + (stats.avgIncome >= 1000 ? (stats.avgIncome/1000).toFixed(0) + 'K' : stats.avgIncome);
-        document.getElementById('kpiProviders').textContent = Object.keys(stats.providers).length || _providerCount;
+        document.getElementById('kpiProviders').textContent = analyticsRaw?.totals?.providers || 0;
+
+        // Update trend badges based on real data
+        const trendRetention = document.getElementById('trendRetention');
+        if (stats.retentionRate >= 70) {
+            trendRetention.textContent = '● Good';
+            trendRetention.className = 'stat-trend good';
+        } else if (stats.retentionRate >= 40) {
+            trendRetention.textContent = '● Average';
+            trendRetention.className = 'stat-trend warning';
+        } else {
+            trendRetention.textContent = '● Low';
+            trendRetention.className = 'stat-trend danger';
+        }
     }
 
     function renderPipeline() {
+        // Real numbers from backend analytics
         const total = stats.total;
-        const completed = Math.round(total * 0.87);
-        const certified = Math.round(total * 0.72);
-        const placed = stats.totalEmployed;
+        const completed = stats.completed;
+        const certified = stats.completed;   // assume all completed are certified if no better data
+        const placed = stats.employed + stats.selfEmployed;
         const joined = stats.employed + stats.selfEmployed;
-        const retained = stats.retained;
+        const retained = stats.retention['180d']?.retained || stats.retention['90d']?.retained || 0;
 
         document.getElementById('pipeRegistered').textContent = total;
         document.getElementById('pipeCompleted').textContent = completed;
@@ -1563,13 +1526,15 @@ MAIN CONTENT
             name,
             total: stats.programs[name].total,
             employed: stats.programs[name].employed,
-            rate: stats.programs[name].total > 0 ? Math.round((stats.programs[name].employed / stats.programs[name].total) * 100) : 0
+            rate: stats.programs[name].total > 0
+                ? Math.round((stats.programs[name].employed / stats.programs[name].total) * 100)
+                : 0,
         }));
         data.sort((a, b) => b.total - a.total);
         const top = data.slice(0, 5);
 
         if (top.length === 0) {
-            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No program data</div>';
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No program data yet</div>`;
             return;
         }
 
@@ -1597,8 +1562,8 @@ MAIN CONTENT
         const data = [
             { label: 'Employed', value: stats.employed, color: '#22c55e' },
             { label: 'Self-Employed', value: stats.selfEmployed, color: '#2563eb' },
-            { label: 'Internship', value: stats.internship, color: '#d97706' },
-            { label: 'Unemployed', value: stats.unemployed, color: '#dc2626' }
+            { label: 'Internship', value: analyticsRaw?.totals?.part_time || 0, color: '#d97706' },
+            { label: 'Unemployed', value: Math.max(stats.total - stats.employed - stats.selfEmployed, 0), color: '#dc2626' },
         ];
 
         const totalVal = stats.total || 1;
@@ -1633,13 +1598,15 @@ MAIN CONTENT
             name,
             total: stats.providers[name].total,
             employed: stats.providers[name].employed,
-            rate: stats.providers[name].total > 0 ? Math.round((stats.providers[name].employed / stats.providers[name].total) * 100) : 0
+            rate: stats.providers[name].total > 0
+                ? Math.round((stats.providers[name].employed / stats.providers[name].total) * 100)
+                : 0,
         }));
         data.sort((a, b) => b.total - a.total);
         const top = data.slice(0, 5);
 
         if (top.length === 0) {
-            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No provider data</div>';
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No provider data yet</div>`;
             return;
         }
 
@@ -1668,8 +1635,15 @@ MAIN CONTENT
         const colors = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#2563eb'];
         const labels = Object.keys(dist);
         const values = Object.values(dist);
-        const totalVal = values.reduce((a,b) => a + b, 0) || 1;
-        const earningCount = allRecords.filter(r => r.income > 0).length;
+        const totalVal = values.reduce((a, b) => a + b, 0) || 1;
+        const earningCount = values.slice(1).reduce((a, b) => a + b, 0);  // exclude ₹0 bucket
+
+        if (totalVal === 0) {
+            container.style.background = '#e2e8f0';
+            document.getElementById('incomeTotal').textContent = '0';
+            legend.innerHTML = `<div style="color:#94a3b8;font-size:12px;padding:8px;">No income data yet</div>`;
+            return;
+        }
 
         let gradient = '';
         let currentAngle = 0;
@@ -1704,9 +1678,9 @@ MAIN CONTENT
                 <tr>
                     <td colspan="7">
                         <div class="empty-state">
-                            <i class="fas fa-database"></i>
-                            <h3>No Real Data Found</h3>
-                            <p>Register as a trainee, employer, or provider to see live data here.</p>
+                            <i class="fas fa-user-plus"></i>
+                            <h3>No Trainees Registered Yet</h3>
+                            <p>Register a trainee via the trainee portal to see live data here.</p>
                         </div>
                     </td>
                 </tr>
@@ -1729,14 +1703,14 @@ MAIN CONTENT
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div style="width:34px;height:34px;border-radius:50%;background:${r.color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;">${r.avatar}</div>
                         <div>
-                            <div style="font-weight:600;font-size:12px;">${r.name}</div>
-                            <div style="font-size:10px;color:#64748b;">${r.id}</div>
+                            <div style="font-weight:600;font-size:12px;">${escapeHtml(r.name)}</div>
+                            <div style="font-size:10px;color:#64748b;">${escapeHtml(r.id)}</div>
                         </div>
                     </div>
                 </td>
-                <td><strong style="font-size:11px;">${r.program}</strong></td>
-                <td style="font-size:11px;">${r.provider}</td>
-                <td style="font-size:11px;">${r.district}</td>
+                <td><strong style="font-size:11px;">${escapeHtml(r.program)}</strong></td>
+                <td style="font-size:11px;">${escapeHtml(r.provider)}</td>
+                <td style="font-size:11px;">${escapeHtml(r.district)}</td>
                 <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
                 <td style="font-weight:700;color:${r.income > 0 ? '#16a34a' : '#94a3b8'};font-size:12px;">${r.income > 0 ? '₹' + r.income.toLocaleString() : 'N/A'}</td>
                 <td>
@@ -1749,7 +1723,8 @@ MAIN CONTENT
     }
 
     function updateSidebar() {
-        const govData = getGovernmentData();
+        let govData = null;
+        try { govData = JSON.parse(localStorage.getItem('governmentData') || 'null'); } catch (e) {}
         const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
         document.getElementById('sidebarAvatar').textContent = initial;
         document.getElementById('sidebarName').textContent = govData?.name || 'Government';
@@ -1760,7 +1735,8 @@ MAIN CONTENT
     }
 
     function updateNotificationBadge() {
-        const pending = allRecords.filter(r => r.status === 'unemployed').length;
+        // Unemployed = total - employed - self-employed
+        const pending = Math.max(stats.total - stats.employed - stats.selfEmployed, 0);
         document.getElementById('notifBadge').textContent = pending;
     }
 
@@ -1796,9 +1772,8 @@ MAIN CONTENT
     }
 
     function showNotifications() {
-        const pending = allRecords.filter(r => r.status === 'unemployed').length;
-        const employed = allRecords.filter(r => r.status === 'employed').length;
-        alert(`📬 Notifications\n\n• ${pending} trainees unemployed\n• ${employed} trainees employed\n• ${allRecords.length} total records\n\n${isRealData ? '✅ Using REAL data from backend' : '⚠️ Using SAMPLE data'}`);
+        const pending = Math.max(stats.total - stats.employed - stats.selfEmployed, 0);
+        alert(`📬 Notifications\n\n• ${pending} trainees unemployed\n• ${stats.employed} trainees employed\n• ${stats.total} total records\n\n✅ Using REAL data from backend`);
     }
 
     function toggleProfileMenu() {
@@ -1822,23 +1797,17 @@ MAIN CONTENT
         if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
-    // ============================================================
-    // STORAGE EVENT (cross-tab refresh)
-    // ============================================================
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'allTrainees' || e.key === 'allEmployment' ||
-            e.key === 'allProviders' || e.key === 'allEmployers' ||
-            e.key === 'allFollowups') {
-            console.log('🔄 Data changed, reloading dashboard...');
-            loadAndRender();
-        }
-    });
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
 
     // ============================================================
     // INIT
     // ============================================================
     document.addEventListener('DOMContentLoaded', async function() {
-        // Apply saved theme
         try {
             const saved = localStorage.getItem('skillintel-theme') || 'light';
             document.documentElement.setAttribute('data-theme', saved);
@@ -1860,8 +1829,6 @@ MAIN CONTENT
         });
 
         console.log('✅ Government Dashboard loaded!');
-        console.log('📋 Data Source:', isRealData ? '✅ REAL DATA' : '⚠️ SAMPLE DATA');
-        console.log('📈 Total Records:', allRecords.length);
     });
 </script>
 

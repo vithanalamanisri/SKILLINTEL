@@ -857,6 +857,33 @@
         .quick-actions .action-btn:hover i { color: white; }
 
         /* ============================================================
+           EMPTY STATE
+           ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+        }
+        .empty-state i {
+            font-size: 48px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+        .empty-state h3 {
+            font-size: 18px;
+            color: #0b1a33;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 13px;
+            color: #64748b;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
            RESPONSIVE
            ============================================================ */
         @media (max-width: 1200px) {
@@ -960,7 +987,7 @@ MAIN CONTENT
     </header>
 
     <!-- ===== CONTAINER ===== -->
-    <div class="container">
+    <div class="container" id="mainContainer">
 
         <!-- ===== WELCOME BANNER ===== -->
         <div class="welcome-banner">
@@ -1113,409 +1140,196 @@ MAIN CONTENT
     </div>
 </div>
 
+<!-- ============================================================
+     API LOADER
+     ============================================================ -->
+<script src="../js/api.js"></script>
+
 <script>
     // ============================================================
-    // GOVERNMENT SCHEME DATA - SIH26135
+    // REAL DATA — populated from the backend at runtime.
+    // No hardcoded schemes/regions.
+    // Backend endpoints used:
+    //   /api/programs             → list of programs with enrolled counts
+    //   /api/analytics/summary    → { total, employed, employment_rate }
+    //   /api/govt/analytics       → comprehensive analytics (by_state, by_sector, income, ...)
+    //   /api/analytics/relevance  → { "High": n, "Medium": n, "Low": n, "Not Relevant": n }
     // ============================================================
 
     const govtSchemes = {
-        schemes: [
-            {
-                id: 'pmkvy',
-                name: 'PMKVY 2.0',
-                fullName: 'Pradhan Mantri Kaushal Vikas Yojana',
-                ministry: 'MSDE',
-                ministryFull: 'Ministry of Skill Development & Entrepreneurship',
-                color: '#2563eb',
-                year: '2016-2020',
-                budget: '₹12,000 Cr',
-                budgetUtilized: 10800,
-                totalTrainees: 15000,
-                completed: 13800,
-                assessed: 12400,
-                jobEligible: 10500,
-                placed: 8200,
-                relevantJob: 6800,
-                retained: 5900,
-                incomeImproved: 5200,
-                employmentRate: 78,
-                placementRate: 55,
-                nonPlacementRate: 22,
-                timeToEmployment: 45,
-                retention30: 92,
-                retention90: 85,
-                retention180: 78,
-                retention365: 71,
-                dropoutRate: 29,
-                sustainedEmployment: 71,
-                avgIncomeAfter: 28000,
-                medianIncomeAfter: 26000,
-                incomeBefore: 12000,
-                incomeGrowth: 16000,
-                incomeGrowthPct: 133,
-                incomeImprovementRate: 62,
-                selfEmploymentRate: 12,
-                highRelevance: 62,
-                mediumRelevance: 24,
-                lowRelevance: 14,
-                jobMismatch: 14,
-                skillMatch: 84,
-                roleMatch: 78,
-                alignmentScore: 82,
-                employerSatisfaction: 86,
-                technicalSatisfaction: 88,
-                practicalSatisfaction: 82,
-                communicationSatisfaction: 78,
-                workplaceReadiness: 84,
-                employerRecommendation: 88,
-                relevantEmployment: 82,
-                permanentEmployment: 72,
-                fullTimeEmployment: 78,
-                expectedSalary: 30000,
-                actualSalary: 28000,
-                salaryMatch: 93,
-                salaryMismatch: 7,
-                employerDemand: 82,
-                skillDemandMatch: 84,
-                skillShortage: 16,
-                outcomeScore: 82,
-                courses: [
-                    { name: 'Data Analytics', trainees: 3000, employmentRate: 82, incomeGrowth: 145, relevance: 80 },
-                    { name: 'Full Stack Development', trainees: 2500, employmentRate: 78, incomeGrowth: 128, relevance: 76 },
-                    { name: 'Digital Marketing', trainees: 2000, employmentRate: 85, incomeGrowth: 155, relevance: 84 },
-                    { name: 'Data Science', trainees: 1500, employmentRate: 76, incomeGrowth: 122, relevance: 78 },
-                    { name: 'Cloud Computing', trainees: 1200, employmentRate: 80, incomeGrowth: 118, relevance: 82 },
-                    { name: 'UI/UX Design', trainees: 1000, employmentRate: 68, incomeGrowth: 140, relevance: 72 }
-                ],
-                providers: [
-                    { name: 'Skill India Centre', trainees: 4000, employmentRate: 82, outcomeScore: 79 },
-                    { name: 'NITC Training', trainees: 3500, employmentRate: 78, outcomeScore: 75 },
-                    { name: 'Digital India Academy', trainees: 3000, employmentRate: 80, outcomeScore: 78 },
-                    { name: 'Data Science Institute', trainees: 2500, employmentRate: 76, outcomeScore: 73 },
-                    { name: 'Cloud Academy', trainees: 2000, employmentRate: 84, outcomeScore: 80 }
-                ]
-            },
-            {
-                id: 'ddu-gky',
-                name: 'DDU-GKY',
-                fullName: 'Deen Dayal Upadhyaya Grameen Kaushalya Yojana',
-                ministry: 'MoRD',
-                ministryFull: 'Ministry of Rural Development',
-                color: '#16a34a',
-                year: '2014-Present',
-                budget: '₹8,500 Cr',
-                budgetUtilized: 7200,
-                totalTrainees: 12000,
-                completed: 10800,
-                assessed: 9600,
-                jobEligible: 8000,
-                placed: 6200,
-                relevantJob: 4600,
-                retained: 4000,
-                incomeImproved: 3500,
-                employmentRate: 72,
-                placementRate: 52,
-                nonPlacementRate: 28,
-                timeToEmployment: 52,
-                retention30: 88,
-                retention90: 78,
-                retention180: 68,
-                retention365: 65,
-                dropoutRate: 35,
-                sustainedEmployment: 65,
-                avgIncomeAfter: 22000,
-                medianIncomeAfter: 20000,
-                incomeBefore: 9000,
-                incomeGrowth: 13000,
-                incomeGrowthPct: 144,
-                incomeImprovementRate: 58,
-                selfEmploymentRate: 18,
-                highRelevance: 55,
-                mediumRelevance: 28,
-                lowRelevance: 17,
-                jobMismatch: 17,
-                skillMatch: 74,
-                roleMatch: 68,
-                alignmentScore: 72,
-                employerSatisfaction: 78,
-                technicalSatisfaction: 76,
-                practicalSatisfaction: 80,
-                communicationSatisfaction: 72,
-                workplaceReadiness: 76,
-                employerRecommendation: 78,
-                relevantEmployment: 74,
-                qualityEmployment: 68,
-                permanentEmployment: 62,
-                fullTimeEmployment: 70,
-                expectedSalary: 24000,
-                actualSalary: 22000,
-                salaryMatch: 92,
-                salaryMismatch: 8,
-                employerDemand: 76,
-                skillDemandMatch: 74,
-                skillShortage: 26,
-                outcomeScore: 72,
-                courses: [
-                    { name: 'Agriculture & Allied', trainees: 3000, employmentRate: 70, incomeGrowth: 138, relevance: 72 },
-                    { name: 'Construction', trainees: 2500, employmentRate: 74, incomeGrowth: 152, relevance: 68 },
-                    { name: 'Healthcare', trainees: 2000, employmentRate: 78, incomeGrowth: 145, relevance: 80 },
-                    { name: 'Automotive', trainees: 1800, employmentRate: 72, incomeGrowth: 130, relevance: 74 },
-                    { name: 'Retail', trainees: 1500, employmentRate: 66, incomeGrowth: 142, relevance: 62 },
-                    { name: 'Logistics', trainees: 1200, employmentRate: 68, incomeGrowth: 128, relevance: 66 }
-                ],
-                providers: [
-                    { name: 'Rural Skill Foundation', trainees: 3500, employmentRate: 72, outcomeScore: 71 },
-                    { name: 'Gramin Kaushal Kendra', trainees: 3000, employmentRate: 70, outcomeScore: 68 },
-                    { name: 'Bharat Skills', trainees: 2800, employmentRate: 74, outcomeScore: 73 },
-                    { name: 'Rural Development Trust', trainees: 2700, employmentRate: 68, outcomeScore: 66 }
-                ]
-            },
-            {
-                id: 'pm-daksh',
-                name: 'PM-DAKSH',
-                fullName: 'Pradhan Mantri Dakshta Aur Kushalta Sampann Hitgrahi',
-                ministry: 'MoSJE',
-                ministryFull: 'Ministry of Social Justice & Empowerment',
-                color: '#d97706',
-                year: '2020-Present',
-                budget: '₹4,200 Cr',
-                budgetUtilized: 3200,
-                totalTrainees: 8000,
-                completed: 7000,
-                assessed: 6200,
-                jobEligible: 5000,
-                placed: 3600,
-                relevantJob: 2600,
-                retained: 2200,
-                incomeImproved: 1900,
-                employmentRate: 68,
-                placementRate: 45,
-                nonPlacementRate: 32,
-                timeToEmployment: 58,
-                retention30: 84,
-                retention90: 74,
-                retention180: 62,
-                retention365: 60,
-                dropoutRate: 40,
-                sustainedEmployment: 60,
-                avgIncomeAfter: 18000,
-                medianIncomeAfter: 17000,
-                incomeBefore: 7000,
-                incomeGrowth: 11000,
-                incomeGrowthPct: 157,
-                incomeImprovementRate: 52,
-                selfEmploymentRate: 22,
-                highRelevance: 48,
-                mediumRelevance: 30,
-                lowRelevance: 22,
-                jobMismatch: 22,
-                skillMatch: 70,
-                roleMatch: 62,
-                alignmentScore: 66,
-                employerSatisfaction: 72,
-                technicalSatisfaction: 70,
-                practicalSatisfaction: 74,
-                communicationSatisfaction: 68,
-                workplaceReadiness: 70,
-                employerRecommendation: 72,
-                relevantEmployment: 68,
-                qualityEmployment: 62,
-                permanentEmployment: 55,
-                fullTimeEmployment: 62,
-                expectedSalary: 20000,
-                actualSalary: 18000,
-                salaryMatch: 90,
-                salaryMismatch: 10,
-                employerDemand: 70,
-                skillDemandMatch: 70,
-                skillShortage: 30,
-                outcomeScore: 66,
-                courses: [
-                    { name: 'Beauty & Wellness', trainees: 2000, employmentRate: 68, incomeGrowth: 165, relevance: 70 },
-                    { name: 'Retail', trainees: 1500, employmentRate: 64, incomeGrowth: 148, relevance: 58 },
-                    { name: 'Healthcare', trainees: 1400, employmentRate: 72, incomeGrowth: 155, relevance: 76 },
-                    { name: 'Hospitality', trainees: 1200, employmentRate: 66, incomeGrowth: 140, relevance: 64 },
-                    { name: 'IT & Digital', trainees: 1000, employmentRate: 70, incomeGrowth: 160, relevance: 72 },
-                    { name: 'Logistics', trainees: 900, employmentRate: 62, incomeGrowth: 135, relevance: 60 }
-                ],
-                providers: [
-                    { name: 'Social Empowerment Trust', trainees: 2500, employmentRate: 68, outcomeScore: 65 },
-                    { name: 'Inclusive Skills', trainees: 2200, employmentRate: 66, outcomeScore: 63 },
-                    { name: 'Uplift Foundation', trainees: 1800, employmentRate: 70, outcomeScore: 67 },
-                    { name: 'Samaj Vikas Sansthan', trainees: 1500, employmentRate: 68, outcomeScore: 65 }
-                ]
-            },
-            {
-                id: 'state-mission',
-                name: 'State Skill Mission',
-                fullName: 'State-Level Skill Development Missions',
-                ministry: 'State Govt',
-                ministryFull: 'State Governments (e.g., KSDC, MSSDS)',
-                color: '#7c3aed',
-                year: '2018-Present',
-                budget: '₹6,000 Cr',
-                budgetUtilized: 4800,
-                totalTrainees: 10000,
-                completed: 9000,
-                assessed: 8000,
-                jobEligible: 6600,
-                placed: 5200,
-                relevantJob: 4200,
-                retained: 3600,
-                incomeImproved: 3200,
-                employmentRate: 76,
-                placementRate: 52,
-                nonPlacementRate: 24,
-                timeToEmployment: 48,
-                retention30: 90,
-                retention90: 80,
-                retention180: 72,
-                retention365: 68,
-                dropoutRate: 32,
-                sustainedEmployment: 68,
-                avgIncomeAfter: 26000,
-                medianIncomeAfter: 24000,
-                incomeBefore: 11000,
-                incomeGrowth: 15000,
-                incomeGrowthPct: 136,
-                incomeImprovementRate: 60,
-                selfEmploymentRate: 15,
-                highRelevance: 58,
-                mediumRelevance: 26,
-                lowRelevance: 16,
-                jobMismatch: 16,
-                skillMatch: 78,
-                roleMatch: 72,
-                alignmentScore: 76,
-                employerSatisfaction: 82,
-                technicalSatisfaction: 80,
-                practicalSatisfaction: 78,
-                communicationSatisfaction: 76,
-                workplaceReadiness: 80,
-                employerRecommendation: 82,
-                relevantEmployment: 78,
-                qualityEmployment: 74,
-                permanentEmployment: 68,
-                fullTimeEmployment: 74,
-                expectedSalary: 28000,
-                actualSalary: 26000,
-                salaryMatch: 93,
-                salaryMismatch: 7,
-                employerDemand: 80,
-                skillDemandMatch: 78,
-                skillShortage: 22,
-                outcomeScore: 76,
-                courses: [
-                    { name: 'IT & Digital', trainees: 2500, employmentRate: 80, incomeGrowth: 140, relevance: 78 },
-                    { name: 'Manufacturing', trainees: 2000, employmentRate: 76, incomeGrowth: 132, relevance: 74 },
-                    { name: 'Tourism & Hospitality', trainees: 1500, employmentRate: 72, incomeGrowth: 145, relevance: 70 },
-                    { name: 'Construction', trainees: 1400, employmentRate: 74, incomeGrowth: 128, relevance: 72 },
-                    { name: 'Healthcare', trainees: 1300, employmentRate: 78, incomeGrowth: 138, relevance: 76 },
-                    { name: 'Logistics', trainees: 1300, employmentRate: 70, incomeGrowth: 125, relevance: 68 }
-                ],
-                providers: [
-                    { name: 'State Skill Corp', trainees: 3500, employmentRate: 78, outcomeScore: 77 },
-                    { name: 'Regional Training Institute', trainees: 2800, employmentRate: 76, outcomeScore: 74 },
-                    { name: 'State Kaushal Kendra', trainees: 2200, employmentRate: 74, outcomeScore: 72 },
-                    { name: 'District Skill Centre', trainees: 1500, employmentRate: 72, outcomeScore: 70 }
-                ]
-            },
-            {
-                id: 'nielit',
-                name: 'NIELIT Programs',
-                fullName: 'National Institute of Electronics & IT Programs',
-                ministry: 'MeitY',
-                ministryFull: 'Ministry of Electronics & Information Technology',
-                color: '#0891b2',
-                year: '2015-Present',
-                budget: '₹2,500 Cr',
-                budgetUtilized: 2100,
-                totalTrainees: 5000,
-                completed: 4600,
-                assessed: 4200,
-                jobEligible: 3600,
-                placed: 2900,
-                relevantJob: 2400,
-                retained: 2100,
-                incomeImproved: 1900,
-                employmentRate: 82,
-                placementRate: 58,
-                nonPlacementRate: 18,
-                timeToEmployment: 40,
-                retention30: 94,
-                retention90: 88,
-                retention180: 82,
-                retention365: 76,
-                dropoutRate: 24,
-                sustainedEmployment: 76,
-                avgIncomeAfter: 32000,
-                medianIncomeAfter: 30000,
-                incomeBefore: 14000,
-                incomeGrowth: 18000,
-                incomeGrowthPct: 129,
-                incomeImprovementRate: 65,
-                selfEmploymentRate: 10,
-                highRelevance: 68,
-                mediumRelevance: 22,
-                lowRelevance: 10,
-                jobMismatch: 10,
-                skillMatch: 86,
-                roleMatch: 82,
-                alignmentScore: 84,
-                employerSatisfaction: 88,
-                technicalSatisfaction: 90,
-                practicalSatisfaction: 86,
-                communicationSatisfaction: 82,
-                workplaceReadiness: 86,
-                employerRecommendation: 90,
-                relevantEmployment: 86,
-                qualityEmployment: 82,
-                permanentEmployment: 76,
-                fullTimeEmployment: 82,
-                expectedSalary: 34000,
-                actualSalary: 32000,
-                salaryMatch: 94,
-                salaryMismatch: 6,
-                employerDemand: 84,
-                skillDemandMatch: 86,
-                skillShortage: 14,
-                outcomeScore: 84,
-                courses: [
-                    { name: 'Cloud Computing', trainees: 1500, employmentRate: 86, incomeGrowth: 132, relevance: 86 },
-                    { name: 'Cybersecurity', trainees: 1200, employmentRate: 84, incomeGrowth: 128, relevance: 84 },
-                    { name: 'AI & ML', trainees: 1000, employmentRate: 88, incomeGrowth: 138, relevance: 88 },
-                    { name: 'Data Science', trainees: 800, employmentRate: 82, incomeGrowth: 122, relevance: 82 },
-                    { name: 'IoT', trainees: 500, employmentRate: 80, incomeGrowth: 118, relevance: 80 }
-                ],
-                providers: [
-                    { name: 'NIELIT Centre A', trainees: 2000, employmentRate: 84, outcomeScore: 83 },
-                    { name: 'NIELIT Centre B', trainees: 1500, employmentRate: 82, outcomeScore: 81 },
-                    { name: 'NIELIT Centre C', trainees: 1000, employmentRate: 80, outcomeScore: 79 }
-                ]
-            }
-        ],
-        regions: [
-            { name: 'Karnataka', schemes: { pmkvy: 82, ddugky: 74, pmdaksh: 68, state: 80, nielit: 86 }, employment: 80, retention: 74, incomeGrowth: 68, satisfaction: 85 },
-            { name: 'Maharashtra', schemes: { pmkvy: 78, ddugky: 72, pmdaksh: 70, state: 78, nielit: 84 }, employment: 78, retention: 72, incomeGrowth: 65, satisfaction: 83 },
-            { name: 'Delhi NCR', schemes: { pmkvy: 80, ddugky: 74, pmdaksh: 66, state: 76, nielit: 86 }, employment: 79, retention: 74, incomeGrowth: 70, satisfaction: 84 },
-            { name: 'Tamil Nadu', schemes: { pmkvy: 76, ddugky: 74, pmdaksh: 72, state: 78, nielit: 82 }, employment: 76, retention: 70, incomeGrowth: 64, satisfaction: 82 },
-            { name: 'Telangana', schemes: { pmkvy: 74, ddugky: 70, pmdaksh: 68, state: 76, nielit: 84 }, employment: 74, retention: 68, incomeGrowth: 62, satisfaction: 80 },
-            { name: 'Uttar Pradesh', schemes: { pmkvy: 70, ddugky: 68, pmdaksh: 66, state: 72, nielit: 78 }, employment: 70, retention: 64, incomeGrowth: 58, satisfaction: 76 }
-        ]
+        schemes: [],
+        regions: []
     };
 
     // ============================================================
     // STATE MANAGEMENT
     // ============================================================
 
-    let selectedSchemes = ['pmkvy', 'ddu-gky', 'pm-daksh'];
+    let selectedSchemes = [];
     let currentView = 'scheme';
+
+    // ============================================================
+    // API HELPERS
+    // ============================================================
+    async function fetchJSON(url) {
+        try {
+            const r = await fetch(url, { credentials: 'include' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return await r.json();
+        } catch (e) {
+            console.warn('API failed:', url, e.message);
+            return null;
+        }
+    }
+
+    // ============================================================
+    // BUILD SCHEMES FROM BACKEND
+    // Each program returned by /api/programs is treated as a "scheme".
+    // Fields not exposed by the backend are shown honestly as 0 / '—'
+    // instead of fake numbers.
+    // ============================================================
+    function buildSchemesFromApi(programs, summary, relevance) {
+        if (!Array.isArray(programs) || programs.length === 0) return [];
+
+        // relevance counts are global, not per-program; use them to
+        // approximate a program-level relevance distribution ratio.
+        const relMap = relevance || {};
+        const pick = (key) => {
+            if (relMap[key] != null) return Number(relMap[key]) || 0;
+            const k = Object.keys(relMap).find(x => x.toLowerCase() === key.toLowerCase());
+            return k ? Number(relMap[k]) || 0 : 0;
+        };
+        const relTotal = pick('High') + pick('Medium') + pick('Low') + pick('Not Relevant') || 1;
+        const highSharePct = Math.round((pick('High') / relTotal) * 100) || 0;
+        const mediumSharePct = Math.round((pick('Medium') / relTotal) * 100) || 0;
+        const lowSharePct = Math.round((pick('Low') / relTotal) * 100) || 0;
+
+        const totalTraineesAll = summary ? (Number(summary.total) || 0) : 0;
+        const totalEmployedAll = summary ? (Number(summary.employed) || 0) : 0;
+        const globalEmploymentRate = totalTraineesAll > 0
+            ? Math.round((totalEmployedAll / totalTraineesAll) * 100)
+            : 0;
+
+        // Color palette for charts (cycles)
+        const palette = ['#2563eb', '#16a34a', '#d97706', '#7c3aed', '#0891b2', '#db2777'];
+
+        return programs.map((p, i) => {
+            const enrolled = Number(p.enrolled) || 0;
+
+            // We don't have per-program employment yet, so we honestly
+            // show 0 unless the backend later provides it.
+            const placed = 0;
+            const employmentRate = 0;
+            const retention365 = 0;
+
+            return {
+                id: 'prog-' + (p.id != null ? p.id : i),
+                name: p.name || ('Program ' + (i + 1)),
+                fullName: p.name || '',
+                ministry: p.provider_name || 'Provider',
+                ministryFull: p.provider_name || '',
+                color: palette[i % palette.length],
+                year: '—',
+                budget: '—',
+                budgetUtilized: 0,
+                totalTrainees: enrolled,
+                completed: 0,
+                assessed: 0,
+                jobEligible: 0,
+                placed: placed,
+                relevantJob: 0,
+                retained: 0,
+                incomeImproved: 0,
+                employmentRate: employmentRate,
+                placementRate: 0,
+                nonPlacementRate: 0,
+                timeToEmployment: 0,
+                retention30: 0,
+                retention90: 0,
+                retention180: 0,
+                retention365: retention365,
+                dropoutRate: 0,
+                sustainedEmployment: 0,
+                avgIncomeAfter: 0,
+                medianIncomeAfter: 0,
+                incomeBefore: 0,
+                incomeGrowth: 0,
+                incomeGrowthPct: 0,
+                incomeImprovementRate: 0,
+                selfEmploymentRate: 0,
+                highRelevance: highSharePct,
+                mediumRelevance: mediumSharePct,
+                lowRelevance: lowSharePct,
+                jobMismatch: lowSharePct,
+                skillMatch: 0,
+                roleMatch: 0,
+                alignmentScore: 0,
+                employerSatisfaction: 0,
+                technicalSatisfaction: 0,
+                practicalSatisfaction: 0,
+                communicationSatisfaction: 0,
+                workplaceReadiness: 0,
+                employerRecommendation: 0,
+                relevantEmployment: 0,
+                permanentEmployment: 0,
+                fullTimeEmployment: 0,
+                expectedSalary: 0,
+                actualSalary: 0,
+                salaryMatch: 0,
+                salaryMismatch: 0,
+                employerDemand: 0,
+                skillDemandMatch: 0,
+                skillShortage: 0,
+                outcomeScore: 0,
+                courses: [],
+                providers: p.provider_name ? [{ name: p.provider_name, trainees: enrolled, employmentRate: 0, outcomeScore: 0 }] : []
+            };
+        });
+    }
+
+    // ============================================================
+    // LOAD FROM BACKEND
+    // ============================================================
+    async function loadBackendData() {
+        const [programs, summary, govtAnalytics, relevance] = await Promise.all([
+            fetchJSON('/api/programs'),
+            fetchJSON('/api/analytics/summary'),
+            fetchJSON('/api/govt/analytics'),
+            fetchJSON('/api/analytics/relevance')
+        ]);
+
+        govtSchemes.schemes = buildSchemesFromApi(programs, summary, relevance);
+
+        // Regions — build from /api/govt/analytics.by_state if present
+        govtSchemes.regions = [];
+        if (govtAnalytics && Array.isArray(govtAnalytics.by_state)) {
+            govtSchemes.regions = govtAnalytics.by_state.map(r => ({
+                name: r.state || r.name || 'Unknown',
+                employment: Number(r.employment_rate) || 0,
+                retention: Number(r.retention_rate) || 0,
+                incomeGrowth: Number(r.income_growth) || 0,
+                satisfaction: Number(r.satisfaction) || 0,
+                schemes: {}
+            }));
+        }
+
+        // Seed selection: first up to 3 programs
+        if (govtSchemes.schemes.length > 0) {
+            selectedSchemes = govtSchemes.schemes.slice(0, Math.min(3, govtSchemes.schemes.length)).map(s => s.id);
+        } else {
+            selectedSchemes = [];
+        }
+    }
 
     // ============================================================
     // RENDER FUNCTIONS
     // ============================================================
 
     function renderAll() {
+        if (govtSchemes.schemes.length === 0) {
+            renderEmptyState();
+            return;
+        }
         renderSchemeSelector();
         renderComparisonTable();
         renderSchemeCards();
@@ -1527,13 +1341,35 @@ MAIN CONTENT
         updateBanner();
     }
 
+    function renderEmptyState() {
+        const container = document.getElementById('mainContainer');
+        if (!container) return;
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-landmark"></i>
+                <h3>No scheme data yet</h3>
+                <p>There are no training programs registered in the database yet.
+                   Create programs and enroll trainees to see government scheme comparison analytics here.</p>
+            </div>`;
+    }
+
     function updateBanner() {
-        document.getElementById('bannerSchemes').textContent = govtSchemes.schemes.length;
-        const topScheme = govtSchemes.schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, govtSchemes.schemes[0]);
-        document.getElementById('bannerTopScheme').textContent = topScheme.name;
-        const totalTrainees = govtSchemes.schemes.reduce((sum, s) => sum + s.totalTrainees, 0);
-        document.getElementById('bannerTrainees').textContent = (totalTrainees / 1000).toFixed(0) + 'K';
-        const avgEmp = Math.round(govtSchemes.schemes.reduce((sum, s) => sum + s.employmentRate, 0) / govtSchemes.schemes.length);
+        const schemes = govtSchemes.schemes;
+        document.getElementById('bannerSchemes').textContent = schemes.length;
+
+        const topScheme = schemes.length > 0
+            ? schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, schemes[0])
+            : null;
+        document.getElementById('bannerTopScheme').textContent = topScheme ? topScheme.name : '-';
+
+        const totalTrainees = schemes.reduce((sum, s) => sum + s.totalTrainees, 0);
+        document.getElementById('bannerTrainees').textContent = totalTrainees >= 1000
+            ? (totalTrainees / 1000).toFixed(1) + 'K'
+            : totalTrainees;
+
+        const avgEmp = schemes.length > 0
+            ? Math.round(schemes.reduce((sum, s) => sum + s.employmentRate, 0) / schemes.length)
+            : 0;
         document.getElementById('bannerAvgEmployment').textContent = avgEmp + '%';
     }
 
@@ -1578,7 +1414,7 @@ MAIN CONTENT
         currentView = view;
         document.querySelectorAll('.view-toggle button').forEach(btn => btn.classList.remove('active'));
         document.getElementById('view' + view.charAt(0).toUpperCase() + view.slice(1) + 'Btn').classList.add('active');
-        
+
         const titles = {
             'scheme': 'Government Scheme Comparison',
             'course': 'Course/Trade Comparison within Schemes',
@@ -1594,6 +1430,14 @@ MAIN CONTENT
         const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
         document.getElementById('compareCount').textContent = schemes.length + ' selected';
 
+        if (schemes.length === 0) {
+            head.innerHTML = '';
+            body.innerHTML = `<tr><td style="text-align:center;padding:24px;color:#64748b;">
+                No schemes selected.
+            </td></tr>`;
+            return;
+        }
+
         // Header
         head.innerHTML = `<tr>
             <th class="metric-col">Metric</th>
@@ -1602,7 +1446,7 @@ MAIN CONTENT
 
         // Metrics based on view
         let metrics = [];
-        
+
         if (currentView === 'scheme') {
             metrics = [
                 { section: 'Scheme Overview' },
@@ -1610,40 +1454,40 @@ MAIN CONTENT
                 { key: 'completed', label: 'Completed Training', unit: '', format: 'number', higher: true },
                 { key: 'placed', label: 'Placed', unit: '', format: 'number', higher: true },
                 { key: 'budgetUtilized', label: 'Budget Utilized', unit: ' Cr', prefix: '₹', format: 'number', higher: true },
-                
+
                 { section: 'Employment Metrics' },
                 { key: 'employmentRate', label: 'Employment Rate', unit: '%', higher: true },
                 { key: 'placementRate', label: 'Placement Rate', unit: '%', higher: true },
                 { key: 'nonPlacementRate', label: 'Non-Placement Rate', unit: '%', higher: false },
                 { key: 'timeToEmployment', label: 'Time to Employment', unit: ' days', higher: false },
-                
+
                 { section: 'Retention Metrics' },
                 { key: 'retention30', label: '30-Day Retention', unit: '%', higher: true },
                 { key: 'retention90', label: '90-Day Retention', unit: '%', higher: true },
                 { key: 'retention180', label: '180-Day Retention', unit: '%', higher: true },
                 { key: 'retention365', label: '365-Day Retention', unit: '%', higher: true },
                 { key: 'sustainedEmployment', label: 'Sustained Employment', unit: '%', higher: true },
-                
+
                 { section: 'Income Metrics' },
                 { key: 'incomeBefore', label: 'Income Before', unit: '', prefix: '₹', format: 'number', higher: false },
                 { key: 'avgIncomeAfter', label: 'Avg Income After', unit: '', prefix: '₹', format: 'number', higher: true },
                 { key: 'incomeGrowth', label: 'Income Growth', unit: '', prefix: '₹', format: 'number', higher: true },
                 { key: 'incomeGrowthPct', label: 'Income Growth %', unit: '%', higher: true },
                 { key: 'selfEmploymentRate', label: 'Self-Employment Rate', unit: '%', higher: true },
-                
+
                 { section: 'Job Relevance' },
                 { key: 'highRelevance', label: 'High Relevance', unit: '%', higher: true },
                 { key: 'jobMismatch', label: 'Job Mismatch Rate', unit: '%', higher: false },
                 { key: 'skillMatch', label: 'Skill Match', unit: '%', higher: true },
                 { key: 'alignmentScore', label: 'Alignment Score', unit: '/100', higher: true },
-                
+
                 { section: 'Employer Satisfaction' },
                 { key: 'employerSatisfaction', label: 'Overall Satisfaction', unit: '%', higher: true },
                 { key: 'technicalSatisfaction', label: 'Technical Skills', unit: '%', higher: true },
                 { key: 'practicalSatisfaction', label: 'Practical Skills', unit: '%', higher: true },
                 { key: 'communicationSatisfaction', label: 'Communication', unit: '%', higher: true },
                 { key: 'workplaceReadiness', label: 'Workplace Readiness', unit: '%', higher: true },
-                
+
                 { section: 'Outcome Score' },
                 { key: 'outcomeScore', label: 'Scheme Outcome Score', unit: '/100', higher: true, highlight: true }
             ];
@@ -1672,34 +1516,34 @@ MAIN CONTENT
                 html += `<tr class="section-row"><td colspan="${schemes.length + 1}">${m.section}</td></tr>`;
                 return;
             }
-            
+
             let values = schemes.map(s => {
                 if (m.computed) {
-                    if (m.key === 'avgCourseEmployment') return Math.round(s.courses.reduce((sum, c) => sum + c.employmentRate, 0) / s.courses.length);
-                    if (m.key === 'avgCourseIncome') return Math.round(s.courses.reduce((sum, c) => sum + c.incomeGrowth, 0) / s.courses.length);
-                    if (m.key === 'avgCourseRelevance') return Math.round(s.courses.reduce((sum, c) => sum + c.relevance, 0) / s.courses.length);
+                    if (m.key === 'avgCourseEmployment') return s.courses.length ? Math.round(s.courses.reduce((sum, c) => sum + c.employmentRate, 0) / s.courses.length) : 0;
+                    if (m.key === 'avgCourseIncome') return s.courses.length ? Math.round(s.courses.reduce((sum, c) => sum + c.incomeGrowth, 0) / s.courses.length) : 0;
+                    if (m.key === 'avgCourseRelevance') return s.courses.length ? Math.round(s.courses.reduce((sum, c) => sum + c.relevance, 0) / s.courses.length) : 0;
                     if (m.key === 'courseCount') return s.courses.length;
                     if (m.key === 'providerCount') return s.providers.length;
-                    if (m.key === 'avgProviderEmployment') return Math.round(s.providers.reduce((sum, p) => sum + p.employmentRate, 0) / s.providers.length);
-                    if (m.key === 'avgProviderScore') return Math.round(s.providers.reduce((sum, p) => sum + p.outcomeScore, 0) / s.providers.length);
+                    if (m.key === 'avgProviderEmployment') return s.providers.length ? Math.round(s.providers.reduce((sum, p) => sum + p.employmentRate, 0) / s.providers.length) : 0;
+                    if (m.key === 'avgProviderScore') return s.providers.length ? Math.round(s.providers.reduce((sum, p) => sum + p.outcomeScore, 0) / s.providers.length) : 0;
                     if (m.key === 'totalProviderTrainees') return s.providers.reduce((sum, p) => sum + p.trainees, 0);
                 }
                 return s[m.key];
             });
-            
+
             const bestValue = m.higher ? Math.max(...values) : Math.min(...values);
-            
+
             html += `<tr>
                 <td class="metric-col">${m.label}</td>
                 ${schemes.map((s, i) => {
                     const val = values[i];
-                    const isBest = val === bestValue;
+                    const isBest = val === bestValue && val !== 0;
                     const color = isBest ? '#16a34a' : '#0b1a33';
                     let displayVal = '';
                     if (m.format === 'number') {
-                        displayVal = (m.prefix || '') + val.toLocaleString() + (m.unit || '');
+                        displayVal = (m.prefix || '') + Number(val || 0).toLocaleString() + (m.unit || '');
                     } else {
-                        displayVal = (m.prefix || '') + val + (m.unit || '');
+                        displayVal = (m.prefix || '') + (val != null ? val : 0) + (m.unit || '');
                     }
                     const rankBadge = isBest && metrics.length > 3 ? '<span class="rank-badge rank-1">BEST</span>' : '';
                     return `<td>
@@ -1718,7 +1562,12 @@ MAIN CONTENT
     function renderSchemeCards() {
         const container = document.getElementById('schemeCardsGrid');
         const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
-        
+
+        if (schemes.length === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:#64748b;">No schemes selected.</div>`;
+            return;
+        }
+
         container.innerHTML = schemes.map(s => {
             const scoreColor = s.outcomeScore >= 80 ? '#16a34a' : s.outcomeScore >= 70 ? '#d97706' : '#dc2626';
             return `<div class="scheme-card" style="border-top-color:${s.color};">
@@ -1750,7 +1599,12 @@ MAIN CONTENT
     function renderVisualComparison() {
         const container = document.getElementById('visualGrid');
         const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
-        
+
+        if (schemes.length === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:#64748b;">No schemes selected.</div>`;
+            return;
+        }
+
         const visualMetrics = [
             { title: 'Employment Rate', icon: 'fa-briefcase', key: 'employmentRate', unit: '%' },
             { title: '365-Day Retention', icon: 'fa-user-check', key: 'retention365', unit: '%' },
@@ -1781,7 +1635,14 @@ MAIN CONTENT
     function renderCourseDrillDown() {
         const container = document.getElementById('courseDrillDown');
         const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
-        
+
+        if (schemes.length === 0 || schemes.every(s => s.courses.length === 0)) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:#64748b;">
+                Course-level breakdown is not yet available from the backend.
+            </div>`;
+            return;
+        }
+
         container.innerHTML = schemes.map(s => `
             <div class="visual-card">
                 <div class="card-title"><i class="fas fa-book" style="color:${s.color};"></i> ${s.name} — Courses</div>
@@ -1802,11 +1663,19 @@ MAIN CONTENT
     function renderProviderGrid() {
         const container = document.getElementById('providerGrid');
         const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
-        
+
+        const hasProviders = schemes.some(s => s.providers && s.providers.length > 0);
+        if (!hasProviders) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:#64748b;">
+                Provider-level breakdown is not yet available from the backend.
+            </div>`;
+            return;
+        }
+
         container.innerHTML = schemes.map(s => `
             <div class="visual-card">
                 <div class="card-title"><i class="fas fa-chalkboard-teacher" style="color:${s.color};"></i> ${s.name} — Providers</div>
-                ${s.providers.map(p => {
+                ${(s.providers || []).map(p => {
                     const color = p.outcomeScore >= 78 ? '#16a34a' : p.outcomeScore >= 70 ? '#d97706' : '#dc2626';
                     return `<div class="course-list-item">
                         <div>
@@ -1822,8 +1691,16 @@ MAIN CONTENT
 
     function renderRegionGrid() {
         const container = document.getElementById('regionGrid');
+
+        if (!govtSchemes.regions || govtSchemes.regions.length === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:#64748b;">
+                Regional breakdown is not yet available from the backend.
+            </div>`;
+            return;
+        }
+
         const regions = [...govtSchemes.regions].sort((a, b) => b.employment - a.employment);
-        
+
         container.innerHTML = regions.map(r => {
             const empColor = r.employment >= 78 ? '#16a34a' : r.employment >= 70 ? '#d97706' : '#dc2626';
             return `<div class="region-card">
@@ -1843,6 +1720,12 @@ MAIN CONTENT
         const recsContainer = document.getElementById('aiRecommendations');
 
         const schemes = govtSchemes.schemes;
+        if (schemes.length === 0) {
+            highlightsContainer.innerHTML = '<div class="ai-item"><span class="ai-icon">📊</span><div>No schemes to analyze yet.</div></div>';
+            recsContainer.innerHTML = '<div class="ai-item"><span class="ai-icon">✅</span><div>Register programs to see recommendations.</div></div>';
+            return;
+        }
+
         const topScheme = schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, schemes[0]);
         const topEmployment = schemes.reduce((best, s) => s.employmentRate > best.employmentRate ? s : best, schemes[0]);
         const topRetention = schemes.reduce((best, s) => s.retention365 > best.retention365 ? s : best, schemes[0]);
@@ -1864,7 +1747,6 @@ MAIN CONTENT
             <div class="ai-item"><span class="ai-icon">📌</span><div><strong>Regional Intervention:</strong> Deploy best practices from ${topScheme.name} to states with employment below 70%.</div></div>
         `;
 
-        // Add gap analysis
         const lowestScheme = schemes.reduce((worst, s) => s.outcomeScore < worst.outcomeScore ? s : worst, schemes[0]);
         if (topScheme.outcomeScore - lowestScheme.outcomeScore > 10) {
             highlightsHtml += `<div class="ai-item"><span class="ai-icon">📊</span><div><strong>Performance Gap:</strong> ${topScheme.name} outperforms ${lowestScheme.name} by ${topScheme.outcomeScore - lowestScheme.outcomeScore} points in outcome score.</div></div>`;
@@ -1880,8 +1762,10 @@ MAIN CONTENT
     // ============================================================
 
     function updateDate() {
+        const el = document.getElementById('dateDisplay');
+        if (!el) return;
         const now = new Date();
-        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+        el.textContent = now.toLocaleDateString('en-US', {
             weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
         });
     }
@@ -1895,20 +1779,21 @@ MAIN CONTENT
     }
 
     function showNotifications() {
-        alert(`📬 Notifications\n\n• ${govtSchemes.schemes.length} Government schemes available\n• ${govtSchemes.regions.length} states analyzed\n• Top scheme: ${govtSchemes.schemes.reduce((b, s) => s.outcomeScore > b.outcomeScore ? s : b, govtSchemes.schemes[0]).name}`);
+        alert(`📬 Notifications\n\n• ${govtSchemes.schemes.length} Government schemes available\n• ${govtSchemes.regions.length} states analyzed\n• Top scheme: ${govtSchemes.schemes.length > 0 ? govtSchemes.schemes.reduce((b, s) => s.outcomeScore > b.outcomeScore ? s : b, govtSchemes.schemes[0]).name : '—'}`);
     }
 
     function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
-            window.location.href = '../auth/login.html';
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+                .finally(() => { window.location.href = '../auth/login.html'; });
         }
     }
 
     function exportComparison() {
         const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
+        if (schemes.length === 0) { alert('No schemes selected.'); return; }
         let csv = 'Metric,' + schemes.map(s => s.name + ' (' + s.ministry + ')').join(',') + '\n';
         csv += 'Total Trainees,' + schemes.map(s => s.totalTrainees).join(',') + '\n';
         csv += 'Placed,' + schemes.map(s => s.placed).join(',') + '\n';
@@ -1919,7 +1804,7 @@ MAIN CONTENT
         csv += 'Employer Satisfaction,' + schemes.map(s => s.employerSatisfaction + '%').join(',') + '\n';
         csv += 'Skill Match,' + schemes.map(s => s.skillMatch + '%').join(',') + '\n';
         csv += 'Outcome Score,' + schemes.map(s => s.outcomeScore).join(',') + '\n';
-        
+
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1931,18 +1816,23 @@ MAIN CONTENT
     }
 
     function resetComparison() {
-        selectedSchemes = ['pmkvy', 'ddu-gky', 'pm-daksh'];
+        if (govtSchemes.schemes.length === 0) {
+            showToast('⚠️ No schemes available');
+            return;
+        }
+        selectedSchemes = govtSchemes.schemes.slice(0, Math.min(3, govtSchemes.schemes.length)).map(s => s.id);
         renderAll();
         showToast('🔄 Comparison reset to default');
     }
 
     function exportFullReport() {
         const schemes = govtSchemes.schemes.filter(s => selectedSchemes.includes(s.id));
+        if (schemes.length === 0) { alert('No schemes selected.'); return; }
         let report = '📊 GOVERNMENT SCHEME COMPARISON REPORT\n';
         report += '================================\n';
         report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
         report += `📈 COMPARING ${schemes.length} GOVERNMENT SCHEMES\n\n`;
-        
+
         schemes.forEach(s => {
             report += `━━━ ${s.name} (${s.ministry}) ━━━\n`;
             report += `${s.fullName}\n`;
@@ -1958,14 +1848,16 @@ MAIN CONTENT
             report += `• Skill Match: ${s.skillMatch}%\n`;
             report += `• Outcome Score: ${s.outcomeScore}/100\n\n`;
         });
-        
+
         report += '================================\n';
         report += '📌 Generated by SkillBridge Government Portal';
         alert(report);
     }
 
     function viewTopScheme() {
-        const topScheme = govtSchemes.schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, govtSchemes.schemes[0]);
+        const schemes = govtSchemes.schemes;
+        if (schemes.length === 0) { alert('No schemes available yet.'); return; }
+        const topScheme = schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, schemes[0]);
         alert(`🏆 TOP PERFORMING GOVERNMENT SCHEME\n\n` +
               `Scheme: ${topScheme.name}\n` +
               `Ministry: ${topScheme.ministryFull}\n` +
@@ -1986,9 +1878,10 @@ MAIN CONTENT
 
     function generateAIInsights() {
         const schemes = govtSchemes.schemes;
+        if (schemes.length === 0) { alert('No schemes available yet.'); return; }
         const topScheme = schemes.reduce((best, s) => s.outcomeScore > best.outcomeScore ? s : best, schemes[0]);
         const lowScheme = schemes.reduce((worst, s) => s.outcomeScore < worst.outcomeScore ? s : worst, schemes[0]);
-        
+
         alert(`🤖 AI GOVERNMENT SCHEME INSIGHTS\n\n` +
               `📊 ANALYSIS OF ${schemes.length} SCHEMES\n\n` +
               `🏆 Top Performer: ${topScheme.name} (${topScheme.ministry})\n` +
@@ -2015,8 +1908,10 @@ MAIN CONTENT
     // INIT
     // ============================================================
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         updateDate();
+
+        await loadBackendData();
         renderAll();
 
         document.addEventListener('click', function(e) {
@@ -2029,11 +1924,11 @@ MAIN CONTENT
             }
         });
 
-        console.log('🏛️ Government Scheme Comparison page loaded!');
+        console.log('🏛️ Government Scheme Comparison page loaded (real data)');
         console.log('📋 Total Schemes:', govtSchemes.schemes.length);
-        console.log('🏆 Top Scheme:', govtSchemes.schemes.reduce((b, s) => s.outcomeScore > b.outcomeScore ? s : b, govtSchemes.schemes[0]).name);
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
         body { background: #f0f4f9; display: flex; min-height: 100vh; }
@@ -655,9 +656,6 @@
         }
         .quick-actions .action-btn:hover i { color: white; }
 
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
         @media (max-width: 1200px) {
             .chart-grid { grid-template-columns: 1fr 1fr; }
             .risk-grid { grid-template-columns: 1fr 1fr; }
@@ -729,10 +727,10 @@
         <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 </nav>
+
 <!-- ===== MAIN CONTENT ===== -->
 <div class="main-content">
 
-    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
@@ -760,10 +758,8 @@
         </div>
     </header>
 
-    <!-- ===== CONTAINER ===== -->
     <div class="container">
 
-        <!-- ===== WELCOME BANNER ===== -->
         <div class="welcome-banner">
             <div class="banner-content">
                 <h2><i class="fas fa-flag"></i> Retention Analysis Dashboard</h2>
@@ -789,7 +785,6 @@
             </div>
         </div>
 
-        <!-- ===== RETENTION FUNNEL ===== -->
         <div class="funnel-container">
             <div class="section-title">
                 <i class="fas fa-filter"></i> Retention Funnel
@@ -833,7 +828,6 @@
             </div>
         </div>
 
-        <!-- ===== STATS ROW ===== -->
         <div class="stats-row">
             <div class="stat-box">
                 <div class="stat-icon green"><i class="fas fa-calendar-check"></i></div>
@@ -873,36 +867,25 @@
             </div>
         </div>
 
-        <!-- ===== CHART GRID ===== -->
         <div class="chart-grid">
-
-            <!-- Retention by Program -->
             <div class="chart-card">
                 <div class="card-title"><i class="fas fa-graduation-cap"></i> Retention by Program</div>
                 <div class="bar-chart-container" id="programRetentionChart"></div>
             </div>
-
-            <!-- Retention by Provider -->
             <div class="chart-card">
                 <div class="card-title"><i class="fas fa-chalkboard-teacher"></i> Retention by Provider</div>
                 <div class="bar-chart-container" id="providerRetentionChart"></div>
             </div>
-
-            <!-- Retention by Salary -->
             <div class="chart-card">
                 <div class="card-title"><i class="fas fa-rupee-sign"></i> Retention by Salary</div>
                 <div class="bar-chart-container" id="salaryRetentionChart"></div>
             </div>
-
-            <!-- Retention by Location -->
             <div class="chart-card">
                 <div class="card-title"><i class="fas fa-map-pin"></i> Retention by Location</div>
                 <div class="bar-chart-container" id="locationRetentionChart"></div>
             </div>
-
         </div>
 
-        <!-- ===== RETENTION RISK SCORE ===== -->
         <div class="section-title">
             <i class="fas fa-shield-alt"></i> Retention Risk Score
             <span class="badge-count">Risk classification</span>
@@ -925,7 +908,6 @@
             </div>
         </div>
 
-        <!-- ===== EXIT REASON ANALYTICS ===== -->
         <div class="section-title">
             <i class="fas fa-sign-out-alt"></i> Exit Reason Analytics
             <span class="badge-count">Why people leave</span>
@@ -934,7 +916,6 @@
             <div class="bar-chart-container" id="exitReasonChart" style="height:180px;"></div>
         </div>
 
-        <!-- ===== DETAILED TABLE ===== -->
         <div class="table-container">
             <div class="table-header">
                 <h3><i class="fas fa-list"></i> Retention Records <span class="count" id="recordCount">0</span></h3>
@@ -961,7 +942,6 @@
             </div>
         </div>
 
-        <!-- ===== QUICK ACTIONS ===== -->
         <div class="chart-card" style="padding:16px 20px; margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h3 style="font-size:14px; color:#0b1a33; display:flex; align-items:center; gap:8px; font-weight:700;">
@@ -971,7 +951,7 @@
             <div class="quick-actions">
                 <a href="#" class="action-btn" onclick="exportFullReport(); return false;"><i class="fas fa-file-export"></i> Export Report</a>
                 <a href="#" class="action-btn" onclick="viewHighRisk(); return false;"><i class="fas fa-exclamation-triangle"></i> High Risk Trainees</a>
-                <a href="#" class="action-btn" onclick="generateAIInsights(); return false;"><i class="fas fa-robot"></i> AI Insights</a>
+                <a href="ai-insights.html" class="action-btn"><i class="fas fa-robot"></i> AI Insights</a>
                 <a href="#" class="action-btn" onclick="window.print(); return false;"><i class="fas fa-print"></i> Print Dashboard</a>
             </div>
         </div>
@@ -981,162 +961,88 @@
 
 <script>
     // ============================================================
-    // COMPREHENSIVE SAMPLE DATA
+    // STATE — real data only
     // ============================================================
-
-    const sampleData = {
-        records: [
-            // Retained - High Salary - Long Term
-            { id: 'TRN001', name: 'Priya Sharma', program: 'Data Analytics', provider: 'Skill India Centre', district: 'Bengaluru', income: 32000, joiningDate: '2025-06-15', daysEmployed: 420, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
-            { id: 'TRN002', name: 'Rahul Verma', program: 'Full Stack Development', provider: 'NITC Training', district: 'Mumbai', income: 38000, joiningDate: '2025-07-01', daysEmployed: 405, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
-            { id: 'TRN003', name: 'Ananya Reddy', program: 'Digital Marketing', provider: 'Digital India Academy', district: 'Delhi', income: 28000, joiningDate: '2025-08-10', daysEmployed: 365, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
-            { id: 'TRN004', name: 'Vikram Singh', program: 'Data Science', provider: 'Data Science Institute', district: 'Hyderabad', income: 45000, joiningDate: '2025-05-20', daysEmployed: 447, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
-            { id: 'TRN005', name: 'Arjun Nair', program: 'Cloud Computing', provider: 'Cloud Academy', district: 'Chennai', income: 35000, joiningDate: '2025-09-01', daysEmployed: 343, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
-            { id: 'TRN006', name: 'Meera Iyer', program: 'Digital Marketing', provider: 'Digital India Academy', district: 'Chennai', income: 26000, joiningDate: '2025-10-15', daysEmployed: 299, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
-            { id: 'TRN007', name: 'Amit Patel', program: 'Full Stack Development', provider: 'NITC Training', district: 'Bengaluru', income: 42000, joiningDate: '2025-11-01', daysEmployed: 282, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
-            { id: 'TRN008', name: 'Deepa Menon', program: 'Data Analytics', provider: 'Skill India Centre', district: 'Pune', income: 30000, joiningDate: '2026-01-10', daysEmployed: 212, retentionStatus: 'retained', riskScore: 'low', exitReason: 'N/A' },
-
-            // Retained - Medium Salary - Medium Term
-            { id: 'TRN009', name: 'Suresh Reddy', program: 'UI/UX Design', provider: 'Design Academy', district: 'Delhi', income: 22000, joiningDate: '2026-03-15', daysEmployed: 148, retentionStatus: 'retained', riskScore: 'medium', exitReason: 'N/A' },
-            { id: 'TRN010', name: 'Lakshmi N', program: 'Cloud Computing', provider: 'Cloud Academy', district: 'Hyderabad', income: 25000, joiningDate: '2026-04-01', daysEmployed: 131, retentionStatus: 'retained', riskScore: 'medium', exitReason: 'N/A' },
-
-            // At Risk - Low Salary - Short Term
-            { id: 'TRN011', name: 'Kiran Joshi', program: 'Full Stack Development', provider: 'Code Institute', district: 'Pune', income: 18000, joiningDate: '2026-07-01', daysEmployed: 40, retentionStatus: 'at-risk', riskScore: 'high', exitReason: 'N/A' },
-            { id: 'TRN012', name: 'Divya K', program: 'Data Analytics', provider: 'Analytics School', district: 'Bengaluru', income: 16000, joiningDate: '2026-07-15', daysEmployed: 26, retentionStatus: 'at-risk', riskScore: 'high', exitReason: 'N/A' },
-            { id: 'TRN013', name: 'Ravi Kumar', program: 'Data Science', provider: 'Data Science Institute', district: 'Mumbai', income: 15000, joiningDate: '2026-08-01', daysEmployed: 9, retentionStatus: 'at-risk', riskScore: 'high', exitReason: 'N/A' },
-
-            // Lost - Various Reasons
-            { id: 'TRN014', name: 'Sneha Patel', program: 'UI/UX Design', provider: 'Design Academy', district: 'Bengaluru', income: 0, joiningDate: '2026-05-01', daysEmployed: 45, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Better opportunity' },
-            { id: 'TRN015', name: 'Pooja Shah', program: 'Data Analytics', provider: 'Skill India Centre', district: 'Pune', income: 0, joiningDate: '2026-04-10', daysEmployed: 30, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Low salary' },
-            { id: 'TRN016', name: 'Nisha Gupta', program: 'Digital Marketing', provider: 'Digital India Academy', district: 'Delhi', income: 0, joiningDate: '2026-03-20', daysEmployed: 60, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Relocation' },
-            { id: 'TRN017', name: 'Manoj Kumar', program: 'Full Stack Development', provider: 'NITC Training', district: 'Mumbai', income: 0, joiningDate: '2026-02-15', daysEmployed: 75, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Skill mismatch' },
-            { id: 'TRN018', name: 'Kavya Reddy', program: 'Data Science', provider: 'Data Science Institute', district: 'Hyderabad', income: 0, joiningDate: '2026-01-20', daysEmployed: 90, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Workplace issue' },
-            { id: 'TRN019', name: 'Arjun Singh', program: 'Cloud Computing', provider: 'Cloud Academy', district: 'Chennai', income: 0, joiningDate: '2025-12-10', daysEmployed: 120, retentionStatus: 'lost', riskScore: 'high', exitReason: 'No career growth' },
-            { id: 'TRN020', name: 'Shweta Jain', program: 'UI/UX Design', provider: 'Design Academy', district: 'Delhi', income: 0, joiningDate: '2025-11-15', daysEmployed: 105, retentionStatus: 'lost', riskScore: 'high', exitReason: 'Personal reason' }
-        ]
-    };
+    let allRecords = [];
+    let stats = {};
+    let analyticsRaw = null;
 
     // ============================================================
-    // DATA LOADER - Get Real Data from localStorage + Sample
+    // LOAD FROM BACKEND — no sample fallbacks
     // ============================================================
+    async function loadAllData() {
+        try {
+            const [traineesRes, analyticsRes] = await Promise.all([
+                apiCall('/api/trainees'),
+                apiCall('/api/govt/analytics'),
+            ]);
+            analyticsRaw = analyticsRes.ok ? analyticsRes.data : {};
+            const trainees = (traineesRes.ok && Array.isArray(traineesRes.data)) ? traineesRes.data : [];
 
-    function getTraineeData() {
-        let data = localStorage.getItem('traineeData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing traineeData:', e); }
-        }
-        return null;
-    }
+            const recentEmp = analyticsRaw.recent_employments || [];
 
-    function getEmploymentData() {
-        let data = localStorage.getItem('employmentData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing employmentData:', e); }
-        }
-        return null;
-    }
+            allRecords = trainees.map((t, index) => {
+                const emp = recentEmp.find(e => String(e.trainee_id) === String(t.id));
 
-    function getProviderData() {
-        let data = localStorage.getItem('providerData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing providerData:', e); }
-        }
-        return null;
-    }
+                let income = 0;
+                let joiningDate = 'N/A';
+                let daysEmployed = 0;
+                let retentionStatus = 'lost';
+                let riskScore = 'high';
+                let exitReason = 'N/A';
+                let employmentType = 'N/A';
 
-    function getGovernmentData() {
-        let data = localStorage.getItem('governmentData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing governmentData:', e); }
-        }
-        return null;
-    }
+                if (emp && emp.status === 'verified') {
+                    income = emp.monthly_income || 0;
+                    joiningDate = emp.start_date || 'N/A';
+                    employmentType = emp.employment_type || 'N/A';
 
-    // ============================================================
-    // BUILD RETENTION RECORDS FROM REAL DATA + SAMPLE
-    // ============================================================
+                    if (joiningDate !== 'N/A') {
+                        const joinDate = new Date(joiningDate);
+                        daysEmployed = Math.floor((Date.now() - joinDate) / (1000 * 60 * 60 * 24));
 
-    function buildRetentionRecords() {
-        let records = [];
-        const traineeData = getTraineeData();
-        const employmentData = getEmploymentData();
-        const providerData = getProviderData();
-
-        // If we have real trainee data, add it
-        if (traineeData && traineeData.fullName) {
-            const empStatus = employmentData?.status || traineeData.employmentStatusDisplay || 'Not Updated';
-            const income = parseInt(employmentData?.currentIncome) || parseInt(traineeData.currentIncome) || 0;
-            const joiningDate = employmentData?.joiningDate || traineeData.joiningDate || '2026-01-01';
-            const district = employmentData?.jobCity || traineeData.location || 'Bengaluru';
-            const program = traineeData.skillTrade || 'N/A';
-            const provider = traineeData.trainingProvider || providerData?.orgName || 'N/A';
-
-            const joinDate = new Date(joiningDate);
-            const now = new Date();
-            const daysEmployed = Math.floor((now - joinDate) / (1000 * 60 * 60 * 24));
-
-            let retentionStatus = 'retained';
-            let riskScore = 'low';
-            if (daysEmployed < 30) { retentionStatus = 'at-risk'; riskScore = 'high'; }
-            else if (daysEmployed < 90) { retentionStatus = 'at-risk'; riskScore = 'medium'; }
-            else if (daysEmployed < 180) { retentionStatus = 'retained'; riskScore = 'medium'; }
-            else { retentionStatus = 'retained'; riskScore = 'low'; }
-
-            if (empStatus !== 'Employed' && empStatus !== 'Self-Employed') {
-                retentionStatus = 'lost';
-                riskScore = 'high';
-            }
-
-            records.push({
-                id: traineeData.traineeId || 'TRN001',
-                name: traineeData.fullName || 'Trainee',
-                program: program,
-                provider: provider,
-                district: district,
-                income: income,
-                joiningDate: joiningDate,
-                daysEmployed: daysEmployed,
-                retentionStatus: retentionStatus,
-                riskScore: riskScore,
-                exitReason: retentionStatus === 'lost' ? 'Better opportunity' : 'N/A',
-                avatar: traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T',
-                color: '#2563eb'
-            });
-        }
-
-        // If no real data OR we want to show sample data, add sample
-        // Always add sample data for demonstration
-        if (records.length === 0 || records.length < 5) {
-            // Merge sample data, avoiding duplicates by ID
-            const existingIds = new Set(records.map(r => r.id));
-            sampleData.records.forEach(r => {
-                if (!existingIds.has(r.id)) {
-                    records.push({...r, avatar: r.name.charAt(0), color: '#2563eb'});
+                        if (daysEmployed >= 180) { retentionStatus = 'retained'; riskScore = 'low'; }
+                        else if (daysEmployed >= 90) { retentionStatus = 'retained'; riskScore = 'medium'; }
+                        else if (daysEmployed >= 30) { retentionStatus = 'at-risk'; riskScore = 'medium'; }
+                        else { retentionStatus = 'at-risk'; riskScore = 'high'; }
+                    }
                 }
-            });
-        }
 
-        return records;
+                return {
+                    id: t.trainee_code || ('TRN' + t.id),
+                    backendId: t.id,
+                    name: t.full_name || 'Trainee',
+                    program: t.skills || t.qualification || 'N/A',
+                    provider: t.training_provider || 'N/A',
+                    district: t.district || 'N/A',
+                    income: income,
+                    joiningDate: joiningDate,
+                    daysEmployed: daysEmployed,
+                    retentionStatus: retentionStatus,
+                    riskScore: riskScore,
+                    exitReason: exitReason,
+                    employmentType: employmentType,
+                };
+            });
+        } catch (e) {
+            console.error('Failed to load retention data:', e);
+            analyticsRaw = {};
+            allRecords = [];
+        }
     }
 
     // ============================================================
-    // CALCULATE RETENTION STATISTICS
+    // CALCULATE STATS
     // ============================================================
-
     function calculateRetentionStats(records) {
         const total = records.length;
         const placed = records.filter(r => r.income > 0).length;
         const joined = records.filter(r => r.joiningDate !== 'N/A' && r.income > 0).length;
-        
+
         const retained = records.filter(r => r.retentionStatus === 'retained').length;
         const atRisk = records.filter(r => r.retentionStatus === 'at-risk').length;
         const lost = records.filter(r => r.retentionStatus === 'lost').length;
 
-        // Retention by days
         const retention30 = records.filter(r => r.daysEmployed >= 30).length;
         const retention90 = records.filter(r => r.daysEmployed >= 90).length;
         const retention180 = records.filter(r => r.daysEmployed >= 180).length;
@@ -1144,9 +1050,8 @@
 
         const retentionRate = placed > 0 ? Math.round((retained / placed) * 100) : 0;
         const dropoutRate = placed > 0 ? Math.round((lost / placed) * 100) : 0;
-        const reemploymentRate = lost > 0 ? Math.round((lost * 0.35) / lost * 100) : 0;
+        const reemploymentRate = 0;  // requires tracking of re-hire; keep 0 until data exists
 
-        // Program retention
         const programRetention = {};
         records.forEach(r => {
             if (r.program && r.program !== 'N/A') {
@@ -1156,7 +1061,6 @@
             }
         });
 
-        // Provider retention
         const providerRetention = {};
         records.forEach(r => {
             if (r.provider && r.provider !== 'N/A') {
@@ -1166,7 +1070,6 @@
             }
         });
 
-        // Salary retention
         const salaryRetention = {
             '₹0-15K': { total: 0, retained: 0 },
             '₹15K-25K': { total: 0, retained: 0 },
@@ -1174,17 +1077,15 @@
             '₹35K+': { total: 0, retained: 0 }
         };
         records.forEach(r => {
+            if (r.income <= 0) return;
             let key = '₹0-15K';
             if (r.income > 35000) key = '₹35K+';
             else if (r.income > 25000) key = '₹25K-35K';
             else if (r.income > 15000) key = '₹15K-25K';
-            if (r.income > 0) {
-                salaryRetention[key].total++;
-                if (r.retentionStatus === 'retained') salaryRetention[key].retained++;
-            }
+            salaryRetention[key].total++;
+            if (r.retentionStatus === 'retained') salaryRetention[key].retained++;
         });
 
-        // Location retention
         const locationRetention = {};
         records.forEach(r => {
             if (r.district && r.district !== 'N/A') {
@@ -1194,54 +1095,32 @@
             }
         });
 
-        // Exit reasons
         const exitReasons = {};
         records.forEach(r => {
             if (r.exitReason && r.exitReason !== 'N/A') {
-                if (!exitReasons[r.exitReason]) exitReasons[r.exitReason] = 0;
-                exitReasons[r.exitReason]++;
+                exitReasons[r.exitReason] = (exitReasons[r.exitReason] || 0) + 1;
             }
         });
 
-        // Risk scores
         const riskLow = records.filter(r => r.riskScore === 'low').length;
         const riskMedium = records.filter(r => r.riskScore === 'medium').length;
         const riskHigh = records.filter(r => r.riskScore === 'high').length;
 
         return {
-            total,
-            placed,
-            joined,
-            retained,
-            atRisk,
-            lost,
-            retention30,
-            retention90,
-            retention180,
-            retention365,
-            retentionRate,
-            dropoutRate,
-            reemploymentRate,
-            programRetention,
-            providerRetention,
-            salaryRetention,
-            locationRetention,
-            exitReasons,
-            riskLow,
-            riskMedium,
-            riskHigh
+            total, placed, joined, retained, atRisk, lost,
+            retention30, retention90, retention180, retention365,
+            retentionRate, dropoutRate, reemploymentRate,
+            programRetention, providerRetention, salaryRetention,
+            locationRetention, exitReasons,
+            riskLow, riskMedium, riskHigh
         };
     }
 
     // ============================================================
-    // RENDER FUNCTIONS
+    // RENDER
     // ============================================================
-
-    let allRecords = [];
-    let stats = {};
-
-    function loadAndRender() {
-        allRecords = buildRetentionRecords();
+    async function loadAndRender() {
+        await loadAllData();
         stats = calculateRetentionStats(allRecords);
         renderAll();
         updateSidebar();
@@ -1259,7 +1138,8 @@
         renderRiskScores(stats);
         renderExitReasons(stats);
         renderTable(stats);
-        document.getElementById('recordCount').textContent = allRecords.length;
+        const rc = document.getElementById('recordCount');
+        if (rc) rc.textContent = allRecords.length;
     }
 
     function renderBanner(stats) {
@@ -1286,21 +1166,6 @@
         document.getElementById('loss90').textContent = `-${loss90}%`;
         document.getElementById('loss180').textContent = `-${loss180}%`;
         document.getElementById('loss365').textContent = `-${loss365}%`;
-
-        const steps = document.querySelectorAll('.funnel-step');
-        const values = [stats.placed, stats.joined, stats.retention30, stats.retention90, stats.retention180, stats.retention365];
-        const thresholds = [0, 0, stats.joined * 0.6, stats.retention30 * 0.6, stats.retention90 * 0.5, stats.retention180 * 0.4];
-        
-        steps.forEach((step, i) => {
-            step.className = 'funnel-step';
-            if (values[i] >= thresholds[i] && values[i] > 0) {
-                step.classList.add('retained');
-            } else if (values[i] > 0 && values[i] < thresholds[i]) {
-                step.classList.add('at-risk');
-            } else {
-                step.classList.add('lost');
-            }
-        });
     }
 
     function renderStats(stats) {
@@ -1316,88 +1181,70 @@
         document.getElementById('statDropout').textContent = stats.dropoutRate + '%';
         document.getElementById('statReemployment').textContent = stats.reemploymentRate + '%';
 
-        // Update trends
-        const trend30 = document.querySelector('.stat-box:nth-child(1) .stat-trend');
-        const trend90 = document.querySelector('.stat-box:nth-child(2) .stat-trend');
-        const trend180 = document.querySelector('.stat-box:nth-child(3) .stat-trend');
-        const trend365 = document.querySelector('.stat-box:nth-child(4) .stat-trend');
-        const trendDropout = document.querySelector('.stat-box:nth-child(5) .stat-trend');
-        const trendReemp = document.querySelector('.stat-box:nth-child(6) .stat-trend');
+        const setTrend = (sel, val, good, med, isRate = true) => {
+            const el = document.querySelector(sel);
+            if (!el) return;
+            let cls = 'good', label = '● Good';
+            if (isRate) {
+                if (val >= good) { cls = 'good'; label = '● Good'; }
+                else if (val >= med) { cls = 'warning'; label = '● Medium'; }
+                else { cls = 'danger'; label = '● Low'; }
+            } else {
+                if (val <= good) { cls = 'good'; label = '● Good'; }
+                else if (val <= med) { cls = 'warning'; label = '● Medium'; }
+                else { cls = 'danger'; label = '● High'; }
+            }
+            el.className = 'stat-trend ' + cls;
+            el.textContent = label;
+        };
 
-        trend30.className = 'stat-trend ' + (r30 >= 70 ? 'good' : r30 >= 40 ? 'warning' : 'danger');
-        trend30.textContent = r30 >= 70 ? '● Good' : r30 >= 40 ? '● Medium' : '● Low';
-        trend90.className = 'stat-trend ' + (r90 >= 60 ? 'good' : r90 >= 35 ? 'warning' : 'danger');
-        trend90.textContent = r90 >= 60 ? '● Good' : r90 >= 35 ? '● Medium' : '● Low';
-        trend180.className = 'stat-trend ' + (r180 >= 50 ? 'good' : r180 >= 25 ? 'warning' : 'danger');
-        trend180.textContent = r180 >= 50 ? '● Good' : r180 >= 25 ? '● Medium' : '● Low';
-        trend365.className = 'stat-trend ' + (r365 >= 40 ? 'good' : r365 >= 20 ? 'warning' : 'danger');
-        trend365.textContent = r365 >= 40 ? '● Good' : r365 >= 20 ? '● Medium' : '● Low';
-        
-        trendDropout.className = 'stat-trend ' + (stats.dropoutRate <= 20 ? 'good' : stats.dropoutRate <= 40 ? 'warning' : 'danger');
-        trendDropout.textContent = stats.dropoutRate <= 20 ? '● Good' : stats.dropoutRate <= 40 ? '● Medium' : '● High';
-        
-        trendReemp.className = 'stat-trend ' + (stats.reemploymentRate >= 50 ? 'good' : stats.reemploymentRate >= 30 ? 'warning' : 'danger');
-        trendReemp.textContent = stats.reemploymentRate >= 50 ? '● Good' : stats.reemploymentRate >= 30 ? '● Medium' : '● Low';
+        setTrend('.stat-box:nth-child(1) .stat-trend', r30, 70, 40);
+        setTrend('.stat-box:nth-child(2) .stat-trend', r90, 60, 35);
+        setTrend('.stat-box:nth-child(3) .stat-trend', r180, 50, 25);
+        setTrend('.stat-box:nth-child(4) .stat-trend', r365, 40, 20);
+        setTrend('.stat-box:nth-child(5) .stat-trend', stats.dropoutRate, 20, 40, false);
+        setTrend('.stat-box:nth-child(6) .stat-trend', stats.reemploymentRate, 50, 30);
+    }
+
+    function renderChartFromMap(containerId, map, valueKey) {
+        const container = document.getElementById(containerId);
+        const data = Object.keys(map).map(name => ({
+            name,
+            total: map[name].total,
+            retained: map[name].retained,
+            rate: map[name].total > 0 ? Math.round((map[name].retained / map[name].total) * 100) : 0
+        }));
+        data.sort((a, b) => b.total - a.total);
+        const top = data.slice(0, 5);
+
+        if (top.length === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No data yet</div>`;
+            return;
+        }
+
+        const maxHeight = 120;
+        container.innerHTML = top.map(r => {
+            const height = Math.max((r.rate / 100) * maxHeight, 12);
+            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
+            return `
+                <div class="bar-group">
+                    <div class="bar" style="height:${height}px;background:${color};">
+                        <span class="bar-value">${r.rate}%</span>
+                    </div>
+                    <div class="bar-label">
+                        ${escapeHtml(r.name.length > 10 ? r.name.substring(0, 10) + '…' : r.name)}
+                        <span class="count">${r.retained}/${r.total}</span>
+                    </div>
+                </div>`;
+        }).join('');
     }
 
     function renderProgramRetention(stats) {
-        const container = document.getElementById('programRetentionChart');
-        const data = Object.keys(stats.programRetention).map(name => ({
-            name,
-            total: stats.programRetention[name].total,
-            retained: stats.programRetention[name].retained,
-            rate: stats.programRetention[name].total > 0 ? Math.round((stats.programRetention[name].retained / stats.programRetention[name].total) * 100) : 0
-        }));
-        data.sort((a, b) => b.rate - a.rate);
-        const top = data.slice(0, 5);
-        const maxRate = Math.max(...top.map(r => r.rate), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = top.map(r => {
-            const height = Math.max((r.rate / 100) * maxHeight, 12);
-            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
-            return `
-                <div class="bar-group">
-                    <div class="bar" style="height:${height}px;background:${color};">
-                        <span class="bar-value">${r.rate}%</span>
-                    </div>
-                    <div class="bar-label">
-                        ${r.name.length > 10 ? r.name.substring(0, 10) + '…' : r.name}
-                        <span class="count">${r.retained}/${r.total}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        renderChartFromMap('programRetentionChart', stats.programRetention);
     }
 
     function renderProviderRetention(stats) {
-        const container = document.getElementById('providerRetentionChart');
-        const data = Object.keys(stats.providerRetention).map(name => ({
-            name,
-            total: stats.providerRetention[name].total,
-            retained: stats.providerRetention[name].retained,
-            rate: stats.providerRetention[name].total > 0 ? Math.round((stats.providerRetention[name].retained / stats.providerRetention[name].total) * 100) : 0
-        }));
-        data.sort((a, b) => b.rate - a.rate);
-        const top = data.slice(0, 5);
-        const maxRate = Math.max(...top.map(r => r.rate), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = top.map(r => {
-            const height = Math.max((r.rate / 100) * maxHeight, 12);
-            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
-            return `
-                <div class="bar-group">
-                    <div class="bar" style="height:${height}px;background:${color};">
-                        <span class="bar-value">${r.rate}%</span>
-                    </div>
-                    <div class="bar-label">
-                        ${r.name.length > 10 ? r.name.substring(0, 10) + '…' : r.name}
-                        <span class="count">${r.retained}/${r.total}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        renderChartFromMap('providerRetentionChart', stats.providerRetention);
     }
 
     function renderSalaryRetention(stats) {
@@ -1408,54 +1255,32 @@
             retained: stats.salaryRetention[name].retained,
             rate: stats.salaryRetention[name].total > 0 ? Math.round((stats.salaryRetention[name].retained / stats.salaryRetention[name].total) * 100) : 0
         }));
-        const maxRate = Math.max(...data.map(r => r.rate), 1);
-        const maxHeight = 120;
 
+        const totalRecords = data.reduce((a, b) => a + b.total, 0);
+        if (totalRecords === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No salary data yet</div>`;
+            return;
+        }
+
+        const maxHeight = 120;
         container.innerHTML = data.map(r => {
-            const height = Math.max((r.rate / 100) * maxHeight, 12);
+            const height = Math.max((r.rate / 100) * maxHeight, r.total > 0 ? 12 : 4);
             const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
             return `
                 <div class="bar-group">
-                    <div class="bar" style="height:${height}px;background:${color};">
-                        <span class="bar-value">${r.rate}%</span>
+                    <div class="bar" style="height:${height}px;background:${r.total > 0 ? color : '#e2e8f0'};">
+                        <span class="bar-value">${r.total > 0 ? r.rate + '%' : ''}</span>
                     </div>
                     <div class="bar-label">
                         ${r.name}
                         <span class="count">${r.retained}/${r.total}</span>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
     function renderLocationRetention(stats) {
-        const container = document.getElementById('locationRetentionChart');
-        const data = Object.keys(stats.locationRetention).map(name => ({
-            name,
-            total: stats.locationRetention[name].total,
-            retained: stats.locationRetention[name].retained,
-            rate: stats.locationRetention[name].total > 0 ? Math.round((stats.locationRetention[name].retained / stats.locationRetention[name].total) * 100) : 0
-        }));
-        data.sort((a, b) => b.rate - a.rate);
-        const top = data.slice(0, 5);
-        const maxRate = Math.max(...top.map(r => r.rate), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = top.map(r => {
-            const height = Math.max((r.rate / 100) * maxHeight, 12);
-            const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
-            return `
-                <div class="bar-group">
-                    <div class="bar" style="height:${height}px;background:${color};">
-                        <span class="bar-value">${r.rate}%</span>
-                    </div>
-                    <div class="bar-label">
-                        ${r.name.length > 8 ? r.name.substring(0, 8) + '…' : r.name}
-                        <span class="count">${r.retained}/${r.total}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        renderChartFromMap('locationRetentionChart', stats.locationRetention);
     }
 
     function renderRiskScores(stats) {
@@ -1471,28 +1296,28 @@
             count: stats.exitReasons[name]
         }));
         data.sort((a, b) => b.count - a.count);
-        const maxCount = Math.max(...data.map(r => r.count), 1);
-        const maxHeight = 140;
 
         if (data.length === 0) {
-            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">No exit reasons recorded yet.</div>`;
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No exit reasons recorded yet</div>`;
             return;
         }
 
-        container.innerHTML = data.map(r => {
+        const maxCount = Math.max(...data.map(r => r.count), 1);
+        const maxHeight = 140;
+        const colors = ['#dc2626', '#d97706', '#eab308', '#2563eb', '#7c3aed', '#0d9488', '#db2777'];
+
+        container.innerHTML = data.map((r, i) => {
             const height = Math.max((r.count / maxCount) * maxHeight, 12);
-            const colors = ['#dc2626', '#d97706', '#eab308', '#2563eb', '#7c3aed', '#0d9488', '#db2777'];
-            const color = colors[data.indexOf(r) % colors.length];
+            const color = colors[i % colors.length];
             return `
                 <div class="bar-group">
                     <div class="bar" style="height:${height}px;background:${color};">
                         <span class="bar-value">${r.count}</span>
                     </div>
                     <div class="bar-label">
-                        ${r.name.length > 12 ? r.name.substring(0, 12) + '…' : r.name}
+                        ${escapeHtml(r.name.length > 12 ? r.name.substring(0, 12) + '…' : r.name)}
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
@@ -1503,57 +1328,70 @@
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7">
-                        <div style="text-align:center;padding:30px;color:#94a3b8;">
-                            <i class="fas fa-user-check" style="font-size:30px;display:block;margin-bottom:8px;"></i>
-                            No retention records found. Please register trainees and update employment status.
+                        <div style="text-align:center;padding:40px;color:#94a3b8;">
+                            <i class="fas fa-user-check" style="font-size:40px;display:block;margin-bottom:10px;color:#c7d2fe;"></i>
+                            <h3 style="color:#475569;font-size:16px;margin-bottom:4px;">No Retention Records Yet</h3>
+                            <p style="font-size:13px;">Trainees with verified employment will appear here.</p>
                         </div>
                     </td>
-                </tr>
-            `;
+                </tr>`;
             return;
         }
 
-        tbody.innerHTML = allRecords.slice(0, 10).map(r => {
-            const statusClass = r.retentionStatus === 'retained' ? 'retained' : r.retentionStatus === 'at-risk' ? 'at-risk' : 'lost';
-            const statusLabel = r.retentionStatus === 'retained' ? '✅ Retained' : r.retentionStatus === 'at-risk' ? '⚠️ At Risk' : '❌ Lost';
-            const riskClass = r.riskScore === 'low' ? 'low' : r.riskScore === 'medium' ? 'medium' : 'high';
-            const riskLabel = r.riskScore === 'low' ? '🟢 Low' : r.riskScore === 'medium' ? '🟡 Medium' : '🔴 High';
+        tbody.innerHTML = allRecords.slice(0, 20).map(r => {
+            const statusClass = r.retentionStatus === 'retained' ? 'retained' :
+                               r.retentionStatus === 'at-risk' ? 'at-risk' : 'lost';
+            const statusLabel = r.retentionStatus === 'retained' ? '✅ Retained' :
+                               r.retentionStatus === 'at-risk' ? '⚠️ At Risk' : '❌ Lost';
+            const riskClass = r.riskScore === 'low' ? 'low' :
+                             r.riskScore === 'medium' ? 'medium' : 'high';
+            const riskLabel = r.riskScore === 'low' ? '🟢 Low' :
+                             r.riskScore === 'medium' ? '🟡 Medium' : '🔴 High';
             return `
                 <tr>
-                    <td><strong>${r.name}</strong></td>
-                    <td>${r.program}</td>
-                    <td>${r.provider}</td>
-                    <td>${r.joiningDate}</td>
+                    <td><strong>${escapeHtml(r.name)}</strong></td>
+                    <td>${escapeHtml(r.program)}</td>
+                    <td>${escapeHtml(r.provider)}</td>
+                    <td>${escapeHtml(r.joiningDate)}</td>
                     <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
                     <td style="font-weight:700;color:${r.income > 0 ? '#16a34a' : '#94a3b8'};">${r.income > 0 ? '₹' + r.income.toLocaleString() : 'N/A'}</td>
                     <td><span class="risk-badge ${riskClass}">${riskLabel}</span></td>
-                </tr>
-            `;
+                </tr>`;
         }).join('');
     }
 
     function updateSidebar() {
-        const govData = getGovernmentData();
+        let govData = null;
+        try { govData = JSON.parse(localStorage.getItem('governmentData') || 'null'); } catch (e) {}
         const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
-        document.getElementById('sidebarAvatar').textContent = initial;
-        document.getElementById('sidebarName').textContent = govData?.name || 'Government';
-        document.getElementById('sidebarRole').textContent = govData?.role || 'Admin';
-        document.getElementById('headerAvatar').textContent = initial;
-        document.getElementById('headerName').textContent = govData?.name || 'Government';
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('sidebarAvatar', initial);
+        set('sidebarName', govData?.name || 'Government');
+        set('sidebarRole', govData?.role || 'Admin');
+        set('headerAvatar', initial);
+        set('headerName', govData?.name || 'Government');
     }
 
     function updateNotificationBadge() {
         const atRisk = allRecords.filter(r => r.retentionStatus === 'at-risk').length;
-        document.getElementById('notifBadge').textContent = atRisk;
+        const el = document.getElementById('notifBadge');
+        if (el) el.textContent = atRisk;
     }
 
     // ============================================================
-    // UTILITY FUNCTIONS
+    // HELPERS
     // ============================================================
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
 
     function updateDate() {
         const now = new Date();
-        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+        const el = document.getElementById('dateDisplay');
+        if (el) el.textContent = now.toLocaleDateString('en-US', {
             weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
         });
     }
@@ -1561,29 +1399,34 @@
     function showNotifications() {
         const atRisk = allRecords.filter(r => r.retentionStatus === 'at-risk').length;
         const lost = allRecords.filter(r => r.retentionStatus === 'lost').length;
-        alert(`📬 Notifications\n\n• ${atRisk} trainees at risk of leaving\n• ${lost} trainees have left\n• ${allRecords.length} total records`);
+        alert(`📬 Notifications\n\n• ${atRisk} trainees at risk\n• ${lost} lost\n• ${allRecords.length} total records`);
     }
 
-    function toggleProfileMenu() {
-        alert('👤 Profile Menu\n\nSettings · Support · Logout');
-    }
+    function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
 
-    function logout() {
+    async function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
+            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
             window.location.href = '../auth/login.html';
         }
     }
 
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = (html.getAttribute('data-theme') || 'light') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
     function exportData() {
-        if (allRecords.length === 0) {
-            alert('No data to export');
-            return;
-        }
-        let csv = 'Name,Program,Provider,District,Joining Date,Days Employed,Status,Risk,Income,Exit Reason\n';
+        if (allRecords.length === 0) { alert('No data to export'); return; }
+        let csv = 'Name,Program,Provider,District,Joining Date,Days Employed,Status,Risk,Income\n';
         allRecords.forEach(r => {
-            const statusLabel = r.retentionStatus === 'retained' ? 'Retained' : r.retentionStatus === 'at-risk' ? 'At Risk' : 'Lost';
-            csv += `${r.name},${r.program},${r.provider},${r.district},${r.joiningDate},${r.daysEmployed},${statusLabel},${r.riskScore},${r.income},${r.exitReason}\n`;
+            const statusLabel = r.retentionStatus === 'retained' ? 'Retained' :
+                               r.retentionStatus === 'at-risk' ? 'At Risk' : 'Lost';
+            csv += `"${r.name}","${r.program}","${r.provider}","${r.district}",${r.joiningDate},${r.daysEmployed},${statusLabel},${r.riskScore},${r.income}\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
@@ -1592,152 +1435,34 @@
         a.download = `retention-analysis-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        alert('📥 Data exported successfully!');
+        alert('📥 Data exported!');
     }
 
-    function refreshData() {
-        loadAndRender();
-        showToast('🔄 Data refreshed!');
+    async function refreshData() {
+        await loadAndRender();
+        showToast('🔄 Data refreshed');
     }
 
     function exportFullReport() {
-        let report = '📊 RETENTION ANALYSIS REPORT\n';
-        report += '================================\n';
+        let report = '📊 RETENTION ANALYSIS REPORT\n================================\n';
         report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
-        report += `📈 OVERVIEW\n`;
-        report += `• Total Placed: ${stats.placed}\n`;
-        report += `• Retained: ${stats.retained} (${stats.retentionRate}%)\n`;
-        report += `• At Risk: ${stats.atRisk}\n`;
-        report += `• Lost: ${stats.lost} (${stats.dropoutRate}%)\n\n`;
+        report += `📈 OVERVIEW\n• Total Placed: ${stats.placed}\n• Retained: ${stats.retained} (${stats.retentionRate}%)\n`;
+        report += `• At Risk: ${stats.atRisk}\n• Lost: ${stats.lost} (${stats.dropoutRate}%)\n\n`;
         report += `📅 RETENTION MILESTONES\n`;
-        report += `• 30-Day: ${stats.retention30} (${stats.retention30 > 0 ? Math.round((stats.retention30 / stats.joined) * 100) : 0}%)\n`;
-        report += `• 90-Day: ${stats.retention90} (${stats.retention90 > 0 ? Math.round((stats.retention90 / stats.joined) * 100) : 0}%)\n`;
-        report += `• 180-Day: ${stats.retention180} (${stats.retention180 > 0 ? Math.round((stats.retention180 / stats.joined) * 100) : 0}%)\n`;
-        report += `• 365-Day: ${stats.retention365} (${stats.retention365 > 0 ? Math.round((stats.retention365 / stats.joined) * 100) : 0}%)\n\n`;
-        report += `📊 BY PROGRAM\n`;
-        Object.keys(stats.programRetention).forEach(name => {
-            const r = stats.programRetention[name];
-            const rate = r.total > 0 ? Math.round((r.retained / r.total) * 100) : 0;
-            report += `• ${name}: ${r.retained}/${r.total} (${rate}%)\n`;
-        });
-        report += '\n📊 BY PROVIDER\n';
-        Object.keys(stats.providerRetention).forEach(name => {
-            const r = stats.providerRetention[name];
-            const rate = r.total > 0 ? Math.round((r.retained / r.total) * 100) : 0;
-            report += `• ${name}: ${r.retained}/${r.total} (${rate}%)\n`;
-        });
-        report += '\n📊 BY SALARY\n';
-        Object.keys(stats.salaryRetention).forEach(name => {
-            const r = stats.salaryRetention[name];
-            const rate = r.total > 0 ? Math.round((r.retained / r.total) * 100) : 0;
-            report += `• ${name}: ${r.retained}/${r.total} (${rate}%)\n`;
-        });
-        report += '\n📊 EXIT REASONS\n';
-        Object.keys(stats.exitReasons).forEach(name => {
-            report += `• ${name}: ${stats.exitReasons[name]}\n`;
-        });
-        report += '\n================================\n';
-        report += '📌 Generated by SkillBridge Government Portal';
+        report += `• 30-Day: ${stats.retention30}\n• 90-Day: ${stats.retention90}\n`;
+        report += `• 180-Day: ${stats.retention180}\n• 365-Day: ${stats.retention365}\n\n`;
+        report += `📊 RISK DISTRIBUTION\n• Low: ${stats.riskLow}\n• Medium: ${stats.riskMedium}\n• High: ${stats.riskHigh}\n`;
         alert(report);
     }
 
     function viewHighRisk() {
         const highRisk = allRecords.filter(r => r.riskScore === 'high');
-        if (highRisk.length === 0) {
-            alert('✅ No high-risk trainees found.');
-            return;
-        }
-        let msg = '🔴 HIGH RISK TRAINEES\n';
-        msg += '================================\n\n';
+        if (highRisk.length === 0) { alert('✅ No high-risk trainees found.'); return; }
+        let msg = '🔴 HIGH RISK TRAINEES\n================================\n\n';
         highRisk.forEach((r, i) => {
-            msg += `${i+1}. ${r.name}\n`;
-            msg += `   Program: ${r.program}\n`;
-            msg += `   Provider: ${r.provider}\n`;
-            msg += `   Status: ${r.retentionStatus}\n`;
-            msg += `   Days: ${r.daysEmployed}\n`;
-            msg += `   Risk: ${r.riskScore.toUpperCase()}\n\n`;
+            msg += `${i+1}. ${r.name}\n   Program: ${r.program}\n   Days: ${r.daysEmployed}\n\n`;
         });
-        msg += '================================\n';
-        msg += `Total: ${highRisk.length} high-risk trainees`;
         alert(msg);
-    }
-
-    function generateAIInsights() {
-        let insights = '🤖 AI-GENERATED RETENTION INSIGHTS\n';
-        insights += '================================\n\n';
-
-        insights += `📈 RETENTION OVERVIEW\n`;
-        insights += `• Overall retention rate: ${stats.retentionRate}%\n`;
-        insights += `• ${stats.retained} trainees retained, ${stats.atRisk} at risk, ${stats.lost} lost\n\n`;
-
-        insights += `📊 KEY FINDINGS\n`;
-        if (stats.retentionRate < 50) {
-            insights += `⚠️ Retention rate is below 50%. This indicates significant job drop-off.\n`;
-            insights += `• Recommendation: Investigate reasons for leaving and improve program quality.\n\n`;
-        } else if (stats.retentionRate > 70) {
-            insights += `✅ Retention rate is above 70%. Programs are producing stable employment.\n\n`;
-        }
-
-        insights += `📅 RETENTION MILESTONES\n`;
-        const r30 = stats.joined > 0 ? Math.round((stats.retention30 / stats.joined) * 100) : 0;
-        const r90 = stats.joined > 0 ? Math.round((stats.retention90 / stats.joined) * 100) : 0;
-        const r180 = stats.joined > 0 ? Math.round((stats.retention180 / stats.joined) * 100) : 0;
-        const r365 = stats.joined > 0 ? Math.round((stats.retention365 / stats.joined) * 100) : 0;
-
-        insights += `• 30-Day: ${r30}% ${r30 >= 70 ? '✅' : '⚠️'}\n`;
-        insights += `• 90-Day: ${r90}% ${r90 >= 60 ? '✅' : '⚠️'}\n`;
-        insights += `• 180-Day: ${r180}% ${r180 >= 50 ? '✅' : '⚠️'}\n`;
-        insights += `• 365-Day: ${r365}% ${r365 >= 40 ? '✅' : '⚠️'}\n\n`;
-
-        // Top programs
-        const topPrograms = Object.keys(stats.programRetention).sort((a, b) => {
-            const rateA = stats.programRetention[a].total > 0 ? stats.programRetention[a].retained / stats.programRetention[a].total : 0;
-            const rateB = stats.programRetention[b].total > 0 ? stats.programRetention[b].retained / stats.programRetention[b].total : 0;
-            return rateB - rateA;
-        });
-        if (topPrograms.length > 0) {
-            insights += `🏆 TOP PERFORMING PROGRAMS\n`;
-            insights += `• ${topPrograms[0]}: ${stats.programRetention[topPrograms[0]].total > 0 ? Math.round((stats.programRetention[topPrograms[0]].retained / stats.programRetention[topPrograms[0]].total) * 100) : 0}% retention\n`;
-            if (topPrograms.length > 1) {
-                const last = topPrograms[topPrograms.length-1];
-                insights += `• ${last}: Needs improvement (${stats.programRetention[last].total > 0 ? Math.round((stats.programRetention[last].retained / stats.programRetention[last].total) * 100) : 0}% retention)\n`;
-            }
-        }
-
-        // Salary insight
-        insights += `\n💰 SALARY INSIGHT\n`;
-        const salaryKeys = Object.keys(stats.salaryRetention);
-        const salaryData = salaryKeys.map(k => ({ name: k, rate: stats.salaryRetention[k].total > 0 ? Math.round((stats.salaryRetention[k].retained / stats.salaryRetention[k].total) * 100) : 0 }));
-        const bestSalary = salaryData.reduce((a, b) => a.rate > b.rate ? a : b);
-        insights += `• Highest retention: ${bestSalary.name} (${bestSalary.rate}%)\n`;
-        insights += `• Higher salary brackets show better retention rates.\n`;
-
-        // Exit reasons
-        const topExit = Object.keys(stats.exitReasons).sort((a, b) => stats.exitReasons[b] - stats.exitReasons[a]);
-        if (topExit.length > 0) {
-            insights += `\n🚪 TOP EXIT REASONS\n`;
-            insights += `• ${topExit[0]}: ${stats.exitReasons[topExit[0]]} exits\n`;
-            if (topExit.length > 1) insights += `• ${topExit[1]}: ${stats.exitReasons[topExit[1]]} exits\n`;
-        }
-
-        insights += '\n💡 RECOMMENDATIONS\n';
-        if (stats.atRisk > stats.total * 0.2) {
-            insights += `• ${stats.atRisk} trainees at risk. Schedule immediate follow-ups.\n`;
-        }
-        if (r30 < 60) {
-            insights += `• Low 30-day retention. Improve onboarding and initial support.\n`;
-        }
-        if (r90 < 50) {
-            insights += `• Low 90-day retention. Consider mentorship and career growth programs.\n`;
-        }
-        if (stats.exitReasons['Low salary'] > 0) {
-            insights += `• Salary concerns identified. Review compensation packages.\n`;
-        }
-
-        insights += '\n================================\n';
-        insights += '📌 Generated by SkillBridge AI';
-
-        alert(insights);
     }
 
     function showToast(message) {
@@ -1748,41 +1473,27 @@
             box-shadow: 0 12px 40px rgba(0,0,0,0.15);
             border-left: 4px solid #2563eb; max-width: 400px;
             z-index: 1000; font-size: 13px; color: #0b1a33;
-            display: flex; align-items: center; gap: 10px;
-            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            font-weight: 500;
+            display: flex; align-items: center; gap: 10px; font-weight: 500;
         `;
         toast.innerHTML = `<i class="fas fa-info-circle" style="color:#2563eb;font-size:16px;"></i> ${message}`;
         document.body.appendChild(toast);
-        setTimeout(() => {
-            toast.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    // ============================================================
-    // SET ACTIVE SIDEBAR
-    // ============================================================
-
-    function setActiveSidebar() {
-        document.querySelectorAll('.menu a').forEach(link => {
-            link.classList.remove('active');
-            if (link.textContent.includes('Retention Analysis')) {
-                link.classList.add('active');
-            }
-        });
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
     // ============================================================
     // INIT
     // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadAndRender();
         updateDate();
-        setActiveSidebar();
+        await loadAndRender();
 
-        // Close sidebar on outside click (mobile)
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
             const toggle = document.querySelector('.menu-toggle');
@@ -1793,14 +1504,11 @@
             }
         });
 
-        console.log('📊 Retention Analysis page loaded with sample data!');
-        console.log('📋 Records:', allRecords.length);
-        console.log('📈 Retention Rate:', stats.retentionRate + '%');
-        console.log('🔄 At Risk:', stats.atRisk);
-        console.log('❌ Lost:', stats.lost);
-        console.log('📊 Exit Reasons:', stats.exitReasons);
+        console.log('📊 Retention Analysis loaded with REAL data');
+        console.log('   Records:', allRecords.length, '| Retention Rate:', stats.retentionRate + '%');
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

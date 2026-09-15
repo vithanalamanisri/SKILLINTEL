@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
-    
+
     <link rel="stylesheet" href="../css/style.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
@@ -1291,274 +1291,211 @@
     </div>
 </div>
 
+<!-- ============================================================
+     API LOADER — included before inline script so `apiGet` exists
+     ============================================================ -->
+<script src="../js/api.js"></script>
+
 <script>
     // ============================================================
-    // COMPREHENSIVE SAMPLE DATA - Training-Job Relevance
+    // REAL DATA LOADER
+    // Backend endpoints used:
+    //   /api/analytics/relevance   { "High":n, "Medium":n, "Low":n, "Not Relevant":n }
+    //   /api/analytics/summary     { total, employed, ... }
+    //   /api/analytics/income      { avg_starting_income, avg_income_growth }
+    //   /api/analytics/retention   { "30d":{rate}, "90d":{...}, "180d":{...}, "365d":{...} }
+    //   /api/nonplacement          { breakdown:[{reason,count,percentage}] }
+    //   /api/insights/global       { count, insights:[{type,severity,problem,evidence,recommendation}] }
     // ============================================================
 
     const sampleData = {
-        records: [
-            { id: 'TRN001', name: 'Priya Sharma', program: 'Data Analytics', provider: 'Skill India Centre', trainingRole: 'Data Analyst', actualRole: 'Data Analyst', relevance: 'High', skillMatch: 85, expectedSalary: 30000, actualSalary: 28000, mismatchReason: 'N/A' },
-            { id: 'TRN002', name: 'Rahul Verma', program: 'Full Stack Development', provider: 'NITC Training', trainingRole: 'Full Stack Developer', actualRole: 'Full Stack Developer', relevance: 'High', skillMatch: 90, expectedSalary: 35000, actualSalary: 32000, mismatchReason: 'N/A' },
-            { id: 'TRN003', name: 'Ananya Reddy', program: 'Digital Marketing', provider: 'Digital India Academy', trainingRole: 'Marketing Executive', actualRole: 'Digital Marketing Lead', relevance: 'High', skillMatch: 82, expectedSalary: 25000, actualSalary: 25000, mismatchReason: 'N/A' },
-            { id: 'TRN004', name: 'Vikram Singh', program: 'Data Science', provider: 'Data Science Institute', trainingRole: 'Data Scientist', actualRole: 'Data Scientist', relevance: 'High', skillMatch: 88, expectedSalary: 38000, actualSalary: 35000, mismatchReason: 'N/A' },
-            { id: 'TRN005', name: 'Arjun Nair', program: 'Cloud Computing', provider: 'Cloud Academy', trainingRole: 'Cloud Engineer', actualRole: 'Cloud Engineer', relevance: 'High', skillMatch: 85, expectedSalary: 32000, actualSalary: 30000, mismatchReason: 'N/A' },
-            { id: 'TRN006', name: 'Meera Iyer', program: 'Digital Marketing', provider: 'Digital India Academy', trainingRole: 'Marketing Executive', actualRole: 'SEO Specialist', relevance: 'Medium', skillMatch: 68, expectedSalary: 24000, actualSalary: 22000, mismatchReason: 'Job role mismatch' },
-            { id: 'TRN007', name: 'Amit Patel', program: 'Full Stack Development', provider: 'NITC Training', trainingRole: 'Full Stack Developer', actualRole: 'Backend Developer', relevance: 'Medium', skillMatch: 72, expectedSalary: 35000, actualSalary: 38000, mismatchReason: 'N/A' },
-            { id: 'TRN008', name: 'Deepa Menon', program: 'Data Analytics', provider: 'Skill India Centre', trainingRole: 'Data Analyst', actualRole: 'Business Analyst', relevance: 'Medium', skillMatch: 65, expectedSalary: 28000, actualSalary: 24000, mismatchReason: 'Skill gap' },
-            { id: 'TRN009', name: 'Suresh Reddy', program: 'UI/UX Design', provider: 'Design Academy', trainingRole: 'UI/UX Designer', actualRole: 'Graphic Designer', relevance: 'Low', skillMatch: 45, expectedSalary: 25000, actualSalary: 20000, mismatchReason: 'Industry mismatch' },
-            { id: 'TRN010', name: 'Lakshmi N', program: 'Cloud Computing', provider: 'Cloud Academy', trainingRole: 'Cloud Engineer', actualRole: 'DevOps Engineer', relevance: 'Medium', skillMatch: 70, expectedSalary: 32000, actualSalary: 25000, mismatchReason: 'Skill gap' },
-            { id: 'TRN011', name: 'Kiran Joshi', program: 'Full Stack Development', provider: 'Code Institute', trainingRole: 'Full Stack Developer', actualRole: 'Junior Developer', relevance: 'Medium', skillMatch: 60, expectedSalary: 30000, actualSalary: 18000, mismatchReason: 'Salary mismatch' },
-            { id: 'TRN012', name: 'Divya K', program: 'Data Analytics', provider: 'Analytics School', trainingRole: 'Data Analyst', actualRole: 'Data Analyst', relevance: 'High', skillMatch: 78, expectedSalary: 25000, actualSalary: 18000, mismatchReason: 'Salary mismatch' },
-            { id: 'TRN013', name: 'Ravi Kumar', program: 'Data Science', provider: 'Data Science Institute', trainingRole: 'Data Scientist', actualRole: 'N/A', relevance: 'Not Relevant', skillMatch: 0, expectedSalary: 35000, actualSalary: 0, mismatchReason: 'Lack of employment opportunities' },
-            { id: 'TRN014', name: 'Sneha Patel', program: 'UI/UX Design', provider: 'Design Academy', trainingRole: 'UI/UX Designer', actualRole: 'N/A', relevance: 'Not Relevant', skillMatch: 0, expectedSalary: 25000, actualSalary: 0, mismatchReason: 'Trainee chose another career' },
-            { id: 'TRN015', name: 'Pooja Shah', program: 'Data Analytics', provider: 'Skill India Centre', trainingRole: 'Data Analyst', actualRole: 'Data Entry Operator', relevance: 'Low', skillMatch: 35, expectedSalary: 25000, actualSalary: 12000, mismatchReason: 'Qualification mismatch' },
-            { id: 'TRN016', name: 'Nisha Gupta', program: 'Digital Marketing', provider: 'Digital India Academy', trainingRole: 'Marketing Executive', actualRole: 'Content Writer', relevance: 'Low', skillMatch: 40, expectedSalary: 22000, actualSalary: 18000, mismatchReason: 'Job role mismatch' },
-            { id: 'TRN017', name: 'Manoj Kumar', program: 'Full Stack Development', provider: 'NITC Training', trainingRole: 'Full Stack Developer', actualRole: 'Frontend Developer', relevance: 'Medium', skillMatch: 68, expectedSalary: 32000, actualSalary: 22000, mismatchReason: 'Skill gap' },
-            { id: 'TRN018', name: 'Kavya Reddy', program: 'Data Science', provider: 'Data Science Institute', trainingRole: 'Data Scientist', actualRole: 'Data Analyst', relevance: 'Medium', skillMatch: 62, expectedSalary: 35000, actualSalary: 25000, mismatchReason: 'Skill gap' },
-            { id: 'TRN019', name: 'Arjun Singh', program: 'Cloud Computing', provider: 'Cloud Academy', trainingRole: 'Cloud Engineer', actualRole: 'Cloud Engineer', relevance: 'High', skillMatch: 82, expectedSalary: 32000, actualSalary: 25000, mismatchReason: 'Salary mismatch' },
-            { id: 'TRN020', name: 'Shweta Jain', program: 'UI/UX Design', provider: 'Design Academy', trainingRole: 'UI/UX Designer', actualRole: 'UI Developer', relevance: 'Medium', skillMatch: 58, expectedSalary: 25000, actualSalary: 16000, mismatchReason: 'Skill gap' }
-        ],
-        skills: [
-            { name: 'Python', employerDemand: 82, trainingCoverage: 78 },
-            { name: 'Cloud Computing', employerDemand: 76, trainingCoverage: 41 },
-            { name: 'SQL', employerDemand: 69, trainingCoverage: 65 },
-            { name: 'AI/ML', employerDemand: 63, trainingCoverage: 38 },
-            { name: 'React', employerDemand: 72, trainingCoverage: 68 },
-            { name: 'Data Analysis', employerDemand: 85, trainingCoverage: 82 },
-            { name: 'Communication', employerDemand: 78, trainingCoverage: 45 },
-            { name: 'DevOps', employerDemand: 65, trainingCoverage: 32 },
-            { name: 'Cybersecurity', employerDemand: 58, trainingCoverage: 25 },
-            { name: 'UI/UX Design', employerDemand: 55, trainingCoverage: 60 }
-        ],
-        mismatchReasons: [
-            { reason: 'Skill gap', count: 5 },
-            { reason: 'Salary mismatch', count: 3 },
-            { reason: 'Job role mismatch', count: 2 },
-            { reason: 'Industry mismatch', count: 1 },
-            { reason: 'Qualification mismatch', count: 1 },
-            { reason: 'Lack of employment opportunities', count: 1 },
-            { reason: 'Trainee chose another career', count: 1 },
-            { reason: 'Outdated curriculum', count: 0 },
-            { reason: 'Insufficient practical training', count: 0 },
-            { reason: 'Employer requirement changed', count: 0 },
-            { reason: 'Location constraints', count: 0 },
-            { reason: 'Other', count: 0 }
-        ]
+        // Filled dynamically from the backend. Kept as a named object so
+        // existing code that references `sampleData.skills` / `sampleData.mismatchReasons`
+        // still works without changing anything else.
+        records: [],
+        skills: [],
+        mismatchReasons: []
     };
 
-    // ============================================================
-    // DATA LOADER
-    // ============================================================
+    // ------------------------------------------------------------
+    // DATA LOADER  (previous localStorage versions replaced — they now
+    // just return null so nothing else breaks. Real data comes from API.)
+    // ------------------------------------------------------------
+    function getTraineeData()      { return null; }
+    function getEmploymentData()   { return null; }
+    function getProviderData()     { return null; }
+    function getGovernmentData()   { return null; }
 
-    function getTraineeData() {
-        let data = localStorage.getItem('traineeData');
-        if (data) { try { return JSON.parse(data); } catch(e) {} }
-        return null;
+    // ------------------------------------------------------------
+    // API HELPERS
+    // ------------------------------------------------------------
+    async function fetchJSON(url) {
+        try {
+            const r = await fetch(url, { credentials: 'include' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return await r.json();
+        } catch (e) {
+            console.warn('fetch failed:', url, e.message);
+            return null;
+        }
     }
 
-    function getEmploymentData() {
-        let data = localStorage.getItem('employmentData');
-        if (data) { try { return JSON.parse(data); } catch(e) {} }
-        return null;
-    }
+    // ------------------------------------------------------------
+    // BUILD RELEVANCE RECORDS FROM API
+    // The API returns aggregate counts per relevance label, so we
+    // synthesize lightweight records (used for counts only). No fake
+    // salary/skill numbers are invented.
+    // ------------------------------------------------------------
+    function buildRelevanceRecordsFromApi(relMap) {
+        const records = [];
+        if (!relMap || typeof relMap !== 'object') return records;
 
-    function getProviderData() {
-        let data = localStorage.getItem('providerData');
-        if (data) { try { return JSON.parse(data); } catch(e) {} }
-        return null;
-    }
+        const pick = (key) => {
+            if (relMap[key] != null) return Number(relMap[key]) || 0;
+            const k = Object.keys(relMap).find(x => x.toLowerCase() === key.toLowerCase());
+            return k ? Number(relMap[k]) || 0 : 0;
+        };
 
-    function getGovernmentData() {
-        let data = localStorage.getItem('governmentData');
-        if (data) { try { return JSON.parse(data); } catch(e) {} }
-        return null;
-    }
-
-    // ============================================================
-    // BUILD RELEVANCE RECORDS
-    // ============================================================
-
-    function buildRelevanceRecords() {
-        let records = [];
-        const traineeData = getTraineeData();
-        const employmentData = getEmploymentData();
-        const providerData = getProviderData();
-
-        if (traineeData && traineeData.fullName) {
-            const program = traineeData.skillTrade || 'N/A';
-            const provider = traineeData.trainingProvider || providerData?.orgName || 'N/A';
-            const actualRole = employmentData?.jobRole || traineeData.currentJobRole || 'N/A';
-            
-            // Calculate relevance based on program and role
-            let relevance = 'Medium';
-            let skillMatch = 65;
-            if (actualRole !== 'N/A') {
-                const programLower = program.toLowerCase();
-                const roleLower = actualRole.toLowerCase();
-                if ((programLower.includes('data') && roleLower.includes('data')) ||
-                    (programLower.includes('full stack') && roleLower.includes('developer')) ||
-                    (programLower.includes('cloud') && roleLower.includes('cloud'))) {
-                    relevance = 'High';
-                    skillMatch = 85;
-                } else if (roleLower.includes('analyst') || roleLower.includes('developer')) {
-                    relevance = 'Medium';
-                    skillMatch = 65;
-                } else {
-                    relevance = 'Low';
-                    skillMatch = 40;
-                }
-            } else {
-                relevance = 'Not Relevant';
-                skillMatch = 0;
+        const push = (n, relevance) => {
+            for (let i = 0; i < n; i++) {
+                records.push({
+                    id: 'R' + i,
+                    name: '',
+                    program: '',
+                    provider: '',
+                    trainingRole: '',
+                    actualRole: '',
+                    relevance: relevance,
+                    skillMatch: 0,
+                    expectedSalary: 0,
+                    actualSalary: 0,
+                    mismatchReason: 'N/A'
+                });
             }
+        };
 
-            const expectedSalary = parseInt(traineeData.expectedSalary) || 30000;
-            const actualSalary = parseInt(employmentData?.currentIncome) || parseInt(traineeData.currentIncome) || 0;
-
-            records.push({
-                id: traineeData.traineeId || 'TRN001',
-                name: traineeData.fullName || 'Trainee',
-                program: program,
-                provider: provider,
-                trainingRole: program,
-                actualRole: actualRole,
-                relevance: relevance,
-                skillMatch: skillMatch,
-                expectedSalary: expectedSalary,
-                actualSalary: actualSalary,
-                mismatchReason: actualSalary === 0 ? 'Lack of employment opportunities' : 
-                               actualSalary < expectedSalary * 0.8 ? 'Salary mismatch' : 'N/A',
-                avatar: traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T'
-            });
-        }
-
-        // Add sample data
-        if (records.length === 0 || records.length < 5) {
-            const existingIds = new Set(records.map(r => r.id));
-            sampleData.records.forEach(r => {
-                if (!existingIds.has(r.id)) {
-                    records.push({...r, avatar: r.name.charAt(0)});
-                }
-            });
-        }
+        push(pick('High'), 'High');
+        push(pick('Medium'), 'Medium');
+        push(pick('Low'), 'Low');
+        push(pick('Not Relevant'), 'Not Relevant');
 
         return records;
     }
 
-    // ============================================================
-    // CALCULATE RELEVANCE STATISTICS
-    // ============================================================
+    // ------------------------------------------------------------
+    // LOAD EVERYTHING FROM BACKEND
+    // ------------------------------------------------------------
+    let apiSummary = null;
+    let apiIncome  = null;
+    let apiRetention = null;
+    let apiInsights  = null;
 
+    async function loadBackendData() {
+        const [rel, sum, inc, ret, np, ins] = await Promise.all([
+            fetchJSON('/api/analytics/relevance'),
+            fetchJSON('/api/analytics/summary'),
+            fetchJSON('/api/analytics/income'),
+            fetchJSON('/api/analytics/retention'),
+            fetchJSON('/api/nonplacement'),
+            fetchJSON('/api/insights/global')
+        ]);
+
+        apiSummary   = sum;
+        apiIncome    = inc;
+        apiRetention = ret;
+        apiInsights  = ins;
+
+        // Records
+        sampleData.records = buildRelevanceRecordsFromApi(rel || {});
+
+        // Mismatch reasons from /api/nonplacement
+        if (np && Array.isArray(np.breakdown)) {
+            sampleData.mismatchReasons = np.breakdown.map(r => ({
+                reason: String(r.reason || '').replace(/_/g, ' '),
+                count: Number(r.count) || 0
+            }));
+        } else {
+            sampleData.mismatchReasons = [];
+        }
+
+        // Skills — backend does not expose this yet. Leave empty (honest).
+        sampleData.skills = [];
+    }
+
+    // ------------------------------------------------------------
+    // BUILD RELEVANCE RECORDS (kept for compatibility; uses API data)
+    // ------------------------------------------------------------
+    function buildRelevanceRecords() {
+        // Data already loaded by loadBackendData(); return as-is.
+        return sampleData.records;
+    }
+
+    // ------------------------------------------------------------
+    // CALCULATE RELEVANCE STATISTICS
+    // Uses real numbers from the backend where available; otherwise
+    // uses 0 / '—' so nothing fake is displayed.
+    // ------------------------------------------------------------
     function calculateRelevanceStats(records) {
         const total = records.length;
-        const employed = records.filter(r => r.actualSalary > 0).length;
+        const employed = apiSummary ? (Number(apiSummary.employed) || 0) : records.filter(r => r.actualSalary > 0).length;
 
         // Relevance distribution
-        const highRelevance = records.filter(r => r.relevance === 'High').length;
-        const mediumRelevance = records.filter(r => r.relevance === 'Medium').length;
-        const lowRelevance = records.filter(r => r.relevance === 'Low').length;
-        const notRelevant = records.filter(r => r.relevance === 'Not Relevant').length;
+        const highRelevance    = records.filter(r => r.relevance === 'High').length;
+        const mediumRelevance  = records.filter(r => r.relevance === 'Medium').length;
+        const lowRelevance     = records.filter(r => r.relevance === 'Low').length;
+        const notRelevant      = records.filter(r => r.relevance === 'Not Relevant').length;
 
-        const highPct = total > 0 ? Math.round((highRelevance / total) * 100) : 0;
-        const mediumPct = total > 0 ? Math.round((mediumRelevance / total) * 100) : 0;
-        const lowPct = total > 0 ? Math.round((lowRelevance / total) * 100) : 0;
-        const notRelevantPct = total > 0 ? Math.round((notRelevant / total) * 100) : 0;
+        const highPct       = total > 0 ? Math.round((highRelevance / total) * 100) : 0;
+        const mediumPct     = total > 0 ? Math.round((mediumRelevance / total) * 100) : 0;
+        const lowPct        = total > 0 ? Math.round((lowRelevance / total) * 100) : 0;
+        const notRelevantPct= total > 0 ? Math.round((notRelevant / total) * 100) : 0;
 
         // Match score
-        const matchScore = Math.round((highPct * 1.0 + mediumPct * 0.6 + lowPct * 0.3) * 1.0);
+        const matchScore = Math.round((highPct * 1.0 + mediumPct * 0.6 + lowPct * 0.3));
         const mismatchRate = total > 0 ? Math.round(((lowRelevance + notRelevant) / total) * 100) : 0;
 
-        // Salary alignment
-        const expectedSalaries = records.filter(r => r.expectedSalary > 0).map(r => r.expectedSalary);
-        const actualSalaries = records.filter(r => r.actualSalary > 0).map(r => r.actualSalary);
-        const avgExpected = expectedSalaries.length > 0 ? Math.round(expectedSalaries.reduce((a,b) => a+b, 0) / expectedSalaries.length) : 0;
-        const avgActual = actualSalaries.length > 0 ? Math.round(actualSalaries.reduce((a,b) => a+b, 0) / actualSalaries.length) : 0;
-        const salaryGap = avgActual - avgExpected;
+        // Salary alignment (from /api/analytics/income)
+        const avgActual   = apiIncome ? (Number(apiIncome.avg_starting_income) || 0) : 0;
+        const avgExpected = 0;   // not exposed by backend — show N/A
+        const salaryGap   = avgActual - avgExpected;
         const salaryMatchPct = avgExpected > 0 ? Math.round((avgActual / avgExpected) * 100) : 0;
-        
-        const aboveExpectation = records.filter(r => r.actualSalary > r.expectedSalary).length;
-        const belowExpectation = records.filter(r => r.actualSalary > 0 && r.actualSalary < r.expectedSalary).length;
-        const abovePct = employed > 0 ? Math.round((aboveExpectation / employed) * 100) : 0;
-        const belowPct = employed > 0 ? Math.round((belowExpectation / employed) * 100) : 0;
 
-        // Skill alignment
-        const skillMatches = records.filter(r => r.skillMatch > 0).map(r => r.skillMatch);
-        const avgSkillMatch = skillMatches.length > 0 ? Math.round(skillMatches.reduce((a,b) => a+b, 0) / skillMatches.length) : 0;
-        const fullyMatched = records.filter(r => r.skillMatch >= 80).length;
-        const partiallyMatched = records.filter(r => r.skillMatch >= 50 && r.skillMatch < 80).length;
-        const skillsMissing = records.filter(r => r.skillMatch < 50).length;
+        const aboveExpectation = 0;
+        const belowExpectation = 0;
+        const abovePct = 0;
+        const belowPct = 0;
 
-        // Top skill gap and demand
-        const skills = sampleData.skills;
+        // Skill alignment — backend does not supply skillMatch yet
+        const skillMatches = [];
+        const avgSkillMatch = 0;
+        const fullyMatched = 0;
+        const partiallyMatched = 0;
+        const skillsMissing = 0;
+
+        // Top skill gap / demand — derived from skills array if present
+        const skills = sampleData.skills || [];
         const sortedByGap = [...skills].sort((a, b) => (b.employerDemand - b.trainingCoverage) - (a.employerDemand - a.trainingCoverage));
         const topGap = sortedByGap.length > 0 ? sortedByGap[0].name : '-';
         const sortedByDemand = [...skills].sort((a, b) => b.employerDemand - a.employerDemand);
         const topDemand = sortedByDemand.length > 0 ? sortedByDemand[0].name : '-';
 
-        // Job role alignment
-        const sameRole = records.filter(r => r.relevance === 'High').length;
-        const relatedRole = records.filter(r => r.relevance === 'Medium').length;
-        const differentRole = records.filter(r => r.relevance === 'Low').length;
-        const noRole = records.filter(r => r.relevance === 'Not Relevant').length;
+        // Job role alignment derived from relevance map
+        const sameRole      = highRelevance;
+        const relatedRole   = mediumRelevance;
+        const differentRole = lowRelevance;
+        const noRole        = notRelevant;
 
-        // Mismatch reasons
+        // Mismatch reasons (from /api/nonplacement)
         const mismatchReasons = {};
-        records.forEach(r => {
-            if (r.mismatchReason && r.mismatchReason !== 'N/A') {
-                if (!mismatchReasons[r.mismatchReason]) mismatchReasons[r.mismatchReason] = 0;
-                mismatchReasons[r.mismatchReason]++;
-            }
+        sampleData.mismatchReasons.forEach(r => {
+            if (r.reason) mismatchReasons[r.reason] = Number(r.count) || 0;
         });
 
-        // Program effectiveness
+        // Program stats — not in backend; leave empty
         const programStats = {};
-        records.forEach(r => {
-            if (!programStats[r.program]) {
-                programStats[r.program] = { total: 0, high: 0, skillSum: 0, employed: 0, salarySum: 0, expectedSum: 0 };
-            }
-            const p = programStats[r.program];
-            p.total++;
-            if (r.relevance === 'High') p.high++;
-            p.skillSum += r.skillMatch;
-            if (r.actualSalary > 0) {
-                p.employed++;
-                p.salarySum += r.actualSalary;
-                p.expectedSum += r.expectedSalary;
-            }
-        });
-        Object.keys(programStats).forEach(key => {
-            const p = programStats[key];
-            p.relevanceRate = p.total > 0 ? Math.round((p.high / p.total) * 100) : 0;
-            p.avgSkillMatch = p.total > 0 ? Math.round(p.skillSum / p.total) : 0;
-            p.employmentRate = p.total > 0 ? Math.round((p.employed / p.total) * 100) : 0;
-            p.salaryGrowth = p.expectedSum > 0 ? Math.round(((p.salarySum - p.expectedSum) / p.expectedSum) * 100) : 0;
-        });
 
-        // Provider performance
+        // Provider stats — not in backend; leave empty
         const providerStats = {};
-        records.forEach(r => {
-            if (!providerStats[r.provider]) {
-                providerStats[r.provider] = { total: 0, high: 0, skillSum: 0, employed: 0, salarySum: 0, expectedSum: 0 };
-            }
-            const p = providerStats[r.provider];
-            p.total++;
-            if (r.relevance === 'High') p.high++;
-            p.skillSum += r.skillMatch;
-            if (r.actualSalary > 0) {
-                p.employed++;
-                p.salarySum += r.actualSalary;
-                p.expectedSum += r.expectedSalary;
-            }
-        });
-        Object.keys(providerStats).forEach(key => {
-            const p = providerStats[key];
-            p.relevanceRate = p.total > 0 ? Math.round((p.high / p.total) * 100) : 0;
-            p.avgSkillMatch = p.total > 0 ? Math.round(p.skillSum / p.total) : 0;
-            p.employmentRate = p.total > 0 ? Math.round((p.employed / p.total) * 100) : 0;
-            p.salaryGrowth = p.expectedSum > 0 ? Math.round(((p.salarySum - p.expectedSum) / p.expectedSum) * 100) : 0;
-            p.outcomeScore = Math.round((p.relevanceRate * 0.3 + p.avgSkillMatch * 0.25 + p.employmentRate * 0.25 + Math.max(0, p.salaryGrowth) * 0.2));
-        });
 
         return {
             total, employed,
@@ -1575,18 +1512,43 @@
     }
 
     // ============================================================
-    // RENDER FUNCTIONS
+    // RENDER FUNCTIONS (unchanged structure)
     // ============================================================
 
     let allRecords = [];
     let stats = {};
 
-    function loadAndRender() {
+    async function loadAndRender() {
+        await loadBackendData();
         allRecords = buildRelevanceRecords();
         stats = calculateRelevanceStats(allRecords);
-        renderAll();
+
+        if (stats.total === 0) {
+            renderEmptyState();
+        } else {
+            renderAll();
+        }
         updateSidebar();
         updateNotificationBadge();
+    }
+
+    function renderEmptyState() {
+        // Replace the entire container content with a friendly empty state.
+        const container = document.querySelector('.container');
+        if (!container) return;
+        container.innerHTML = `
+            <div style="background:white;border-radius:16px;border:1px solid #eef2f6;
+                        padding:60px 20px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
+                <div style="font-size:48px;color:#cbd5e1;margin-bottom:16px;">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h3 style="font-size:18px;color:#0b1a33;margin-bottom:8px;">No relevance data yet</h3>
+                <p style="font-size:13px;color:#64748b;max-width:400px;margin:0 auto;">
+                    There is no trainee or employment data in the database yet.
+                    Register trainees and record their employment outcomes to see
+                    training-to-job relevance analytics here.
+                </p>
+            </div>`;
     }
 
     function renderAll() {
@@ -1606,19 +1568,19 @@
     }
 
     function renderBanner(stats) {
-        document.getElementById('bannerHigh').textContent = stats.highPct + '%';
-        document.getElementById('bannerScore').textContent = stats.matchScore;
+        document.getElementById('bannerHigh').textContent     = stats.highPct + '%';
+        document.getElementById('bannerScore').textContent    = stats.matchScore;
         document.getElementById('bannerMismatch').textContent = stats.mismatchRate + '%';
-        document.getElementById('bannerSalary').textContent = stats.salaryMatchPct + '%';
+        document.getElementById('bannerSalary').textContent   = stats.avgExpected > 0 ? (stats.salaryMatchPct + '%') : '—';
     }
 
     function renderKPIs(stats) {
-        document.getElementById('kpiHighRelevance').textContent = stats.highPct + '%';
+        document.getElementById('kpiHighRelevance').textContent   = stats.highPct + '%';
         document.getElementById('kpiMediumRelevance').textContent = stats.mediumPct + '%';
-        document.getElementById('kpiLowRelevance').textContent = stats.lowPct + '%';
-        document.getElementById('kpiNotRelevant').textContent = stats.notRelevantPct + '%';
-        document.getElementById('kpiMatchScore').textContent = stats.matchScore;
-        document.getElementById('kpiMismatchRate').textContent = stats.mismatchRate + '%';
+        document.getElementById('kpiLowRelevance').textContent    = stats.lowPct + '%';
+        document.getElementById('kpiNotRelevant').textContent     = stats.notRelevantPct + '%';
+        document.getElementById('kpiMatchScore').textContent      = stats.matchScore;
+        document.getElementById('kpiMismatchRate').textContent    = stats.mismatchRate + '%';
     }
 
     function renderRelevanceDonut(stats) {
@@ -1655,27 +1617,37 @@
     }
 
     function renderSalaryAlignment(stats) {
-        document.getElementById('salaryExpected').textContent = '₹' + stats.avgExpected.toLocaleString();
-        document.getElementById('salaryActual').textContent = '₹' + stats.avgActual.toLocaleString();
-        document.getElementById('salaryGap').textContent = (stats.salaryGap >= 0 ? '+' : '') + '₹' + stats.salaryGap.toLocaleString();
-        document.getElementById('salaryMatchPct').textContent = stats.salaryMatchPct + '%';
-        document.getElementById('salaryAbove').textContent = stats.abovePct + '%';
-        document.getElementById('salaryBelow').textContent = stats.belowPct + '%';
+        const fmt = n => '₹' + Number(n || 0).toLocaleString();
+        document.getElementById('salaryExpected').textContent = stats.avgExpected > 0 ? fmt(stats.avgExpected) : '—';
+        document.getElementById('salaryActual').textContent   = fmt(stats.avgActual);
+        document.getElementById('salaryGap').textContent      = stats.avgExpected > 0
+            ? ((stats.salaryGap >= 0 ? '+' : '') + fmt(stats.salaryGap))
+            : '—';
+        document.getElementById('salaryMatchPct').textContent = stats.avgExpected > 0 ? (stats.salaryMatchPct + '%') : '—';
+        document.getElementById('salaryAbove').textContent    = '—';
+        document.getElementById('salaryBelow').textContent    = '—';
     }
 
     function renderSkillAlignment(stats) {
-        document.getElementById('kpiSkillMatch').textContent = stats.avgSkillMatch + '%';
-        document.getElementById('kpiSkillsFullyMatched').textContent = stats.fullyMatched;
-        document.getElementById('kpiSkillsPartial').textContent = stats.partiallyMatched;
-        document.getElementById('kpiSkillsMissing').textContent = stats.skillsMissing;
-        document.getElementById('kpiTopGap').textContent = stats.topGap;
-        document.getElementById('kpiTopDemand').textContent = stats.topDemand;
+        document.getElementById('kpiSkillMatch').textContent       = stats.avgSkillMatch ? (stats.avgSkillMatch + '%') : '—';
+        document.getElementById('kpiSkillsFullyMatched').textContent = stats.fullyMatched || '—';
+        document.getElementById('kpiSkillsPartial').textContent    = stats.partiallyMatched || '—';
+        document.getElementById('kpiSkillsMissing').textContent    = stats.skillsMissing || '—';
+        document.getElementById('kpiTopGap').textContent           = stats.topGap;
+        document.getElementById('kpiTopDemand').textContent        = stats.topDemand;
     }
 
     function renderSkillTable() {
         const tbody = document.getElementById('skillTableBody');
         const skills = sampleData.skills;
         document.getElementById('skillCount').textContent = skills.length + ' skills';
+
+        if (skills.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#64748b;">
+                Skill supply/demand data is not yet available from the backend.
+            </td></tr>`;
+            return;
+        }
 
         tbody.innerHTML = skills.map(s => {
             const gap = s.employerDemand - s.trainingCoverage;
@@ -1740,31 +1712,26 @@
 
     function renderTransitions() {
         const container = document.getElementById('transitionsList');
-        const transitions = [
-            { from: 'Data Analytics', to: 'Data Analyst', pct: 62 },
-            { from: 'Data Analytics', to: 'Business Analyst', pct: 18 },
-            { from: 'Data Analytics', to: 'Non-related roles', pct: 20 },
-            { from: 'Full Stack Development', to: 'Full Stack Developer', pct: 55 },
-            { from: 'Full Stack Development', to: 'Backend Developer', pct: 25 },
-            { from: 'Full Stack Development', to: 'Non-related roles', pct: 20 },
-            { from: 'Digital Marketing', to: 'Marketing Executive', pct: 58 },
-            { from: 'Digital Marketing', to: 'SEO Specialist', pct: 22 }
-        ];
-        container.innerHTML = transitions.map(t => `
-            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f8fafc;">
-                <span>${t.from} → ${t.to}</span>
-                <span style="font-weight:700;color:${t.pct > 50 ? '#16a34a' : t.pct > 20 ? '#d97706' : '#dc2626'};">${t.pct}%</span>
-            </div>
-        `).join('');
+        container.innerHTML = `<div style="color:#64748b;text-align:center;padding:12px;">
+            Transition detail is not yet available from the backend.
+        </div>`;
     }
 
     function renderMismatchReasons(stats) {
         const container = document.getElementById('mismatchGrid');
-        const reasons = sampleData.mismatchReasons;
-        const totalMismatch = reasons.reduce((sum, r) => sum + r.count, 0) || 1;
+        const reasons = sampleData.mismatchReasons.filter(r => Number(r.count) > 0);
 
-        container.innerHTML = reasons.filter(r => r.count > 0).map(r => {
-            const pct = Math.round((r.count / totalMismatch) * 100);
+        if (reasons.length === 0) {
+            container.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;grid-column:1/-1;">
+                No non-placement data recorded yet.
+            </div>`;
+            return;
+        }
+
+        const totalMismatch = reasons.reduce((sum, r) => sum + Number(r.count), 0) || 1;
+
+        container.innerHTML = reasons.map(r => {
+            const pct = Math.round((Number(r.count) / totalMismatch) * 100);
             return `<div class="mismatch-item">
                 <div class="mismatch-label">⚠️ ${r.reason}</div>
                 <div>
@@ -1776,164 +1743,104 @@
     }
 
     function renderChain(stats) {
-        const trainingCompletion = 85;
-        const employmentRate = stats.total > 0 ? Math.round((stats.employed / stats.total) * 100) : 0;
-        const relevanceRate = stats.highPct + stats.mediumPct;
-        const skillMatchRate = stats.total > 0 ? Math.round(((stats.fullyMatched + stats.partiallyMatched) / stats.total) * 100) : 0;
-        const salaryMatchRate = stats.salaryMatchPct;
-        const incomeGrowthRate = 68;
-        const retentionRate = 62;
+        const totalTrainees = apiSummary ? (Number(apiSummary.total) || 0) : stats.total;
+        const employedCount = apiSummary ? (Number(apiSummary.employed) || 0) : 0;
+        const employmentRate = totalTrainees > 0 ? Math.round((employedCount / totalTrainees) * 100) : 0;
 
-        document.getElementById('chainTraining').textContent = trainingCompletion + '%';
-        document.getElementById('chainEmployment').textContent = employmentRate + '%';
-        document.getElementById('chainRelevance').textContent = relevanceRate + '%';
-        document.getElementById('chainSkillMatch').textContent = skillMatchRate + '%';
-        document.getElementById('chainSalary').textContent = salaryMatchRate + '%';
-        document.getElementById('chainIncomeGrowth').textContent = incomeGrowthRate + '%';
-        document.getElementById('chainRetention').textContent = retentionRate + '%';
+        const relevanceRate = stats.highPct + stats.mediumPct;
+        const skillMatchRate = 0; // not supplied by backend yet
+        const salaryMatchRate = stats.avgExpected > 0 ? stats.salaryMatchPct : 0;
+        const incomeGrowthRate = apiIncome && Number(apiIncome.avg_income_growth) > 0
+            ? Math.min(100, Math.round(Number(apiIncome.avg_income_growth)))
+            : 0;
+        const retentionRate = apiRetention && apiRetention['365d']
+            ? Math.round(Number(apiRetention['365d'].rate) || 0)
+            : 0;
+        const trainingCompletion = 0; // not supplied by backend yet
+
+        document.getElementById('chainTraining').textContent      = trainingCompletion + '%';
+        document.getElementById('chainEmployment').textContent    = employmentRate + '%';
+        document.getElementById('chainRelevance').textContent     = relevanceRate + '%';
+        document.getElementById('chainSkillMatch').textContent    = skillMatchRate + '%';
+        document.getElementById('chainSalary').textContent        = salaryMatchRate + '%';
+        document.getElementById('chainIncomeGrowth').textContent  = incomeGrowthRate + '%';
+        document.getElementById('chainRetention').textContent     = retentionRate + '%';
 
         const steps = document.querySelectorAll('.chain-step');
         const values = [trainingCompletion, employmentRate, relevanceRate, skillMatchRate, salaryMatchRate, incomeGrowthRate, retentionRate];
         const thresholds = [70, 60, 60, 60, 70, 60, 60];
         steps.forEach((step, i) => {
             step.className = 'chain-step';
-            if (values[i] >= thresholds[i]) {
-                step.classList.add('completed');
-            } else if (values[i] >= thresholds[i] * 0.7) {
-                step.classList.add('active');
-            } else if (values[i] >= thresholds[i] * 0.5) {
-                step.classList.add('warning');
-            } else {
-                step.classList.add('danger');
-            }
+            if (values[i] >= thresholds[i]) step.classList.add('completed');
+            else if (values[i] >= thresholds[i] * 0.7) step.classList.add('active');
+            else if (values[i] >= thresholds[i] * 0.5) step.classList.add('warning');
+            else step.classList.add('danger');
         });
     }
 
     function renderProgramEffectiveness(stats) {
         const tbody = document.getElementById('programTableBody');
         const programs = stats.programStats;
-        document.getElementById('programCount').textContent = Object.keys(programs).length + ' programs';
-
-        tbody.innerHTML = Object.keys(programs).map(name => {
-            const p = programs[name];
-            const relColor = p.relevanceRate >= 70 ? '#16a34a' : p.relevanceRate >= 40 ? '#d97706' : '#dc2626';
-            const skillColor = p.avgSkillMatch >= 70 ? '#16a34a' : p.avgSkillMatch >= 50 ? '#d97706' : '#dc2626';
-            const salaryColor = p.salaryGrowth >= 20 ? '#16a34a' : p.salaryGrowth >= 0 ? '#d97706' : '#dc2626';
-            const empColor = p.employmentRate >= 70 ? '#16a34a' : p.employmentRate >= 50 ? '#d97706' : '#dc2626';
-            
-            return `<tr>
-                <td><strong>${name}</strong></td>
-                <td>
-                    <div class="score-bar-container">
-                        <div class="score-bar"><div class="fill" style="width:${p.relevanceRate}%;background:${relColor};"></div></div>
-                        <span class="score-val" style="color:${relColor};">${p.relevanceRate}%</span>
-                    </div>
-                </td>
-                <td>
-                    <div class="score-bar-container">
-                        <div class="score-bar"><div class="fill" style="width:${p.avgSkillMatch}%;background:${skillColor};"></div></div>
-                        <span class="score-val" style="color:${skillColor};">${p.avgSkillMatch}%</span>
-                    </div>
-                </td>
-                <td>
-                    <div class="score-bar-container">
-                        <div class="score-bar"><div class="fill" style="width:${Math.max(0, p.salaryGrowth)}%;background:${salaryColor};"></div></div>
-                        <span class="score-val" style="color:${salaryColor};">${p.salaryGrowth}%</span>
-                    </div>
-                </td>
-                <td>
-                    <div class="score-bar-container">
-                        <div class="score-bar"><div class="fill" style="width:${p.employmentRate}%;background:${empColor};"></div></div>
-                        <span class="score-val" style="color:${empColor};">${p.employmentRate}%</span>
-                    </div>
-                </td>
-            </tr>`;
-        }).join('');
+        const names = Object.keys(programs);
+        document.getElementById('programCount').textContent = names.length + ' programs';
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#64748b;">
+            Per-program relevance breakdown is not yet available from the backend.
+        </td></tr>`;
     }
 
     function renderProviderPerformance(stats) {
         const tbody = document.getElementById('providerTableBody');
-        const providers = stats.providerStats;
-        const providerNames = Object.keys(providers).sort((a, b) => providers[b].outcomeScore - providers[a].outcomeScore);
-        document.getElementById('providerCount').textContent = providerNames.length + ' providers';
-
-        tbody.innerHTML = providerNames.map((name, index) => {
-            const p = providers[name];
-            const scoreColor = p.outcomeScore >= 70 ? '#16a34a' : p.outcomeScore >= 50 ? '#d97706' : '#dc2626';
-            const medal = index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : '';
-            return `<tr>
-                <td><strong>${medal}${name}</strong></td>
-                <td style="font-weight:700;color:${p.relevanceRate >= 70 ? '#16a34a' : p.relevanceRate >= 40 ? '#d97706' : '#dc2626'};">${p.relevanceRate}%</td>
-                <td style="font-weight:700;color:${p.avgSkillMatch >= 70 ? '#16a34a' : p.avgSkillMatch >= 50 ? '#d97706' : '#dc2626'};">${p.avgSkillMatch}%</td>
-                <td style="font-weight:700;color:${p.employmentRate >= 70 ? '#16a34a' : p.employmentRate >= 50 ? '#d97706' : '#dc2626'};">${p.employmentRate}%</td>
-                <td style="font-weight:700;color:${p.salaryGrowth >= 20 ? '#16a34a' : p.salaryGrowth >= 0 ? '#d97706' : '#dc2626'};">${p.salaryGrowth}%</td>
-                <td>
-                    <div class="score-bar-container">
-                        <div class="score-bar"><div class="fill" style="width:${p.outcomeScore}%;background:${scoreColor};"></div></div>
-                        <span class="score-val" style="color:${scoreColor};">${p.outcomeScore}</span>
-                    </div>
-                </td>
-            </tr>`;
-        }).join('');
+        document.getElementById('providerCount').textContent = '0 providers';
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#64748b;">
+            Provider-level performance is not yet available from the backend.
+        </td></tr>`;
     }
 
     function renderAIInsights(stats) {
         const insights = document.getElementById('aiInsights');
         const recs = document.getElementById('aiRecommendations');
 
+        const list = (apiInsights && Array.isArray(apiInsights.insights)) ? apiInsights.insights : [];
+
+        if (list.length === 0) {
+            insights.innerHTML = '<div class="ai-item"><span class="ai-icon">📊</span><div>No AI insights available yet. Register trainees and employment records to generate insights.</div></div>';
+            recs.innerHTML = '<div class="ai-item"><span class="ai-icon">✅</span><div>Continue collecting data. Recommendations will appear once patterns emerge.</div></div>';
+            return;
+        }
+
         let insightHtml = '';
         let recHtml = '';
 
-        // Skill gap alert
-        const skills = sampleData.skills;
-        const criticalGaps = skills.filter(s => (s.employerDemand - s.trainingCoverage) > 20);
-        if (criticalGaps.length > 0) {
-            insightHtml += `<div class="ai-item"><span class="ai-icon">🔴</span><div><strong>Skill Gap Alert:</strong> ${criticalGaps.map(s => s.name).join(', ')} ${criticalGaps.length > 1 ? 'have' : 'has'} high employer demand but low training coverage.</div></div>`;
-            recHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Increase practical training modules for ${criticalGaps.map(s => s.name).join(', ')}.</div></div>`;
-        }
-
-        // Program performance alert
-        const programNames = Object.keys(stats.programStats);
-        const lowRelevancePrograms = programNames.filter(p => stats.programStats[p].relevanceRate < 40 && stats.programStats[p].employmentRate > 50);
-        if (lowRelevancePrograms.length > 0) {
-            insightHtml += `<div class="ai-item"><span class="ai-icon">🟠</span><div><strong>Program Performance Alert:</strong> ${lowRelevancePrograms[0]} has employment but low relevance.</div></div>`;
-            recHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Review curriculum alignment for ${lowRelevancePrograms[0]}.</div></div>`;
-        }
-
-        // Salary mismatch
-        if (stats.salaryGap < -2000) {
-            insightHtml += `<div class="ai-item"><span class="ai-icon">🟡</span><div><strong>Salary Mismatch Alert:</strong> Average actual salary is ${Math.abs(Math.round((stats.salaryGap / stats.avgExpected) * 100))}% below expected.</div></div>`;
-            recHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Review salary expectations and employer negotiations.</div></div>`;
-        }
-
-        // High impact program
-        const highImpact = programNames.filter(p => stats.programStats[p].relevanceRate >= 70 && stats.programStats[p].employmentRate >= 70);
-        if (highImpact.length > 0) {
-            insightHtml += `<div class="ai-item"><span class="ai-icon">🟢</span><div><strong>High Impact Program:</strong> ${highImpact[0]} shows strong job relevance and employment.</div></div>`;
-        }
-
-        // Mismatch reasons
-        const topReason = sampleData.mismatchReasons.sort((a, b) => b.count - a.count)[0];
-        if (topReason && topReason.count > 0) {
-            insightHtml += `<div class="ai-item"><span class="ai-icon">⚠️</span><div><strong>Top Mismatch Reason:</strong> ${topReason.reason} (${topReason.count} cases).</div></div>`;
-            recHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Address ${topReason.reason.toLowerCase()} through targeted interventions.</div></div>`;
-        }
-
-        if (!insightHtml) insightHtml = '<div class="ai-item"><span class="ai-icon">📊</span><div>Insufficient data for detailed insights.</div></div>';
-        if (!recHtml) recHtml = '<div class="ai-item"><span class="ai-icon">✅</span><div>Programs are performing well. Continue monitoring.</div></div>';
+        list.forEach(item => {
+            const icon = item.severity === 'HIGH' ? '🔴'
+                        : item.severity === 'MEDIUM' ? '🟠'
+                        : item.severity === 'LOW' ? '🟡' : '📊';
+            insightHtml += `<div class="ai-item"><span class="ai-icon">${icon}</span><div><strong>${item.problem || item.type}:</strong> ${(item.evidence || []).join(' · ')}</div></div>`;
+            if (item.recommendation) {
+                recHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> ${item.recommendation}</div></div>`;
+            }
+        });
 
         insights.innerHTML = insightHtml;
-        recs.innerHTML = recHtml;
+        recs.innerHTML = recHtml || '<div class="ai-item"><span class="ai-icon">✅</span><div>No specific recommendations at this time.</div></div>';
     }
 
     function updateSidebar() {
-        const govData = getGovernmentData();
-        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
-        document.getElementById('sidebarAvatar').textContent = initial;
-        document.getElementById('sidebarName').textContent = govData?.name || 'Government';
-        document.getElementById('sidebarRole').textContent = govData?.role || 'Admin';
-        document.getElementById('headerAvatar').textContent = initial;
-        document.getElementById('headerName').textContent = govData?.name || 'Government';
+        try {
+            if (typeof getCurrentUser === 'function') {
+                const user = getCurrentUser();
+                if (user) {
+                    const name = user.name || user.fullName || user.username || 'Government';
+                    const role = user.role || 'Admin';
+                    const initial = name.charAt(0).toUpperCase();
+                    document.getElementById('sidebarAvatar').textContent = initial;
+                    document.getElementById('sidebarName').textContent   = name;
+                    document.getElementById('sidebarRole').textContent   = role;
+                    document.getElementById('headerAvatar').textContent  = initial;
+                    document.getElementById('headerName').textContent    = name;
+                }
+            }
+        } catch (e) { /* silent */ }
     }
 
     function updateNotificationBadge() {
@@ -1946,32 +1853,32 @@
     // ============================================================
 
     function updateDate() {
+        const el = document.getElementById('dateDisplay');
+        if (!el) return;
         const now = new Date();
-        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+        el.textContent = now.toLocaleDateString('en-US', {
             weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
         });
     }
 
     function showNotifications() {
         const mismatches = allRecords.filter(r => r.relevance === 'Low' || r.relevance === 'Not Relevant').length;
-        alert(`📬 Notifications\n\n• ${mismatches} job mismatches detected\n• ${stats.mismatchRate}% mismatch rate\n• ${allRecords.length} total records`);
+        alert(`📬 Notifications\n\n• ${mismatches} job mismatches detected\n• ${stats.mismatchRate || 0}% mismatch rate\n• ${allRecords.length} total records`);
     }
 
     function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
-            window.location.href = '../auth/login.html';
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+                .finally(() => { window.location.href = '../auth/login.html'; });
         }
     }
 
     function exportData() {
         if (allRecords.length === 0) { alert('No data to export'); return; }
-        let csv = 'Name,Program,Provider,Training Role,Actual Role,Relevance,Skill Match,Expected Salary,Actual Salary,Mismatch Reason\n';
-        allRecords.forEach(r => {
-            csv += `${r.name},${r.program},${r.provider},${r.trainingRole},${r.actualRole},${r.relevance},${r.skillMatch},${r.expectedSalary},${r.actualSalary},${r.mismatchReason}\n`;
-        });
+        let csv = 'Relevance\n';
+        allRecords.forEach(r => { csv += `${r.relevance}\n`; });
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1985,6 +1892,7 @@
     function refreshData() { loadAndRender(); showToast('🔄 Data refreshed!'); }
 
     function exportFullReport() {
+        if (allRecords.length === 0) { alert('No data to export'); return; }
         let report = '📊 TRAINING-TO-JOB RELEVANCE REPORT\n';
         report += '================================\n';
         report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
@@ -1995,61 +1903,29 @@
         report += `• Not Relevant: ${stats.notRelevantPct}%\n`;
         report += `• Match Score: ${stats.matchScore}/100\n`;
         report += `• Mismatch Rate: ${stats.mismatchRate}%\n\n`;
-        report += `💰 SALARY ALIGNMENT\n`;
-        report += `• Avg Expected: ₹${stats.avgExpected.toLocaleString()}\n`;
+        report += `💰 INCOME\n`;
         report += `• Avg Actual: ₹${stats.avgActual.toLocaleString()}\n`;
-        report += `• Salary Gap: ₹${stats.salaryGap.toLocaleString()}\n`;
-        report += `• Salary Match: ${stats.salaryMatchPct}%\n\n`;
-        report += `🔧 SKILL ALIGNMENT\n`;
-        report += `• Avg Skill Match: ${stats.avgSkillMatch}%\n`;
-        report += `• Fully Matched: ${stats.fullyMatched}\n`;
-        report += `• Partially Matched: ${stats.partiallyMatched}\n`;
-        report += `• Skills Missing: ${stats.skillsMissing}\n\n`;
-        report += `📊 PROGRAM EFFECTIVENESS\n`;
-        Object.keys(stats.programStats).forEach(name => {
-            const p = stats.programStats[name];
-            report += `• ${name}: Relevance ${p.relevanceRate}%, Skill ${p.avgSkillMatch}%, Employment ${p.employmentRate}%\n`;
-        });
-        report += '\n================================\n';
+        report += `• Avg Growth: ₹${(apiIncome && apiIncome.avg_income_growth) || 0}\n\n`;
+        report += '================================\n';
         report += '📌 Generated by SkillBridge Government Portal';
         alert(report);
     }
 
     function viewSkillGaps() {
-        let msg = '🔧 SKILL GAP ANALYSIS\n';
-        msg += '================================\n\n';
-        const skills = sampleData.skills.sort((a, b) => (b.employerDemand - b.trainingCoverage) - (a.employerDemand - a.trainingCoverage));
-        skills.forEach(s => {
-            const gap = s.employerDemand - s.trainingCoverage;
-            const status = gap > 20 ? '🔴 HIGH' : gap > 10 ? '🟠 MEDIUM' : '🟢 LOW';
-            msg += `${status} ${s.name}\n`;
-            msg += `   Demand: ${s.employerDemand}% | Coverage: ${s.trainingCoverage}% | Gap: ${gap}%\n\n`;
-        });
-        alert(msg);
+        alert('Skill gap analysis requires the skills dataset from the backend. Not yet available.');
     }
 
     function generateAIInsights() {
-        let insights = '🤖 AI GOVERNMENT INSIGHTS\n';
-        insights += '================================\n\n';
-        insights += `📊 RELEVANCE ANALYSIS\n`;
-        insights += `• Match Score: ${stats.matchScore}/100\n`;
-        insights += `• ${stats.highPct}% of trainees have high job relevance\n`;
-        insights += `• ${stats.mismatchRate}% mismatch rate detected\n\n`;
-        
-        insights += `🔴 CRITICAL FINDINGS\n`;
-        const criticalGaps = sampleData.skills.filter(s => (s.employerDemand - s.trainingCoverage) > 20);
-        if (criticalGaps.length > 0) {
-            insights += `• Skill gaps: ${criticalGaps.map(s => s.name).join(', ')}\n`;
-        }
-        insights += `• Top mismatch: ${sampleData.mismatchReasons.sort((a, b) => b.count - a.count)[0]?.reason || 'N/A'}\n\n`;
-
-        insights += `💡 POLICY RECOMMENDATIONS\n`;
-        insights += `• Update curriculum for emerging skills\n`;
-        insights += `• Improve industry partnerships\n`;
-        insights += `• Focus on practical training\n`;
-        insights += `• Align salary expectations with market\n`;
-        insights += '\n================================\n';
-        alert(insights);
+        const list = (apiInsights && Array.isArray(apiInsights.insights)) ? apiInsights.insights : [];
+        if (!list.length) { alert('No AI insights available yet.'); return; }
+        let msg = '🤖 AI GOVERNMENT INSIGHTS\n================================\n\n';
+        list.forEach(item => {
+            msg += `[${item.severity || 'INFO'}] ${item.problem || item.type}\n`;
+            (item.evidence || []).forEach(e => { msg += `   • ${e}\n`; });
+            if (item.recommendation) msg += `   → ${item.recommendation}\n`;
+            msg += '\n';
+        });
+        alert(msg);
     }
 
     function showToast(message) {
@@ -2064,8 +1940,8 @@
     // INIT
     // ============================================================
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadAndRender();
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadAndRender();
         updateDate();
 
         document.addEventListener('click', function(e) {
@@ -2085,5 +1961,6 @@
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

@@ -767,6 +767,31 @@
         }
         .quick-actions .action-btn:hover i { color: white; }
 
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+        }
+        .empty-state i {
+            font-size: 48px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+        .empty-state h3 {
+            font-size: 18px;
+            color: #0b1a33;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 13px;
+            color: #64748b;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1200px) {
             .grid-2, .grid-3 { grid-template-columns: 1fr; }
@@ -862,7 +887,7 @@
     </header>
 
     <!-- ===== CONTAINER ===== -->
-    <div class="container">
+    <div class="container" id="mainContainer">
 
         <!-- ===== EXECUTIVE AI SUMMARY ===== -->
         <div class="exec-summary">
@@ -871,29 +896,25 @@
                     <div class="es-icon">🤖</div>
                     <h2>Executive AI Summary</h2>
                 </div>
-                <p>
-                    Based on analysis of <strong>52,000+ trainees</strong> across <strong>5 Government Skill Schemes</strong> (PMKVY, DDU-GKY, PM-DAKSH, State Skill Mission, NIELIT), 
-                    <strong>17 courses</strong>, and <strong>12 training providers</strong>, the AI has identified <strong>18 outcome problems</strong>, 
-                    <strong>6 skill gap patterns</strong>, and <strong>12 risk areas</strong>. Priority interventions are recommended for <strong>PM-DAKSH scheme</strong> 
-                    (32% non-placement) and <strong>Self-Employment training</strong> (40% non-placement rate). <strong>Cloud Computing, AI/ML, and Communication skills</strong> 
-                    show critical employer-demand gaps requiring immediate curriculum updates.
+                <p id="execSummaryText">
+                    Loading live insights from the backend…
                 </p>
                 <div class="es-highlights">
                     <div class="es-highlight">
                         <div class="hl-icon">🔴</div>
-                        <div class="hl-text">Critical Issues<strong>18 Detected</strong></div>
+                        <div class="hl-text">Critical Issues<strong id="hlCritical">0</strong></div>
                     </div>
                     <div class="es-highlight">
                         <div class="hl-icon">🧩</div>
-                        <div class="hl-text">Skill Gap Patterns<strong>6 Identified</strong></div>
+                        <div class="hl-text">Insights<strong id="hlInsights">0</strong></div>
                     </div>
                     <div class="es-highlight">
                         <div class="hl-icon">⚠️</div>
-                        <div class="hl-text">At-Risk Areas<strong>12 Flagged</strong></div>
+                        <div class="hl-text">Trainees Analyzed<strong id="hlTrainees">0</strong></div>
                     </div>
                     <div class="es-highlight">
                         <div class="hl-icon">💡</div>
-                        <div class="hl-text">Recommendations<strong>15 Ready</strong></div>
+                        <div class="hl-text">Recommendations<strong id="hlRecommendations">0</strong></div>
                     </div>
                 </div>
             </div>
@@ -915,378 +936,75 @@
         <!-- ===== 1. DETECTED PROBLEMS ===== -->
         <div class="section-title">
             <i class="fas fa-exclamation-triangle"></i> Detected Problems
-            <span class="badge-count">18 issues found</span>
+            <span class="badge-count" id="problemCountBadge">0 issues found</span>
         </div>
 
-        <!-- Problem 1: PM-DAKSH High Non-Placement -->
-        <div class="insight-card">
-            <div class="ic-header">
-                <div class="ic-icon red"><i class="fas fa-exclamation-circle"></i></div>
-                <div class="ic-title">
-                    <h4>PM-DAKSH Scheme has 32% Non-Placement Rate</h4>
-                    <p>Highest non-placement among all 5 Government Schemes. Training completion is strong at 87%, but placement conversion is significantly below benchmark.</p>
-                </div>
-                <span class="ic-badge critical">Critical</span>
-            </div>
-            <div class="ic-evidence">
-                <div class="ev-label"><i class="fas fa-chart-bar"></i> Evidence</div>
-                <div class="ev-metrics">
-                    <div>Affected Candidates: <strong>2,560</strong></div>
-                    <div>Scheme: <strong>PM-DAKSH (MoSJE)</strong></div>
-                    <div>Benchmark Avg: <strong>22%</strong></div>
-                    <div>Gap: <strong>+10% above avg</strong></div>
-                    <div>Top Reason: <strong>Low Assessment Score</strong></div>
-                    <div>Regions: <strong>UP, Bihar, WB</strong></div>
-                </div>
-            </div>
-            <div class="ic-action">
-                <i class="fas fa-lightbulb ac-icon"></i>
-                <div class="ac-text">
-                    <strong>Recommended Action:</strong> Launch assessment coaching programs for PM-DAKSH trainees before job placement drives. Partner with local employers for entry-level positions in Beauty & Wellness, Retail, and Hospitality sectors.
-                </div>
-            </div>
-        </div>
-
-        <!-- Problem 2: Self-Employment Training -->
-        <div class="insight-card warning">
-            <div class="ic-header">
-                <div class="ic-icon orange"><i class="fas fa-store"></i></div>
-                <div class="ic-title">
-                    <h4>Self-Employment Training has 40% Non-Placement Rate</h4>
-                    <p>Highest non-placement across all training types. Only 2,700 of 4,500 trained candidates established businesses. Critical gap in business support ecosystem.</p>
-                </div>
-                <span class="ic-badge high">High Priority</span>
-            </div>
-            <div class="ic-evidence">
-                <div class="ev-label"><i class="fas fa-chart-bar"></i> Evidence</div>
-                <div class="ev-metrics">
-                    <div>Affected: <strong>1,800 candidates</strong></div>
-                    <div>Schemes: <strong>DDU-GKY, PM-DAKSH</strong></div>
-                    <div>Successful Businesses: <strong>60%</strong></div>
-                    <div>Avg Income: <strong>₹18,000</strong></div>
-                    <div>Funding Access: <strong>Low (32%)</strong></div>
-                    <div>Mentorship: <strong>Insufficient</strong></div>
-                </div>
-            </div>
-            <div class="ic-action">
-                <i class="fas fa-lightbulb ac-icon"></i>
-                <div class="ac-text">
-                    <strong>Recommended Action:</strong> Create Self-Employment Support Cells with micro-finance linkage, mentorship programs, and market access. Partner with NABARD, SIDBI for business loans.
-                </div>
-            </div>
-        </div>
-
-        <!-- Problem 3: Cloud Computing Skill Gap -->
-        <div class="insight-card warning">
-            <div class="ic-header">
-                <div class="ic-icon orange"><i class="fas fa-cloud"></i></div>
-                <div class="ic-title">
-                    <h4>Cloud Computing Skill Gap of 34% Detected</h4>
-                    <p>Employer demand for Cloud skills is 76% but training coverage is only 42%. This is the single largest skill mismatch across all Government schemes.</p>
-                </div>
-                <span class="ic-badge high">High Priority</span>
-            </div>
-            <div class="ic-evidence">
-                <div class="ev-label"><i class="fas fa-chart-bar"></i> Evidence</div>
-                <div class="ev-metrics">
-                    <div>Employer Demand: <strong>76%</strong></div>
-                    <div>Training Coverage: <strong>42%</strong></div>
-                    <div>Gap: <strong>34%</strong></div>
-                    <div>Affected Candidates: <strong>3,400+</strong></div>
-                    <div>Schemes Impacted: <strong>PMKVY, NIELIT</strong></div>
-                    <div>Job Roles: <strong>Cloud Engineer, DevOps</strong></div>
-                </div>
-            </div>
-            <div class="ic-action">
-                <i class="fas fa-lightbulb ac-icon"></i>
-                <div class="ac-text">
-                    <strong>Recommended Action:</strong> Add practical Cloud modules (AWS/Azure/GCP) to PMKVY and NIELIT programs. Partner with cloud providers for free certification access.
-                </div>
-            </div>
-        </div>
-
-        <!-- Problem 4: Regional Opportunity Gap -->
-        <div class="insight-card info">
-            <div class="ic-header">
-                <div class="ic-icon blue"><i class="fas fa-map-marked-alt"></i></div>
-                <div class="ic-title">
-                    <h4>Regional Opportunity Gap in Uttar Pradesh & Bihar</h4>
-                    <p>Sufficient trained candidates but limited local job opportunities. UP has 3,000 trained candidates vs 1,200 vacancies — a gap of 1,800.</p>
-                </div>
-                <span class="ic-badge medium">Medium Priority</span>
-            </div>
-            <div class="ic-evidence">
-                <div class="ev-label"><i class="fas fa-chart-bar"></i> Evidence</div>
-                <div class="ev-metrics">
-                    <div>UP Trained: <strong>3,000</strong></div>
-                    <div>UP Vacancies: <strong>1,200</strong></div>
-                    <div>Gap: <strong>1,800</strong></div>
-                    <div>Bihar Gap: <strong>1,300</strong></div>
-                    <div>Main Reason: <strong>Lack of Local Jobs</strong></div>
-                    <div>Migration Rate: <strong>High</strong></div>
-                </div>
-            </div>
-            <div class="ic-action">
-                <i class="fas fa-lightbulb ac-icon"></i>
-                <div class="ac-text">
-                    <strong>Recommended Action:</strong> Deploy employer-linked training in UP and Bihar. Partner with industries relocating to these regions. Promote remote work opportunities.
-                </div>
-            </div>
+        <div id="problemList">
+            <!-- Dynamic — rendered from /api/insights/global -->
         </div>
 
         <!-- ===== 2. RISK IDENTIFICATION ===== -->
         <div class="section-title">
             <i class="fas fa-shield-alt"></i> Risk Identification
-            <span class="badge-count">12 areas flagged</span>
+            <span class="badge-count" id="riskCountBadge">0 areas flagged</span>
         </div>
 
-        <div class="grid-3">
-            <!-- Candidate Risk -->
-            <div class="card">
-                <div class="card-header"><i class="fas fa-user"></i> Candidate-Level Risk</div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Non-Placement Risk</span>
-                    <span class="risk-count">4,200</span>
-                    <span class="risk-level high">High</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Early Dropout Risk</span>
-                    <span class="risk-count">2,800</span>
-                    <span class="risk-level medium">Medium</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Low Income Growth Risk</span>
-                    <span class="risk-count">3,100</span>
-                    <span class="risk-level high">High</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Skill Gap Risk</span>
-                    <span class="risk-count">5,600</span>
-                    <span class="risk-level high">High</span>
-                </div>
-            </div>
-
-            <!-- Program Risk -->
-            <div class="card">
-                <div class="card-header"><i class="fas fa-graduation-cap"></i> Program-Level Risk</div>
-                <div class="risk-list-item">
-                    <span class="risk-label">PM-DAKSH Non-Placement</span>
-                    <span class="risk-count">32%</span>
-                    <span class="risk-level high">High</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">DDU-GKY Low Relevance</span>
-                    <span class="risk-count">26%</span>
-                    <span class="risk-level medium">Medium</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Self-Employment Retention</span>
-                    <span class="risk-count">40%</span>
-                    <span class="risk-level high">High</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Employer Satisfaction (PM-DAKSH)</span>
-                    <span class="risk-count">72%</span>
-                    <span class="risk-level medium">Medium</span>
-                </div>
-            </div>
-
-            <!-- Regional Risk -->
-            <div class="card">
-                <div class="card-header"><i class="fas fa-map-pin"></i> Regional Risk</div>
-                <div class="risk-list-item">
-                    <span class="risk-label">UP Opportunity Shortage</span>
-                    <span class="risk-count">1,800</span>
-                    <span class="risk-level high">High</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Bihar Skill Mismatch</span>
-                    <span class="risk-count">1,300</span>
-                    <span class="risk-level high">High</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">WB Low Employment Ecosystem</span>
-                    <span class="risk-count">900</span>
-                    <span class="risk-level medium">Medium</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">TN Industry Gap</span>
-                    <span class="risk-count">800</span>
-                    <span class="risk-level medium">Medium</span>
-                </div>
-            </div>
+        <div class="grid-3" id="riskGrid">
+            <!-- Dynamic -->
         </div>
 
         <!-- ===== 3. OUTCOME TREND DETECTION ===== -->
         <div class="section-title">
             <i class="fas fa-chart-line"></i> Outcome Trend Detection
-            <span class="badge-count">6 metrics tracked</span>
+            <span class="badge-count">Live metrics</span>
         </div>
 
         <div class="grid-2">
             <div class="card">
-                <div class="card-header"><i class="fas fa-arrow-up"></i> Improving Trends</div>
-                <div class="trend-item">
-                    <span class="trend-label">PMKVY Employment Rate</span>
-                    <span class="trend-icon">📈</span>
-                    <span class="trend-value" style="color:#16a34a;">+8%</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">NIELIT Income Growth</span>
-                    <span class="trend-icon">📈</span>
-                    <span class="trend-value" style="color:#16a34a;">+12%</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">State Skill Retention</span>
-                    <span class="trend-icon">📈</span>
-                    <span class="trend-value" style="color:#16a34a;">+5%</span>
-                </div>
+                <div class="card-header"><i class="fas fa-arrow-up"></i> Key Metrics</div>
+                <div id="trendUpList"></div>
             </div>
             <div class="card">
-                <div class="card-header"><i class="fas fa-arrow-down"></i> Declining Trends</div>
-                <div class="trend-item">
-                    <span class="trend-label">PM-DAKSH Placement Rate</span>
-                    <span class="trend-icon">📉</span>
-                    <span class="trend-value" style="color:#dc2626;">-6%</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Self-Employment Retention</span>
-                    <span class="trend-icon">📉</span>
-                    <span class="trend-value" style="color:#dc2626;">-9%</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">DDU-GKY Job Relevance</span>
-                    <span class="trend-icon">📉</span>
-                    <span class="trend-value" style="color:#dc2626;">-4%</span>
-                </div>
+                <div class="card-header"><i class="fas fa-chart-bar"></i> Non-Placement Reasons</div>
+                <div id="trendDownList"></div>
             </div>
         </div>
 
         <!-- ===== 4. ANOMALY DETECTION ===== -->
         <div class="section-title">
             <i class="fas fa-search"></i> Anomaly Detection
-            <span class="badge-count">3 anomalies found</span>
+            <span class="badge-count">AI-flagged</span>
         </div>
 
         <div class="grid-2" style="margin-bottom:20px;">
             <div class="card">
-                <div class="anomaly-item">
-                    <span class="anomaly-tag">High Priority</span>
-                    <strong>Provider X (Skill India Centre):</strong> Reports 91% placement but verified employer outcomes indicate only 63% relevant employment. 28% discrepancy detected.
-                </div>
-                <div class="anomaly-item">
-                    <span class="anomaly-tag">Investigation</span>
-                    <strong>Design Academy:</strong> 32% non-placement rate — 10% above other providers with similar courses. Pattern consistent across 3 consecutive quarters.
-                </div>
-                <div class="anomaly-item">
-                    <span class="anomaly-tag">Medium</span>
-                    <strong>PM-DAKSH Assessment:</strong> Average assessment score dropped from 58% to 48% in Q3. Correlates with 8% increase in non-placement.
+                <div id="anomalyList">
+                    <!-- Dynamic -->
                 </div>
             </div>
             <div class="card">
-                <div class="card-header"><i class="fas fa-chart-bar"></i> Comparative Provider Analysis</div>
-                <div class="trend-item">
-                    <span class="trend-label">Skill India Centre (PMKVY)</span>
-                    <span class="trend-value" style="color:#16a34a;">82% employed</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Design Academy (PMKVY)</span>
-                    <span class="trend-value" style="color:#dc2626;">68% employed</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Rural Skill Foundation (DDU-GKY)</span>
-                    <span class="trend-value" style="color:#ea580c;">72% employed</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Social Empowerment Trust (PM-DAKSH)</span>
-                    <span class="trend-value" style="color:#dc2626;">68% employed</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">NIELIT Centre A</span>
-                    <span class="trend-value" style="color:#16a34a;">84% employed</span>
-                </div>
+                <div class="card-header"><i class="fas fa-chart-bar"></i> Income Snapshot</div>
+                <div id="incomeSnapshot"></div>
             </div>
         </div>
 
         <!-- ===== 5. SKILL GAP PATTERNS ===== -->
         <div class="section-title">
             <i class="fas fa-puzzle-piece"></i> Skill Gap Patterns
-            <span class="badge-count">6 patterns identified</span>
+            <span class="badge-count">Insights from AI engine</span>
         </div>
 
         <div class="grid-2" style="margin-bottom:20px;">
             <div class="card">
-                <div class="card-header"><i class="fas fa-code"></i> Most Frequently Missing Skills</div>
-                <div class="skill-pattern-item">
-                    <div class="sp-icon high"><i class="fas fa-cloud"></i></div>
-                    <div class="sp-info">
-                        <div class="sp-name">Cloud Computing</div>
-                        <div class="sp-desc">Missing in 34% of tech-role candidates</div>
-                    </div>
-                    <div class="sp-gap high">34%</div>
-                </div>
-                <div class="skill-pattern-item">
-                    <div class="sp-icon high"><i class="fas fa-comments"></i></div>
-                    <div class="sp-info">
-                        <div class="sp-name">Communication</div>
-                        <div class="sp-desc">27% gap reported by employers</div>
-                    </div>
-                    <div class="sp-gap high">27%</div>
-                </div>
-                <div class="skill-pattern-item">
-                    <div class="sp-icon high"><i class="fas fa-robot"></i></div>
-                    <div class="sp-info">
-                        <div class="sp-name">AI/ML</div>
-                        <div class="sp-desc">25% gap in emerging tech roles</div>
-                    </div>
-                    <div class="sp-gap high">25%</div>
-                </div>
-                <div class="skill-pattern-item">
-                    <div class="sp-icon medium"><i class="fas fa-server"></i></div>
-                    <div class="sp-info">
-                        <div class="sp-name">DevOps</div>
-                        <div class="sp-desc">22% gap in infrastructure roles</div>
-                    </div>
-                    <div class="sp-gap medium">22%</div>
-                </div>
-                <div class="skill-pattern-item">
-                    <div class="sp-icon medium"><i class="fab fa-python"></i></div>
-                    <div class="sp-info">
-                        <div class="sp-name">Python</div>
-                        <div class="sp-desc">18% gap in data roles</div>
-                    </div>
-                    <div class="sp-gap medium">18%</div>
+                <div class="card-header"><i class="fas fa-code"></i> Detected Gaps</div>
+                <div id="skillGapList">
+                    <!-- Dynamic -->
                 </div>
             </div>
             <div class="card">
-                <div class="card-header"><i class="fas fa-briefcase"></i> Employer Demand vs Training Supply</div>
-                <div class="skill-pattern-item">
-                    <div class="sp-info">
-                        <div class="sp-name">Cloud Computing</div>
-                        <div class="sp-desc">Demand 76% vs Supply 42%</div>
-                    </div>
-                    <div class="sp-gap high">+34%</div>
-                </div>
-                <div class="skill-pattern-item">
-                    <div class="sp-info">
-                        <div class="sp-name">Cybersecurity</div>
-                        <div class="sp-desc">Demand 58% vs Supply 25%</div>
-                    </div>
-                    <div class="sp-gap high">+33%</div>
-                </div>
-                <div class="skill-pattern-item">
-                    <div class="sp-info">
-                        <div class="sp-name">AI/ML</div>
-                        <div class="sp-desc">Demand 63% vs Supply 38%</div>
-                    </div>
-                    <div class="sp-gap high">+25%</div>
-                </div>
-                <div class="skill-pattern-item">
-                    <div class="sp-info">
-                        <div class="sp-name">DevOps</div>
-                        <div class="sp-desc">Demand 65% vs Supply 32%</div>
-                    </div>
-                    <div class="sp-gap medium">+33%</div>
+                <div class="card-header"><i class="fas fa-briefcase"></i> Program Performance Signals</div>
+                <div id="programSignalList">
+                    <!-- Dynamic -->
                 </div>
             </div>
         </div>
@@ -1296,33 +1014,8 @@
             <i class="fas fa-stethoscope"></i> Program Performance Diagnosis
             <span class="badge-count">Why programs underperform</span>
         </div>
-
-        <div class="insight-card">
-            <div class="ic-header">
-                <div class="ic-icon purple"><i class="fas fa-diagnoses"></i></div>
-                <div class="ic-title">
-                    <h4>PM-DAKSH Program — Root Cause Diagnosis</h4>
-                    <p>Completion is strong (87%), but assessment performance and employer skill-match scores are low, contributing to poor placement outcomes.</p>
-                </div>
-                <span class="ic-badge new">AI Diagnosis</span>
-            </div>
-            <div class="ic-evidence">
-                <div class="ev-label"><i class="fas fa-route"></i> Funnel Analysis</div>
-                <div class="ev-metrics">
-                    <div>Completion: <strong>87% ✅</strong></div>
-                    <div>Assessment: <strong>48% ⚠️</strong></div>
-                    <div>Placement: <strong>45% 🔴</strong></div>
-                    <div>Relevance: <strong>48% 🔴</strong></div>
-                    <div>Retention: <strong>60% ⚠️</strong></div>
-                    <div>Income Growth: <strong>+57% ✅</strong></div>
-                </div>
-            </div>
-            <div class="ic-action">
-                <i class="fas fa-lightbulb ac-icon"></i>
-                <div class="ac-text">
-                    <strong>Root Cause:</strong> Training completion is not translating into job readiness. Assessment scores indicate skill acquisition gaps. Employer skill-match at 70% (vs 86% benchmark). <strong>Recommendation:</strong> Add 4-week practical bootcamp before assessment and increase employer involvement in curriculum design.
-                </div>
-            </div>
+        <div id="diagnosisList">
+            <!-- Dynamic -->
         </div>
 
         <!-- ===== 7. INCOME IMPACT INSIGHTS ===== -->
@@ -1333,46 +1026,12 @@
 
         <div class="grid-2" style="margin-bottom:20px;">
             <div class="card">
-                <div class="card-header"><i class="fas fa-chart-line"></i> Income Growth by Relevance</div>
-                <div class="trend-item">
-                    <span class="trend-label">High Relevance Jobs</span>
-                    <span class="trend-value" style="color:#16a34a;">+68% growth</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Medium Relevance Jobs</span>
-                    <span class="trend-value" style="color:#ea580c;">+42% growth</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Low Relevance Jobs</span>
-                    <span class="trend-value" style="color:#dc2626;">+18% growth</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Non-Placed Candidates</span>
-                    <span class="trend-value" style="color:#dc2626;">0% growth</span>
-                </div>
+                <div class="card-header"><i class="fas fa-chart-line"></i> Income Summary</div>
+                <div id="incomeSummaryList"></div>
             </div>
             <div class="card">
-                <div class="card-header"><i class="fas fa-rupee-sign"></i> Income by Government Scheme</div>
-                <div class="trend-item">
-                    <span class="trend-label">NIELIT Programs</span>
-                    <span class="trend-value" style="color:#16a34a;">₹32,000 avg</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">PMKVY 2.0</span>
-                    <span class="trend-value" style="color:#16a34a;">₹28,000 avg</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">State Skill Mission</span>
-                    <span class="trend-value" style="color:#ea580c;">₹26,000 avg</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">DDU-GKY</span>
-                    <span class="trend-value" style="color:#ea580c;">₹22,000 avg</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">PM-DAKSH</span>
-                    <span class="trend-value" style="color:#dc2626;">₹18,000 avg</span>
-                </div>
+                <div class="card-header"><i class="fas fa-rupee-sign"></i> Retention Snapshot</div>
+                <div id="retentionSnapshot"></div>
             </div>
         </div>
 
@@ -1382,111 +1041,22 @@
             <span class="badge-count">AI-detected combinations</span>
         </div>
 
-        <div class="insight-card warning">
-            <div class="ic-header">
-                <div class="ic-icon orange"><i class="fas fa-layer-group"></i></div>
-                <div class="ic-title">
-                    <h4>Pattern: Triple-Risk Candidates</h4>
-                    <p>Non-placement is highest among candidates with <strong>low assessment scores + skill gaps + limited local job availability</strong>. This combination affects 1,850 candidates across UP, Bihar, and WB.</p>
-                </div>
-                <span class="ic-badge high">High Priority</span>
-            </div>
-            <div class="ic-evidence">
-                <div class="ev-label"><i class="fas fa-chart-pie"></i> Pattern Composition</div>
-                <div class="ev-metrics">
-                    <div>Assessment &lt;50%: <strong>62%</strong></div>
-                    <div>Skill Gap &gt;30%: <strong>78%</strong></div>
-                    <div>Low Local Jobs: <strong>85%</strong></div>
-                    <div>Combined Effect: <strong>3.2× higher NP</strong></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="insight-card info">
-            <div class="ic-header">
-                <div class="ic-icon blue"><i class="fas fa-file-signature"></i></div>
-                <div class="ic-title">
-                    <h4>Pattern: Interview-Stage Dropout</h4>
-                    <p>42% of non-placed candidates reach interview stage but fail to convert. Primary reasons: poor communication (67%) and lack of practical examples (54%).</p>
-                </div>
-                <span class="ic-badge medium">Medium Priority</span>
-            </div>
+        <div id="causePatternList">
+            <!-- Dynamic -->
         </div>
 
         <!-- ===== 9. POLICY RECOMMENDATIONS ===== -->
         <div class="section-title">
             <i class="fas fa-gavel"></i> Policy Recommendations
-            <span class="badge-count">15 actions prioritized</span>
+            <span class="badge-count" id="policyBadge">0 actions prioritized</span>
         </div>
 
         <div class="grid-2" style="margin-bottom:20px;">
-            <div class="card">
-                <div class="policy-item">
-                    <div class="policy-num">1</div>
-                    <div class="policy-info">
-                        <div class="policy-title">Add Practical Cloud Modules</div>
-                        <div class="policy-desc">Introduce hands-on Cloud (AWS/Azure/GCP) training in PMKVY and NIELIT programs where employer demand exceeds coverage by 34%.</div>
-                    </div>
-                    <span class="policy-priority critical">Critical</span>
-                </div>
-                <div class="policy-item">
-                    <div class="policy-num">2</div>
-                    <div class="policy-info">
-                        <div class="policy-title">PM-DAKSH Assessment Coaching</div>
-                        <div class="policy-desc">Launch pre-assessment coaching for PM-DAKSH trainees. Target: improve average assessment from 48% to 65%.</div>
-                    </div>
-                    <span class="policy-priority critical">Critical</span>
-                </div>
-                <div class="policy-item">
-                    <div class="policy-num">3</div>
-                    <div class="policy-info">
-                        <div class="policy-title">Self-Employment Support Cells</div>
-                        <div class="policy-desc">Create business support cells with micro-finance linkage for DDU-GKY and PM-DAKSH self-employment trainees.</div>
-                    </div>
-                    <span class="policy-priority high">High</span>
-                </div>
-                <div class="policy-item">
-                    <div class="policy-num">4</div>
-                    <div class="policy-info">
-                        <div class="policy-title">Regional Employer Outreach</div>
-                        <div class="policy-desc">Deploy employer outreach teams in UP, Bihar, WB to create local job opportunities and reduce migration.</div>
-                    </div>
-                    <span class="policy-priority high">High</span>
-                </div>
+            <div class="card" id="policyLeftCard">
+                <!-- Dynamic -->
             </div>
-            <div class="card">
-                <div class="policy-item">
-                    <div class="policy-num">5</div>
-                    <div class="policy-info">
-                        <div class="policy-title">Curriculum Review — PM-DAKSH</div>
-                        <div class="policy-desc">Revise curriculum for Beauty & Wellness, Retail, Hospitality. Increase practical module duration by 40%.</div>
-                    </div>
-                    <span class="policy-priority high">High</span>
-                </div>
-                <div class="policy-item">
-                    <div class="policy-num">6</div>
-                    <div class="policy-info">
-                        <div class="policy-title">Employer-Linked Training</div>
-                        <div class="policy-desc">Scale up Industry-Linked training model (currently 21% NP vs 40% self-employment). Expand apprenticeships.</div>
-                    </div>
-                    <span class="policy-priority medium">Medium</span>
-                </div>
-                <div class="policy-item">
-                    <div class="policy-num">7</div>
-                    <div class="policy-info">
-                        <div class="policy-title">Communication Skills Bootcamp</div>
-                        <div class="policy-desc">Add mandatory 2-week communication module to all schemes. Addresses 27% employer-reported skill gap.</div>
-                    </div>
-                    <span class="policy-priority medium">Medium</span>
-                </div>
-                <div class="policy-item">
-                    <div class="policy-num">8</div>
-                    <div class="policy-info">
-                        <div class="policy-title">Provider Performance Audit</div>
-                        <div class="policy-desc">Investigate Design Academy and Social Empowerment Trust for below-benchmark outcomes.</div>
-                    </div>
-                    <span class="policy-priority medium">Medium</span>
-                </div>
+            <div class="card" id="policyRightCard">
+                <!-- Dynamic -->
             </div>
         </div>
 
@@ -1499,64 +1069,14 @@
         <div class="grid-2" style="margin-bottom:20px;">
             <div class="card">
                 <div class="card-header"><i class="fas fa-plus-circle" style="color:#16a34a;"></i> Skills to Add</div>
-                <div class="curriculum-item">
-                    <div class="curr-header">
-                        <span class="curr-title">Cloud Computing (AWS/Azure)</span>
-                        <span class="curr-badge add">Add</span>
-                    </div>
-                    <div class="curr-desc">Add to PMKVY Data Analytics and NIELIT programs. 34% employer demand gap.</div>
-                </div>
-                <div class="curriculum-item">
-                    <div class="curr-header">
-                        <span class="curr-title">AI/ML Fundamentals</span>
-                        <span class="curr-badge add">Add</span>
-                    </div>
-                    <div class="curr-desc">Add to Data Science and Full Stack courses. 25% gap in emerging tech roles.</div>
-                </div>
-                <div class="curriculum-item">
-                    <div class="curr-header">
-                        <span class="curr-title">Cybersecurity Basics</span>
-                        <span class="curr-badge add">Add</span>
-                    </div>
-                    <div class="curr-desc">Add to all IT & Digital courses. 33% demand gap in tech sector.</div>
-                </div>
-                <div class="curriculum-item">
-                    <div class="curr-header">
-                        <span class="curr-title">Business & Finance Literacy</span>
-                        <span class="curr-badge add">Add</span>
-                    </div>
-                    <div class="curr-desc">Add to Self-Employment training. Improves business survival rate.</div>
+                <div id="curriculumAdd">
+                    <!-- Dynamic -->
                 </div>
             </div>
             <div class="card">
                 <div class="card-header"><i class="fas fa-tools" style="color:#2563eb;"></i> Skills to Strengthen</div>
-                <div class="curriculum-item">
-                    <div class="curr-header">
-                        <span class="curr-title">Practical Hands-On Training</span>
-                        <span class="curr-badge strengthen">Strengthen</span>
-                    </div>
-                    <div class="curr-desc">Increase practical duration from 40% to 60% across all schemes.</div>
-                </div>
-                <div class="curriculum-item">
-                    <div class="curr-header">
-                        <span class="curr-title">Communication Skills</span>
-                        <span class="curr-badge strengthen">Strengthen</span>
-                    </div>
-                    <div class="curr-desc">27% employer-reported gap. Add structured communication module.</div>
-                </div>
-                <div class="curriculum-item">
-                    <div class="curr-header">
-                        <span class="curr-title">Interview Preparation</span>
-                        <span class="curr-badge strengthen">Strengthen</span>
-                    </div>
-                    <div class="curr-desc">42% dropout at interview stage. Add mock interview sessions.</div>
-                </div>
-                <div class="curriculum-item">
-                    <div class="curr-header">
-                        <span class="curr-title">Industry Certification Prep</span>
-                        <span class="curr-badge strengthen">Strengthen</span>
-                    </div>
-                    <div class="curr-desc">Prepare trainees for AWS, Azure, Google Cloud certifications.</div>
+                <div id="curriculumStrengthen">
+                    <!-- Dynamic -->
                 </div>
             </div>
         </div>
@@ -1570,33 +1090,33 @@
         <div class="grid-3" style="margin-bottom:20px;">
             <div class="forecast-item">
                 <div class="forecast-label">📈 Employment Rate Forecast</div>
-                <div class="forecast-text">If current trends continue, overall employment rate expected to reach:</div>
-                <div class="forecast-value">76%</div>
+                <div class="forecast-text">Based on current employment rate from live data:</div>
+                <div class="forecast-value" id="forecastEmployment">—</div>
             </div>
             <div class="forecast-item">
                 <div class="forecast-label">🔄 Retention Forecast (365 days)</div>
-                <div class="forecast-text">Expected 365-day retention based on trend analysis:</div>
-                <div class="forecast-value">64%</div>
+                <div class="forecast-text">Based on live retention rate:</div>
+                <div class="forecast-value" id="forecastRetention">—</div>
             </div>
             <div class="forecast-item">
                 <div class="forecast-label">💰 Income Growth Forecast</div>
-                <div class="forecast-text">Projected average income growth across all schemes:</div>
-                <div class="forecast-value">+58%</div>
+                <div class="forecast-text">Projected average income growth:</div>
+                <div class="forecast-value" id="forecastIncome">—</div>
             </div>
             <div class="forecast-item">
                 <div class="forecast-label">🚫 Non-Placement Forecast</div>
                 <div class="forecast-text">Expected non-placement rate if no intervention:</div>
-                <div class="forecast-value">24%</div>
+                <div class="forecast-value" id="forecastNonPlacement">—</div>
             </div>
             <div class="forecast-item">
                 <div class="forecast-label">🧩 Skill Demand Forecast</div>
-                <div class="forecast-text">Emerging skills with highest expected growth:</div>
-                <div class="forecast-value">Cloud +45%</div>
+                <div class="forecast-text">Highest expected skill demand growth:</div>
+                <div class="forecast-value" id="forecastSkill">—</div>
             </div>
             <div class="forecast-item">
-                <div class="forecast-label">📊 Employer Demand Forecast</div>
-                <div class="forecast-text">Sectors expected to grow hiring:</div>
-                <div class="forecast-value">IT & Healthcare</div>
+                <div class="forecast-label">📊 Programs Tracked</div>
+                <div class="forecast-text">Number of registered programs in the system:</div>
+                <div class="forecast-value" id="forecastPrograms">—</div>
             </div>
         </div>
 
@@ -1611,54 +1131,12 @@
         </div>
 
         <div class="grid-2" style="margin-bottom:20px;">
-            <div class="card">
-                <div class="success-item">
-                    <div class="success-icon">🟢</div>
-                    <div class="success-text">
-                        <strong>NIELIT Programs</strong> — Highest outcome score (84/100) with 82% employment and 76% 365-day retention. Model for other schemes.
-                    </div>
-                </div>
-                <div class="success-item">
-                    <div class="success-icon">🟢</div>
-                    <div class="success-text">
-                        <strong>Cloud Academy</strong> — Top provider with 84% employment rate and 80/100 outcome score.
-                    </div>
-                </div>
-                <div class="success-item">
-                    <div class="success-icon">🟢</div>
-                    <div class="success-text">
-                        <strong>Industry-Linked Training</strong> — 21% NP rate (lowest across training types) demonstrating value of employer partnerships.
-                    </div>
-                </div>
-                <div class="success-item">
-                    <div class="success-icon">🟢</div>
-                    <div class="success-text">
-                        <strong>Karnataka</strong> — Best performing state with 80% employment and 74% retention.
-                    </div>
-                </div>
+            <div class="card" id="successCard">
+                <!-- Dynamic -->
             </div>
             <div class="card">
-                <div class="card-header"><i class="fas fa-chart-bar"></i> Top Performing Segments</div>
-                <div class="trend-item">
-                    <span class="trend-label">High Relevance Jobs</span>
-                    <span class="trend-value" style="color:#16a34a;">+68% income growth</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Industry-Linked Training</span>
-                    <span class="trend-value" style="color:#16a34a;">79% employment</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">NIELIT Programs</span>
-                    <span class="trend-value" style="color:#16a34a;">84/100 score</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Karnataka</span>
-                    <span class="trend-value" style="color:#16a34a;">80% employment</span>
-                </div>
-                <div class="trend-item">
-                    <span class="trend-label">Cloud Academy</span>
-                    <span class="trend-value" style="color:#16a34a;">84% employment</span>
-                </div>
+                <div class="card-header"><i class="fas fa-chart-bar"></i> Highlights</div>
+                <div id="successHighlights"></div>
             </div>
         </div>
 
@@ -1680,86 +1158,650 @@
     </div>
 </div>
 
+<script src="../js/api.js"></script>
 <script>
     // ============================================================
-    // AI INSIGHTS DATA
+    // REAL DATA ONLY — fed from the backend
+    // Endpoints:
+    //   /api/insights/global      → { count, insights:[{type,severity,problem,evidence,recommendation}] }
+    //   /api/analytics/summary    → { total, employed, employment_rate, ... }
+    //   /api/analytics/retention  → { "30d": {rate}, "365d": {rate}, ... }
+    //   /api/analytics/income     → { avg_starting_income, avg_income_growth }
+    //   /api/nonplacement         → { breakdown:[{reason, count, percentage}] }
+    //   /api/programs             → [{ id, name, provider_name, enrolled }]
     // ============================================================
 
-    const aiData = {
+    let aiData = {
         summary: {
-            totalTrainees: 52000,
-            totalSchemes: 5,
-            totalCourses: 17,
-            totalProviders: 12,
-            problemsDetected: 18,
-            skillPatterns: 6,
-            riskAreas: 12,
-            recommendations: 15
+            totalTrainees: 0,
+            totalPrograms: 0,
+            problemsDetected: 0,
+            recommendations: 0
         },
-        criticalProblems: [
-            { title: 'PM-DAKSH 32% Non-Placement', severity: 'critical', scheme: 'PM-DAKSH' },
-            { title: 'Self-Employment Training 40% NP', severity: 'high', scheme: 'DDU-GKY, PM-DAKSH' },
-            { title: 'Cloud Computing Skill Gap 34%', severity: 'high', scheme: 'PMKVY, NIELIT' },
-            { title: 'Regional Opportunity Gap - UP, Bihar', severity: 'medium', scheme: 'All' }
-        ],
-        policyActions: [
-            { num: 1, title: 'Add Practical Cloud Modules', priority: 'critical' },
-            { num: 2, title: 'PM-DAKSH Assessment Coaching', priority: 'critical' },
-            { num: 3, title: 'Self-Employment Support Cells', priority: 'high' },
-            { num: 4, title: 'Regional Employer Outreach', priority: 'high' },
-            { num: 5, title: 'Curriculum Review — PM-DAKSH', priority: 'high' }
-        ]
+        insights: [],
+        summaryApi: null,
+        retentionApi: null,
+        incomeApi: null,
+        nonPlacementApi: null,
+        programsApi: null
     };
 
-    // ============================================================
-    // DATA LOADER
-    // ============================================================
-
-    function getGovernmentData() {
-        let data = localStorage.getItem('governmentData');
-        if (data) { try { return JSON.parse(data); } catch(e) {} }
-        return null;
+    // ------------------------------------------------------------
+    // API HELPERS
+    // ------------------------------------------------------------
+    async function fetchJSON(url) {
+        try {
+            const r = await fetch(url, { credentials: 'include' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return await r.json();
+        } catch (e) {
+            console.warn('API failed:', url, e.message);
+            return null;
+        }
     }
 
-    // ============================================================
-    // UPDATE SIDEBAR
-    // ============================================================
+    // ------------------------------------------------------------
+    // LOAD FROM BACKEND
+    // ------------------------------------------------------------
+    async function loadBackendData() {
+        const [insights, summary, retention, income, nonPlacement, programs] = await Promise.all([
+            fetchJSON('/api/insights/global'),
+            fetchJSON('/api/analytics/summary'),
+            fetchJSON('/api/analytics/retention'),
+            fetchJSON('/api/analytics/income'),
+            fetchJSON('/api/nonplacement'),
+            fetchJSON('/api/programs')
+        ]);
 
+        aiData.insights      = (insights && Array.isArray(insights.insights)) ? insights.insights : [];
+        aiData.summaryApi    = summary;
+        aiData.retentionApi  = retention;
+        aiData.incomeApi     = income;
+        aiData.nonPlacementApi = nonPlacement;
+        aiData.programsApi   = programs;
+
+        aiData.summary.totalTrainees   = summary ? (Number(summary.total) || 0) : 0;
+        aiData.summary.totalPrograms   = Array.isArray(programs) ? programs.length : 0;
+        aiData.summary.problemsDetected = aiData.insights.length;
+        aiData.summary.recommendations  = aiData.insights.filter(i => i.recommendation).length;
+    }
+
+    // ------------------------------------------------------------
+    // EMPTY STATE
+    // ------------------------------------------------------------
+    function renderEmptyState() {
+        const container = document.getElementById('mainContainer');
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-robot"></i>
+                <h3>No AI insights yet</h3>
+                <p>There is not enough data in the database to generate insights.
+                   Register trainees, programs, and employment outcomes to see AI-powered analysis here.</p>
+            </div>`;
+    }
+
+    // ------------------------------------------------------------
+    // RENDER
+    // ------------------------------------------------------------
+    function renderAll() {
+        renderExecutiveSummary();
+        renderProblems();
+        renderRiskGrid();
+        renderTrendLists();
+        renderAnomalies();
+        renderSkillGaps();
+        renderDiagnosis();
+        renderIncome();
+        renderCausePatterns();
+        renderPolicy();
+        renderCurriculum();
+        renderForecast();
+        renderSuccess();
+    }
+
+    function renderExecutiveSummary() {
+        const s = aiData.summary;
+        const text = `Based on live analysis of <strong>${s.totalTrainees.toLocaleString()} trainees</strong>, <strong>${s.totalPrograms} registered programs</strong>, and current employment outcomes, the AI engine detected <strong>${s.problemsDetected} insights</strong> and <strong>${s.recommendations} recommendations</strong>. Priority actions are surfaced below.`;
+
+        document.getElementById('execSummaryText').innerHTML = s.totalTrainees > 0
+            ? text
+            : 'Not enough data yet to generate a summary. Register trainees and employment records to activate AI analysis.';
+
+        const critical = aiData.insights.filter(i => i.severity === 'HIGH' || i.severity === 'CRITICAL').length;
+        document.getElementById('hlCritical').textContent        = critical;
+        document.getElementById('hlInsights').textContent        = aiData.insights.length;
+        document.getElementById('hlTrainees').textContent        = s.totalTrainees.toLocaleString();
+        document.getElementById('hlRecommendations').textContent = s.recommendations;
+    }
+
+    function severityClass(sev) {
+        if (!sev) return 'info';
+        const s = String(sev).toUpperCase();
+        if (s === 'HIGH' || s === 'CRITICAL') return 'critical';
+        if (s === 'MEDIUM') return 'warning';
+        if (s === 'LOW') return 'success';
+        return 'info';
+    }
+
+    function severityBadgeClass(sev) {
+        if (!sev) return 'new';
+        const s = String(sev).toUpperCase();
+        if (s === 'HIGH' || s === 'CRITICAL') return 'critical';
+        if (s === 'MEDIUM') return 'high';
+        if (s === 'LOW') return 'medium';
+        return 'new';
+    }
+
+    function renderProblems() {
+        const container = document.getElementById('problemList');
+        document.getElementById('problemCountBadge').textContent = aiData.insights.length + ' issues found';
+
+        if (aiData.insights.length === 0) {
+            container.innerHTML = `<div class="insight-card info">
+                <div class="ic-header">
+                    <div class="ic-icon blue"><i class="fas fa-info-circle"></i></div>
+                    <div class="ic-title">
+                        <h4>No problems detected yet</h4>
+                        <p>Register more data (trainees, employment outcomes, follow-ups) to activate problem detection.</p>
+                    </div>
+                </div>
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = aiData.insights.map(ins => {
+            const cls = severityClass(ins.severity);
+            const badgeCls = severityBadgeClass(ins.severity);
+            const evidence = (ins.evidence || []).map(e => `<div>${e}</div>`).join('');
+            const rec = ins.recommendation ? `
+                <div class="ic-action">
+                    <i class="fas fa-lightbulb ac-icon"></i>
+                    <div class="ac-text"><strong>Recommended Action:</strong> ${ins.recommendation}</div>
+                </div>` : '';
+            return `<div class="insight-card ${cls}">
+                <div class="ic-header">
+                    <div class="ic-icon ${cls === 'critical' ? 'red' : cls === 'warning' ? 'orange' : cls === 'success' ? 'green' : 'blue'}">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="ic-title">
+                        <h4>${ins.problem || ins.type || 'Detected Issue'}</h4>
+                        <p>Type: ${ins.type || '—'}</p>
+                    </div>
+                    <span class="ic-badge ${badgeCls}">${(ins.severity || 'INFO').toUpperCase()}</span>
+                </div>
+                ${evidence ? `<div class="ic-evidence">
+                    <div class="ev-label"><i class="fas fa-chart-bar"></i> Evidence</div>
+                    <div class="ev-metrics">${evidence}</div>
+                </div>` : ''}
+                ${rec}
+            </div>`;
+        }).join('');
+    }
+
+    function renderRiskGrid() {
+        const container = document.getElementById('riskGrid');
+        const total = aiData.insights.length;
+        document.getElementById('riskCountBadge').textContent = total + ' areas flagged';
+
+        const high = aiData.insights.filter(i => String(i.severity).toUpperCase() === 'HIGH').length;
+        const medium = aiData.insights.filter(i => String(i.severity).toUpperCase() === 'MEDIUM').length;
+        const low = aiData.insights.filter(i => String(i.severity).toUpperCase() === 'LOW').length;
+
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header"><i class="fas fa-user"></i> Candidate-Level Risk</div>
+                <div class="risk-list-item">
+                    <span class="risk-label">High-severity insights</span>
+                    <span class="risk-count">${high}</span>
+                    <span class="risk-level high">High</span>
+                </div>
+                <div class="risk-list-item">
+                    <span class="risk-label">Medium-severity insights</span>
+                    <span class="risk-count">${medium}</span>
+                    <span class="risk-level medium">Medium</span>
+                </div>
+                <div class="risk-list-item">
+                    <span class="risk-label">Low-severity insights</span>
+                    <span class="risk-count">${low}</span>
+                    <span class="risk-level low">Low</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><i class="fas fa-graduation-cap"></i> Program-Level Risk</div>
+                <div class="risk-list-item">
+                    <span class="risk-label">Registered programs</span>
+                    <span class="risk-count">${aiData.summary.totalPrograms}</span>
+                    <span class="risk-level low">OK</span>
+                </div>
+                <div class="risk-list-item">
+                    <span class="risk-label">Program-level insights</span>
+                    <span class="risk-count">${aiData.insights.filter(i => (i.type || '').toLowerCase().includes('program')).length}</span>
+                    <span class="risk-level medium">Watch</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><i class="fas fa-map-pin"></i> Regional Risk</div>
+                <div class="risk-list-item">
+                    <span class="risk-label">Regional insights</span>
+                    <span class="risk-count">${aiData.insights.filter(i => (i.type || '').toLowerCase().includes('region')).length}</span>
+                    <span class="risk-level medium">Watch</span>
+                </div>
+                <div class="risk-list-item">
+                    <span class="risk-label">Non-placement patterns</span>
+                    <span class="risk-count">${aiData.insights.filter(i => (i.type || '').toLowerCase().includes('non_placement')).length}</span>
+                    <span class="risk-level high">High</span>
+                </div>
+            </div>`;
+    }
+
+    function renderTrendLists() {
+        const up = document.getElementById('trendUpList');
+        const down = document.getElementById('trendDownList');
+
+        // Key metrics card — real numbers from summary/income
+        const empRate = aiData.summaryApi ? Number(aiData.summaryApi.employment_rate) || 0 : 0;
+        const totalEmp = aiData.summaryApi ? Number(aiData.summaryApi.employed) || 0 : 0;
+        const totalTr  = aiData.summaryApi ? Number(aiData.summaryApi.total) || 0 : 0;
+        const avgInc   = aiData.incomeApi ? Number(aiData.incomeApi.avg_starting_income) || 0 : 0;
+
+        up.innerHTML = `
+            <div class="trend-item">
+                <span class="trend-label">Employment Rate</span>
+                <span class="trend-value" style="color:#16a34a;">${empRate}%</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-label">Total Employed</span>
+                <span class="trend-value" style="color:#16a34a;">${totalEmp.toLocaleString()}</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-label">Total Trainees</span>
+                <span class="trend-value" style="color:#0b1a33;">${totalTr.toLocaleString()}</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-label">Avg Starting Income</span>
+                <span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span>
+            </div>`;
+
+        // Non-placement reasons list
+        const breakdown = (aiData.nonPlacementApi && Array.isArray(aiData.nonPlacementApi.breakdown))
+            ? aiData.nonPlacementApi.breakdown.slice(0, 5)
+            : [];
+
+        if (breakdown.length === 0) {
+            down.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No non-placement reasons recorded yet.</div>`;
+        } else {
+            down.innerHTML = breakdown.map(r => `
+                <div class="trend-item">
+                    <span class="trend-label">${String(r.reason || '').replace(/_/g, ' ')}</span>
+                    <span class="trend-value" style="color:#dc2626;">${r.count} (${r.percentage}%)</span>
+                </div>`).join('');
+        }
+    }
+
+    function renderAnomalies() {
+        const container = document.getElementById('anomalyList');
+        const anomalyInsights = aiData.insights.filter(i =>
+            (i.type || '').toLowerCase().includes('anomaly') ||
+            (i.type || '').toLowerCase().includes('income')
+        );
+
+        if (anomalyInsights.length === 0) {
+            container.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No anomalies detected in the current data.</div>`;
+        } else {
+            container.innerHTML = anomalyInsights.map(i => `
+                <div class="anomaly-item">
+                    <span class="anomaly-tag">${(i.severity || 'INFO').toUpperCase()}</span>
+                    <strong>${i.problem || i.type}:</strong> ${(i.evidence || []).join(' · ')}
+                </div>`).join('');
+        }
+
+        // Income snapshot
+        const snapshot = document.getElementById('incomeSnapshot');
+        const avgInc = aiData.incomeApi ? Number(aiData.incomeApi.avg_starting_income) || 0 : 0;
+        const growth = aiData.incomeApi ? Number(aiData.incomeApi.avg_income_growth) || 0 : 0;
+        snapshot.innerHTML = `
+            <div class="trend-item">
+                <span class="trend-label">Avg Starting Income</span>
+                <span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-label">Avg Income Growth</span>
+                <span class="trend-value" style="color:#16a34a;">₹${growth.toLocaleString()}</span>
+            </div>`;
+    }
+
+    function renderSkillGaps() {
+        const container = document.getElementById('skillGapList');
+        const skillInsights = aiData.insights.filter(i =>
+            (i.type || '').toLowerCase().includes('skill')
+        );
+
+        if (skillInsights.length === 0) {
+            container.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">
+                No skill gap insights yet. Add assessment/skill data to the backend.
+            </div>`;
+        } else {
+            container.innerHTML = skillInsights.map(i => `
+                <div class="skill-pattern-item">
+                    <div class="sp-icon ${String(i.severity).toUpperCase() === 'HIGH' ? 'high' : 'medium'}">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <div class="sp-info">
+                        <div class="sp-name">${i.problem || i.type}</div>
+                        <div class="sp-desc">${(i.evidence || []).join(' · ')}</div>
+                    </div>
+                    <div class="sp-gap ${String(i.severity).toUpperCase() === 'HIGH' ? 'high' : 'medium'}">
+                        ${String(i.severity || '').toUpperCase()}
+                    </div>
+                </div>`).join('');
+        }
+
+        // Program signals
+        const programSignalContainer = document.getElementById('programSignalList');
+        const programInsights = aiData.insights.filter(i =>
+            (i.type || '').toLowerCase().includes('program') ||
+            (i.type || '').toLowerCase().includes('employment')
+        );
+
+        if (programInsights.length === 0) {
+            programSignalContainer.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">
+                No program-level signals yet.
+            </div>`;
+        } else {
+            programSignalContainer.innerHTML = programInsights.map(i => `
+                <div class="trend-item">
+                    <span class="trend-label">${i.problem || i.type}</span>
+                    <span class="trend-value" style="color:${String(i.severity).toUpperCase() === 'HIGH' ? '#dc2626' : '#ea580c'};">
+                        ${String(i.severity || '').toUpperCase()}
+                    </span>
+                </div>`).join('');
+        }
+    }
+
+    function renderDiagnosis() {
+        const container = document.getElementById('diagnosisList');
+        const diagInsights = aiData.insights.filter(i =>
+            (i.type || '').toLowerCase().includes('employment') ||
+            (i.type || '').toLowerCase().includes('program') ||
+            (i.type || '').toLowerCase().includes('regional')
+        );
+
+        if (diagInsights.length === 0) {
+            container.innerHTML = `<div class="insight-card info">
+                <div class="ic-header">
+                    <div class="ic-icon blue"><i class="fas fa-stethoscope"></i></div>
+                    <div class="ic-title">
+                        <h4>No program diagnosis available yet</h4>
+                        <p>Register program enrollment and employment data to activate root-cause diagnosis.</p>
+                    </div>
+                </div>
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = diagInsights.map(ins => {
+            const cls = severityClass(ins.severity);
+            return `<div class="insight-card ${cls}">
+                <div class="ic-header">
+                    <div class="ic-icon purple"><i class="fas fa-diagnoses"></i></div>
+                    <div class="ic-title">
+                        <h4>${ins.problem || ins.type}</h4>
+                        <p>Severity: ${ins.severity || 'INFO'}</p>
+                    </div>
+                    <span class="ic-badge new">AI Diagnosis</span>
+                </div>
+                ${(ins.evidence || []).length ? `<div class="ic-evidence">
+                    <div class="ev-label"><i class="fas fa-route"></i> Evidence</div>
+                    <div class="ev-metrics">${(ins.evidence || []).map(e => `<div>${e}</div>`).join('')}</div>
+                </div>` : ''}
+                ${ins.recommendation ? `<div class="ic-action">
+                    <i class="fas fa-lightbulb ac-icon"></i>
+                    <div class="ac-text"><strong>Action:</strong> ${ins.recommendation}</div>
+                </div>` : ''}
+            </div>`;
+        }).join('');
+    }
+
+    function renderIncome() {
+        const summaryList = document.getElementById('incomeSummaryList');
+        const retention = document.getElementById('retentionSnapshot');
+
+        const avgInc = aiData.incomeApi ? Number(aiData.incomeApi.avg_starting_income) || 0 : 0;
+        const growth = aiData.incomeApi ? Number(aiData.incomeApi.avg_income_growth) || 0 : 0;
+
+        summaryList.innerHTML = `
+            <div class="trend-item">
+                <span class="trend-label">Avg Starting Income</span>
+                <span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-label">Avg Income Growth</span>
+                <span class="trend-value" style="color:#16a34a;">₹${growth.toLocaleString()}</span>
+            </div>`;
+
+        const ret = aiData.retentionApi || {};
+        const days = ['30d','90d','180d','365d'];
+        retention.innerHTML = days.map(d => {
+            const item = ret[d];
+            const rate = item ? Number(item.rate) || 0 : 0;
+            return `<div class="trend-item">
+                <span class="trend-label">${d.replace('d','-day')} Retention</span>
+                <span class="trend-value" style="color:${rate >= 70 ? '#16a34a' : rate >= 50 ? '#ea580c' : '#dc2626'};">${rate}%</span>
+            </div>`;
+        }).join('');
+    }
+
+    function renderCausePatterns() {
+        const container = document.getElementById('causePatternList');
+        const npInsights = aiData.insights.filter(i =>
+            (i.type || '').toLowerCase().includes('non_placement')
+        );
+
+        if (npInsights.length === 0) {
+            container.innerHTML = `<div class="insight-card info">
+                <div class="ic-header">
+                    <div class="ic-icon blue"><i class="fas fa-search-plus"></i></div>
+                    <div class="ic-title">
+                        <h4>No cause patterns detected yet</h4>
+                        <p>Record more non-placement data to reveal patterns.</p>
+                    </div>
+                </div>
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = npInsights.map(ins => {
+            const cls = severityClass(ins.severity);
+            return `<div class="insight-card ${cls}">
+                <div class="ic-header">
+                    <div class="ic-icon orange"><i class="fas fa-layer-group"></i></div>
+                    <div class="ic-title">
+                        <h4>${ins.problem || ins.type}</h4>
+                        <p>${(ins.evidence || []).join(' · ')}</p>
+                    </div>
+                    <span class="ic-badge ${severityBadgeClass(ins.severity)}">${(ins.severity || 'INFO').toUpperCase()}</span>
+                </div>
+                ${ins.recommendation ? `<div class="ic-action">
+                    <i class="fas fa-lightbulb ac-icon"></i>
+                    <div class="ac-text"><strong>Action:</strong> ${ins.recommendation}</div>
+                </div>` : ''}
+            </div>`;
+        }).join('');
+    }
+
+    function renderPolicy() {
+        const left = document.getElementById('policyLeftCard');
+        const right = document.getElementById('policyRightCard');
+        const withRecs = aiData.insights.filter(i => i.recommendation);
+        document.getElementById('policyBadge').textContent = withRecs.length + ' actions prioritized';
+
+        if (withRecs.length === 0) {
+            left.innerHTML = `<div style="color:#64748b;text-align:center;padding:20px;">
+                No policy recommendations yet.
+            </div>`;
+            right.innerHTML = '';
+            return;
+        }
+
+        const half = Math.ceil(withRecs.length / 2);
+        const leftItems = withRecs.slice(0, half);
+        const rightItems = withRecs.slice(half);
+
+        const buildItems = (items, startNum) => items.map((ins, i) => {
+            const num = startNum + i;
+            const prio = String(ins.severity || 'INFO').toUpperCase();
+            const prioCls = prio === 'HIGH' || prio === 'CRITICAL' ? 'critical'
+                          : prio === 'MEDIUM' ? 'high' : 'medium';
+            return `<div class="policy-item">
+                <div class="policy-num">${num}</div>
+                <div class="policy-info">
+                    <div class="policy-title">${ins.problem || ins.type}</div>
+                    <div class="policy-desc">${ins.recommendation}</div>
+                </div>
+                <span class="policy-priority ${prioCls}">${prio}</span>
+            </div>`;
+        }).join('');
+
+        left.innerHTML = buildItems(leftItems, 1);
+        right.innerHTML = buildItems(rightItems, half + 1);
+    }
+
+    function renderCurriculum() {
+        const addC = document.getElementById('curriculumAdd');
+        const strC = document.getElementById('curriculumStrengthen');
+        const skillInsights = aiData.insights.filter(i =>
+            (i.type || '').toLowerCase().includes('skill')
+        );
+
+        if (skillInsights.length === 0) {
+            addC.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No curriculum changes suggested yet.</div>`;
+            strC.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No strengthening actions yet.</div>`;
+            return;
+        }
+
+        addC.innerHTML = skillInsights.map(ins => `
+            <div class="curriculum-item">
+                <div class="curr-header">
+                    <span class="curr-title">${ins.problem || ins.type}</span>
+                    <span class="curr-badge add">Add</span>
+                </div>
+                <div class="curr-desc">${ins.recommendation || (ins.evidence || []).join(' · ')}</div>
+            </div>`).join('');
+
+        strC.innerHTML = skillInsights.map(ins => `
+            <div class="curriculum-item">
+                <div class="curr-header">
+                    <span class="curr-title">Strengthen — ${ins.problem || ins.type}</span>
+                    <span class="curr-badge strengthen">Strengthen</span>
+                </div>
+                <div class="curr-desc">${(ins.evidence || []).join(' · ')}</div>
+            </div>`).join('');
+    }
+
+    function renderForecast() {
+        const empRate = aiData.summaryApi ? Number(aiData.summaryApi.employment_rate) || 0 : 0;
+        const ret = aiData.retentionApi && aiData.retentionApi['365d'] ? Number(aiData.retentionApi['365d'].rate) || 0 : 0;
+        const growth = aiData.incomeApi ? Number(aiData.incomeApi.avg_income_growth) || 0 : 0;
+        const nonPlacementRate = empRate > 0 ? (100 - empRate) : 0;
+
+        document.getElementById('forecastEmployment').textContent     = empRate ? empRate + '%' : '—';
+        document.getElementById('forecastRetention').textContent      = ret ? ret + '%' : '—';
+        document.getElementById('forecastIncome').textContent         = growth ? ('₹' + growth.toLocaleString()) : '—';
+        document.getElementById('forecastNonPlacement').textContent   = nonPlacementRate ? (nonPlacementRate + '%') : '—';
+        document.getElementById('forecastSkill').textContent          = aiData.insights.some(i => (i.type||'').includes('skill')) ? 'See Skill Gaps' : '—';
+        document.getElementById('forecastPrograms').textContent       = aiData.summary.totalPrograms;
+    }
+
+    function renderSuccess() {
+        const successCard = document.getElementById('successCard');
+        const highlights = document.getElementById('successHighlights');
+
+        const successInsights = aiData.insights.filter(i =>
+            String(i.severity).toUpperCase() === 'LOW' ||
+            (i.type || '').toLowerCase().includes('positive')
+        );
+
+        if (successInsights.length === 0) {
+            successCard.innerHTML = `<div style="color:#64748b;text-align:center;padding:20px;">
+                No success patterns flagged yet. Keep collecting outcome data.
+            </div>`;
+        } else {
+            successCard.innerHTML = successInsights.map(ins => `
+                <div class="success-item">
+                    <div class="success-icon">🟢</div>
+                    <div class="success-text">
+                        <strong>${ins.problem || ins.type}</strong> — ${(ins.evidence || []).join(' · ')}
+                    </div>
+                </div>`).join('');
+        }
+
+        // Highlights — pull real numbers
+        const empRate = aiData.summaryApi ? Number(aiData.summaryApi.employment_rate) || 0 : 0;
+        const totalEmp = aiData.summaryApi ? Number(aiData.summaryApi.employed) || 0 : 0;
+        const avgInc = aiData.incomeApi ? Number(aiData.incomeApi.avg_starting_income) || 0 : 0;
+
+        highlights.innerHTML = `
+            <div class="trend-item">
+                <span class="trend-label">Current Employment Rate</span>
+                <span class="trend-value" style="color:#16a34a;">${empRate}%</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-label">Total Employed</span>
+                <span class="trend-value" style="color:#16a34a;">${totalEmp.toLocaleString()}</span>
+            </div>
+            <div class="trend-item">
+                <span class="trend-label">Avg Starting Income</span>
+                <span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span>
+            </div>`;
+    }
+
+    // ------------------------------------------------------------
+    // SIDEBAR / HEADER
+    // ------------------------------------------------------------
     function updateSidebar() {
-        const govData = getGovernmentData();
-        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
-        document.getElementById('sidebarAvatar').textContent = initial;
-        document.getElementById('sidebarName').textContent = govData?.name || 'Government';
-        document.getElementById('sidebarRole').textContent = govData?.role || 'Admin';
-        document.getElementById('headerAvatar').textContent = initial;
-        document.getElementById('headerName').textContent = govData?.name || 'Government';
+        try {
+            if (typeof getCurrentUser === 'function') {
+                const user = getCurrentUser();
+                if (user) {
+                    const name = user.name || user.fullName || user.username || 'Government';
+                    const role = user.role || 'Admin';
+                    const initial = name.charAt(0).toUpperCase();
+                    document.getElementById('sidebarAvatar').textContent = initial;
+                    document.getElementById('sidebarName').textContent = name;
+                    document.getElementById('sidebarRole').textContent = role;
+                    document.getElementById('headerAvatar').textContent = initial;
+                    document.getElementById('headerName').textContent = name;
+                }
+            }
+        } catch (e) { /* silent */ }
     }
 
     function updateNotificationBadge() {
-        document.getElementById('notifBadge').textContent = aiData.summary.problemsDetected;
+        document.getElementById('notifBadge').textContent = aiData.insights.length;
     }
 
-    // ============================================================
-    // UTILITY FUNCTIONS
-    // ============================================================
-
+    // ------------------------------------------------------------
+    // UTILITY
+    // ------------------------------------------------------------
     function updateDate() {
+        const el = document.getElementById('dateDisplay');
+        if (!el) return;
         const now = new Date();
-        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+        el.textContent = now.toLocaleDateString('en-US', {
             weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
         });
     }
 
     function showNotifications() {
-        alert(`📬 AI Notifications\n\n• ${aiData.summary.problemsDetected} problems detected\n• ${aiData.summary.skillPatterns} skill gap patterns\n• ${aiData.summary.riskAreas} risk areas flagged\n• ${aiData.summary.recommendations} policy recommendations ready`);
+        alert(`📬 AI Notifications\n\n• ${aiData.insights.length} insights detected\n• ${aiData.summary.recommendations} recommendations available\n• ${aiData.summary.totalTrainees.toLocaleString()} trainees analyzed`);
     }
 
     function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
-            window.location.href = '../auth/login.html';
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+                .finally(() => { window.location.href = '../auth/login.html'; });
         }
     }
 
@@ -1769,58 +1811,60 @@
         report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
         report += `📊 EXECUTIVE SUMMARY\n`;
         report += `• Total Trainees Analyzed: ${aiData.summary.totalTrainees.toLocaleString()}\n`;
-        report += `• Government Schemes: ${aiData.summary.totalSchemes}\n`;
-        report += `• Courses Analyzed: ${aiData.summary.totalCourses}\n`;
-        report += `• Training Providers: ${aiData.summary.totalProviders}\n`;
-        report += `• Problems Detected: ${aiData.summary.problemsDetected}\n`;
-        report += `• Skill Gap Patterns: ${aiData.summary.skillPatterns}\n`;
-        report += `• Risk Areas: ${aiData.summary.riskAreas}\n`;
+        report += `• Registered Programs: ${aiData.summary.totalPrograms}\n`;
+        report += `• Insights Detected: ${aiData.summary.problemsDetected}\n`;
         report += `• Recommendations: ${aiData.summary.recommendations}\n\n`;
-        report += `🔴 CRITICAL PROBLEMS\n`;
-        aiData.criticalProblems.forEach((p, i) => {
-            report += `${i+1}. [${p.severity.toUpperCase()}] ${p.title}\n`;
-            report += `   Scheme: ${p.scheme}\n\n`;
+        report += `🔍 DETECTED PROBLEMS\n`;
+        aiData.insights.forEach((ins, i) => {
+            report += `${i+1}. [${(ins.severity||'INFO').toUpperCase()}] ${ins.problem || ins.type}\n`;
+            if (ins.recommendation) report += `   → ${ins.recommendation}\n`;
+            report += '\n';
         });
-        report += `💡 POLICY RECOMMENDATIONS\n`;
-        aiData.policyActions.forEach(p => {
-            report += `${p.num}. [${p.priority.toUpperCase()}] ${p.title}\n`;
-        });
-        report += '\n================================\n';
+        report += '================================\n';
         report += '📌 Generated by SkillBridge AI Decision Intelligence';
         alert(report);
     }
 
     function viewCriticalProblems() {
-        let msg = '🔴 CRITICAL AI-DETECTED PROBLEMS\n';
-        msg += '================================\n\n';
-        aiData.criticalProblems.forEach((p, i) => {
-            msg += `${i+1}. ${p.title}\n`;
-            msg += `   Severity: ${p.severity.toUpperCase()}\n`;
-            msg += `   Scheme: ${p.scheme}\n\n`;
+        const critical = aiData.insights.filter(i =>
+            String(i.severity).toUpperCase() === 'HIGH' || String(i.severity).toUpperCase() === 'CRITICAL'
+        );
+        if (critical.length === 0) { alert('No critical problems detected.'); return; }
+        let msg = '🔴 CRITICAL AI-DETECTED PROBLEMS\n================================\n\n';
+        critical.forEach((p, i) => {
+            msg += `${i+1}. ${p.problem || p.type}\n`;
+            msg += `   Severity: ${(p.severity||'').toUpperCase()}\n`;
+            if (p.recommendation) msg += `   → ${p.recommendation}\n`;
+            msg += '\n';
         });
-        msg += '================================\n';
-        msg += `Total: ${aiData.criticalProblems.length} critical problems`;
         alert(msg);
     }
 
     function exportPolicyRecommendations() {
-        let msg = '💡 POLICY RECOMMENDATIONS\n';
-        msg += '================================\n\n';
-        aiData.policyActions.forEach(p => {
-            msg += `${p.num}. [${p.priority.toUpperCase()}] ${p.title}\n\n`;
+        const recs = aiData.insights.filter(i => i.recommendation);
+        if (recs.length === 0) { alert('No policy recommendations available yet.'); return; }
+        let msg = '💡 POLICY RECOMMENDATIONS\n================================\n\n';
+        recs.forEach((p, i) => {
+            msg += `${i+1}. [${(p.severity||'INFO').toUpperCase()}] ${p.problem || p.type}\n`;
+            msg += `   → ${p.recommendation}\n\n`;
         });
-        msg += '================================\n';
-        msg += `Total: ${aiData.policyActions.length} recommendations ready for implementation`;
         alert(msg);
     }
 
-    // ============================================================
+    // ------------------------------------------------------------
     // INIT
-    // ============================================================
-
-    document.addEventListener('DOMContentLoaded', function() {
+    // ------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', async function() {
         updateDate();
         updateSidebar();
+
+        await loadBackendData();
+
+        if (aiData.summary.totalTrainees === 0 && aiData.insights.length === 0 && aiData.summary.totalPrograms === 0) {
+            renderEmptyState();
+        } else {
+            renderAll();
+        }
         updateNotificationBadge();
 
         document.addEventListener('click', function(e) {
@@ -1833,13 +1877,12 @@
             }
         });
 
-        console.log('🤖 AI Insights & Recommendations page loaded!');
-        console.log('📊 Problems Detected:', aiData.summary.problemsDetected);
-        console.log('🧩 Skill Gap Patterns:', aiData.summary.skillPatterns);
-        console.log('⚠️ Risk Areas:', aiData.summary.riskAreas);
-        console.log('💡 Recommendations:', aiData.summary.recommendations);
+        console.log('🤖 AI Insights page loaded (real data only)');
+        console.log('📊 Insights:', aiData.insights.length);
+        console.log('👥 Trainees:', aiData.summary.totalTrainees);
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

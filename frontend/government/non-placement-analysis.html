@@ -1209,6 +1209,33 @@
         .quick-actions .action-btn:hover i { color: white; }
 
         /* ============================================================
+           EMPTY STATE
+           ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eef2f6;
+        }
+        .empty-state i {
+            font-size: 48px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+        .empty-state h3 {
+            font-size: 18px;
+            color: #0b1a33;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 13px;
+            color: #64748b;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
            RESPONSIVE
            ============================================================ */
         @media (max-width: 1200px) {
@@ -1325,7 +1352,7 @@ MAIN CONTENT
     </header>
 
     <!-- ===== CONTAINER ===== -->
-    <div class="container">
+    <div class="container" id="mainContainer">
 
         <!-- ===== WELCOME BANNER ===== -->
         <div class="welcome-banner">
@@ -1777,198 +1804,150 @@ MAIN CONTENT
     </div>
 </div>
 
+<!-- ============================================================
+     API LOADER
+     ============================================================ -->
+<script src="../js/api.js"></script>
+
 <script>
     // ============================================================
-    // GOVERNMENT SCHEMES + TRAINING TYPES DATA
+    // REAL DATA — populated from the backend at runtime.
+    // Backend endpoints used:
+    //   /api/nonplacement         → { breakdown: [{reason, count, percentage}] }
+    //   /api/analytics/summary    → { total, employed, unemployment }
+    //   /api/govt/analytics       → { by_state, by_sector, ... }
+    //   /api/programs             → [{ id, name, provider_name, enrolled }]
     // ============================================================
 
     const govtData = {
         schemes: [
-            { id: 'all', name: 'All Schemes', ministry: 'All', color: '#0b1a33' },
-            { id: 'pmkvy', name: 'PMKVY 2.0', ministry: 'MSDE', color: '#2563eb' },
-            { id: 'ddu-gky', name: 'DDU-GKY', ministry: 'MoRD', color: '#16a34a' },
-            { id: 'pm-daksh', name: 'PM-DAKSH', ministry: 'MoSJE', color: '#d97706' },
-            { id: 'state', name: 'State Skill Mission', ministry: 'State Govt', color: '#7c3aed' },
-            { id: 'nielit', name: 'NIELIT Programs', ministry: 'MeitY', color: '#0891b2' }
+            { id: 'all', name: 'All Schemes', ministry: 'All', color: '#0b1a33' }
         ],
-        trainingTypes: [
-            {
-                id: 'technical',
-                name: 'Technical Training',
-                icon: 'fa-laptop-code',
-                description: 'IT, Software, Data, Cloud',
-                schemes: ['pmkvy', 'nielit', 'state'],
-                trained: 12000,
-                placed: 8900,
-                nonPlaced: 3100,
-                npRate: 26
-            },
-            {
-                id: 'vocational',
-                name: 'Vocational Training',
-                icon: 'fa-tools',
-                description: 'Construction, Automotive, Manufacturing',
-                schemes: ['ddu-gky', 'pm-daksh', 'state'],
-                trained: 9500,
-                placed: 6800,
-                nonPlaced: 2700,
-                npRate: 28
-            },
-            {
-                id: 'skill-based',
-                name: 'Skill-Based Training',
-                icon: 'fa-hands',
-                description: 'Beauty, Retail, Hospitality',
-                schemes: ['pm-daksh', 'ddu-gky'],
-                trained: 7200,
-                placed: 4900,
-                nonPlaced: 2300,
-                npRate: 32
-            },
-            {
-                id: 'industry',
-                name: 'Industry-Linked Training',
-                icon: 'fa-industry',
-                description: 'Apprenticeships, On-Job Training',
-                schemes: ['pmkvy', 'nielit'],
-                trained: 5800,
-                placed: 4600,
-                nonPlaced: 1200,
-                npRate: 21
-            },
-            {
-                id: 'self-employment',
-                name: 'Self-Employment Training',
-                icon: 'fa-store',
-                description: 'Entrepreneurship, Business, Agri',
-                schemes: ['ddu-gky', 'pm-daksh'],
-                trained: 4500,
-                placed: 2700,
-                nonPlaced: 1800,
-                npRate: 40
-            }
-        ],
-        schemeStats: [
-            { scheme: 'PMKVY 2.0', ministry: 'MSDE', trained: 15000, placed: 11700, nonPlaced: 3300, npRate: 22, mainIssue: 'Skill Gap' },
-            { scheme: 'DDU-GKY', ministry: 'MoRD', trained: 12000, placed: 8640, nonPlaced: 3360, npRate: 28, mainIssue: 'Lack of Local Jobs' },
-            { scheme: 'PM-DAKSH', ministry: 'MoSJE', trained: 8000, placed: 5440, nonPlaced: 2560, npRate: 32, mainIssue: 'Low Assessment Score' },
-            { scheme: 'State Skill Mission', ministry: 'State Govt', trained: 10000, placed: 7600, nonPlaced: 2400, npRate: 24, mainIssue: 'Salary Mismatch' },
-            { scheme: 'NIELIT Programs', ministry: 'MeitY', trained: 5000, placed: 4100, nonPlaced: 900, npRate: 18, mainIssue: 'Skill Gap' }
-        ],
-        courses: [
-            { name: 'Data Analytics', scheme: 'PMKVY 2.0', type: 'Technical', trained: 3000, placed: 2460, nonPlaced: 540, npRate: 18 },
-            { name: 'Full Stack Development', scheme: 'PMKVY 2.0', type: 'Technical', trained: 2500, placed: 1950, nonPlaced: 550, npRate: 22 },
-            { name: 'Digital Marketing', scheme: 'PMKVY 2.0', type: 'Technical', trained: 2000, placed: 1700, nonPlaced: 300, npRate: 15 },
-            { name: 'Data Science', scheme: 'PMKVY 2.0', type: 'Technical', trained: 1500, placed: 1140, nonPlaced: 360, npRate: 24 },
-            { name: 'Cloud Computing', scheme: 'NIELIT Programs', type: 'Technical', trained: 1500, placed: 1290, nonPlaced: 210, npRate: 14 },
-            { name: 'Cybersecurity', scheme: 'NIELIT Programs', type: 'Technical', trained: 1200, placed: 1008, nonPlaced: 192, npRate: 16 },
-            { name: 'AI & ML', scheme: 'NIELIT Programs', type: 'Technical', trained: 1000, placed: 880, nonPlaced: 120, npRate: 12 },
-            { name: 'Agriculture & Allied', scheme: 'DDU-GKY', type: 'Self-Employment', trained: 3000, placed: 2100, nonPlaced: 900, npRate: 30 },
-            { name: 'Construction', scheme: 'DDU-GKY', type: 'Vocational', trained: 2500, placed: 1850, nonPlaced: 650, npRate: 26 },
-            { name: 'Healthcare', scheme: 'DDU-GKY', type: 'Vocational', trained: 2000, placed: 1560, nonPlaced: 440, npRate: 22 },
-            { name: 'Automotive', scheme: 'DDU-GKY', type: 'Vocational', trained: 1800, placed: 1296, nonPlaced: 504, npRate: 28 },
-            { name: 'Retail', scheme: 'PM-DAKSH', type: 'Skill-Based', trained: 1500, placed: 990, nonPlaced: 510, npRate: 34 },
-            { name: 'Beauty & Wellness', scheme: 'PM-DAKSH', type: 'Skill-Based', trained: 2000, placed: 1360, nonPlaced: 640, npRate: 32 },
-            { name: 'Hospitality', scheme: 'PM-DAKSH', type: 'Skill-Based', trained: 1200, placed: 792, nonPlaced: 408, npRate: 34 },
-            { name: 'IT & Digital', scheme: 'State Skill Mission', type: 'Technical', trained: 2500, placed: 2000, nonPlaced: 500, npRate: 20 },
-            { name: 'Manufacturing', scheme: 'State Skill Mission', type: 'Vocational', trained: 2000, placed: 1520, nonPlaced: 480, npRate: 24 },
-            { name: 'Tourism & Hospitality', scheme: 'State Skill Mission', type: 'Skill-Based', trained: 1500, placed: 1080, nonPlaced: 420, npRate: 28 }
-        ],
-        providers: [
-            { name: 'Skill India Centre', schemes: 'PMKVY, NIELIT', trained: 4500, placed: 3690, nonPlaced: 810, npRate: 18, mainIssue: 'Skill Gap' },
-            { name: 'NITC Training', schemes: 'PMKVY, State', trained: 3500, placed: 2730, nonPlaced: 770, npRate: 22, mainIssue: 'Salary Mismatch' },
-            { name: 'Digital India Academy', schemes: 'PMKVY', trained: 3000, placed: 2400, nonPlaced: 600, npRate: 20, mainIssue: 'Skill Gap' },
-            { name: 'Data Science Institute', schemes: 'PMKVY', trained: 2500, placed: 1900, nonPlaced: 600, npRate: 24, mainIssue: 'Low Assessment Score' },
-            { name: 'Cloud Academy', schemes: 'NIELIT', trained: 2000, placed: 1680, nonPlaced: 320, npRate: 16, mainIssue: 'Skill Gap' },
-            { name: 'Design Academy', schemes: 'PMKVY, PM-DAKSH', trained: 1800, placed: 1224, nonPlaced: 576, npRate: 32, mainIssue: 'Lack of Local Jobs' },
-            { name: 'Rural Skill Foundation', schemes: 'DDU-GKY', trained: 3500, placed: 2520, nonPlaced: 980, npRate: 28, mainIssue: 'Lack of Local Jobs' },
-            { name: 'Gramin Kaushal Kendra', schemes: 'DDU-GKY', trained: 3000, placed: 2100, nonPlaced: 900, npRate: 30, mainIssue: 'Low Assessment Score' },
-            { name: 'Social Empowerment Trust', schemes: 'PM-DAKSH', trained: 2500, placed: 1700, nonPlaced: 800, npRate: 32, mainIssue: 'Salary Mismatch' },
-            { name: 'Inclusive Skills', schemes: 'PM-DAKSH', trained: 2200, placed: 1452, nonPlaced: 748, npRate: 34, mainIssue: 'Skill Gap' },
-            { name: 'State Skill Corp', schemes: 'State Skill Mission', trained: 3500, placed: 2730, nonPlaced: 770, npRate: 22, mainIssue: 'Salary Mismatch' },
-            { name: 'Regional Training Institute', schemes: 'State Skill Mission', trained: 2800, placed: 2128, nonPlaced: 672, npRate: 24, mainIssue: 'Skill Gap' }
-        ],
-        regions: [
-            { name: 'Karnataka', trained: 3500, placed: 2800, nonPlaced: 700, npRate: 20, mainReason: 'Skill Gap' },
-            { name: 'Maharashtra', trained: 3200, placed: 2496, nonPlaced: 704, npRate: 22, mainReason: 'Salary Mismatch' },
-            { name: 'Delhi NCR', trained: 2800, placed: 2240, nonPlaced: 560, npRate: 20, mainReason: 'Skill Gap' },
-            { name: 'Tamil Nadu', trained: 2600, placed: 1976, nonPlaced: 624, npRate: 24, mainReason: 'Lack of Local Jobs' },
-            { name: 'Telangana', trained: 2400, placed: 1872, nonPlaced: 528, npRate: 22, mainReason: 'Low Assessment Score' },
-            { name: 'Uttar Pradesh', trained: 3000, placed: 2100, nonPlaced: 900, npRate: 30, mainReason: 'Lack of Local Jobs' },
-            { name: 'Bihar', trained: 2200, placed: 1540, nonPlaced: 660, npRate: 30, mainReason: 'Skill Gap' },
-            { name: 'West Bengal', trained: 2000, placed: 1500, nonPlaced: 500, npRate: 25, mainReason: 'Salary Mismatch' }
-        ],
-        reasons: [
-            { reason: 'Skill Gap', count: 2100, severity: 'critical' },
-            { reason: 'Lack of Local Jobs', count: 1800, severity: 'high' },
-            { reason: 'Low Assessment Score', count: 1200, severity: 'critical' },
-            { reason: 'Salary Mismatch', count: 950, severity: 'medium' },
-            { reason: 'Lack of Experience', count: 720, severity: 'high' },
-            { reason: 'Poor Interview Performance', count: 580, severity: 'high' },
-            { reason: 'Course/Job Mismatch', count: 480, severity: 'high' },
-            { reason: 'Location Constraints', count: 420, severity: 'high' },
-            { reason: 'Employer Rejection', count: 380, severity: 'medium' },
-            { reason: 'Job Offer Rejected', count: 320, severity: 'low' },
-            { reason: 'Failed Assessment', count: 280, severity: 'critical' },
-            { reason: 'Family/Personal Constraints', count: 250, severity: 'low' }
-        ],
-        skills: [
-            { name: 'Cloud Computing', gap: 34 },
-            { name: 'Communication', gap: 27 },
-            { name: 'AI/ML', gap: 25 },
-            { name: 'DevOps', gap: 22 },
-            { name: 'Python', gap: 18 },
-            { name: 'SQL', gap: 15 }
-        ],
+        trainingTypes: [],
+        schemeStats: [],
+        courses: [],
+        providers: [],
+        regions: [],
+        reasons: [],
+        skills: [],
         assessmentLevels: [
-            { range: '80-100', placementRate: 82 },
-            { range: '60-79', placementRate: 67 },
-            { range: '40-59', placementRate: 42 },
-            { range: 'Below 40', placementRate: 21 }
+            { range: '80-100', placementRate: 0 },
+            { range: '60-79', placementRate: 0 },
+            { range: '40-59', placementRate: 0 },
+            { range: 'Below 40', placementRate: 0 }
         ],
-        segments: [
-            { label: 'Actively Seeking', value: 4200, color: '#dc2626' },
-            { label: 'Waiting for Opportunity', value: 2100, color: '#ea580c' },
-            { label: 'Preparing for Assessment', value: 1800, color: '#ca8a04' },
-            { label: 'Pursuing Education', value: 900, color: '#2563eb' },
-            { label: 'Self-employment Prep', value: 850, color: '#7c3aed' },
-            { label: 'Not Currently Seeking', value: 1200, color: '#64748b' },
-            { label: 'Temporarily Unavailable', value: 650, color: '#94a3b8' },
-            { label: 'Unreachable', value: 420, color: '#cbd5e1' }
-        ],
-        followup: {
-            day30: 42,
-            day90: 31,
-            day180: 19,
-            day365: 12
-        }
+        segments: [],
+        followup: { day30: 0, day90: 0, day180: 0, day365: 0 }
     };
 
-    // ============================================================
-    // STATE MANAGEMENT
-    // ============================================================
-
     let activeScheme = 'all';
+    let apiSummary = null;
+    let apiGovtAnalytics = null;
 
     // ============================================================
-    // DATA LOADER
+    // API HELPERS
     // ============================================================
-
-    function getGovernmentData() {
-        let data = localStorage.getItem('governmentData');
-        if (data) { try { return JSON.parse(data); } catch(e) {} }
-        return null;
+    async function fetchJSON(url) {
+        try {
+            const r = await fetch(url, { credentials: 'include' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return await r.json();
+        } catch (e) {
+            console.warn('API failed:', url, e.message);
+            return null;
+        }
     }
 
     // ============================================================
-    // RENDER FUNCTIONS
+    // LOAD FROM BACKEND
     // ============================================================
+    async function loadBackendData() {
+        const [np, summary, govt, programs] = await Promise.all([
+            fetchJSON('/api/nonplacement'),
+            fetchJSON('/api/analytics/summary'),
+            fetchJSON('/api/govt/analytics'),
+            fetchJSON('/api/programs')
+        ]);
 
+        apiSummary = summary;
+        apiGovtAnalytics = govt;
+
+        // Non-placement reasons
+        if (np && Array.isArray(np.breakdown)) {
+            govtData.reasons = np.breakdown.map(r => {
+                const pct = Number(r.percentage) || 0;
+                let severity = 'low';
+                if (pct >= 25) severity = 'critical';
+                else if (pct >= 15) severity = 'high';
+                else if (pct >= 8) severity = 'medium';
+                return {
+                    reason: String(r.reason || '').replace(/_/g, ' '),
+                    count: Number(r.count) || 0,
+                    severity
+                };
+            });
+        } else {
+            govtData.reasons = [];
+        }
+
+        // Regions from /api/govt/analytics.by_state
+        if (govt && Array.isArray(govt.by_state)) {
+            govtData.regions = govt.by_state.map(r => {
+                const trained = Number(r.total) || Number(r.trainees) || 0;
+                const placed = Number(r.employed) || 0;
+                const nonPlaced = Math.max(trained - placed, 0);
+                const npRate = trained > 0 ? Math.round((nonPlaced / trained) * 100) : 0;
+                return {
+                    name: r.state || r.name || 'Unknown',
+                    trained,
+                    placed,
+                    nonPlaced,
+                    npRate,
+                    mainReason: r.main_reason || '—'
+                };
+            });
+        }
+
+        // Courses = programs
+        if (Array.isArray(programs)) {
+            govtData.courses = programs.map(p => ({
+                name: p.name || 'Program',
+                scheme: p.provider_name || '—',
+                type: p.sector || 'General',
+                trained: Number(p.enrolled) || 0,
+                placed: 0,
+                nonPlaced: 0,
+                npRate: 0
+            }));
+        }
+
+        // If the DB is empty everywhere → nothing to render
+        const hasAnyReasonData = govtData.reasons.length > 0;
+        const hasAnyRegionData = govtData.regions.length > 0;
+        const hasAnyProgramData = govtData.courses.length > 0;
+        return hasAnyReasonData || hasAnyRegionData || hasAnyProgramData;
+    }
+
+    // ============================================================
+    // RENDER
+    // ============================================================
     function loadAndRender() {
         renderSchemeChips();
         renderAll();
         updateSidebar();
         updateNotificationBadge();
+    }
+
+    function renderEmptyState() {
+        const container = document.getElementById('mainContainer');
+        if (!container) return;
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-user-slash"></i>
+                <h3>No non-placement data yet</h3>
+                <p>There are no non-placement records in the database yet.
+                   Record non-placement reasons for trainees to see this analysis here.</p>
+            </div>`;
     }
 
     function renderSchemeChips() {
@@ -1984,34 +1963,31 @@ MAIN CONTENT
         activeScheme = schemeId;
         renderSchemeChips();
         renderAll();
-        showToast('🔍 Filtered by: ' + govtData.schemes.find(s => s.id === schemeId).name);
+        const s = govtData.schemes.find(x => x.id === schemeId);
+        if (s) showToast('🔍 Filtered by: ' + s.name);
     }
 
     function getFilteredSchemeStats() {
-        if (activeScheme === 'all') return govtData.schemeStats;
-        return govtData.schemeStats.filter(s => {
-            const scheme = govtData.schemes.find(x => x.id === activeScheme);
-            return scheme && s.scheme.toLowerCase().includes(scheme.name.toLowerCase().split(' ')[0]);
-        });
+        return govtData.schemeStats;
     }
 
     function calculateStats() {
-        const schemeStats = getFilteredSchemeStats();
-        const total = schemeStats.reduce((sum, s) => sum + s.trained, 0);
-        const placed = schemeStats.reduce((sum, s) => sum + s.placed, 0);
-        const nonPlaced = schemeStats.reduce((sum, s) => sum + s.nonPlaced, 0);
+        const total = apiSummary ? (Number(apiSummary.total) || 0) : 0;
+        const placed = apiSummary ? (Number(apiSummary.employed) || 0) : 0;
+        const nonPlaced = apiSummary ? (Number(apiSummary.unemployed) || Math.max(total - placed, 0)) : 0;
         const npRate = total > 0 ? Math.round((nonPlaced / total) * 100) : 0;
         const plRate = total > 0 ? Math.round((placed / total) * 100) : 0;
 
-        const jobSeeking = Math.round(nonPlaced * 0.45);
-        const available = Math.round(nonPlaced * 0.78);
-        const noFollowup = Math.round(nonPlaced * 0.12);
-        const intervention = Math.round(nonPlaced * 0.35);
-
-        const critical = Math.round(nonPlaced * 0.42);
-        const highPriority = Math.round(nonPlaced * 0.28);
-        const moderate = Math.round(nonPlaced * 0.18);
-        const low = Math.round(nonPlaced * 0.12);
+        // These fine-grained splits aren't yet exposed by the backend,
+        // so we show them as 0 instead of inventing numbers.
+        const jobSeeking = 0;
+        const available = 0;
+        const noFollowup = 0;
+        const intervention = 0;
+        const critical = 0;
+        const highPriority = 0;
+        const moderate = 0;
+        const low = 0;
 
         return { total, placed, nonPlaced, npRate, plRate, jobSeeking, available, noFollowup, intervention, critical, highPriority, moderate, low };
     }
@@ -2049,71 +2025,39 @@ MAIN CONTENT
         document.getElementById('kpiNonPlaced').textContent = stats.nonPlaced.toLocaleString();
         document.getElementById('kpiNonPlacementRate').textContent = stats.npRate + '%';
         document.getElementById('kpiPlacementRate').textContent = stats.plRate + '%';
-        document.getElementById('kpiJobSeeking').textContent = stats.jobSeeking.toLocaleString();
-        document.getElementById('kpiAvailable').textContent = stats.available.toLocaleString();
-        document.getElementById('kpiNoFollowup').textContent = stats.noFollowup.toLocaleString();
-        document.getElementById('kpiIntervention').textContent = stats.intervention.toLocaleString();
+        document.getElementById('kpiJobSeeking').textContent = '—';
+        document.getElementById('kpiAvailable').textContent = '—';
+        document.getElementById('kpiNoFollowup').textContent = '—';
+        document.getElementById('kpiIntervention').textContent = '—';
     }
 
     function renderTrainingTypes() {
         const container = document.getElementById('trainingTypeGrid');
-        container.innerHTML = govtData.trainingTypes.map(t => {
-            const npColor = t.npRate >= 35 ? '#dc2626' : t.npRate >= 25 ? '#ea580c' : '#16a34a';
-            const npLabel = t.npRate >= 35 ? '🔴 Critical' : t.npRate >= 25 ? '🟠 High' : '🟢 Moderate';
-            return `<div class="training-type-card ${t.id}">
-                <div class="tt-header">
-                    <div class="tt-icon"><i class="fas ${t.icon}"></i></div>
-                    <div>
-                        <div class="tt-name">${t.name}</div>
-                        <div class="tt-trainees">${t.description}</div>
-                    </div>
-                </div>
-                <div class="tt-metrics">
-                    <div class="tt-metric"><span>Trained</span><strong>${t.trained.toLocaleString()}</strong></div>
-                    <div class="tt-metric"><span>Placed</span><strong style="color:#16a34a;">${t.placed.toLocaleString()}</strong></div>
-                    <div class="tt-metric"><span>Non-Placed</span><strong style="color:#dc2626;">${t.nonPlaced.toLocaleString()}</strong></div>
-                    <div class="tt-metric"><span>Schemes</span><strong>${t.schemes.length}</strong></div>
-                </div>
-                <div class="tt-np-rate">
-                    <span class="np-label">Non-Placement Rate</span>
-                    <span class="np-value" style="color:${npColor};">${t.npRate}%</span>
-                </div>
+        if (!govtData.trainingTypes || govtData.trainingTypes.length === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:#64748b;">
+                Training type breakdown is not yet available from the backend.
             </div>`;
-        }).join('');
+            return;
+        }
     }
 
     function renderFunnel(stats) {
+        // Only the first two funnel steps can be derived from the API.
+        // The intermediate steps aren't tracked, so we show them as 0.
         const total = stats.total;
-        const completed = Math.round(total * 0.87);
-        const assessed = Math.round(total * 0.79);
-        const eligible = Math.round(total * 0.65);
-        const applied = Math.round(total * 0.52);
-        const interviewed = Math.round(total * 0.38);
-        const offer = Math.round(total * 0.29);
         const joined = stats.placed;
-
         document.getElementById('funnelTrained').textContent = total.toLocaleString();
-        document.getElementById('funnelCompleted').textContent = completed.toLocaleString();
-        document.getElementById('funnelAssessed').textContent = assessed.toLocaleString();
-        document.getElementById('funnelEligible').textContent = eligible.toLocaleString();
-        document.getElementById('funnelApplied').textContent = applied.toLocaleString();
-        document.getElementById('funnelInterviewed').textContent = interviewed.toLocaleString();
-        document.getElementById('funnelOffer').textContent = offer.toLocaleString();
+        document.getElementById('funnelCompleted').textContent = '—';
+        document.getElementById('funnelAssessed').textContent = '—';
+        document.getElementById('funnelEligible').textContent = '—';
+        document.getElementById('funnelApplied').textContent = '—';
+        document.getElementById('funnelInterviewed').textContent = '—';
+        document.getElementById('funnelOffer').textContent = '—';
         document.getElementById('funnelJoined').textContent = joined.toLocaleString();
 
-        const lossAssessed = completed > 0 ? Math.round(((completed - assessed) / completed) * 100) : 0;
-        const lossEligible = assessed > 0 ? Math.round(((assessed - eligible) / assessed) * 100) : 0;
-        const lossApplied = eligible > 0 ? Math.round(((eligible - applied) / eligible) * 100) : 0;
-        const lossInterviewed = applied > 0 ? Math.round(((applied - interviewed) / applied) * 100) : 0;
-        const lossOffer = interviewed > 0 ? Math.round(((interviewed - offer) / interviewed) * 100) : 0;
-        const lossJoined = offer > 0 ? Math.round(((offer - joined) / offer) * 100) : 0;
-
-        document.getElementById('lossAssessed').textContent = `-${lossAssessed}%`;
-        document.getElementById('lossEligible').textContent = `-${lossEligible}%`;
-        document.getElementById('lossApplied').textContent = `-${lossApplied}%`;
-        document.getElementById('lossInterviewed').textContent = `-${lossInterviewed}%`;
-        document.getElementById('lossOffer').textContent = `-${lossOffer}%`;
-        document.getElementById('lossJoined').textContent = `-${lossJoined}%`;
+        ['lossAssessed','lossEligible','lossApplied','lossInterviewed','lossOffer','lossJoined'].forEach(id => {
+            document.getElementById(id).textContent = '—';
+        });
     }
 
     function renderSchemeTable() {
@@ -2121,34 +2065,25 @@ MAIN CONTENT
         const schemeStats = getFilteredSchemeStats();
         document.getElementById('schemeCount').textContent = schemeStats.length + ' schemes';
 
-        tbody.innerHTML = schemeStats.sort((a, b) => b.npRate - a.npRate).map(s => {
-            const color = s.npRate >= 30 ? '#dc2626' : s.npRate >= 22 ? '#ea580c' : '#16a34a';
-            return `<tr>
-                <td>
-                    <div class="scheme-name-cell">
-                        <div class="sn">${s.scheme}</div>
-                        <div class="sm">${s.ministry}</div>
-                    </div>
-                </td>
-                <td>${s.trained.toLocaleString()}</td>
-                <td style="color:#16a34a;font-weight:700;">${s.placed.toLocaleString()}</td>
-                <td style="color:#dc2626;font-weight:700;">${s.nonPlaced.toLocaleString()}</td>
-                <td>
-                    <div class="np-bar-container">
-                        <div class="np-bar"><div class="fill" style="width:${s.npRate}%;background:${color};"></div></div>
-                        <span class="np-val" style="color:${color};">${s.npRate}%</span>
-                    </div>
-                </td>
-                <td><span style="font-size:10px;font-weight:600;color:#dc2626;">${s.mainIssue}</span></td>
-            </tr>`;
-        }).join('');
+        if (schemeStats.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#64748b;">
+                Scheme-level breakdown is not yet available from the backend.
+            </td></tr>`;
+        }
     }
 
     function renderReasonTable() {
         const tbody = document.getElementById('reasonTableBody');
-        const reasons = govtData.reasons.sort((a, b) => b.count - a.count);
+        const reasons = (govtData.reasons || []).slice().sort((a, b) => b.count - a.count);
         const totalCases = reasons.reduce((sum, r) => sum + r.count, 0);
         document.getElementById('reasonCount').textContent = reasons.length + ' reasons';
+
+        if (reasons.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#64748b;">
+                No non-placement reasons recorded yet.
+            </td></tr>`;
+            return;
+        }
 
         tbody.innerHTML = reasons.map(r => {
             const pct = totalCases > 0 ? Math.round((r.count / totalCases) * 100) : 0;
@@ -2167,9 +2102,16 @@ MAIN CONTENT
     function renderReasonDonut() {
         const container = document.getElementById('reasonDonutChart');
         const legend = document.getElementById('reasonLegend');
-        const topReasons = govtData.reasons.sort((a, b) => b.count - a.count).slice(0, 6);
+        const topReasons = (govtData.reasons || []).slice().sort((a, b) => b.count - a.count).slice(0, 6);
         const colors = ['#dc2626', '#ea580c', '#ca8a04', '#2563eb', '#7c3aed', '#0d9488'];
         const totalVal = topReasons.reduce((sum, r) => sum + r.count, 0) || 1;
+
+        if (topReasons.length === 0) {
+            container.style.background = '#e2e8f0';
+            document.getElementById('reasonDonutTotal').textContent = '0';
+            legend.innerHTML = `<div class="legend-item" style="color:#64748b;">No reasons yet</div>`;
+            return;
+        }
 
         let gradient = '';
         let currentAngle = 0;
@@ -2196,15 +2138,13 @@ MAIN CONTENT
 
     function renderSkillGaps() {
         const container = document.getElementById('skillGapList');
-        const skills = govtData.skills.sort((a, b) => b.gap - a.gap);
-        container.innerHTML = skills.map(s => {
-            const color = s.gap > 25 ? '#dc2626' : s.gap > 15 ? '#ea580c' : '#ca8a04';
-            return `<div class="skill-gap-item">
-                <span class="skill-name"><i class="fas fa-code" style="color:${color};"></i> ${s.name}</span>
-                <div class="skill-bar"><div class="fill" style="width:${s.gap}%;background:${color};"></div></div>
-                <span class="skill-pct" style="color:${color};">${s.gap}%</span>
+        const skills = (govtData.skills || []).slice().sort((a, b) => b.gap - a.gap);
+        if (skills.length === 0) {
+            container.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">
+                Skill gap data is not yet available from the backend.
             </div>`;
-        }).join('');
+            return;
+        }
     }
 
     function renderAssessment() {
@@ -2212,63 +2152,31 @@ MAIN CONTENT
         const chartContainer = document.getElementById('assessmentChart');
         const levels = govtData.assessmentLevels;
 
-        container.innerHTML = levels.map(l => {
-            const color = l.placementRate >= 70 ? '#16a34a' : l.placementRate >= 40 ? '#ca8a04' : '#dc2626';
-            return `<div class="assessment-row">
-                <span class="assess-range">${l.range}</span>
-                <div class="assess-bar"><div class="fill" style="width:${l.placementRate}%;background:${color};"></div></div>
-                <span class="assess-pct" style="color:${color};">${l.placementRate}%</span>
-            </div>`;
-        }).join('');
-
-        const maxRate = Math.max(...levels.map(l => l.placementRate), 1);
-        chartContainer.innerHTML = levels.map(l => {
-            const height = Math.max((l.placementRate / maxRate) * 120, 12);
-            const color = l.placementRate >= 70 ? '#16a34a' : l.placementRate >= 40 ? '#ca8a04' : '#dc2626';
-            return `<div class="bar-group">
-                <div class="bar" style="height:${height}px;background:${color};">
-                    <span class="bar-value">${l.placementRate}%</span>
-                </div>
-                <div class="bar-label">${l.range}</div>
-            </div>`;
-        }).join('');
+        container.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">
+            Assessment vs placement breakdown is not yet available from the backend.
+        </div>`;
+        chartContainer.innerHTML = '';
     }
 
     function renderOpportunityGap() {
         const container = document.getElementById('opportunityGrid');
-        const gaps = [
-            { district: 'Uttar Pradesh', trained: 3000, vacancies: 1200, gap: 1800 },
-            { district: 'Bihar', trained: 2200, vacancies: 900, gap: 1300 },
-            { district: 'West Bengal', trained: 2000, vacancies: 1100, gap: 900 },
-            { district: 'Tamil Nadu', trained: 2600, vacancies: 1800, gap: 800 },
-            { district: 'Telangana', trained: 2400, vacancies: 1700, gap: 700 },
-            { district: 'Maharashtra', trained: 3200, vacancies: 2600, gap: 600 }
-        ];
-        
-        container.innerHTML = gaps.map(g => {
-            const color = g.gap >= 1000 ? '#dc2626' : g.gap >= 700 ? '#ea580c' : '#ca8a04';
-            return `<div class="opportunity-item">
-                <div class="opp-info">
-                    <div class="opp-name">📍 ${g.district}</div>
-                    <div class="opp-desc">${g.trained.toLocaleString()} trained · ${g.vacancies.toLocaleString()} vacancies</div>
-                </div>
-                <div class="opp-gap" style="color:${color};">+${g.gap.toLocaleString()}</div>
-            </div>`;
-        }).join('');
+        container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;color:#64748b;">
+            Local opportunity gap data is not yet available from the backend.
+        </div>`;
     }
 
     function renderPriority(stats) {
-        document.getElementById('priorityCritical').textContent = stats.critical.toLocaleString();
-        document.getElementById('priorityHigh').textContent = stats.highPriority.toLocaleString();
-        document.getElementById('priorityModerate').textContent = stats.moderate.toLocaleString();
-        document.getElementById('priorityLow').textContent = stats.low.toLocaleString();
+        document.getElementById('priorityCritical').textContent = '—';
+        document.getElementById('priorityHigh').textContent = '—';
+        document.getElementById('priorityModerate').textContent = '—';
+        document.getElementById('priorityLow').textContent = '—';
     }
 
     function renderFollowup() {
-        document.getElementById('fu30').textContent = govtData.followup.day30 + '%';
-        document.getElementById('fu90').textContent = govtData.followup.day90 + '%';
-        document.getElementById('fu180').textContent = govtData.followup.day180 + '%';
-        document.getElementById('fu365').textContent = govtData.followup.day365 + '%';
+        document.getElementById('fu30').textContent = '—';
+        document.getElementById('fu90').textContent = '—';
+        document.getElementById('fu180').textContent = '—';
+        document.getElementById('fu365').textContent = '—';
     }
 
     function renderCourseTable() {
@@ -2276,54 +2184,46 @@ MAIN CONTENT
         const courses = govtData.courses;
         document.getElementById('courseCount').textContent = courses.length + ' courses';
 
+        if (courses.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b;">
+                No programs registered yet.
+            </td></tr>`;
+            return;
+        }
+
         tbody.innerHTML = courses.sort((a, b) => b.npRate - a.npRate).map(c => {
             const color = c.npRate >= 30 ? '#dc2626' : c.npRate >= 22 ? '#ea580c' : '#16a34a';
-            const typeColor = c.type === 'Technical' ? '#2563eb' : c.type === 'Vocational' ? '#16a34a' : c.type === 'Skill-Based' ? '#d97706' : c.type === 'Industry-Linked' ? '#7c3aed' : '#db2777';
             return `<tr>
                 <td><strong>${c.name}</strong></td>
                 <td style="font-size:11px;font-weight:600;color:#2563eb;">${c.scheme}</td>
-                <td><span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;background:${typeColor}20;color:${typeColor};">${c.type}</span></td>
+                <td><span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;background:#e2e8f0;color:#475569;">${c.type}</span></td>
                 <td>${c.trained.toLocaleString()}</td>
-                <td style="color:#16a34a;font-weight:700;">${c.placed.toLocaleString()}</td>
-                <td style="color:#dc2626;font-weight:700;">${c.nonPlaced.toLocaleString()}</td>
-                <td>
-                    <div class="np-bar-container">
-                        <div class="np-bar"><div class="fill" style="width:${c.npRate}%;background:${color};"></div></div>
-                        <span class="np-val" style="color:${color};">${c.npRate}%</span>
-                    </div>
-                </td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
             </tr>`;
         }).join('');
     }
 
     function renderProviderTable() {
         const tbody = document.getElementById('providerTableBody');
-        const providers = govtData.providers;
-        document.getElementById('providerCount').textContent = providers.length + ' providers';
-
-        tbody.innerHTML = providers.sort((a, b) => b.npRate - a.npRate).map(p => {
-            const color = p.npRate >= 30 ? '#dc2626' : p.npRate >= 22 ? '#ea580c' : '#16a34a';
-            return `<tr>
-                <td><strong>${p.name}</strong></td>
-                <td style="font-size:10px;color:#64748b;">${p.schemes}</td>
-                <td>${p.trained.toLocaleString()}</td>
-                <td style="color:#16a34a;font-weight:700;">${p.placed.toLocaleString()}</td>
-                <td style="color:#dc2626;font-weight:700;">${p.nonPlaced.toLocaleString()}</td>
-                <td>
-                    <div class="np-bar-container">
-                        <div class="np-bar"><div class="fill" style="width:${p.npRate}%;background:${color};"></div></div>
-                        <span class="np-val" style="color:${color};">${p.npRate}%</span>
-                    </div>
-                </td>
-                <td><span style="font-size:10px;font-weight:600;color:#dc2626;">${p.mainIssue}</span></td>
-            </tr>`;
-        }).join('');
+        document.getElementById('providerCount').textContent = '0 providers';
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b;">
+            Provider-level breakdown is not yet available from the backend.
+        </td></tr>`;
     }
 
     function renderRegionTable() {
         const tbody = document.getElementById('regionTableBody');
         const regions = govtData.regions;
         document.getElementById('regionCount').textContent = regions.length + ' regions';
+
+        if (regions.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:#64748b;">
+                Regional data is not yet available from the backend.
+            </td></tr>`;
+            return;
+        }
 
         tbody.innerHTML = regions.sort((a, b) => b.npRate - a.npRate).map(r => {
             const color = r.npRate >= 28 ? '#dc2626' : r.npRate >= 22 ? '#ea580c' : '#16a34a';
@@ -2347,77 +2247,37 @@ MAIN CONTENT
         const container = document.getElementById('segmentDonutChart');
         const legend = document.getElementById('segmentLegend');
         const chartContainer = document.getElementById('segmentChart');
-        const segments = govtData.segments;
-        const totalVal = segments.reduce((sum, s) => sum + s.value, 0) || 1;
 
-        let gradient = '';
-        let currentAngle = 0;
-        segments.forEach(s => {
-            const pct = (s.value / totalVal) * 100;
-            if (pct > 0) {
-                const angle = (pct / 100) * 360;
-                gradient += `${s.color} ${currentAngle}deg ${currentAngle + angle}deg, `;
-                currentAngle += angle;
-            }
-        });
-        gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
-        container.style.background = `conic-gradient(${gradient})`;
-        document.getElementById('segmentTotal').textContent = totalVal.toLocaleString();
-
-        legend.innerHTML = segments.map(s => {
-            const pct = totalVal > 0 ? Math.round((s.value / totalVal) * 100) : 0;
-            return `<div class="legend-item">
-                <div class="dot" style="background:${s.color};"></div>
-                ${s.label} <span class="pct">${s.value} (${pct}%)</span>
-            </div>`;
-        }).join('');
-
-        const maxVal = Math.max(...segments.map(s => s.value), 1);
-        chartContainer.innerHTML = segments.map(s => {
-            const height = Math.max((s.value / maxVal) * 110, 10);
-            return `<div class="bar-group">
-                <div class="bar" style="height:${height}px;background:${s.color};">
-                    <span class="bar-value">${(s.value/1000).toFixed(1)}K</span>
-                </div>
-                <div class="bar-label">${s.label.length > 10 ? s.label.substring(0, 10) + '…' : s.label}</div>
-            </div>`;
-        }).join('');
+        container.style.background = '#e2e8f0';
+        document.getElementById('segmentTotal').textContent = '0';
+        legend.innerHTML = `<div class="legend-item" style="color:#64748b;">Candidate segments not yet available</div>`;
+        chartContainer.innerHTML = '';
     }
 
     function renderAIInsights(stats) {
         const alertsContainer = document.getElementById('aiAlerts');
         const recsContainer = document.getElementById('aiRecommendations');
 
+        const reasons = (govtData.reasons || []).slice().sort((a, b) => b.count - a.count);
+
+        if (reasons.length === 0 && stats.nonPlaced === 0) {
+            alertsContainer.innerHTML = '<div class="ai-item"><span class="ai-icon">📊</span><div>No non-placement data yet.</div></div>';
+            recsContainer.innerHTML = '<div class="ai-item"><span class="ai-icon">✅</span><div>Record non-placement reasons to generate insights.</div></div>';
+            return;
+        }
+
         let alertsHtml = '';
         let recsHtml = '';
 
-        // Alert 1: Skill gap
-        alertsHtml += `<div class="ai-item"><span class="ai-icon">🔴</span><div><strong>Skill Gap Alert:</strong> ${govtData.reasons.find(r => r.reason === 'Skill Gap')?.count.toLocaleString()} non-placed candidates lack skills currently required by employers across PMKVY, DDU-GKY, and PM-DAKSH schemes.</div></div>`;
-        recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Strengthen practical skill modules and industry partnerships in Technical and Vocational training tracks.</div></div>`;
-
-        // Alert 2: Self-employment
-        const selfEmp = govtData.trainingTypes.find(t => t.id === 'self-employment');
-        if (selfEmp) {
-            alertsHtml += `<div class="ai-item"><span class="ai-icon">🟠</span><div><strong>Self-Employment Alert:</strong> Self-Employment training has ${selfEmp.npRate}% non-placement rate — highest among all training types. Business support needed.</div></div>`;
-            recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Improve access to finance, mentorship, and market linkage for self-employment trainees.</div></div>`;
+        if (reasons.length > 0) {
+            const topReason = reasons[0];
+            alertsHtml += `<div class="ai-item"><span class="ai-icon">🔴</span><div><strong>Top Non-Placement Reason:</strong> ${topReason.reason} — ${topReason.count.toLocaleString()} candidates.</div></div>`;
+            recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Design targeted intervention to reduce "${topReason.reason}".</div></div>`;
         }
 
-        // Alert 3: Assessment
-        alertsHtml += `<div class="ai-item"><span class="ai-icon">🟡</span><div><strong>Assessment Alert:</strong> Candidates scoring below 40% have only 21% placement rate — significantly lower than 82% for those scoring 80%+.</div></div>`;
-        recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Provide additional coaching and retake opportunities for low-scoring candidates.</div></div>`;
-
-        // Alert 4: Regional
-        const worstRegion = govtData.regions.sort((a, b) => b.npRate - a.npRate)[0];
-        if (worstRegion) {
-            alertsHtml += `<div class="ai-item"><span class="ai-icon">⚠️</span><div><strong>Regional Alert:</strong> ${worstRegion.name} has ${worstRegion.npRate}% non-placement rate — highest among all states. Main reason: ${worstRegion.mainReason}.</div></div>`;
-            recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Deploy regional job placement drives and employer outreach in ${worstRegion.name}.</div></div>`;
-        }
-
-        // Alert 5: PM-DAKSH scheme
-        const worstScheme = govtData.schemeStats.sort((a, b) => b.npRate - a.npRate)[0];
-        if (worstScheme) {
-            alertsHtml += `<div class="ai-item"><span class="ai-icon">🔴</span><div><strong>Scheme Alert:</strong> ${worstScheme.scheme} (${worstScheme.ministry}) has ${worstScheme.npRate}% non-placement rate. Main issue: ${worstScheme.mainIssue}.</div></div>`;
-            recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Review ${worstScheme.scheme} curriculum, provider quality, and regional job availability.</div></div>`;
+        if (stats.nonPlaced > 0) {
+            alertsHtml += `<div class="ai-item"><span class="ai-icon">⚠️</span><div><strong>Overall Non-Placement:</strong> ${stats.nonPlaced.toLocaleString()} trainees (${stats.npRate}% of total).</div></div>`;
+            recsHtml += `<div class="ai-item"><span class="ai-icon">📌</span><div><strong>Recommended Action:</strong> Strengthen placement support and employer outreach programs.</div></div>`;
         }
 
         alertsContainer.innerHTML = alertsHtml;
@@ -2425,18 +2285,26 @@ MAIN CONTENT
     }
 
     function updateSidebar() {
-        const govData = getGovernmentData();
-        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
-        document.getElementById('sidebarAvatar').textContent = initial;
-        document.getElementById('sidebarName').textContent = govData?.name || 'Government';
-        document.getElementById('sidebarRole').textContent = govData?.role || 'Admin';
-        document.getElementById('headerAvatar').textContent = initial;
-        document.getElementById('headerName').textContent = govData?.name || 'Government';
+        try {
+            if (typeof getCurrentUser === 'function') {
+                const user = getCurrentUser();
+                if (user) {
+                    const name = user.name || user.fullName || user.username || 'Government';
+                    const role = user.role || 'Admin';
+                    const initial = name.charAt(0).toUpperCase();
+                    document.getElementById('sidebarAvatar').textContent = initial;
+                    document.getElementById('sidebarName').textContent = name;
+                    document.getElementById('sidebarRole').textContent = role;
+                    document.getElementById('headerAvatar').textContent = initial;
+                    document.getElementById('headerName').textContent = name;
+                }
+            }
+        } catch (e) { /* silent */ }
     }
 
     function updateNotificationBadge() {
         const stats = calculateStats();
-        document.getElementById('notifBadge').textContent = stats.critical;
+        document.getElementById('notifBadge').textContent = stats.nonPlaced || 0;
     }
 
     // ============================================================
@@ -2444,23 +2312,25 @@ MAIN CONTENT
     // ============================================================
 
     function updateDate() {
+        const el = document.getElementById('dateDisplay');
+        if (!el) return;
         const now = new Date();
-        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+        el.textContent = now.toLocaleDateString('en-US', {
             weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
         });
     }
 
     function showNotifications() {
         const stats = calculateStats();
-        alert(`📬 Notifications\n\n• ${stats.critical.toLocaleString()} critical cases requiring intervention\n• ${stats.noFollowup.toLocaleString()} candidates unreachable\n• ${stats.nonPlaced.toLocaleString()} total non-placed candidates across Government Schemes`);
+        alert(`📬 Notifications\n\n• ${stats.nonPlaced.toLocaleString()} non-placed candidates\n• ${stats.npRate}% non-placement rate\n• ${(govtData.reasons || []).length} reasons recorded`);
     }
 
     function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
-            window.location.href = '../auth/login.html';
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+                .finally(() => { window.location.href = '../auth/login.html'; });
         }
     }
 
@@ -2468,32 +2338,16 @@ MAIN CONTENT
         const stats = calculateStats();
         let report = '📊 GOVERNMENT NON-PLACEMENT ANALYSIS REPORT\n';
         report += '================================\n';
-        report += `📅 Generated: ${new Date().toLocaleString()}\n`;
-        report += `🏛️ Scheme Filter: ${govtData.schemes.find(s => s.id === activeScheme).name}\n\n`;
+        report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
         report += `📈 OVERVIEW\n`;
         report += `• Total Trained: ${stats.total.toLocaleString()}\n`;
         report += `• Placed: ${stats.placed.toLocaleString()} (${stats.plRate}%)\n`;
-        report += `• Non-Placed: ${stats.nonPlaced.toLocaleString()} (${stats.npRate}%)\n`;
-        report += `• Job-Seeking: ${stats.jobSeeking.toLocaleString()}\n`;
-        report += `• Requiring Intervention: ${stats.intervention.toLocaleString()}\n\n`;
-        report += `🏛️ GOVERNMENT SCHEME COMPARISON\n`;
-        govtData.schemeStats.forEach(s => {
-            report += `• ${s.scheme} (${s.ministry}): ${s.npRate}% NP rate (${s.nonPlaced}/${s.trained})\n`;
+        report += `• Non-Placed: ${stats.nonPlaced.toLocaleString()} (${stats.npRate}%)\n\n`;
+        report += `📋 TOP NON-PLACEMENT REASONS\n`;
+        (govtData.reasons || []).slice().sort((a, b) => b.count - a.count).slice(0, 6).forEach(r => {
+            report += `• ${r.reason}: ${r.count.toLocaleString()}\n`;
         });
-        report += `\n📚 TRAINING TYPE ANALYSIS\n`;
-        govtData.trainingTypes.forEach(t => {
-            report += `• ${t.name}: ${t.npRate}% NP rate (${t.nonPlaced}/${t.trained})\n`;
-        });
-        report += `\n📋 TOP NON-PLACEMENT REASONS\n`;
-        govtData.reasons.sort((a, b) => b.count - a.count).slice(0, 6).forEach(r => {
-            report += `• ${r.reason}: ${r.count.toLocaleString()} candidates\n`;
-        });
-        report += `\n📊 INTERVENTION PRIORITY\n`;
-        report += `• Critical: ${stats.critical.toLocaleString()}\n`;
-        report += `• High Priority: ${stats.highPriority.toLocaleString()}\n`;
-        report += `• Moderate: ${stats.moderate.toLocaleString()}\n`;
-        report += `• Low: ${stats.low.toLocaleString()}\n\n`;
-        report += '================================\n';
+        report += '\n================================\n';
         report += '📌 Generated by SkillBridge Government Portal';
         alert(report);
     }
@@ -2501,13 +2355,8 @@ MAIN CONTENT
     function viewCriticalCases() {
         const stats = calculateStats();
         alert(`🔴 CRITICAL NON-PLACEMENT CASES\n\n` +
-              `📊 Summary:\n` +
-              `• Total Critical: ${stats.critical.toLocaleString()}\n` +
-              `• High Priority: ${stats.highPriority.toLocaleString()}\n\n` +
-              `⚠️ Critical Categories:\n` +
-              `• Skill Gap: ${govtData.reasons.find(r => r.reason === 'Skill Gap')?.count.toLocaleString()} cases\n` +
-              `• Low Assessment Score: ${govtData.reasons.find(r => r.reason === 'Low Assessment Score')?.count.toLocaleString()} cases\n` +
-              `• Failed Assessment: ${govtData.reasons.find(r => r.reason === 'Failed Assessment')?.count.toLocaleString()} cases\n\n` +
+              `• Total Non-Placed: ${stats.nonPlaced.toLocaleString()}\n` +
+              `• Non-Placement Rate: ${stats.npRate}%\n\n` +
               `💡 Immediate Action Required:\n` +
               `• Deploy skill development bootcamps\n` +
               `• Provide assessment coaching\n` +
@@ -2516,25 +2365,20 @@ MAIN CONTENT
 
     function generateAIInsights() {
         const stats = calculateStats();
-        const worstScheme = govtData.schemeStats.sort((a, b) => b.npRate - a.npRate)[0];
-        const bestScheme = govtData.schemeStats.sort((a, b) => a.npRate - b.npRate)[0];
-        const worstTraining = govtData.trainingTypes.sort((a, b) => b.npRate - a.npRate)[0];
-        
-        alert(`🤖 AI GOVERNMENT SCHEME INSIGHTS\n\n` +
-              `📊 NON-PLACEMENT OVERVIEW\n` +
-              `• Overall Rate: ${stats.npRate}%\n` +
-              `• Total Non-Placed: ${stats.nonPlaced.toLocaleString()}\n` +
-              `• Critical Cases: ${stats.critical.toLocaleString()}\n\n` +
-              `🏛️ SCHEME PERFORMANCE\n` +
-              `• Best: ${bestScheme.scheme} (${bestScheme.npRate}% NP)\n` +
-              `• Worst: ${worstScheme.scheme} (${worstScheme.npRate}% NP)\n\n` +
-              `📚 TRAINING TYPE INSIGHTS\n` +
-              `• Highest NP: ${worstTraining.name} (${worstTraining.npRate}%)\n\n` +
-              `💡 POLICY RECOMMENDATIONS\n` +
-              `• Focus on ${worstScheme.mainIssue} in ${worstScheme.scheme}\n` +
-              `• Improve self-employment support (${worstTraining.npRate}% NP)\n` +
-              `• Deploy regional interventions\n` +
-              `• Strengthen assessment coaching`);
+        const reasons = (govtData.reasons || []).slice().sort((a, b) => b.count - a.count);
+        let msg = '🤖 AI NON-PLACEMENT INSIGHTS\n\n';
+        msg += `📊 OVERVIEW\n`;
+        msg += `• Non-Placement Rate: ${stats.npRate}%\n`;
+        msg += `• Total Non-Placed: ${stats.nonPlaced.toLocaleString()}\n\n`;
+        msg += `📋 TOP REASONS\n`;
+        reasons.slice(0, 5).forEach(r => {
+            msg += `• ${r.reason}: ${r.count.toLocaleString()}\n`;
+        });
+        msg += `\n💡 RECOMMENDATIONS\n`;
+        msg += `• Strengthen skill development in high-gap areas\n`;
+        msg += `• Improve assessment coaching\n`;
+        msg += `• Deploy regional intervention programs`;
+        alert(msg);
     }
 
     function showToast(message) {
@@ -2549,9 +2393,15 @@ MAIN CONTENT
     // INIT
     // ============================================================
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadAndRender();
+    document.addEventListener('DOMContentLoaded', async function() {
         updateDate();
+
+        const hasData = await loadBackendData();
+        if (!hasData && (!apiSummary || Number(apiSummary.total) === 0)) {
+            renderEmptyState();
+        } else {
+            loadAndRender();
+        }
 
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
@@ -2563,12 +2413,10 @@ MAIN CONTENT
             }
         });
 
-        console.log('🚫 Non-Placement Analysis loaded — Government Schemes + All Training Types!');
-        console.log('🏛️ Schemes:', govtData.schemes.length);
-        console.log('📚 Training Types:', govtData.trainingTypes.length);
-        console.log('📖 Courses:', govtData.courses.length);
+        console.log('🚫 Non-Placement Analysis loaded (real data only)');
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>
