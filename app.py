@@ -986,6 +986,13 @@ def api_create_trainee():
          d.get("score"), d.get("state"), d.get("district"),
          d.get("preferred_role"), d.get("preferred_location"),
          d.get("expected_salary"), d.get("skills"), d.get("certifications")))
+
+    # Auto-schedule follow-ups (30/90/180/365 days)
+    try:
+        ensure_followup_schedule(tid)
+    except Exception as e:
+        print(f"[warn] followup scheduling failed: {e}")
+
     audit("create", "trainee", tid, after=d)
     return jsonify(id=tid, trainee_code=code), 201
 
@@ -1110,6 +1117,31 @@ def _schedule_followups(trainee_id, completion_date_str):
               VALUES (?,?,?, 'due')""", (trainee_id, days, due))
 
 
+def ensure_followup_schedule(trainee_id, completion_date=None):
+    """
+    Ensure a trainee has 30/90/180/365 day follow-ups scheduled.
+    Called after registration or completion.
+    """
+    base = None
+    if completion_date:
+        try:
+            base = dt.date.fromisoformat(completion_date)
+        except Exception:
+            base = None
+    if not base:
+        base = dt.date.today()
+
+    for days in FOLLOWUP_PERIODS:
+        due = (base + dt.timedelta(days=days)).isoformat()
+        exists = q("""SELECT id FROM followups
+                      WHERE trainee_id=? AND period_days=?""",
+                   (trainee_id, days), one=True)
+        if not exists:
+            qx("""INSERT INTO followups (trainee_id,period_days,due_date,status)
+                  VALUES (?,?,?, 'due')""",
+               (trainee_id, days, due))
+
+
 @app.route("/api/followups", methods=["GET"])
 @login_required
 def api_list_followups():
@@ -1142,6 +1174,26 @@ def api_autoflag_overdue():
            (dt.date.today().isoformat(),))
     audit("autoflag", "followup", 0, after={"count": n})
     return jsonify(updated=n)
+
+
+@app.route("/api/followups/<int:fid>/submit", methods=["POST"])
+@login_required
+def api_submit_followup(fid):
+    """Trainee submits their follow-up data."""
+    d = request.json or {}
+    f = q("SELECT * FROM followups WHERE id=?", (fid,), one=True)
+    if not f:
+        return jsonify(error="followup not found"), 404
+
+    status = d.get("status") or "completed"
+    submitted_at = d.get("submitted_at") or now_iso()
+    data_json = d.get("data") if isinstance(d.get("data"), str) else json.dumps(d.get("data") or {})
+
+    qx("""UPDATE followups SET status=?, submitted_at=?, data=?
+          WHERE id=?""",
+       (status, submitted_at, data_json, fid))
+    audit("submit", "followup", fid, after={"status": status})
+    return jsonify(ok=True)
 
 
 # =============================================================================
@@ -1180,6 +1232,428 @@ def api_decide_verification(vid):
             qx("UPDATE employers SET verified=1 WHERE id=?", (v["entity_id"],))
     audit("decide", "verification", vid, after={"action": action})
     return jsonify(ok=True)
+
+
+# =============================================================================
+#  SECTION 12B — EMPLOYMENTS (save employment records from trainee dashboard)
+# =============================================================================
+@app.route("/api/employments", methods=["GET"])
+@login_required
+def api_list_employments():
+    """List employments (optionally filtered by trainee)."""
+    trainee_id = request.args.get("trainee_id")
+    where, args = ["1=1"], []
+    if trainee_id:
+        where.append("em.trainee_id=?")
+        args.append(trainee_id)
+    rows = q(f"""SELECT em.*, er.name employer_name, t.full_name trainee_name
+                 FROM employments em
+                 LEFT JOIN employers er ON er.id=em.employer_id
+                 LEFT JOIN trainees t ON t.id=em.trainee_id
+                 WHERE {' AND '.join(where)}
+                 ORDER BY em.start_date DESC, em.id DESC""", args)
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route("/api/employments", methods=["POST"])
+@login_required
+def api_create_employment():
+    """
+    Save/update an employment record from the trainee dashboard.
+    If a record already exists for the trainee, update it.
+    Otherwise, insert a new one.
+    """
+    d = request.json or {}
+    trainee_id = d.get("trainee_id")
+    if not trainee_id:
+        return jsonify(error="trainee_id required"), 400
+
+    # Verify trainee exists
+    t = q("SELECT id FROM trainees WHERE id=?", (trainee_id,), one=True)
+    if not t:
+        return jsonify(error="Trainee not found"), 404
+
+    # Optional: auto-link to an employer if the name matches an existing employer
+    employer_id = d.get("employer_id")
+    employer_name = (d.get("employer_name") or "").strip()
+    if not employer_id and employer_name:
+        existing_emp = q("SELECT id FROM employers WHERE LOWER(name)=LOWER(?)",
+                         (employer_name,), one=True)
+        if existing_emp:
+            employer_id = existing_emp["id"]
+
+    # Check if there is already an employment row for this trainee
+    existing = q("SELECT id FROM employments WHERE trainee_id=? ORDER BY id DESC LIMIT 1",
+                 (trainee_id,), one=True)
+
+    job_role = d.get("job_role") or None
+    employment_type = d.get("employment_type") or "full"
+    start_date = d.get("start_date") or None
+    monthly_income = float(d.get("monthly_income") or 0)
+    pre_training_income = float(d.get("pre_training_income") or 0)
+    job_relevance = d.get("job_relevance") or "medium"
+    skills_matched = d.get("skills_matched") or ""
+    skills_missing = d.get("skills_missing") or ""
+
+    if existing:
+        # Update
+        qx("""UPDATE employments
+              SET employer_id=?, job_role=?, employment_type=?, start_date=?,
+                  monthly_income=?, pre_training_income=?, job_relevance=?,
+                  skills_matched=?, skills_missing=?
+              WHERE id=?""",
+           (employer_id, job_role, employment_type, start_date,
+            monthly_income, pre_training_income, job_relevance,
+            skills_matched, skills_missing, existing["id"]))
+        emp_id = existing["id"]
+        audit("update", "employment", emp_id, after=d)
+    else:
+        # Insert
+        emp_id = qx("""INSERT INTO employments
+            (trainee_id,employer_id,job_role,employment_type,start_date,
+             monthly_income,pre_training_income,job_relevance,
+             skills_matched,skills_missing,status)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (trainee_id, employer_id, job_role, employment_type, start_date,
+             monthly_income, pre_training_income, job_relevance,
+             skills_matched, skills_missing, "pending"))
+        audit("create", "employment", emp_id, after=d)
+
+    # Automatically create a verification request for admins
+    try:
+        existing_verif = q("""SELECT id FROM verifications
+                              WHERE entity_type='employment' AND entity_id=?
+                              AND status='pending'""",
+                           (emp_id,), one=True)
+        if not existing_verif:
+            qx("""INSERT INTO verifications
+                  (entity_type,entity_id,status,submitted_by,remarks)
+                  VALUES ('employment',?,'pending',?,?)""",
+               (emp_id, session.get("uid"), "Submitted from trainee dashboard"))
+    except Exception:
+        pass
+
+    return jsonify(id=emp_id, ok=True), 201
+
+
+@app.route("/api/employments/<int:eid>", methods=["GET"])
+@login_required
+def api_get_employment(eid):
+    emp = q("""SELECT em.*, er.name employer_name FROM employments em
+               LEFT JOIN employers er ON er.id=em.employer_id
+               WHERE em.id=?""", (eid,), one=True)
+    if not emp:
+        return jsonify(error="not found"), 404
+    return jsonify(dict(emp))
+
+
+@app.route("/api/employments/<int:eid>/verify", methods=["POST"])
+@role_required("admin", "verifier", "employer")
+def api_verify_employment(eid):
+    """Employer / admin verifies a trainee's employment record."""
+    emp = q("SELECT * FROM employments WHERE id=?", (eid,), one=True)
+    if not emp:
+        return jsonify(error="not found"), 404
+    qx("""UPDATE employments SET status='verified', verified_by=?, verified_at=?
+          WHERE id=?""",
+       (session.get("uid"), now_iso(), eid))
+    # Mark verification request as approved
+    qx("""UPDATE verifications SET status='approved', decided_by=?, decided_at=?
+          WHERE entity_type='employment' AND entity_id=? AND status='pending'""",
+       (session.get("uid"), now_iso(), eid))
+    # Schedule retention checks based on start date
+    if emp["start_date"]:
+        try:
+            start = dt.date.fromisoformat(emp["start_date"])
+            for days in FOLLOWUP_PERIODS:
+                check_date = (start + dt.timedelta(days=days)).isoformat()
+                exists = q("""SELECT id FROM retention_checks
+                              WHERE employment_id=? AND days=?""",
+                           (eid, days), one=True)
+                if not exists:
+                    qx("""INSERT INTO retention_checks
+                          (employment_id,days,retained,checked_at)
+                          VALUES (?,?,?,?)""",
+                       (eid, days, None, check_date))
+        except Exception:
+            pass
+    audit("verify", "employment", eid)
+    return jsonify(ok=True)
+
+
+# =============================================================================
+#  SECTION 12C — TRAINEE SELF REGISTRATION (auth-based)
+# =============================================================================
+@app.route("/api/trainees/register", methods=["POST"])
+def api_register_trainee_full():
+    """
+    Register a new trainee AND create their user account, AND schedule followups.
+    Called by trainee-register.html if using the combined flow.
+    """
+    d = request.json or {}
+    email = (d.get("email") or "").strip().lower()
+    password = d.get("password") or ""
+    full_name = (d.get("full_name") or "").strip()
+
+    if not (email and password and full_name):
+        return jsonify(error="email, password, full_name required"), 400
+    if len(password) < 8:
+        return jsonify(error="Password must be at least 8 characters"), 400
+
+    # 1. Create user account (if not exists)
+    uid = None
+    existing_user = q("SELECT id FROM users WHERE email=?", (email,), one=True)
+    if existing_user:
+        uid = existing_user["id"]
+    else:
+        try:
+            uid = qx("""INSERT INTO users
+                (username,password_hash,full_name,email,phone,role)
+                VALUES (?,?,?,?,?,?)""",
+                (email, generate_password_hash(password),
+                 full_name, email, d.get("phone"), "trainee"))
+        except sqlite3.IntegrityError:
+            uid = q("SELECT id FROM users WHERE email=?", (email,), one=True)["id"]
+
+    # 2. Create trainee record (if not exists)
+    existing_t = q("SELECT id FROM trainees WHERE email=?", (email,), one=True)
+    if existing_t:
+        trainee_id = existing_t["id"]
+    else:
+        code = d.get("trainee_code") or f"TRN{random.randint(10000, 99999)}"
+        trainee_id = qx("""INSERT INTO trainees
+            (trainee_code,user_id,full_name,dob,gender,phone,email,
+             category,qualification,state,district,preferred_role,skills)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (code, uid, full_name, d.get("dob"), d.get("gender"),
+             d.get("phone"), email, d.get("category"),
+             d.get("qualification"), d.get("state"), d.get("district"),
+             d.get("preferred_role"), d.get("skills")))
+
+    # 3. Schedule follow-ups (30/90/180/365 days from today)
+    ensure_followup_schedule(trainee_id)
+
+    audit("register", "trainee", trainee_id)
+    return jsonify(
+        id=trainee_id, user_id=uid,
+        trainee_code=q("SELECT trainee_code FROM trainees WHERE id=?",
+                       (trainee_id,), one=True)["trainee_code"],
+    ), 201
+
+
+# =============================================================================
+#  SECTION 12D — GOVERNMENT ANALYTICS (aggregated real data)
+# =============================================================================
+@app.route("/api/govt/analytics", methods=["GET"])
+@login_required
+def api_govt_analytics():
+    """Aggregated analytics for government dashboard."""
+    total_trainees = q("SELECT COUNT(*) c FROM trainees WHERE archived=0", one=True)["c"]
+    completed = q("SELECT COUNT(*) c FROM trainees WHERE training_status='completed' AND archived=0",
+                  one=True)["c"]
+    employed = q("""SELECT COUNT(DISTINCT trainee_id) c FROM employments
+                    WHERE status='verified'""", one=True)["c"]
+    avg_income = q("""SELECT AVG(monthly_income) a FROM employments
+                      WHERE status='verified'""", one=True)["a"] or 0
+    avg_previous = q("""SELECT AVG(pre_training_income) a FROM employments
+                        WHERE status='verified' AND pre_training_income > 0""",
+                     one=True)["a"] or 0
+
+    # By state
+    by_state = q("""SELECT state, COUNT(*) c FROM trainees
+                    WHERE state IS NOT NULL AND archived=0
+                    GROUP BY state ORDER BY c DESC LIMIT 15""")
+
+    # By sector (from employments)
+    by_sector = q("""SELECT t.preferred_role AS sector, COUNT(*) c
+                     FROM employments em
+                     JOIN trainees t ON t.id=em.trainee_id
+                     WHERE em.status='verified' AND t.preferred_role IS NOT NULL
+                     GROUP BY t.preferred_role ORDER BY c DESC LIMIT 10""")
+
+    # Employment rate
+    rate = round(employed / completed * 100, 2) if completed else 0
+
+    # Income growth
+    growth = round(avg_income - avg_previous, 2) if avg_income and avg_previous else 0
+    growth_pct = round(growth / avg_previous * 100, 1) if avg_previous else 0
+
+    # Non-placement breakdown
+    non_placement = q("""SELECT reason, COUNT(*) c FROM non_placement
+                         GROUP BY reason ORDER BY c DESC""")
+
+    return jsonify({
+        "totals": {
+            "trainees": total_trainees,
+            "completed": completed,
+            "employed": employed,
+            "employment_rate": rate,
+        },
+        "income": {
+            "avg_current": round(avg_income, 2),
+            "avg_previous": round(avg_previous, 2),
+            "growth": growth,
+            "growth_pct": growth_pct,
+        },
+        "by_state": [dict(r) for r in by_state],
+        "by_sector": [dict(r) for r in by_sector],
+        "non_placement": [dict(r) for r in non_placement],
+    })
+
+
+@app.route("/api/govt/trainee/<int:tid>/full", methods=["GET"])
+@login_required
+def api_govt_trainee_full(tid):
+    """
+    Full 360° trainee profile for government 360° view page.
+    Includes: personal, training, employment, followups, retention.
+    """
+    t = q("SELECT * FROM trainees WHERE id=?", (tid,), one=True)
+    if not t:
+        return jsonify(error="not found"), 404
+
+    result = dict(t)
+
+    # Enrollments
+    result["enrollments"] = [dict(r) for r in q("""
+        SELECT e.*, p.name program_name, p.sector
+        FROM enrollments e
+        LEFT JOIN programs p ON p.id=e.program_id
+        WHERE e.trainee_id=?""", (tid,))]
+
+    # Employments + employer names
+    result["employments"] = [dict(r) for r in q("""
+        SELECT em.*, er.name employer_name, er.industry
+        FROM employments em
+        LEFT JOIN employers er ON er.id=em.employer_id
+        WHERE em.trainee_id=?
+        ORDER BY em.start_date DESC""", (tid,))]
+
+    # Retention checks for the latest employment
+    if result["employments"]:
+        latest_emp_id = result["employments"][0]["id"]
+        result["retention"] = [dict(r) for r in q("""
+            SELECT * FROM retention_checks
+            WHERE employment_id=?
+            ORDER BY days""", (latest_emp_id,))]
+    else:
+        result["retention"] = []
+
+    # Follow-ups
+    result["followups"] = [dict(r) for r in q("""
+        SELECT * FROM followups WHERE trainee_id=?
+        ORDER BY period_days""", (tid,))]
+
+    # Non-placement records
+    result["non_placement"] = [dict(r) for r in q("""
+        SELECT * FROM non_placement WHERE trainee_id=?""", (tid,))]
+
+    # Feedback
+    result["feedback"] = [dict(r) for r in q("""
+        SELECT * FROM feedback WHERE trainee_id=?""", (tid,))]
+
+    return jsonify(result)
+
+
+# =============================================================================
+#  SECTION 12E — ADMIN AUTO-SEED ROUTES (for bulk seeding)
+# =============================================================================
+@app.route("/api/admin/seed-complete", methods=["POST"])
+@admin_required
+def api_admin_seed_complete():
+    """
+    Idempotent seed that creates trainees + followups + employments + verifications.
+    Safe to call repeatedly.
+    """
+    # Create providers
+    provider_ids = []
+    for i, pname in enumerate(["Skill India Centre", "NSDC Partner", "DataEdge Academy"]):
+        existing = q("SELECT id FROM providers WHERE name=?", (pname,), one=True)
+        if existing:
+            provider_ids.append(existing["id"])
+        else:
+            provider_ids.append(qx(
+                "INSERT INTO providers (name,state,district,verified) VALUES (?,?,?,1)",
+                (pname, random.choice(STATES), f"District{i}")))
+
+    # Employers
+    emp_ids = []
+    for ename in ["TechCorp", "InfoSys", "Wipro Ltd"]:
+        existing = q("SELECT id FROM employers WHERE name=?", (ename,), one=True)
+        if existing:
+            emp_ids.append(existing["id"])
+        else:
+            emp_ids.append(qx(
+                "INSERT INTO employers (name,industry,state,verified) VALUES (?,?,?,1)",
+                (ename, random.choice(SECTORS), random.choice(STATES))))
+
+    # Programs
+    program_ids = []
+    for i in range(4):
+        pname = f"Program {chr(65 + i)}"
+        existing = q("SELECT id FROM programs WHERE name=?", (pname,), one=True)
+        if existing:
+            program_ids.append(existing["id"])
+        else:
+            program_ids.append(qx(
+                """INSERT INTO programs (name,sector,provider_id,duration_weeks,skills_taught)
+                   VALUES (?,?,?,?,?)""",
+                (pname, random.choice(SECTORS), random.choice(provider_ids),
+                 random.choice([8, 12, 16]), "Python, SQL, Communication")))
+
+    # Trainees + followups + employments
+    created = 0
+    for i in range(30):
+        email = f"seed.trainee{i}@example.com"
+        if q("SELECT id FROM trainees WHERE email=?", (email,), one=True):
+            continue
+        tid = qx("""INSERT INTO trainees
+            (trainee_code,full_name,gender,phone,email,category,qualification,
+             state,district,training_status,completion_date,assessment_score,
+             assessment_result,skills)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (f"TRN{20000+i}", f"Seed Trainee {i+1}",
+             random.choice(["Male", "Female"]),
+             f"+9199{random.randint(1000000, 9999999)}",
+             email, "General", "B.Sc.",
+             random.choice(STATES), f"District{i % 5}",
+             "completed",
+             (dt.date.today() - dt.timedelta(days=random.randint(60, 400))).isoformat(),
+             round(random.gauss(70, 12), 1),
+             "Pass", "Python, SQL"))
+        # Enrollment
+        qx("""INSERT INTO enrollments (trainee_id,program_id,enrolled_on,
+              completion_status,attendance_pct)
+              VALUES (?,?,?,?,?)""",
+           (tid, random.choice(program_ids),
+            (dt.date.today() - dt.timedelta(days=200)).isoformat(),
+            "completed", round(random.uniform(70, 100), 1)))
+        # Followups
+        ensure_followup_schedule(tid,
+            (dt.date.today() - dt.timedelta(days=random.randint(60, 400))).isoformat())
+        # Employment
+        if random.random() < 0.75:
+            emp_id = qx("""INSERT INTO employments
+                (trainee_id,employer_id,job_role,employment_type,start_date,
+                 monthly_income,pre_training_income,job_relevance,status,
+                 verified_by,verified_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                (tid, random.choice(emp_ids),
+                 random.choice(["Data Analyst", "Engineer", "Associate"]),
+                 random.choice(["full", "part", "self"]),
+                 (dt.date.today() - dt.timedelta(days=random.randint(10, 200))).isoformat(),
+                 float(random.randint(15000, 45000)),
+                 float(random.randint(6000, 15000)),
+                 random.choice(["high", "medium"]),
+                 "verified", 1, now_iso()))
+            for d in FOLLOWUP_PERIODS:
+                if random.random() < 0.7:
+                    qx("""INSERT INTO retention_checks (employment_id,days,retained,checked_at)
+                          VALUES (?,?,?,?)""",
+                       (emp_id, d, 1 if random.random() < 0.8 else 0, now_iso()))
+        created += 1
+
+    return jsonify(ok=True, created=created)
 
 
 # =============================================================================
@@ -1773,6 +2247,7 @@ def serve_frontend(path):
 
     # 5. Nothing found
     return jsonify(error="not found", path=path), 404
+
 
 # =============================================================================
 #  SECTION 22 — ENTRY POINT (Render + Local compatible)

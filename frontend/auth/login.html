@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="../css/style.css">
 
-    <!-- ✅ Tiny inline script to apply theme BEFORE page renders -->
+    <!-- ✅ Apply theme BEFORE page renders -->
     <script>
       (function() {
         try {
@@ -559,7 +559,7 @@
             color: #4f46e5;
         }
 
-        /* ── Inline alert (replaces alert()) ── */
+        /* ── Inline alert ── */
         .inline-alert {
             display: none;
             padding: 0.8rem 1.1rem;
@@ -595,32 +595,12 @@
         }
 
         @media (max-width: 520px) {
-            .login-container {
-                padding: 2rem 1.5rem;
-                border-radius: 2.2rem;
-            }
-            .role-selector {
-                grid-template-columns: 1fr 1fr;
-                gap: 0.3rem;
-                border-radius: 30px;
-                padding: 0.3rem;
-            }
-            .role-btn {
-                font-size: 0.6rem;
-                padding: 0.4rem 0.15rem;
-            }
-            .brand-text {
-                font-size: 1.1rem;
-            }
-            .login-heading h2 {
-                font-size: 1.4rem;
-            }
-            .credential-hint {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.3rem;
-                padding: 0.8rem 1rem;
-            }
+            .login-container { padding: 2rem 1.5rem; border-radius: 2.2rem; }
+            .role-selector { grid-template-columns: 1fr 1fr; gap: 0.3rem; border-radius: 30px; padding: 0.3rem; }
+            .role-btn { font-size: 0.6rem; padding: 0.4rem 0.15rem; }
+            .brand-text { font-size: 1.1rem; }
+            .login-heading h2 { font-size: 1.4rem; }
+            .credential-hint { flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.8rem 1rem; }
         }
 
         @media (max-width: 380px) {
@@ -670,62 +650,37 @@
             color: #94A3B8 !important;
             border-bottom-color: rgba(255, 255, 255, 0.08) !important;
         }
-        html[data-theme="dark"] .tagline i {
-            color: #A78BFA !important;
-        }
-        html[data-theme="dark"] .login-heading h2 {
-            color: #F1F5F9 !important;
-        }
-        html[data-theme="dark"] .login-heading p {
-            color: #94A3B8 !important;
-        }
+        html[data-theme="dark"] .tagline i { color: #A78BFA !important; }
+        html[data-theme="dark"] .login-heading h2 { color: #F1F5F9 !important; }
+        html[data-theme="dark"] .login-heading p { color: #94A3B8 !important; }
         html[data-theme="dark"] .role-selector {
             background: #1E293B !important;
             box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2) !important;
         }
-        html[data-theme="dark"] .role-btn {
-            color: #94A3B8 !important;
-        }
-        html[data-theme="dark"] .role-btn:hover {
-            color: #F1F5F9 !important;
-        }
+        html[data-theme="dark"] .role-btn { color: #94A3B8 !important; }
+        html[data-theme="dark"] .role-btn:hover { color: #F1F5F9 !important; }
         html[data-theme="dark"] .role-btn.active {
             background: #0B1220 !important;
             color: #F1F5F9 !important;
             box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25), 0 0 0 1px rgba(37, 99, 235, 0.3) !important;
         }
-        html[data-theme="dark"] .role-btn.active i {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .role-btn.govt-active {
-            background: #1a56db !important;
-            color: white !important;
-        }
-        html[data-theme="dark"] .role-btn.govt-active i {
-            color: white !important;
-        }
+        html[data-theme="dark"] .role-btn.active i { color: #60A5FA !important; }
+        html[data-theme="dark"] .role-btn.govt-active { background: #1a56db !important; color: white !important; }
+        html[data-theme="dark"] .role-btn.govt-active i { color: white !important; }
         html[data-theme="dark"] .credential-hint {
             background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(79, 70, 229, 0.12)) !important;
             border-left-color: #60A5FA !important;
             color: #E2E8F0 !important;
         }
-        html[data-theme="dark"] .credential-hint i {
-            color: #60A5FA !important;
-        }
+        html[data-theme="dark"] .credential-hint i { color: #60A5FA !important; }
         html[data-theme="dark"] .credential-hint .creds span {
             background: rgba(15, 23, 42, 0.7) !important;
             color: #E2E8F0 !important;
             border-color: rgba(255, 255, 255, 0.08) !important;
         }
-        html[data-theme="dark"] .credential-hint .creds span i {
-            color: #A78BFA !important;
-        }
-        html[data-theme="dark"] .form-group label {
-            color: #E2E8F0 !important;
-        }
-        html[data-theme="dark"] .form-group label i {
-            color: #60A5FA !important;
-        }
+        html[data-theme="dark"] .credential-hint .creds span i { color: #A78BFA !important; }
+        html[data-theme="dark"] .form-group label { color: #E2E8F0 !important; }
+        html[data-theme="dark"] .form-group label i { color: #60A5FA !important; }
         html[data-theme="dark"] .input-wrap {
             background: #1A2338 !important;
             border-color: rgba(255, 255, 255, 0.12) !important;
@@ -735,56 +690,22 @@
             background: #1E293B !important;
             box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.15) !important;
         }
-        html[data-theme="dark"] .input-wrap i {
-            color: #64748B !important;
-        }
-        html[data-theme="dark"] .input-wrap:focus-within i {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .input-wrap input {
-            color: #F1F5F9 !important;
-            background: transparent !important;
-        }
-        html[data-theme="dark"] .input-wrap input::placeholder {
-            color: #64748B !important;
-        }
-        html[data-theme="dark"] .input-wrap .toggle-pw {
-            color: #64748B !important;
-        }
-        html[data-theme="dark"] .input-wrap .toggle-pw:hover {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .form-options label {
-            color: #CBD5E1 !important;
-        }
-        html[data-theme="dark"] .form-options a {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .form-options a:hover {
-            color: #93C5FD !important;
-        }
-        html[data-theme="dark"] .govt-badge {
-            background: #2563EB !important;
-            color: white !important;
-        }
-        html[data-theme="dark"] .register-link {
-            color: #94A3B8 !important;
-        }
-        html[data-theme="dark"] .register-link a {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .register-link a:hover {
-            border-bottom-color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .register-link .govt-note {
-            color: #94A3B8 !important;
-        }
-        html[data-theme="dark"] .register-link .govt-note i {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .divider {
-            color: #64748B !important;
-        }
+        html[data-theme="dark"] .input-wrap i { color: #64748B !important; }
+        html[data-theme="dark"] .input-wrap:focus-within i { color: #60A5FA !important; }
+        html[data-theme="dark"] .input-wrap input { color: #F1F5F9 !important; background: transparent !important; }
+        html[data-theme="dark"] .input-wrap input::placeholder { color: #64748B !important; }
+        html[data-theme="dark"] .input-wrap .toggle-pw { color: #64748B !important; }
+        html[data-theme="dark"] .input-wrap .toggle-pw:hover { color: #60A5FA !important; }
+        html[data-theme="dark"] .form-options label { color: #CBD5E1 !important; }
+        html[data-theme="dark"] .form-options a { color: #60A5FA !important; }
+        html[data-theme="dark"] .form-options a:hover { color: #93C5FD !important; }
+        html[data-theme="dark"] .govt-badge { background: #2563EB !important; color: white !important; }
+        html[data-theme="dark"] .register-link { color: #94A3B8 !important; }
+        html[data-theme="dark"] .register-link a { color: #60A5FA !important; }
+        html[data-theme="dark"] .register-link a:hover { border-bottom-color: #60A5FA !important; }
+        html[data-theme="dark"] .register-link .govt-note { color: #94A3B8 !important; }
+        html[data-theme="dark"] .register-link .govt-note i { color: #60A5FA !important; }
+        html[data-theme="dark"] .divider { color: #64748B !important; }
         html[data-theme="dark"] .divider::before,
         html[data-theme="dark"] .divider::after {
             background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.10), transparent) !important;
@@ -798,35 +719,18 @@
             background: #1E293B !important;
             border-color: rgba(255, 255, 255, 0.20) !important;
         }
-        html[data-theme="dark"] .footer-note {
-            color: #64748B !important;
-        }
-        html[data-theme="dark"] .footer-note i {
-            color: #60A5FA !important;
-        }
+        html[data-theme="dark"] .footer-note { color: #64748B !important; }
+        html[data-theme="dark"] .footer-note i { color: #60A5FA !important; }
         html[data-theme="dark"] #govtFields > div[style*="background"] {
             background: #1A2338 !important;
             color: #CBD5E1 !important;
             border-left-color: #60A5FA !important;
         }
-        html[data-theme="dark"] #govtFields > div[style*="background"] strong {
-            color: #93C5FD !important;
-        }
-        html[data-theme="dark"] #govtFields > div[style*="background"] div {
-            color: #94A3B8 !important;
-        }
-        html[data-theme="dark"] .inline-alert.error {
-            background: rgba(239, 68, 68, 0.15) !important;
-            color: #FCA5A5 !important;
-        }
-        html[data-theme="dark"] .inline-alert.success {
-            background: rgba(34, 197, 94, 0.15) !important;
-            color: #86EFAC !important;
-        }
-        html[data-theme="dark"] .inline-alert.info {
-            background: rgba(59, 130, 246, 0.15) !important;
-            color: #93C5FD !important;
-        }
+        html[data-theme="dark"] #govtFields > div[style*="background"] strong { color: #93C5FD !important; }
+        html[data-theme="dark"] #govtFields > div[style*="background"] div { color: #94A3B8 !important; }
+        html[data-theme="dark"] .inline-alert.error { background: rgba(239, 68, 68, 0.15) !important; color: #FCA5A5 !important; }
+        html[data-theme="dark"] .inline-alert.success { background: rgba(34, 197, 94, 0.15) !important; color: #86EFAC !important; }
+        html[data-theme="dark"] .inline-alert.info { background: rgba(59, 130, 246, 0.15) !important; color: #93C5FD !important; }
     </style>
     <script src="../js/api.js"></script>
 </head>
@@ -1044,7 +948,7 @@
     }
 
     // ============================================================
-    // GOVERNMENT — read from admin-provisioned officials (localStorage)
+    // GOVERNMENT — localStorage helpers (fallback)
     // ============================================================
     function getGovtOfficials() {
         try { return JSON.parse(localStorage.getItem(GOVT_STORAGE_KEY) || '[]'); }
@@ -1118,17 +1022,8 @@
         pwInput.value = '';
         emailInput.placeholder = 'name@example.com';
 
-        const allUsers = JSON.parse(localStorage.getItem(meta.storageKey) || '[]');
-
-        if (allUsers.length === 0) {
-            credentialHint.classList.remove('hidden');
-            credsContainer.innerHTML = `
-                <span><i class="fas fa-info-circle"></i> No ${meta.name} account found</span>
-                <span><i class="fas fa-arrow-right"></i> Please register first</span>
-            `;
-        } else {
-            credentialHint.classList.add('hidden');
-        }
+        // Hide credential hint — backend now handles validation
+        credentialHint.classList.add('hidden');
 
         divider.classList.remove('hidden');
         socialLogin.classList.remove('hidden');
@@ -1158,9 +1053,9 @@
     });
 
     // ============================================================
-    // LOGIN HANDLER
+    // LOGIN HANDLER — NOW CALLS BACKEND
     // ============================================================
-    loginBtn.addEventListener('click', function(e) {
+    loginBtn.addEventListener('click', async function(e) {
         e.preventDefault();
         if (loginBtn.disabled) return;
 
@@ -1170,8 +1065,8 @@
             return;
         }
 
-        // ===== STANDARD (localStorage — unchanged) =====
-        const email = emailInput.value.trim();
+        // ===== STANDARD ROLES (trainee / employer / provider) =====
+        const email = emailInput.value.trim().toLowerCase();
         const pw = pwInput.value.trim();
 
         if (!email || !pw) {
@@ -1180,38 +1075,63 @@
         }
 
         const meta = roleMetadata[currentRole];
-        if (!meta || !meta.storageKey) {
+        if (!meta) {
             showAlert('Invalid role selected.', 'error');
             return;
         }
 
-        const allUsers = JSON.parse(localStorage.getItem(meta.storageKey) || '[]');
-        const user = allUsers.find(u => u.email === email && u.password === pw);
+        // Lock button
+        loginBtn.disabled = true;
+        const originalText = loginBtnText.textContent;
+        loginBtnText.textContent = 'Signing in...';
 
-        if (user) {
-            if ((user.status || 'Active') !== 'Active') {
-                showAlert(`Your ${meta.name} account is suspended. Please contact the administrator.`, 'error');
+        try {
+            // ✅ CALL THE BACKEND — this works across all devices
+            const result = await apiCall('/api/auth/login', {
+                method: 'POST',
+                body: {
+                    username: email,
+                    email: email,
+                    password: pw,
+                    role: currentRole,
+                },
+            });
+
+            // ── Success ──
+            if (result.ok && result.data && !result.data.error) {
+                const user = result.data;
+
+                // Save session info locally (for quick page loads)
+                try {
+                    localStorage.setItem(meta.sessionKey, email);
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userRole', currentRole);
+                    localStorage.setItem('userId', user.id || '');
+                    localStorage.setItem('userName', user.full_name || user.username || 'User');
+                    localStorage.setItem('userEmail', user.email || email);
+                } catch (e) {}
+
+                const userName = user.full_name || user.username || 'User';
+                showAlert(`Login successful! Welcome, ${userName}. Redirecting...`, 'success', 0);
+
+                loginBtnText.textContent = 'Success ✓';
+                setTimeout(() => {
+                    window.location.href = meta.redirect;
+                }, 900);
                 return;
             }
 
-            localStorage.setItem(meta.sessionKey, email);
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userRole', currentRole);
+            // ── Backend rejected ──
+            const errMsg = (result.data && result.data.error) || `Invalid credentials for ${meta.name}`;
+            showAlert(errMsg, 'error');
+            loginBtn.disabled = false;
+            loginBtnText.textContent = originalText;
 
-            const userName = user.fullName || user.contactPerson || user.orgName || user.repName || 'User';
-
-            showAlert(`Login successful! Welcome, ${userName}. Redirecting...`, 'success', 0);
-            setTimeout(() => { window.location.href = meta.redirect; }, 900);
-        } else {
-            const emailExists = allUsers.find(u => u.email === email);
-
-            if (emailExists) {
-                showAlert(`Incorrect password for this ${meta.name} account. Please try again.`, 'error');
-            } else if (allUsers.length === 0) {
-                showAlert(`No ${meta.name} account exists yet. Please register first.`, 'error');
-            } else {
-                showAlert(`No ${meta.name} account found with this email. Please check or register.`, 'error');
-            }
+        } catch (err) {
+            console.error('Login error:', err);
+            showAlert('Cannot reach server. Please check your connection and try again.', 'error');
+            loginBtn.disabled = false;
+            loginBtnText.textContent = originalText;
         }
     });
 
@@ -1228,19 +1148,16 @@
             return;
         }
 
-        // Lock button during check
         loginBtn.disabled = true;
         const originalText = loginBtnText.textContent;
         loginBtnText.textContent = 'Verifying…';
 
         try {
-            // ★ STEP A: Ask the BACKEND first
             const { ok, data } = await apiCall('/api/auth/login', {
                 method: 'POST',
                 body: { role: 'government', officialId: id, email, password }
             });
 
-            // ── Success from backend ──
             if (ok && data.role === 'government') {
                 try {
                     localStorage.setItem(GOVT_SESSION_KEY, data.officialId);
@@ -1267,7 +1184,6 @@
                 return;
             }
 
-            // ── Backend rejected credentials ──
             if (data && data.error) {
                 showAlert(data.error, 'error');
                 logGovtActivity(`Login rejected by backend (ID: ${id}): ${data.error}`, 'error');
@@ -1276,18 +1192,16 @@
                 return;
             }
 
-            // Backend returned unexpected data → try offline
             throw new Error('Unexpected backend response');
 
         } catch (err) {
-            // ★ STEP B: Backend unreachable → offline localStorage check
             console.warn('Backend unreachable, using offline check:', err);
             handleGovtLoginOffline(id, email, password);
         }
     }
 
     // ============================================================
-    // OFFLINE FALLBACK — original localStorage logic
+    // OFFLINE FALLBACK — govt login via localStorage
     // ============================================================
     function handleGovtLoginOffline(id, email, password) {
         setTimeout(() => {
@@ -1346,7 +1260,6 @@
                 return;
             }
 
-            // SUCCESS (offline)
             const officials2 = getGovtOfficials();
             const idx = officials2.findIndex(o => o.officialId === official.officialId);
             if (idx !== -1) {
@@ -1489,7 +1402,7 @@
 
         updateThemeIcon();
 
-        console.log('🔐 Login page ready — government accounts validate against backend (with offline fallback).');
+        console.log('🔐 Login page ready — all roles now validate against backend.');
     });
 
     // ============================================================

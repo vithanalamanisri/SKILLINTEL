@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
         body {
@@ -711,51 +712,119 @@
 
 <script>
     // ============================================================
-    // ✅ FIXED DATA LOADER - Reads from ALL arrays
+    // BACKEND CACHE
     // ============================================================
+    let _providerBackend = null;
 
-    function getProviderData() {
-        const currentEmail = localStorage.getItem('currentProviderEmail');
+    // ============================================================
+    // LOAD PROVIDER DATA (backend first)
+    // ============================================================
+    async function getProviderData() {
+        const currentEmail = localStorage.getItem('currentProviderEmail') || localStorage.getItem('userEmail') || '';
+
+        // Try backend
+        try {
+            const res = await apiCall('/api/providers');
+            if (res.ok && Array.isArray(res.data)) {
+                const match = res.data.find(p => (p.email || '').toLowerCase() === currentEmail.toLowerCase());
+                if (match) {
+                    _providerBackend = match;
+                    return {
+                        id: match.id,
+                        providerId: 'PRV' + String(match.id).padStart(4, '0'),
+                        orgName: match.name || 'Provider',
+                        contactPerson: match.name || 'Provider',
+                        email: match.email,
+                        mobile: match.contact || 'N/A',
+                        state: match.state || 'N/A',
+                        district: match.district || 'N/A',
+                        status: match.verified ? 'Active' : 'Pending Verification',
+                    };
+                }
+            }
+        } catch (e) { console.warn('Backend provider load failed:', e); }
+
+        // Fallback localStorage
         const allProviders = JSON.parse(localStorage.getItem('allProviders') || '[]');
         let data = allProviders.find(p => p.email === currentEmail);
-        
         if (!data) {
             const oldData = localStorage.getItem('providerData');
-            if (oldData) {
-                try { data = JSON.parse(oldData); } catch(e) {}
-            }
+            if (oldData) { try { data = JSON.parse(oldData); } catch(e) {} }
+        }
+        if (!data) {
+            data = {
+                providerId: 'PRV2026-0000',
+                orgName: 'Your Training Centre',
+                contactPerson: 'Provider',
+                email: '',
+                mobile: '',
+                status: 'Active',
+            };
         }
         return data;
     }
 
-    // ✅ Load ALL trainees from array
-    function getAllTrainees() {
+    // ============================================================
+    // LOAD ALL TRAINEES (backend first)
+    // ============================================================
+    async function getAllTrainees() {
+        // Try backend
+        try {
+            const res = await apiCall('/api/trainees');
+            if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
+                return res.data.map((t, index) => {
+                    // Determine status
+                    let status = 'pending';
+                    const ts = (t.training_status || '').toLowerCase();
+                    if (ts === 'completed') status = 'pending';   // completed training, awaiting placement
+                    else if (ts === 'training') status = 'pending';
+                    // If assessment passed
+                    if (t.assessment_result === 'Pass') status = 'pending';
+
+                    return {
+                        id: t.trainee_code || 'TRN' + t.id,
+                        backendId: t.id,
+                        name: t.full_name || 'Trainee',
+                        email: t.email || '',
+                        mobile: t.phone || 'N/A',
+                        course: t.skills || t.qualification || 'Training',
+                        provider: 'N/A',
+                        batch: 'N/A',
+                        registrationDate: (t.created_at || '').split('T')[0] || 'N/A',
+                        trainingProgress: t.assessment_score || 0,
+                        certificationStatus: t.assessment_result === 'Pass' ? 'Certified' : 'Pending',
+                        company: 'N/A',
+                        jobRole: t.preferred_role || 'N/A',
+                        employmentType: 'N/A',
+                        joiningDate: 'N/A',
+                        currentIncome: 0,
+                        previousIncome: 0,
+                        employmentStatus: 'Not Updated',
+                        followupStatus: 'Pending',
+                        status: status,
+                        avatar: (t.full_name || 'T').charAt(0).toUpperCase(),
+                        color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6]
+                    };
+                });
+            }
+        } catch (e) { console.warn('Backend trainees load failed:', e); }
+
+        // Fallback localStorage
         const allTraineesArray = JSON.parse(localStorage.getItem('allTrainees') || '[]');
         const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
         const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
 
-        console.log('🔍 Provider loading:');
-        console.log('   allTrainees:', allTraineesArray.length);
-        console.log('   allEmployment:', allEmployment.length);
-        console.log('   allFollowups:', allFollowups.length);
+        if (allTraineesArray.length === 0) return [];
 
-        // If no real data, return empty array
-        if (allTraineesArray.length === 0) {
-            return [];
-        }
-
-        // ✅ Merge each trainee with employment + followup
         return allTraineesArray.map((t, index) => {
             const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
             const fol = allFollowups.find(f => f.traineeEmail === t.email) || {};
 
-            // Determine employment status
             let status = 'pending';
             const empStatus = emp.status || t.employmentStatusDisplay || '';
             if (empStatus === 'Employed') status = 'employed';
             else if (empStatus === 'Self-Employed') status = 'self';
             else if (empStatus === 'Unemployed' || empStatus === 'Looking for Job') status = 'unemployed';
-            else status = 'pending';
 
             return {
                 id: t.traineeId || 'TRN' + (index + 1),
@@ -768,8 +837,6 @@
                 registrationDate: t.registrationDate || t.registeredAt || 'N/A',
                 trainingProgress: t.trainingProgress || 0,
                 certificationStatus: t.certificationStatus || 'Pending',
-                
-                // Employment
                 company: emp.companyName || 'N/A',
                 jobRole: emp.jobRole || 'N/A',
                 employmentType: emp.employmentType || 'N/A',
@@ -777,11 +844,7 @@
                 currentIncome: parseInt(emp.currentIncome) || 0,
                 previousIncome: parseInt(emp.previousIncome) || 0,
                 employmentStatus: empStatus || 'Not Updated',
-                
-                // Followup
                 followupStatus: fol.status || 'Pending',
-                
-                // Display
                 status: status,
                 avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
                 color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6]
@@ -795,11 +858,9 @@
     let allTrainees = [];
     let programs = [];
 
-    function loadData() {
-        const providerData = getProviderData();
-        
-        // ✅ Load ALL trainees
-        allTrainees = getAllTrainees();
+    async function loadData() {
+        const providerData = await getProviderData();
+        allTrainees = await getAllTrainees();
         console.log('✅ Loaded', allTrainees.length, 'trainees for provider view');
 
         // Build programs from trainees' courses
@@ -807,11 +868,7 @@
         allTrainees.forEach(t => {
             const course = t.course || 'Other';
             if (!courseGroups[course]) {
-                courseGroups[course] = { 
-                    name: course, 
-                    trainees: 0, 
-                    totalProgress: 0 
-                };
+                courseGroups[course] = { name: course, trainees: 0, totalProgress: 0 };
             }
             courseGroups[course].trainees++;
             courseGroups[course].totalProgress += (t.trainingProgress || 0);
@@ -824,11 +881,8 @@
             color: ['green', 'blue', 'orange', 'purple'][i % 4]
         }));
 
-        // If no programs, use defaults
         if (programs.length === 0) {
-            programs = [
-                { name: 'No Programs Yet', trainees: 0, progress: 0, color: 'blue' }
-            ];
+            programs = [{ name: 'No Programs Yet', trainees: 0, progress: 0, color: 'blue' }];
         }
 
         // Update provider info
@@ -848,7 +902,6 @@
     // ============================================================
     // RENDER
     // ============================================================
-
     function renderAll() {
         const total = allTrainees.length;
         const employed = allTrainees.filter(t => t.status === 'employed').length;
@@ -859,25 +912,21 @@
         const placementRate = total > 0 ? Math.round((placed / total) * 100) : 0;
         const retentionRate = total > 0 ? Math.round((employed / total) * 100) : 0;
 
-        // Welcome stats
         document.getElementById('totalTrainees').textContent = total;
         document.getElementById('placedCount').textContent = placed;
         document.getElementById('retentionRate').textContent = retentionRate + '%';
         document.getElementById('activePrograms').textContent = programs.length;
 
-        // Stats cards
         document.getElementById('statTrainees').textContent = total;
         document.getElementById('statPlaced').textContent = placed;
         document.getElementById('statPlacementRate').textContent = placementRate + '%';
         document.getElementById('statRetention').textContent = retentionRate + '%';
 
-        // Charts
         renderDonutChart(employed, self, pending, unemployed, total);
         renderBarChart();
         renderTraineeList();
         renderEmploymentSummary(employed, self, pending, unemployed, placed, placementRate, retentionRate);
 
-        // Notification
         document.getElementById('notifBadge').textContent = pending;
     }
 
@@ -903,7 +952,6 @@
 
         let gradient = '';
         let currentAngle = 0;
-
         data.forEach(d => {
             const pct = (d.value / totalVal) * 100;
             if (pct > 0) {
@@ -931,21 +979,16 @@
 
     function renderBarChart() {
         const container = document.getElementById('barChart');
-        
-        // Calculate enrollments by month from real data
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const enrollments = new Array(12).fill(0);
 
         allTrainees.forEach(t => {
             if (t.registrationDate && t.registrationDate !== 'N/A') {
                 const date = new Date(t.registrationDate);
-                if (!isNaN(date)) {
-                    enrollments[date.getMonth()]++;
-                }
+                if (!isNaN(date)) enrollments[date.getMonth()]++;
             }
         });
 
-        // If all zero, show demo data
         const totalEnrollments = enrollments.reduce((a, b) => a + b, 0);
         if (totalEnrollments === 0) {
             container.innerHTML = `
@@ -975,7 +1018,6 @@
 
     function renderTraineeList() {
         const container = document.getElementById('traineeList');
-        
         if (allTrainees.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
@@ -987,7 +1029,6 @@
         }
 
         const list = allTrainees.slice(0, 4);
-
         const statusMap = {
             'employed': { label: 'Employed', class: 'employed' },
             'self': { label: 'Self-Employed', class: 'self' },
@@ -1014,7 +1055,6 @@
 
     function renderEmploymentSummary(employed, self, pending, unemployed, placed, placementRate, retentionRate) {
         const container = document.getElementById('employmentSummary');
-        
         if (allTrainees.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
@@ -1041,7 +1081,6 @@
     // ============================================================
     // UTILITY
     // ============================================================
-
     function updateDate() {
         const now = new Date();
         document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
@@ -1058,22 +1097,39 @@
         alert('👤 Profile Menu\n\nSettings · Support · Logout');
     }
 
-    function logout() {
+    async function logout() {
         if (confirm('Are you sure you want to logout?')) {
+            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
             localStorage.removeItem('currentProviderEmail');
             localStorage.removeItem('currentProviderId');
-            alert('Logging out...');
             window.location.href = '../auth/login.html';
         }
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
     // ============================================================
     // INIT
     // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Apply saved theme
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
 
-    document.addEventListener('DOMContentLoaded', function() {
         updateDate();
-        loadData();
+        await loadData();
 
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
@@ -1089,5 +1145,6 @@
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="../css/style.css">
-
+    <script src="../js/api.js"></script>
     <!-- ✅ Apply theme BEFORE page renders -->
     <script>
       (function() {
@@ -1653,89 +1653,114 @@
         return allChecked;
     }
 
-    // ============================================================
-    // REGISTER PROVIDER
-    // ============================================================
-    function registerProvider() {
-        if (!checkAllConsents()) {
-            showAlert('Please accept <strong>all 5 consent terms</strong> to complete registration.', 'error');
-            document.querySelector('.consent-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
+   // ============================================================
+// REGISTER PROVIDER — backend-first
+// ============================================================
+async function registerProvider() {
+    if (!checkAllConsents()) {
+        showAlert('Please accept <strong>all 5 consent terms</strong> to complete registration.', 'error');
+        document.querySelector('.consent-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    const providerData = {
+        providerId: document.getElementById('providerId').value,
+        orgName: document.getElementById('orgName').value.trim(),
+        email: document.getElementById('email').value.trim().toLowerCase(),
+        password: document.getElementById('password').value,
+        mobile: document.getElementById('mobile').value.trim(),
+        orgType: document.getElementById('orgType').value,
+        registrationNumber: document.getElementById('registrationNumber').value.trim(),
+        yearEstablished: document.getElementById('yearEstablished').value,
+        website: document.getElementById('website').value.trim() || '',
+        orgEmail: document.getElementById('orgEmail').value.trim() || '',
+        orgPhone: document.getElementById('orgPhone').value.trim() || '',
+        repName: document.getElementById('repName').value.trim(),
+        designation: document.getElementById('designation').value.trim(),
+        repEmail: document.getElementById('repEmail').value.trim(),
+        repMobile: document.getElementById('repMobile').value.trim(),
+        state: document.getElementById('state').value,
+        district: document.getElementById('district').value.trim(),
+        mandal: document.getElementById('mandal').value.trim() || '',
+        city: document.getElementById('city').value.trim(),
+        pincode: document.getElementById('pincode').value.trim(),
+        areaType: document.getElementById('areaType').value,
+        address: document.getElementById('address').value.trim(),
+        trainingSector: document.getElementById('trainingSector').value,
+        skillsOffered: document.getElementById('skillsOffered').value.trim(),
+        trainingCapacity: document.getElementById('trainingCapacity').value,
+        batchSize: document.getElementById('batchSize').value,
+        trainerCount: document.getElementById('trainerCount').value,
+        assessmentAvailable: document.getElementById('assessmentAvailable').value,
+        certificationAvailable: document.getElementById('certificationAvailable').value,
+        certificationAuthority: document.getElementById('certificationAuthority').value.trim() || '',
+        schemeName: document.getElementById('schemeName').value,
+        programCode: document.getElementById('programCode').value.trim() || '',
+        recognitionStatus: document.getElementById('recognitionStatus').value,
+        verificationStatus: document.getElementById('verificationStatus').value,
+        consentOrg: document.getElementById('consentOrg').checked,
+        consentRecords: document.getElementById('consentRecords').checked,
+        consentMonitoring: document.getElementById('consentMonitoring').checked,
+        consentCompliance: document.getElementById('consentCompliance').checked,
+        consentDataSharing: document.getElementById('consentDataSharing').checked,
+        registrationDate: new Date().toISOString().split('T')[0],
+        status: 'Active'
+    };
+
+    const registerBtn = document.getElementById('registerBtn');
+    registerBtn.disabled = true;
+    const originalHTML = registerBtn.innerHTML;
+    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+
+    try {
+        // STEP 1: Create user account
+        const userResult = await apiCall('/api/auth/register', {
+            method: 'POST',
+            body: {
+                username: providerData.email,
+                password: providerData.password,
+                role: 'provider',
+                full_name: providerData.orgName,
+                email: providerData.email,
+                phone: providerData.mobile,
+            },
+        });
+        if (!userResult.ok && userResult.status !== 409) {
+            throw new Error('Account creation failed: ' + (userResult.data.error || userResult.status));
         }
 
-        const providerData = {
-            providerId: document.getElementById('providerId').value,
-            orgName: document.getElementById('orgName').value.trim(),
-            email: document.getElementById('email').value.trim(),
-            password: document.getElementById('password').value,
-            mobile: document.getElementById('mobile').value.trim(),
-            orgType: document.getElementById('orgType').value,
-            registrationNumber: document.getElementById('registrationNumber').value.trim(),
-            yearEstablished: document.getElementById('yearEstablished').value,
-            website: document.getElementById('website').value.trim() || '',
-            orgEmail: document.getElementById('orgEmail').value.trim() || '',
-            orgPhone: document.getElementById('orgPhone').value.trim() || '',
-            repName: document.getElementById('repName').value.trim(),
-            designation: document.getElementById('designation').value.trim(),
-            repEmail: document.getElementById('repEmail').value.trim(),
-            repMobile: document.getElementById('repMobile').value.trim(),
-            state: document.getElementById('state').value,
-            district: document.getElementById('district').value.trim(),
-            mandal: document.getElementById('mandal').value.trim() || '',
-            city: document.getElementById('city').value.trim(),
-            pincode: document.getElementById('pincode').value.trim(),
-            areaType: document.getElementById('areaType').value,
-            address: document.getElementById('address').value.trim(),
-            trainingSector: document.getElementById('trainingSector').value,
-            skillsOffered: document.getElementById('skillsOffered').value.trim(),
-            trainingCapacity: document.getElementById('trainingCapacity').value,
-            batchSize: document.getElementById('batchSize').value,
-            trainerCount: document.getElementById('trainerCount').value,
-            assessmentAvailable: document.getElementById('assessmentAvailable').value,
-            certificationAvailable: document.getElementById('certificationAvailable').value,
-            certificationAuthority: document.getElementById('certificationAuthority').value.trim() || '',
-            schemeName: document.getElementById('schemeName').value,
-            programCode: document.getElementById('programCode').value.trim() || '',
-            recognitionStatus: document.getElementById('recognitionStatus').value,
-            verificationStatus: document.getElementById('verificationStatus').value,
-            consentOrg: document.getElementById('consentOrg').checked,
-            consentRecords: document.getElementById('consentRecords').checked,
-            consentMonitoring: document.getElementById('consentMonitoring').checked,
-            consentCompliance: document.getElementById('consentCompliance').checked,
-            consentDataSharing: document.getElementById('consentDataSharing').checked,
-            registrationDate: new Date().toISOString().split('T')[0],
-            status: 'Active'
-        };
+        // STEP 2: Create provider record
+        const provResult = await apiCall('/api/providers', {
+            method: 'POST',
+            body: {
+                name: providerData.orgName,
+                state: providerData.state,
+                district: providerData.district,
+                contact: providerData.repMobile || providerData.mobile,
+                email: providerData.email,
+            },
+        });
+        if (!provResult.ok && provResult.status !== 409) {
+            throw new Error('Provider record creation failed: ' + (provResult.data.error || provResult.status));
+        }
 
-        console.log('📋 Provider Registration Data:', providerData);
-
-        // ✅ SAVE to localStorage
+        // STEP 3: Local cache
         try {
             let allProviders = JSON.parse(localStorage.getItem('allProviders') || '[]');
-
-            const existingIndex = allProviders.findIndex(p => p.email === providerData.email);
-            if (existingIndex !== -1) {
-                allProviders[existingIndex] = { ...allProviders[existingIndex], ...providerData };
-            } else {
-                providerData.providerId = providerData.providerId || 'PRV' + Date.now();
-                providerData.registeredAt = new Date().toISOString();
-                allProviders.push(providerData);
-            }
-
+            const idx = allProviders.findIndex(p => p.email === providerData.email);
+            if (idx !== -1) allProviders[idx] = { ...allProviders[idx], ...providerData };
+            else allProviders.push(providerData);
             localStorage.setItem('allProviders', JSON.stringify(allProviders));
             localStorage.setItem('currentProviderEmail', providerData.email);
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userRole', 'provider');
+        } catch (e) { console.warn('localStorage cache failed:', e); }
 
-            // Backward compatibility
-            localStorage.setItem('providerData', JSON.stringify(providerData));
-
-            console.log('✅ Provider registered. Total providers:', allProviders.length);
-        } catch (e) {
-            console.error('Error saving provider data:', e);
-        }
-
-        try {
-            localStorage.setItem('registrationEmail', providerData.email);
-        } catch (e) {}
+        // STEP 4: Auto-login
+        await apiCall('/api/auth/login', {
+            method: 'POST',
+            body: { username: providerData.email, password: providerData.password, role: 'provider' },
+        });
 
         const successHTML = `
             <strong>🎉 Registration Successful!</strong><br>
@@ -1743,22 +1768,28 @@
                 Provider: <strong>${providerData.orgName}</strong> (${providerData.providerId})<br>
                 Sector: ${providerData.trainingSector} · Capacity: ${providerData.trainingCapacity}<br>
                 Rep: ${providerData.repName} · ${providerData.repEmail}<br>
-                Location: ${providerData.city}, ${providerData.district}, ${providerData.state}<br>
-                Status: <strong>${providerData.verificationStatus}</strong>
+                Location: ${providerData.city}, ${providerData.district}, ${providerData.state}<br><br>
+                <strong>☁️ Synced to cloud</strong> · <strong>Redirecting...</strong>
             </span>
         `;
-
         showAlert(successHTML, 'success');
         document.querySelector('.register-wrapper').scrollTop = 0;
 
-        const registerBtn = document.getElementById('registerBtn');
-        registerBtn.disabled = true;
-        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
-
         setTimeout(() => {
-            window.location.href = 'login.html?role=provider';
-        }, 3000);
+            window.location.href = '../provider/dashboard.html';
+        }, 2000);
+
+    } catch (err) {
+        console.error('❌ Provider registration failed:', err);
+        showAlert(`
+            <strong>Registration Failed</strong><br>
+            <span style="font-size:0.75rem;">${err.message}<br>
+            Please try again or check your internet connection.</span>
+        `, 'error');
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = originalHTML;
     }
+}
 
     // ============================================================
     // INITIALIZE

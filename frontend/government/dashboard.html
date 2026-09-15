@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
     <style>
         /* ============================================================
            RESET & BASE
@@ -1176,7 +1177,7 @@ MAIN CONTENT
         </div>
         <div class="table-container">
             <div class="table-header">
-                <h3><i class="fas fa-database"></i> Live Records from LocalStorage</h3>
+                <h3><i class="fas fa-database"></i> Live Records</h3>
                 <div style="display:flex; gap:8px;">
                     <button onclick="refreshData()" style="padding:6px 14px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; font-size:11px; font-weight:600; color:#475569; cursor:pointer;">
                         <i class="fas fa-sync"></i> Refresh
@@ -1263,70 +1264,99 @@ MAIN CONTENT
 
 <script>
     // ============================================================
-    // ✅ Load ALL data from arrays
+    // BACKEND CACHE
     // ============================================================
+    let _govtBackend = null;
 
-    function getAllTraineesFromArray() {
-        const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
-        const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-        const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
+    // ============================================================
+    // LOAD ALL TRAINEES FROM BACKEND (with employment status)
+    // ============================================================
+    async function getAllTraineesFromBackend() {
+        try {
+            const [traineesRes, employersRes, providersRes] = await Promise.all([
+                apiCall('/api/trainees'),
+                apiCall('/api/employers'),
+                apiCall('/api/providers'),
+            ]);
 
-        console.log('📊 Government Dashboard - Loading data:');
-        console.log('   allTrainees:', allTrainees.length);
-        console.log('   allEmployment:', allEmployment.length);
-        console.log('   allFollowups:', allFollowups.length);
+            if (traineesRes.ok && Array.isArray(traineesRes.data) && traineesRes.data.length > 0) {
+                // Also grab trainee 360 detail for each to get employment info
+                const trainees = traineesRes.data;
 
-        if (allTrainees.length === 0) return [];
+                // Fetch 360 for each (parallel, but limited)
+                const detailed = await Promise.all(trainees.slice(0, 100).map(async (t) => {
+                    try {
+                        const r = await apiCall('/api/trainees/' + t.id + '/360');
+                        return r.ok ? r.data : t;
+                    } catch (e) { return t; }
+                }));
 
-        return allTrainees.map((t, index) => {
-            const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
-            const fol = allFollowups.find(f => f.traineeEmail === t.email) || {};
+                return detailed.map((t, index) => {
+                    // Determine employment status from employments
+                    let empStatus = 'unemployed';
+                    let currentIncome = 0;
+                    let joiningDate = 'N/A';
+                    let district = t.district || 'N/A';
 
-            const empStatus = emp.status || t.employmentStatusDisplay || 'Not Updated';
-            let status = 'unemployed';
-            if (empStatus === 'Employed') status = 'employed';
-            else if (empStatus === 'Self-Employed') status = 'self-employed';
-            else if (empStatus === 'Internship' || empStatus === 'Apprenticeship') status = 'internship';
+                    if (t.employments && t.employments.length > 0) {
+                        const emp = t.employments[0];
+                        const empType = (emp.employment_type || '').toLowerCase();
+                        if (empType === 'self') empStatus = 'self-employed';
+                        else if (empType === 'intern' || empType === 'apprentice') empStatus = 'internship';
+                        else if (emp.status === 'verified') empStatus = 'employed';
+                        else empStatus = 'employed'; // if any record exists, count as employed
 
-            return {
-                id: t.traineeId || 'TRN' + (index + 1),
-                name: t.fullName || 'Unknown',
-                email: t.email || '',
-                program: t.skillTrade || 'N/A',
-                provider: t.trainingProvider || 'N/A',
-                district: emp.jobCity || t.location || t.district || 'N/A',
-                status: status,
-                income: parseInt(emp.currentIncome) || parseInt(t.currentIncome) || 0,
-                joiningDate: emp.joiningDate || t.joiningDate || 'N/A',
-                avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
-                color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
-                isRealData: true
-            };
-        });
+                        currentIncome = emp.monthly_income || 0;
+                        joiningDate = emp.start_date || 'N/A';
+                    }
+
+                    return {
+                        id: t.trainee_code || ('TRN' + t.id),
+                        backendId: t.id,
+                        name: t.full_name || 'Trainee',
+                        email: t.email || '',
+                        program: t.skills || t.qualification || 'N/A',
+                        provider: 'N/A',
+                        district: district,
+                        status: empStatus,
+                        income: currentIncome,
+                        joiningDate: joiningDate,
+                        avatar: (t.full_name || 'T').charAt(0).toUpperCase(),
+                        color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
+                        isRealData: true,
+                    };
+                });
+            }
+        } catch (e) {
+            console.warn('Backend govt data load failed:', e);
+        }
+        return [];
     }
 
-    function getEmployersCount() {
-        const allEmployers = JSON.parse(localStorage.getItem('allEmployers') || '[]');
-        return allEmployers.length;
+    async function getEmployersCount() {
+        try {
+            const r = await apiCall('/api/employers');
+            if (r.ok && Array.isArray(r.data)) return r.data.length;
+        } catch (e) {}
+        return JSON.parse(localStorage.getItem('allEmployers') || '[]').length;
     }
 
-    function getProvidersCount() {
-        const allProviders = JSON.parse(localStorage.getItem('allProviders') || '[]');
-        return allProviders.length;
+    async function getProvidersCount() {
+        try {
+            const r = await apiCall('/api/providers');
+            if (r.ok && Array.isArray(r.data)) return r.data.length;
+        } catch (e) {}
+        return JSON.parse(localStorage.getItem('allProviders') || '[]').length;
     }
 
     function getGovernmentData() {
-        const govData = localStorage.getItem('governmentData');
-        if (govData) {
-            try { return JSON.parse(govData); } catch(e) {}
-        }
-        return null;
+        try { return JSON.parse(localStorage.getItem('governmentData') || 'null'); }
+        catch (e) { return null; }
     }
 
     // ============================================================
     // FALLBACK SAMPLE DATA
     // ============================================================
-
     function getFallbackRecords() {
         return [
             { id: 'TRN001', name: 'Priya Sharma', program: 'Data Analytics', provider: 'Skill India Centre', district: 'Bengaluru', status: 'employed', income: 28000, joiningDate: '2026-04-12', avatar: 'P', color: '#2563eb' },
@@ -1338,22 +1368,50 @@ MAIN CONTENT
         ];
     }
 
-    function getAllRecords() {
-        const realRecords = getAllTraineesFromArray();
+    async function getAllRecords() {
+        const realRecords = await getAllTraineesFromBackend();
 
         if (realRecords.length > 0) {
-            console.log('✅ Using REAL data:', realRecords.length, 'records');
+            console.log('✅ Using REAL data from backend:', realRecords.length, 'records');
             return { records: realRecords, isRealData: true };
-        } else {
-            console.log('⚠️ No real data found - using fallback');
-            return { records: getFallbackRecords(), isRealData: false };
         }
+
+        // Try localStorage fallback
+        const localTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+        if (localTrainees.length > 0) {
+            const localRecords = localTrainees.map((t, index) => {
+                const allEmp = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+                const emp = allEmp.find(e => e.traineeEmail === t.email) || {};
+                const empStatus = emp.status || t.employmentStatusDisplay || '';
+                let status = 'unemployed';
+                if (empStatus === 'Employed') status = 'employed';
+                else if (empStatus === 'Self-Employed') status = 'self-employed';
+                else if (empStatus === 'Internship' || empStatus === 'Apprenticeship') status = 'internship';
+
+                return {
+                    id: t.traineeId || 'TRN' + (index + 1),
+                    name: t.fullName || 'Unknown',
+                    program: t.skillTrade || 'N/A',
+                    provider: t.trainingProvider || 'N/A',
+                    district: emp.jobCity || t.district || 'N/A',
+                    status: status,
+                    income: parseInt(emp.currentIncome) || 0,
+                    joiningDate: emp.joiningDate || 'N/A',
+                    avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
+                    color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
+                    isRealData: true
+                };
+            });
+            return { records: localRecords, isRealData: true };
+        }
+
+        console.log('⚠️ No real data found - using fallback');
+        return { records: getFallbackRecords(), isRealData: false };
     }
 
     // ============================================================
     // CALCULATE STATISTICS
     // ============================================================
-
     function calculateStats(records) {
         const total = records.length;
         const employed = records.filter(r => r.status === 'employed').length;
@@ -1414,18 +1472,22 @@ MAIN CONTENT
     }
 
     // ============================================================
-    // RENDER
+    // STATE
     // ============================================================
-
     let allRecords = [];
     let stats = {};
     let isRealData = false;
+    let _employerCount = 0;
+    let _providerCount = 0;
 
-    function loadAndRender() {
-        const result = getAllRecords();
+    async function loadAndRender() {
+        const result = await getAllRecords();
         allRecords = result.records;
         isRealData = result.isRealData;
         stats = calculateStats(allRecords);
+
+        _employerCount = await getEmployersCount();
+        _providerCount = await getProvidersCount();
 
         renderDataSourceBanner();
         renderBanner();
@@ -1446,12 +1508,9 @@ MAIN CONTENT
         const title = document.getElementById('dsTitle');
         const sub = document.getElementById('dsSub');
 
-        const employerCount = getEmployersCount();
-        const providerCount = getProvidersCount();
-
         document.getElementById('dsTrainees').textContent = allRecords.length;
-        document.getElementById('dsEmployers').textContent = employerCount;
-        document.getElementById('dsProviders').textContent = providerCount;
+        document.getElementById('dsEmployers').textContent = _employerCount;
+        document.getElementById('dsProviders').textContent = _providerCount;
 
         if (isRealData) {
             banner.className = 'data-source-banner';
@@ -1479,7 +1538,7 @@ MAIN CONTENT
         document.getElementById('kpiEmploymentRate').textContent = stats.rate + '%';
         document.getElementById('kpiRetentionRate').textContent = stats.retentionRate + '%';
         document.getElementById('kpiAvgIncome').textContent = '₹' + (stats.avgIncome >= 1000 ? (stats.avgIncome/1000).toFixed(0) + 'K' : stats.avgIncome);
-        document.getElementById('kpiProviders').textContent = Object.keys(stats.providers).length;
+        document.getElementById('kpiProviders').textContent = Object.keys(stats.providers).length || _providerCount;
     }
 
     function renderPipeline() {
@@ -1636,9 +1695,6 @@ MAIN CONTENT
         }).join('');
     }
 
-    // ============================================================
-    // ✅ UPDATED: renderTraineeTable WITH "View 360°" LINK
-    // ============================================================
     function renderTraineeTable() {
         const tbody = document.getElementById('traineeTableBody');
         document.getElementById('recordCount').textContent = allRecords.length + ' records';
@@ -1666,7 +1722,6 @@ MAIN CONTENT
                                r.status === 'self-employed' ? 'Self-Employed' :
                                r.status === 'internship' ? 'Internship' : 'Unemployed';
 
-            // ✅ Real trainee ID passed to the 360° profile page
             const profileUrl = `trainee-360-profile.html?traineeId=${encodeURIComponent(r.id)}`;
 
             return `<tr>
@@ -1712,7 +1767,6 @@ MAIN CONTENT
     // ============================================================
     // UTILITIES
     // ============================================================
-
     function updateDate() {
         const now = new Date();
         document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
@@ -1720,9 +1774,9 @@ MAIN CONTENT
         });
     }
 
-    function refreshData() {
-        loadAndRender();
-        showToast('🔄 Data refreshed from localStorage!');
+    async function refreshData() {
+        await loadAndRender();
+        showToast('🔄 Data refreshed from backend!');
     }
 
     function showToast(message) {
@@ -1744,24 +1798,33 @@ MAIN CONTENT
     function showNotifications() {
         const pending = allRecords.filter(r => r.status === 'unemployed').length;
         const employed = allRecords.filter(r => r.status === 'employed').length;
-        alert(`📬 Notifications\n\n• ${pending} trainees unemployed\n• ${employed} trainees employed\n• ${allRecords.length} total records\n\n${isRealData ? '✅ Using REAL data from localStorage' : '⚠️ Using SAMPLE data - register users to see live data'}`);
+        alert(`📬 Notifications\n\n• ${pending} trainees unemployed\n• ${employed} trainees employed\n• ${allRecords.length} total records\n\n${isRealData ? '✅ Using REAL data from backend' : '⚠️ Using SAMPLE data'}`);
     }
 
     function toggleProfileMenu() {
         alert('👤 Profile Menu\n\nSettings · Support · Logout');
     }
 
-    function logout() {
+    async function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
+            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
             window.location.href = '../auth/login.html';
         }
     }
 
-    // ============================================================
-    // AUTO-REFRESH: Listen for localStorage changes
-    // ============================================================
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
 
+    // ============================================================
+    // STORAGE EVENT (cross-tab refresh)
+    // ============================================================
     window.addEventListener('storage', function(e) {
         if (e.key === 'allTrainees' || e.key === 'allEmployment' ||
             e.key === 'allProviders' || e.key === 'allEmployers' ||
@@ -1772,12 +1835,19 @@ MAIN CONTENT
     });
 
     // ============================================================
-    // INITIALIZE
+    // INIT
     // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Apply saved theme
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
 
-    document.addEventListener('DOMContentLoaded', function() {
         updateDate();
-        loadAndRender();
+        await loadAndRender();
 
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
@@ -1792,11 +1862,9 @@ MAIN CONTENT
         console.log('✅ Government Dashboard loaded!');
         console.log('📋 Data Source:', isRealData ? '✅ REAL DATA' : '⚠️ SAMPLE DATA');
         console.log('📈 Total Records:', allRecords.length);
-        console.log('💼 Employed:', stats.employed);
-        console.log('📊 Employment Rate:', stats.rate + '%');
-        console.log('💰 Avg Income:', '₹' + stats.avgIncome.toLocaleString());
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

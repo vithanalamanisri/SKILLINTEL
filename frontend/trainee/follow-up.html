@@ -12,6 +12,7 @@
 
     <!-- Master theme -->
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
 
     <style>
         /* ===== RESET & BASE ===== */
@@ -624,6 +625,7 @@
         }
 
         .save:hover { box-shadow: 0 14px 30px rgba(79,70,229,0.35); }
+        .save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1100px) {
@@ -1072,15 +1074,49 @@
         <button class="btn draft" onclick="saveDraft()">
             <i class="fas fa-pen"></i> Draft
         </button>
-        <button class="btn save" onclick="saveFollowup()">
+        <button class="btn save" id="saveBtn" onclick="saveFollowup()">
             <i class="fas fa-save"></i> Save Follow-up
         </button>
     </div>
 </div>
 
 <script>
-    // ===== LOAD USER DATA =====
-    function loadUserData() {
+    // ============================================================
+    // BACKEND STATE
+    // ============================================================
+    let _traineeBackendId = null;
+    let _backendFollowups = [];
+
+    // ============================================================
+    // LOAD USER DATA — backend-first
+    // ============================================================
+    async function loadUserData() {
+        const currentEmail = localStorage.getItem('currentTraineeEmail') ||
+                             (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
+
+        // Try backend
+        try {
+            const res = await apiCall('/api/trainees?search=' + encodeURIComponent(currentEmail || ''));
+            if (res.ok && Array.isArray(res.data)) {
+                const found = res.data.find(t =>
+                    (t.email || '').toLowerCase() === (currentEmail || '').toLowerCase()
+                );
+                if (found) {
+                    _traineeBackendId = found.id;
+                    localStorage.setItem('currentTraineeId', String(found.id));
+
+                    const initial = (found.full_name || 'T').charAt(0).toUpperCase();
+                    document.getElementById('userAvatar').textContent = initial;
+                    document.getElementById('userName').textContent = found.full_name || 'Trainee';
+                    console.log('👋 Welcome, ' + (found.full_name || found.email));
+                    return found;
+                }
+            }
+        } catch (e) {
+            console.warn('Backend trainee load failed:', e);
+        }
+
+        // Fallback localStorage
         const storedData = localStorage.getItem('traineeData');
         if (storedData) {
             try {
@@ -1089,14 +1125,79 @@
                     document.getElementById('userAvatar').textContent = data.fullName.charAt(0).toUpperCase();
                     document.getElementById('userName').textContent = data.fullName;
                 }
-                console.log('👋 Welcome, ' + data.fullName);
-            } catch (e) {
-                console.error('Error loading user data:', e);
+            } catch (e) {}
+        }
+        return null;
+    }
+
+    // ============================================================
+    // LOAD EXISTING FOLLOW-UPS FROM BACKEND
+    // ============================================================
+    async function loadBackendFollowups() {
+        if (!_traineeBackendId) return;
+
+        try {
+            const res = await apiCall('/api/trainees/' + _traineeBackendId + '/360');
+            if (res.ok && res.data && res.data.followups) {
+                _backendFollowups = res.data.followups;
+                console.log('📂 Loaded', _backendFollowups.length, 'follow-ups from backend');
+
+                // Render real timeline from backend data
+                renderRealTimeline(_backendFollowups);
+
+                // Load latest follow-up into form
+                const latest = _backendFollowups.find(f => f.status !== 'completed') || _backendFollowups[0];
+                if (latest) {
+                    if (latest.period_days) {
+                        document.getElementById('followupPeriod').value = latest.period_days + ' Days';
+                    }
+                    if (latest.due_date) {
+                        document.getElementById('followupDate').value = latest.due_date;
+                    }
+                    if (latest.status) {
+                        const statusMap = {
+                            'completed': 'Completed',
+                            'due': 'Pending',
+                            'pending': 'Pending',
+                            'overdue': 'Pending',
+                        };
+                        document.getElementById('followupStatus').value = statusMap[latest.status] || 'Pending';
+                    }
+                }
             }
+        } catch (e) {
+            console.warn('Backend followup load failed:', e);
         }
     }
 
-    // ===== CALCULATE INCOME GROWTH =====
+    function renderRealTimeline(followups) {
+        const container = document.getElementById('timelineContainer');
+        if (!container) return;
+
+        container.innerHTML = followups.map(f => {
+            const isCompleted = f.status === 'completed';
+            const isDue = f.status === 'due' || f.status === 'pending' || f.status === 'overdue';
+            const cls = isCompleted ? 'completed' : isDue ? 'active' : 'locked';
+            const icon = isCompleted ? '✅' : isDue ? '📅' : '🔒';
+            const statusText = isCompleted ? 'Completed' : isDue ? 'Upcoming' : 'Pending';
+
+            return `
+                <div class="timeline-step ${cls}">
+                    <div class="step-circle">${icon}</div>
+                    <div class="step-name">${f.period_days} Days</div>
+                    <div class="step-status">${statusText}</div>
+                </div>
+            `;
+        }).join('');
+
+        // Update completed count
+        const completed = followups.filter(f => f.status === 'completed').length;
+        document.getElementById('completedCount').textContent = completed + ' / ' + followups.length;
+    }
+
+    // ============================================================
+    // CALCULATE INCOME GROWTH
+    // ============================================================
     function calculateIncome() {
         const previous = parseFloat(document.getElementById('prevIncome').value) || 0;
         const current = parseFloat(document.getElementById('currIncome').value) || 0;
@@ -1124,63 +1225,119 @@
         document.getElementById('incomeGrowth').value = growthText;
     }
 
-    // ===== SAVE FOLLOW-UP =====
-    function saveFollowup() {
+    // ============================================================
+    // SAVE FOLLOW-UP — backend-first
+    // ============================================================
+    async function saveFollowup() {
+        const saveBtn = document.getElementById('saveBtn');
         const currentEmail = localStorage.getItem('currentTraineeEmail') ||
                              (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
 
+        if (!currentEmail) {
+            alert('⚠️ No trainee logged in. Please login first.');
+            return;
+        }
+
+        const periodValue = document.getElementById('followupPeriod').value;
+        const periodDays = parseInt(periodValue) || 90;
+
         const followupData = {
             traineeEmail: currentEmail,
-            period: document.getElementById('followupPeriod').value,
+            period: periodValue,
+            periodDays: periodDays,
             date: document.getElementById('followupDate').value,
             status: document.getElementById('followupStatus').value,
             contactMethod: document.getElementById('contactMethod').value,
             notes: document.getElementById('followupNotes').value,
-
             empStatus: document.getElementById('empStatus').value,
             retentionStatus: document.getElementById('retentionStatus').value,
             companyName: document.getElementById('companyName').value,
             jobRole: document.getElementById('jobRole').value,
             empStartDate: document.getElementById('empStartDate').value,
             empType: document.getElementById('empType').value,
-
             prevIncome: document.getElementById('prevIncome').value,
             currIncome: document.getElementById('currIncome').value,
             incomeSource: document.getElementById('incomeSource').value,
             incomeStability: document.getElementById('incomeStability').value,
             incomeGrowth: document.getElementById('incomeGrowth').value,
-
             careerRating: document.getElementById('careerRating').value,
             skillsImproved: document.getElementById('skillsImproved').value,
             careerFeedback: document.getElementById('careerFeedback').value,
-
             savedDate: new Date().toISOString()
         };
 
+        // Lock button
+        saveBtn.disabled = true;
+        const originalHTML = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        // --- localStorage save first ---
         try {
             let allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
-
             const existingIndex = allFollowups.findIndex(f => f.traineeEmail === currentEmail);
             if (existingIndex !== -1) {
                 allFollowups[existingIndex] = { ...allFollowups[existingIndex], ...followupData };
             } else {
                 allFollowups.push(followupData);
             }
-
             localStorage.setItem('allFollowups', JSON.stringify(allFollowups));
             localStorage.setItem('followupData', JSON.stringify(followupData));
-
-            alert('✅ Follow-up details saved successfully!');
-            console.log('📋 Total follow-ups:', allFollowups.length);
-
-            updateDashboard(followupData);
         } catch (e) {
-            alert('❌ Error saving data. Please try again.');
-            console.error('Error:', e);
+            console.warn('localStorage save failed:', e);
         }
+
+        // --- backend save: update follow-up status ---
+        try {
+            if (_traineeBackendId) {
+                // Find the matching backend follow-up to update
+                const target = _backendFollowups.find(f => f.period_days === periodDays);
+                if (target) {
+                    const result = await apiCall('/api/followups/' + target.id + '/submit', {
+                        method: 'POST',
+                        body: {
+                            status: 'completed',
+                            submitted_at: new Date().toISOString(),
+                            data: JSON.stringify({
+                                empStatus: followupData.empStatus,
+                                companyName: followupData.companyName,
+                                jobRole: followupData.jobRole,
+                                currIncome: followupData.currIncome,
+                                prevIncome: followupData.prevIncome,
+                                careerRating: followupData.careerRating,
+                                notes: followupData.notes,
+                            }),
+                        },
+                    });
+
+                    if (result.ok) {
+                        console.log('✅ Follow-up saved to backend');
+                        // Reload follow-ups
+                        _backendFollowups = [];
+                        await loadBackendFollowups();
+                    } else {
+                        console.warn('Backend follow-up save failed:', result.data);
+                    }
+                } else {
+                    console.warn('No matching backend follow-up for period', periodDays);
+                }
+            } else {
+                console.warn('No backend trainee id — saved only to localStorage');
+            }
+        } catch (e) {
+            console.warn('Backend followup save error:', e);
+        }
+
+        // Restore button
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalHTML;
+
+        alert('✅ Follow-up details saved successfully!');
+        updateDashboard(followupData);
     }
 
-    // ===== SAVE DRAFT =====
+    // ============================================================
+    // SAVE DRAFT (localStorage only)
+    // ============================================================
     function saveDraft() {
         const followupData = {
             period: document.getElementById('followupPeriod').value,
@@ -1213,7 +1370,9 @@
         }
     }
 
-    // ===== CLEAR FORM =====
+    // ============================================================
+    // CLEAR FORM
+    // ============================================================
     function clearForm() {
         if (confirm('Are you sure you want to clear all fields?')) {
             document.getElementById('followupForm').reset();
@@ -1222,7 +1381,9 @@
         }
     }
 
-    // ===== UPDATE DASHBOARD =====
+    // ============================================================
+    // UPDATE DASHBOARD
+    // ============================================================
     function updateDashboard(data) {
         if (data) {
             if (data.period) {
@@ -1272,6 +1433,8 @@
 
             document.getElementById('healthScore').textContent = score + '%';
             document.getElementById('scoreInner').textContent = score + '%';
+            document.querySelector('.score-ring').style.background =
+                `conic-gradient(#2563eb 0deg ${score * 3.6}deg, #e2e8f0 ${score * 3.6}deg)`;
 
             if (score >= 80) {
                 document.getElementById('healthStatus').textContent = 'Excellent';
@@ -1290,46 +1453,56 @@
                 document.getElementById('healthTitle').textContent = 'Action Required 🔴';
                 document.getElementById('healthDescription').textContent = 'Please complete your follow-up information.';
             }
-
-            const completed = document.querySelectorAll('.timeline-step.completed').length;
-            document.getElementById('completedCount').textContent = completed + ' / 4';
         }
     }
 
-    // ===== SHOW NOTIFICATIONS =====
+    // ============================================================
+    // NOTIFICATIONS
+    // ============================================================
     function showNotifications() {
         alert('📬 No new notifications.');
     }
 
-    // ===== LOGOUT =====
-    function logout() {
+    // ============================================================
+    // LOGOUT
+    // ============================================================
+    async function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
+            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+            localStorage.removeItem('currentTraineeEmail');
+            localStorage.removeItem('currentTraineeId');
             window.location.href = '../../auth/login.html';
         }
     }
 
-    // ===== LOAD SAVED DATA =====
-    document.addEventListener('DOMContentLoaded', function() {
-        loadUserData();
-        calculateIncome();
+    // ============================================================
+    // THEME
+    // ============================================================
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
 
+    // ============================================================
+    // LOAD SAVED DATA (localStorage fallback for form)
+    // ============================================================
+    function loadLocalSavedData() {
         const savedData = localStorage.getItem('followupData');
         if (savedData) {
             try {
                 const data = JSON.parse(savedData);
                 Object.keys(data).forEach(key => {
                     const element = document.getElementById(key);
-                    if (element && data[key]) {
-                        element.value = data[key];
-                    }
+                    if (element && data[key]) element.value = data[key];
                 });
                 calculateIncome();
                 updateDashboard(data);
-                console.log('📂 Loaded saved follow-up data');
-            } catch (e) {
-                console.error('Error loading saved data:', e);
-            }
+            } catch (e) { console.error('Error loading saved data:', e); }
         }
 
         const draftData = localStorage.getItem('followupDraft');
@@ -1343,14 +1516,31 @@
                     }
                 });
                 calculateIncome();
-                console.log('📝 Loaded draft data');
-            } catch (e) {
-                console.error('Error loading draft:', e);
-            }
+            } catch (e) { console.error('Error loading draft:', e); }
         }
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Apply theme
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
+
+        await loadUserData();
+        await loadBackendFollowups();
+        loadLocalSavedData();
+        calculateIncome();
     });
 
-    // ===== MOBILE SIDEBAR TOGGLE =====
+    // ============================================================
+    // MOBILE SIDEBAR TOGGLE
+    // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
         const sidebar = document.getElementById('sidebar');
 

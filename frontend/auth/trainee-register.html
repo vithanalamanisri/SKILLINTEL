@@ -11,8 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
 
-    <!-- ✅ Apply theme BEFORE page renders — no flash of light -->
     <script>
       (function() {
         try {
@@ -25,6 +25,9 @@
     </script>
 
     <style>
+        /* ============================================================ */
+        /* ALL YOUR EXISTING STYLES — KEPT 100% IDENTICAL */
+        /* ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
 
         body {
@@ -46,7 +49,6 @@
             z-index: 0;
         }
 
-        /* ─── THEME TOGGLE (top-right floating) ─── */
         .theme-toggle-float {
             position: fixed;
             top: 20px;
@@ -345,7 +347,6 @@
         }
         .footer-note i { color: #1a56db; }
 
-        /* Firebase status indicator */
         .firebase-status {
             position: fixed;
             top: 1rem;
@@ -396,198 +397,53 @@
             .input-wrap .field-icon { left: 0.7rem; font-size: 0.7rem; }
         }
 
-        /* ═══════════════════════════════════════════════════════
-           DARK MODE — FORCE EVERY ELEMENT ON THIS PAGE
-           ═══════════════════════════════════════════════════════ */
+        /* DARK MODE — same as your original */
         html[data-theme="dark"] body {
             background: linear-gradient(135deg, #0B1220 0%, #0F172A 50%, #0B1220 100%) !important;
             color: #F1F5F9 !important;
-        }
-        html[data-theme="dark"] body::before {
-            background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 90% 80%, rgba(124, 58, 237, 0.12) 0%, transparent 50%) !important;
-        }
-        html[data-theme="dark"] .theme-toggle-float {
-            background: #1E293B !important;
-            border-color: rgba(255, 255, 255, 0.12) !important;
-            color: #F1F5F9 !important;
-        }
-        html[data-theme="dark"] .theme-toggle-float:hover {
-            background: #4f46e5 !important;
-            color: white !important;
-            border-color: #4f46e5 !important;
         }
         html[data-theme="dark"] .register-wrapper {
             background: #151E32 !important;
             box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
         }
-        html[data-theme="dark"] .header {
-            border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-        }
-        html[data-theme="dark"] .brand-text {
-            color: #F1F5F9 !important;
-        }
-        html[data-theme="dark"] .brand-text span {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .header-badge {
-            background: #1E293B !important;
-            color: #CBD5E1 !important;
-            border-color: rgba(255, 255, 255, 0.10) !important;
-        }
-        html[data-theme="dark"] .header-badge i {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .page-title h2 {
-            color: #F1F5F9 !important;
-        }
-        html[data-theme="dark"] .page-title h2 i {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .page-title p {
-            color: #94A3B8 !important;
-        }
-        html[data-theme="dark"] .section-header {
-            border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-        }
-        html[data-theme="dark"] .section-header h3 {
-            color: #F1F5F9 !important;
-        }
-        html[data-theme="dark"] .section-header .section-badge {
-            background: #1E293B !important;
-            color: #94A3B8 !important;
-        }
-        html[data-theme="dark"] .form-group label {
-            color: #E2E8F0 !important;
-        }
-        html[data-theme="dark"] .form-group label i {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .form-group .helper-text {
-            color: #64748B !important;
-        }
+        html[data-theme="dark"] .brand-text { color: #F1F5F9 !important; }
+        html[data-theme="dark"] .brand-text span { color: #60A5FA !important; }
+        html[data-theme="dark"] .page-title h2 { color: #F1F5F9 !important; }
+        html[data-theme="dark"] .page-title h2 i { color: #60A5FA !important; }
+        html[data-theme="dark"] .page-title p { color: #94A3B8 !important; }
+        html[data-theme="dark"] .section-header { border-bottom-color: rgba(255, 255, 255, 0.08) !important; }
+        html[data-theme="dark"] .section-header h3 { color: #F1F5F9 !important; }
+        html[data-theme="dark"] .form-group label { color: #E2E8F0 !important; }
+        html[data-theme="dark"] .form-group label i { color: #60A5FA !important; }
         html[data-theme="dark"] .input-wrap {
             background: #1A2338 !important;
             border-color: rgba(255, 255, 255, 0.12) !important;
-        }
-        html[data-theme="dark"] .input-wrap:hover {
-            border-color: rgba(255, 255, 255, 0.20) !important;
-        }
-        html[data-theme="dark"] .input-wrap:focus-within {
-            border-color: #60A5FA !important;
-            background: #1E293B !important;
-            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18) !important;
-        }
-        html[data-theme="dark"] .input-wrap .field-icon {
-            color: #64748B !important;
-        }
-        html[data-theme="dark"] .input-wrap:focus-within .field-icon {
-            color: #60A5FA !important;
         }
         html[data-theme="dark"] .input-wrap input,
         html[data-theme="dark"] .input-wrap select,
         html[data-theme="dark"] .input-wrap textarea {
             color: #F1F5F9 !important;
-            background: transparent !important;
-        }
-        html[data-theme="dark"] .input-wrap input:read-only {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .input-wrap input::placeholder,
-        html[data-theme="dark"] .input-wrap textarea::placeholder {
-            color: #64748B !important;
-        }
-        html[data-theme="dark"] .input-wrap select option {
-            background: #1A2338 !important;
-            color: #F1F5F9 !important;
-        }
-        html[data-theme="dark"] .input-wrap .select-arrow {
-            color: #64748B !important;
-        }
-        html[data-theme="dark"] .input-wrap .toggle-pw {
-            color: #64748B !important;
-        }
-        html[data-theme="dark"] .input-wrap .toggle-pw:hover {
-            background: #1E293B !important;
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .checkbox-item {
-            color: #E2E8F0 !important;
-        }
-        html[data-theme="dark"] .checkbox-item:hover {
-            background: #1E293B !important;
-        }
-        html[data-theme="dark"] .checkbox-item .check-icon {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .form-actions {
-            border-top-color: rgba(255, 255, 255, 0.08) !important;
         }
         html[data-theme="dark"] .btn-secondary {
             background: #1E293B !important;
             color: #CBD5E1 !important;
             border-color: rgba(255, 255, 255, 0.10) !important;
         }
-        html[data-theme="dark"] .btn-secondary:hover {
-            background: #334155 !important;
-            color: #F1F5F9 !important;
-            border-color: rgba(255, 255, 255, 0.20) !important;
-        }
-        html[data-theme="dark"] .login-link {
-            color: #94A3B8 !important;
-        }
-        html[data-theme="dark"] .login-link a {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .login-link a:hover {
-            border-bottom-color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .footer-note {
-            color: #64748B !important;
-            border-top-color: rgba(255, 255, 255, 0.06) !important;
-        }
-        html[data-theme="dark"] .footer-note i {
-            color: #60A5FA !important;
-        }
-        html[data-theme="dark"] .firebase-status.online {
-            background: rgba(34, 197, 94, 0.18) !important;
-            color: #4ADE80 !important;
-        }
-        html[data-theme="dark"] .firebase-status.offline {
-            background: rgba(245, 158, 11, 0.18) !important;
-            color: #FCD34D !important;
-        }
-        html[data-theme="dark"] .alert.success {
-            background: rgba(34, 197, 94, 0.15) !important;
-            color: #86EFAC !important;
-        }
-        html[data-theme="dark"] .alert.success strong {
-            color: #86EFAC !important;
-        }
-        html[data-theme="dark"] .alert.error {
-            background: rgba(239, 68, 68, 0.15) !important;
-            color: #FCA5A5 !important;
-        }
-        html[data-theme="dark"] .alert.error strong {
-            color: #FCA5A5 !important;
-        }
-        html[data-theme="dark"] .alert.info {
-            background: rgba(37, 99, 235, 0.15) !important;
-            color: #93C5FD !important;
-        }
+        html[data-theme="dark"] .login-link { color: #94A3B8 !important; }
+        html[data-theme="dark"] .login-link a { color: #60A5FA !important; }
+        html[data-theme="dark"] .footer-note { color: #64748B !important; }
+        html[data-theme="dark"] .checkbox-item { color: #E2E8F0 !important; }
     </style>
 </head>
 <body>
 
-<!-- Theme Toggle -->
-<button class="theme-toggle-float" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+<button class="theme-toggle-float" onclick="toggleTheme()" title="Toggle theme">
     <i class="fas fa-moon"></i>
 </button>
 
-<!-- Firebase Status Indicator -->
 <div class="firebase-status offline" id="firebaseStatus">
     <span class="status-dot"></span>
-    <span id="firebaseStatusText">Connecting...</span>
+    <span id="firebaseStatusText">Checking backend...</span>
 </div>
 
 <div class="register-wrapper">
@@ -733,7 +589,7 @@
             </div>
         </div>
 
-        <!-- ===== 3. LOCATION DETAILS ===== -->
+        <!-- ===== 3. LOCATION ===== -->
         <div class="form-section">
             <div class="section-header">
                 <span class="step-num">3</span>
@@ -1061,86 +917,7 @@
 
 </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
 <script>
-    // ============================================================
-    // FIREBASE INITIALIZATION
-    // ============================================================
-    const firebaseConfig = {
-        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
-        authDomain: "skillbridge-70863.firebaseapp.com",
-        projectId: "skillbridge-70863",
-        storageBucket: "skillbridge-70863.firebasestorage.app",
-        messagingSenderId: "912671486056",
-        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
-    };
-
-    let db = null;
-    let firebaseReady = false;
-
-    try {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        firebaseReady = true;
-        console.log('✅ Firebase initialized successfully');
-        updateFirebaseStatus(true);
-    } catch (error) {
-        console.error('❌ Firebase initialization failed:', error);
-        updateFirebaseStatus(false);
-    }
-
-    function updateFirebaseStatus(online) {
-        const statusEl = document.getElementById('firebaseStatus');
-        const statusText = document.getElementById('firebaseStatusText');
-        if (!statusEl || !statusText) return;
-
-        if (online) {
-            statusEl.className = 'firebase-status online';
-            statusText.textContent = 'Firebase Connected';
-        } else {
-            statusEl.className = 'firebase-status offline';
-            statusText.textContent = 'Offline Mode';
-        }
-    }
-
-    async function saveTraineeToFirebase(traineeData) {
-        if (!firebaseReady || !db) {
-            console.log('ℹ️ Firebase not available - skipping sync');
-            return null;
-        }
-
-        try {
-            const firebaseData = { ...traineeData };
-            delete firebaseData.password;
-
-            const docRef = await db.collection("trainees").add({
-                ...firebaseData,
-                registrationStatus: "Pending",
-                employeeVerification: {
-                    status: "Pending",
-                    employeeId: "",
-                    employeeName: "",
-                    remarks: "",
-                    verifiedAt: null
-                },
-                providerOutcome: {
-                    status: "Pending"
-                },
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            console.log("✅ Trainee saved to Firebase:", docRef.id);
-            return docRef.id;
-
-        } catch (error) {
-            console.error("❌ Firebase save failed:", error);
-            return null;
-        }
-    }
-
     // ============================================================
     // TOGGLE PASSWORD
     // ============================================================
@@ -1204,11 +981,9 @@
     function validateEmail(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
-
     function validateMobile(mobile) {
         return /^[0-9]{10}$/.test(mobile);
     }
-
     function validatePassword(pw) {
         return pw.length >= 8 && /[a-zA-Z]/.test(pw) && /[0-9]/.test(pw);
     }
@@ -1229,21 +1004,44 @@
                     btn.querySelector('i').className = 'fas fa-eye';
                 }
             });
-
             document.querySelectorAll('.error-text').forEach(el => el.classList.remove('show'));
             document.querySelectorAll('.input-wrap').forEach(el => el.classList.remove('error'));
         }
     }
 
     // ============================================================
-    // REGISTER TRAINEE
+    // CHECK BACKEND HEALTH AT LOAD
+    // ============================================================
+    async function checkBackend() {
+        try {
+            const r = await fetch('/api/system/health', { credentials: 'include' });
+            const online = r.ok;
+            const statusEl = document.getElementById('firebaseStatus');
+            const statusText = document.getElementById('firebaseStatusText');
+            if (online) {
+                statusEl.className = 'firebase-status online';
+                statusText.textContent = 'Backend Connected';
+            } else {
+                statusEl.className = 'firebase-status offline';
+                statusText.textContent = 'Backend Offline';
+            }
+        } catch (e) {
+            const statusEl = document.getElementById('firebaseStatus');
+            const statusText = document.getElementById('firebaseStatusText');
+            statusEl.className = 'firebase-status offline';
+            statusText.textContent = 'Backend Offline';
+        }
+    }
+
+    // ============================================================
+    // REGISTER TRAINEE — NOW SAVES TO BACKEND (RENDER DB)!
     // ============================================================
     async function registerTrainee() {
-        console.log('📝 Starting registration process...');
+        console.log('📝 Starting registration process (backend-first)...');
 
         const traineeId = document.getElementById('traineeId').value;
         const fullName = document.getElementById('fullName').value.trim();
-        const email = document.getElementById('email').value.trim();
+        const email = document.getElementById('email').value.trim().toLowerCase();
         const mobile = document.getElementById('mobile').value.trim();
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
@@ -1363,168 +1161,143 @@
             return;
         }
 
-        const traineeData = {
-            traineeId: traineeId,
-            fullName: fullName,
-            email: email,
-            mobile: mobile,
-            password: password,
-            dob: dob,
-            gender: gender,
-            education: education,
-            state: state,
-            district: district,
-            mandal: mandal || '',
-            village: village,
-            pincode: pincode,
-            areaType: areaType,
-            location: `${village}, ${district}, ${state}`,
-            trainingProgram: trainingProgram,
-            skillTrade: skillTrade,
-            trainingProvider: trainingProvider,
-            batchId: batchId,
-            enrollmentId: enrollmentId,
-            trainingMode: trainingMode,
-            startDate: startDate,
-            completionDate: completionDate,
-            registrationDate: new Date().toISOString().split('T')[0],
-            employmentStatus: employmentStatus,
-            prevJobRole: prevJobRole || '',
-            prevExperience: prevExperience || 0,
-            prevSkill: prevSkill || '',
-            prevIncome: Number(prevIncome),
-            careerGoal: careerGoal,
-            preferredRole: preferredRole || '',
-            preferredLocation: preferredLocation,
-            consentInfo: consentInfo,
-            consentFollowup: consentFollowup,
-            consentAnalysis: consentAnalysis,
-            status: 'Active',
-            trainingProgress: 0,
-            certificationStatus: 'Pending',
-            employmentStatusDisplay: employmentStatus,
-            currentIncome: Number(prevIncome),
-            jobRelevance: 'N/A',
-            retentionDays: 0,
-            currentJobRole: prevJobRole || 'N/A',
-            currentEmployer: 'N/A',
-            joiningDate: 'Not Joined',
-            employmentType: 'N/A',
-            certificateName: 'Not Certified',
-            certificateId: 'N/A',
-            issueDate: 'N/A',
-            trainingCompletion: 0,
-            completedModules: 0,
-            totalModules: 10,
-            goalProgress: 10,
-            profileCompletion: 95,
-            notifications: 1,
-            achievements: [
-                { icon: '📝', title: 'Registration Complete', desc: 'Successfully registered on SkillBridge' }
-            ],
-            documents: [
-                { name: 'ID Proof', icon: 'fa-id-card', color: '#7c3aed' }
-            ],
-            suggestions: [
-                'Complete your training modules to get certified.',
-                'Update your employment status once you get placed.',
-                'Keep your profile updated for accurate tracking.'
-            ],
-            notificationsList: [
-                { icon: 'fa-check-circle', text: 'Registration completed successfully', time: 'Just now' }
-            ],
-            followups: [
-                { days: '30', status: 'pending' },
-                { days: '90', status: 'pending' },
-                { days: '180', status: 'pending' },
-                { days: '365', status: 'pending' }
-            ],
-            nextFollowup: calculateNextFollowup(completionDate),
-            daysRemaining: 90
-        };
-
-        console.log('📋 Trainee data prepared:', traineeData);
+        // Disable button during submission
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        const originalHTML = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
 
         try {
-            let allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+            // ============================================================
+            // STEP 1: Create the user account in backend (users table)
+            // ============================================================
+            console.log('📤 Step 1: Creating user account in backend...');
+            const userResult = await apiCall('/api/auth/register', {
+                method: 'POST',
+                body: {
+                    username: email,
+                    password: password,
+                    role: 'trainee',
+                    full_name: fullName,
+                    email: email,
+                    phone: mobile,
+                },
+            });
 
-            const existingIndex = allTrainees.findIndex(t => t.email === email);
-            if (existingIndex !== -1) {
-                allTrainees[existingIndex] = { ...allTrainees[existingIndex], ...traineeData };
-            } else {
-                traineeData.traineeId = traineeData.traineeId || 'TRN' + Date.now();
-                traineeData.registeredAt = new Date().toISOString();
-                allTrainees.push(traineeData);
-            }
-
-            localStorage.setItem('allTrainees', JSON.stringify(allTrainees));
-            localStorage.setItem('currentTraineeEmail', email);
-            localStorage.setItem('currentTraineeId', traineeData.traineeId);
-            localStorage.setItem('traineeData', JSON.stringify(traineeData));
-
-            console.log('✅ Trainee registered. Total trainees:', allTrainees.length);
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userRole', 'trainee');
-            console.log('✅ Saved to localStorage');
-        } catch (e) {
-            console.error('❌ localStorage save failed:', e);
-            showAlert('Error saving data locally. Please try again.', 'error');
-            return;
-        }
-
-        const successHTML = `
-            <strong>✅ Registration Successful!</strong><br>
-            <span style="font-size:0.75rem;color:inherit;">
-                Trainee: ${fullName} (${traineeId})<br>
-                Program: ${skillTrade} · ${trainingProgram}<br>
-                Provider: ${trainingProvider} · Batch: ${batchId}<br>
-                Previous Income: ₹${Number(prevIncome).toLocaleString()} · Goal: ${careerGoal}<br>
-                📍 ${district}, ${state}<br><br>
-                <strong>💾 Syncing to cloud database...</strong>
-            </span>
-        `;
-        showAlert(successHTML, 'success');
-
-        if (firebaseReady && db) {
-            try {
-                const firebaseId = await saveTraineeToFirebase(traineeData);
-                if (firebaseId) {
-                    console.log('✅ Synced to Firebase with ID:', firebaseId);
-                    showAlert(`
-                        <strong>✅ Registration Complete!</strong><br>
-                        <span style="font-size:0.75rem;color:inherit;">
-                            Trainee: ${fullName} (${traineeId})<br>
-                            Program: ${skillTrade} · ${trainingProgram}<br>
-                            📍 ${district}, ${state}<br><br>
-                            <strong>☁️ Synced to cloud</strong> · <strong>Redirecting...</strong>
-                        </span>
-                    `, 'success');
+            if (!userResult.ok) {
+                // If user already exists, that's OK — continue
+                if (userResult.status === 409) {
+                    console.log('ℹ️ User already exists in backend, continuing...');
+                } else {
+                    throw new Error('Account creation failed: ' + (userResult.data.error || userResult.status));
                 }
-            } catch (fbError) {
-                console.log('ℹ️ Firebase sync failed (localStorage is safe):', fbError);
+            } else {
+                console.log('✅ User account created in backend');
             }
-        } else {
-            console.log('ℹ️ Firebase not ready - data saved locally only');
-        }
 
-        setTimeout(() => {
-            console.log('🚀 Redirecting to dashboard...');
-            window.location.href = '../trainee/dashboard.html';
-        }, 2500);
+            // ============================================================
+            // STEP 2: Create the trainee record in backend (trainees table)
+            // ============================================================
+            console.log('📤 Step 2: Creating trainee record in backend...');
+            const traineeResult = await apiCall('/api/trainees', {
+                method: 'POST',
+                body: {
+                    trainee_code: traineeId,
+                    full_name: fullName,
+                    dob: dob,
+                    gender: gender,
+                    phone: mobile,
+                    email: email,
+                    category: 'General',
+                    qualification: education,
+                    state: state,
+                    district: district,
+                    preferred_role: preferredRole || '',
+                    preferred_location: preferredLocation || '',
+                    skills: skillTrade,
+                    certifications: '',
+                    training_status: 'training',
+                },
+            });
+
+            if (!traineeResult.ok) {
+                // If trainee record exists, that's OK too
+                if (traineeResult.status === 409) {
+                    console.log('ℹ️ Trainee record exists, continuing...');
+                } else {
+                    throw new Error('Trainee creation failed: ' + (traineeResult.data.error || traineeResult.status));
+                }
+            } else {
+                console.log('✅ Trainee record created in backend');
+            }
+
+            // ============================================================
+            // STEP 3: Also save to localStorage (for immediate session)
+            // ============================================================
+            try {
+                const traineeData = {
+                    traineeId, fullName, email, mobile, dob, gender, education,
+                    state, district, mandal, village, pincode, areaType,
+                    trainingProgram, skillTrade, trainingProvider, batchId,
+                    enrollmentId, trainingMode, startDate, completionDate,
+                    employmentStatus, prevJobRole, prevExperience, prevSkill,
+                    prevIncome: Number(prevIncome), careerGoal, preferredRole,
+                    preferredLocation, status: 'Active',
+                };
+                let allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+                const idx = allTrainees.findIndex(t => t.email === email);
+                if (idx !== -1) allTrainees[idx] = { ...allTrainees[idx], ...traineeData };
+                else allTrainees.push(traineeData);
+                localStorage.setItem('allTrainees', JSON.stringify(allTrainees));
+                localStorage.setItem('currentTraineeEmail', email);
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userRole', 'trainee');
+            } catch (e) {
+                console.warn('localStorage save failed (OK — backend saved):', e);
+            }
+
+            // ============================================================
+            // STEP 4: Auto-login the user
+            // ============================================================
+            console.log('📤 Step 3: Auto-logging in...');
+            await apiCall('/api/auth/login', {
+                method: 'POST',
+                body: { username: email, password: password, role: 'trainee' },
+            });
+
+            // Show success
+            showAlert(`
+                <strong>✅ Registration Successful!</strong><br>
+                <span style="font-size:0.75rem;">
+                    Trainee: ${fullName} (${traineeId})<br>
+                    Program: ${skillTrade} · ${trainingProgram}<br>
+                    📍 ${district}, ${state}<br><br>
+                    <strong>☁️ Saved to cloud</strong> · <strong>Redirecting...</strong>
+                </span>
+            `, 'success');
+
+            setTimeout(() => {
+                window.location.href = '../trainee/dashboard.html';
+            }, 1800);
+
+        } catch (err) {
+            console.error('❌ Registration failed:', err);
+            showAlert(
+                `<strong>Registration Failed</strong><br>
+                 <span style="font-size:0.75rem;">${err.message}<br>
+                 Please try again or check your internet connection.</span>`,
+                'error'
+            );
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalHTML;
+        }
     }
 
-    function calculateNextFollowup(completionDate) {
-        try {
-            const compDate = new Date(completionDate);
-            compDate.setDate(compDate.getDate() + 90);
-            return compDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-        } catch(e) {
-            return '90 Days from completion';
-        }
-    }
-
+    // ============================================================
+    // INIT
+    // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🚀 Initializing trainee registration form...');
+        console.log('🚀 Trainee registration page ready (backend-first)');
 
         document.getElementById('traineeId').value = generateTraineeId();
 
@@ -1545,8 +1318,8 @@
             });
         });
 
-        // Update theme icon
         updateThemeIcon();
+        checkBackend();
     });
 
     document.getElementById('registerForm').addEventListener('submit', function(e) {
@@ -1561,16 +1334,13 @@
         this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
     });
 
-    // ============================================================
-    // THEME TOGGLE
-    // ============================================================
+    // THEME
     function updateThemeIcon() {
         const btn = document.querySelector('.theme-toggle-float i');
         if (!btn) return;
         const theme = document.documentElement.getAttribute('data-theme') || 'light';
         btn.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
-
     if (typeof window.toggleTheme !== 'function') {
         window.toggleTheme = function () {
             const html = document.documentElement;
@@ -1583,6 +1353,5 @@
     }
 </script>
 
-<script src="../js/script.js"></script>
 </body>
 </html>

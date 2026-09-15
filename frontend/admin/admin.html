@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
 
     <script>
       (function() {
@@ -2287,7 +2288,7 @@
 <script>
 /* ═══════════════════════════════════════════════════════════════
    SKILLINTEL · SUPER ADMIN PANEL v3.0
-   Pure frontend-only — no backend, no API calls, no fetch
+   Backend-integrated — reads/writes via Flask API on Render
    ═══════════════════════════════════════════════════════════════ */
 
 const ADMIN_CREDENTIALS = {
@@ -2302,9 +2303,39 @@ const GOVT_STORAGE_KEY = 'govtOfficials';
 const GOVT_ACTIVITY_KEY = 'govtActivityLog';
 
 /* ═══════════════════════════════════════════════════════════════
-   LOGIN — Pure frontend verification
+   BACKEND CACHE
    ═══════════════════════════════════════════════════════════════ */
-function adminLogin() {
+let _backendCache = {
+    trainees: null,
+    employers: null,
+    providers: null,
+    govtOfficials: null,
+    loaded: false
+};
+
+async function loadRealDataFromBackend() {
+    try {
+        const [t, e, p, g] = await Promise.all([
+            apiCall('/api/trainees'),
+            apiCall('/api/employers'),
+            apiCall('/api/providers'),
+            apiCall('/api/admin/govt-officials'),
+        ]);
+        _backendCache.trainees = t.ok ? (t.data || []).map(x => ({ ...x, _role: 'trainee' })) : [];
+        _backendCache.employers = e.ok ? (e.data || []).map(x => ({ ...x, _role: 'employer', orgName: x.name })) : [];
+        _backendCache.providers = p.ok ? (p.data || []).map(x => ({ ...x, _role: 'provider', orgName: x.name })) : [];
+        _backendCache.govtOfficials = g.ok ? (g.data || []) : [];
+        _backendCache.loaded = true;
+    } catch (err) {
+        console.warn('Backend load failed, using localStorage fallback:', err);
+        _backendCache.loaded = false;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN — Backend-backed
+   ═══════════════════════════════════════════════════════════════ */
+async function adminLogin() {
     const user = document.getElementById('adminUser').value.trim();
     const pass = document.getElementById('adminPass').value;
     const errorBox = document.getElementById('loginError');
@@ -2316,44 +2347,65 @@ function adminLogin() {
         return;
     }
 
-    // Frontend-only verification against hardcoded credentials
-    if (user === ADMIN_CREDENTIALS.username && pass === ADMIN_CREDENTIALS.password) {
-        try {
-            sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({
-                username: user,
-                full_name: ADMIN_CREDENTIALS.displayName,
-                role: 'super_admin',
-                loginAt: new Date().toISOString()
-            }));
-        } catch (e) {}
+    try {
+        const result = await apiCall('/api/auth/login', {
+            method: 'POST',
+            body: { username: user, password: pass, role: 'admin' },
+        });
 
-        logAudit('Admin Login', 'Successful login');
-        logActivity('Admin logged in', 'success');
-        showPanel();
-        toast(`Welcome back, ${ADMIN_CREDENTIALS.displayName}!`, 'success');
-    } else {
+        if (result.ok && result.data && !result.data.error) {
+            const data = result.data;
+
+            if (!['super_admin', 'admin', 'verifier'].includes(data.role)) {
+                errorText.textContent = 'This account does not have admin access.';
+                errorBox.classList.add('show');
+                return;
+            }
+
+            try {
+                sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({
+                    username: data.username || user,
+                    full_name: data.full_name || ADMIN_CREDENTIALS.displayName,
+                    role: data.role,
+                    loginAt: new Date().toISOString()
+                }));
+            } catch (e) {}
+
+            logAudit('Admin Login', 'Successful login');
+            logActivity('Admin logged in', 'success');
+            await showPanel();
+            toast(`Welcome back, ${data.full_name || data.username || 'Admin'}!`, 'success');
+            return;
+        }
+
         logSecurityEvent('Failed admin login attempt', `Username: ${user}`);
-        errorText.textContent = 'Invalid admin credentials. Please try again.';
+        errorText.textContent = (result.data && result.data.error) || 'Invalid admin credentials. Please try again.';
         errorBox.classList.add('show');
         setTimeout(() => errorBox.classList.remove('show'), 3000);
+
+    } catch (err) {
+        console.error('Admin login error:', err);
+        errorText.textContent = 'Cannot reach server. Please check your connection.';
+        errorBox.classList.add('show');
     }
 }
 
-function adminLogout() {
+async function adminLogout() {
     if (!confirm('Are you sure you want to logout?')) return;
+    try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
     logActivity('Admin logged out', 'info');
     try { sessionStorage.removeItem(ADMIN_SESSION_KEY); } catch (e) {}
     location.reload();
 }
 
-function checkAdminSession() {
+async function checkAdminSession() {
     try {
         const session = sessionStorage.getItem(ADMIN_SESSION_KEY);
         if (session) {
             const data = JSON.parse(session);
             const loginTime = new Date(data.loginAt).getTime();
             if (Date.now() - loginTime < 2 * 60 * 60 * 1000) {
-                showPanel();
+                await showPanel();
                 return;
             }
             sessionStorage.removeItem(ADMIN_SESSION_KEY);
@@ -2363,9 +2415,13 @@ function checkAdminSession() {
     document.getElementById('adminPanel').classList.remove('show');
 }
 
-function showPanel() {
+async function showPanel() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminPanel').classList.add('show');
+
+    // Load real data from backend FIRST
+    await loadRealDataFromBackend();
+
     initPanel();
     if (!localStorage.getItem('admin-tour-seen')) {
         setTimeout(startOnboardingTour, 800);
@@ -2510,11 +2566,24 @@ function filterSidebar(query) {
    DATA ACCESS
    ═══════════════════════════════════════════════════════════════ */
 function getData(key) {
+    if (_backendCache.loaded) {
+        if (key === 'allTrainees') return _backendCache.trainees || [];
+        if (key === 'allEmployers') return _backendCache.employers || [];
+        if (key === 'allProviders') return _backendCache.providers || [];
+        if (key === GOVT_STORAGE_KEY) return _backendCache.govtOfficials || [];
+    }
     try { return JSON.parse(localStorage.getItem(key) || '[]'); }
     catch (e) { return []; }
 }
 
 function getAllUsers() {
+    if (_backendCache.loaded) {
+        return [
+            ...(_backendCache.trainees || []),
+            ...(_backendCache.employers || []),
+            ...(_backendCache.providers || []),
+        ];
+    }
     const trainees = getData('allTrainees').map(t => ({ ...t, _role: 'trainee' }));
     const employers = getData('allEmployers').map(e => ({ ...e, _role: 'employer' }));
     const providers = getData('allProviders').map(p => ({ ...p, _role: 'provider' }));
@@ -3193,6 +3262,24 @@ function renderAIInsights() {
    GOVERNMENT ACCESS CONTROL
    ═══════════════════════════════════════════════════════════════ */
 function getGovtOfficials() {
+    if (_backendCache.loaded && _backendCache.govtOfficials) {
+        return _backendCache.govtOfficials.map(o => ({
+            officialId: o.official_id,
+            id: o.id,
+            fullName: o.full_name,
+            email: o.email,
+            mobile: o.mobile,
+            department: o.department,
+            accessLevel: o.access_level,
+            region: o.region,
+            status: o.status,
+            expiresAt: o.expires_at,
+            lastLogin: o.last_login,
+            loginCount: o.login_count,
+            createdAt: o.created_at,
+            createdBy: o.created_by,
+        }));
+    }
     try { return JSON.parse(localStorage.getItem(GOVT_STORAGE_KEY) || '[]'); }
     catch (e) { return []; }
 }
@@ -3414,7 +3501,7 @@ function openAddGovtOfficialModal() {
     `);
 }
 
-function saveGovtOfficial() {
+async function saveGovtOfficial() {
     const fullName = document.getElementById('govtFullName').value.trim();
     const officialId = document.getElementById('govtOfficialId').value.trim();
     const email = document.getElementById('govtEmailInput').value.trim();
@@ -3434,46 +3521,44 @@ function saveGovtOfficial() {
         return;
     }
 
-    const officials = getGovtOfficials();
-    if (officials.find(o => o.email.toLowerCase() === email.toLowerCase())) {
-        toast('An official with this email already exists', 'error');
-        return;
+    try {
+        const result = await apiCall('/api/admin/govt-officials', {
+            method: 'POST',
+            body: {
+                fullName: fullName,
+                officialId: officialId,
+                email: email,
+                mobile: mobile,
+                department: department,
+                accessLevel: accessLevel,
+                region: region,
+                expiresAt: expiresAt,
+                password: password,
+            },
+        });
+
+        if (!result.ok) {
+            toast((result.data && result.data.error) || 'Failed to create official', 'error');
+            return;
+        }
+
+        logAudit('Added Govt Official', `${fullName} (${result.data.id})`);
+        logActivity(`Government official added: ${fullName}`, 'success');
+        logGovtActivity(`Created: ${fullName} · ${result.data.id} · ${accessLevel} level`, 'success');
+
+        _backendCache.loaded = false;
+        await loadRealDataFromBackend();
+
+        closeModal();
+        renderGovtOfficials();
+        renderGovtActivityLog();
+        updateCounts();
+        toast(`Official created: ${result.data.id}`, 'success');
+
+    } catch (err) {
+        console.error('Govt official creation failed:', err);
+        toast('Network error while creating official', 'error');
     }
-    if (officials.find(o => o.officialId === officialId)) {
-        toast('Official ID collision — try again', 'error');
-        return;
-    }
-
-    const newOfficial = {
-        officialId: officialId || generateOfficialId(),
-        fullName: fullName,
-        email: email,
-        mobile: mobile || '',
-        department: department,
-        accessLevel: accessLevel || 'State',
-        region: region || '',
-        expiresAt: expiresAt,
-        password: password,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        createdBy: ADMIN_CREDENTIALS.displayName,
-        lastLogin: null,
-        loginCount: 0,
-        mustChangePassword: true
-    };
-
-    officials.push(newOfficial);
-    saveGovtOfficials(officials);
-
-    logAudit('Added Govt Official', `${fullName} (${newOfficial.officialId})`);
-    logActivity(`Government official added: ${fullName}`, 'success');
-    logGovtActivity(`Created: ${fullName} · ${newOfficial.officialId} · ${accessLevel} level`, 'success');
-
-    closeModal();
-    renderGovtOfficials();
-    renderGovtActivityLog();
-    updateCounts();
-    toast(`Official created: ${newOfficial.officialId}`, 'success');
 }
 
 function viewGovtOfficial(officialId) {
@@ -3575,86 +3660,127 @@ function editGovtOfficial(officialId) {
     `);
 }
 
-function updateGovtOfficial(officialId) {
+async function updateGovtOfficial(officialId) {
     const officials = getGovtOfficials();
-    const idx = officials.findIndex(o => o.officialId === officialId);
-    if (idx === -1) { toast('Not found', 'error'); return; }
+    const o = officials.find(x => x.officialId === officialId);
+    if (!o) { toast('Not found', 'error'); return; }
 
     const newPassword = document.getElementById('editGovtPassword').value.trim();
 
-    officials[idx].fullName = document.getElementById('editGovtFullName').value.trim();
-    officials[idx].email = document.getElementById('editGovtEmail').value.trim();
-    officials[idx].mobile = document.getElementById('editGovtMobile').value.trim();
-    officials[idx].department = document.getElementById('editGovtDept').value.trim();
-    officials[idx].accessLevel = document.getElementById('editGovtLevel').value;
-    officials[idx].region = document.getElementById('editGovtRegion').value.trim();
-    officials[idx].expiresAt = document.getElementById('editGovtExpiresAt').value;
-    officials[idx].updatedAt = new Date().toISOString();
+    const payload = {
+        full_name: document.getElementById('editGovtFullName').value.trim(),
+        email: document.getElementById('editGovtEmail').value.trim(),
+        mobile: document.getElementById('editGovtMobile').value.trim(),
+        department: document.getElementById('editGovtDept').value.trim(),
+        access_level: document.getElementById('editGovtLevel').value,
+        region: document.getElementById('editGovtRegion').value.trim(),
+        expires_at: document.getElementById('editGovtExpiresAt').value,
+    };
+    if (newPassword) payload.password = newPassword;
 
-    if (newPassword) {
-        officials[idx].password = newPassword;
-        officials[idx].mustChangePassword = true;
-        logGovtActivity(`Password reset for ${officials[idx].fullName}`, 'warning');
+    try {
+        if (o.id) {
+            const result = await apiCall(`/api/admin/govt-officials/${o.id}`, {
+                method: 'PUT',
+                body: payload,
+            });
+            if (!result.ok) {
+                toast('Failed to update', 'error');
+                return;
+            }
+        }
+
+        logAudit('Updated Govt Official', `${payload.full_name} (${officialId})`);
+        logActivity(`Government official updated: ${payload.full_name}`, 'info');
+        logGovtActivity(`Updated: ${payload.full_name}`, 'info');
+
+        _backendCache.loaded = false;
+        await loadRealDataFromBackend();
+
+        closeModal();
+        renderGovtOfficials();
+        renderGovtActivityLog();
+        toast('Official updated', 'success');
+
+    } catch (err) {
+        console.error('Update failed:', err);
+        toast('Network error', 'error');
     }
-
-    saveGovtOfficials(officials);
-    logAudit('Updated Govt Official', `${officials[idx].fullName} (${officialId})`);
-    logActivity(`Government official updated: ${officials[idx].fullName}`, 'info');
-    logGovtActivity(`Updated: ${officials[idx].fullName}`, 'info');
-
-    closeModal();
-    renderGovtOfficials();
-    renderGovtActivityLog();
-    toast('Official updated', 'success');
 }
 
-function toggleGovtStatus(officialId) {
+async function toggleGovtStatus(officialId) {
     const officials = getGovtOfficials();
-    const idx = officials.findIndex(o => o.officialId === officialId);
-    if (idx === -1) { toast('Not found', 'error'); return; }
+    const o = officials.find(x => x.officialId === officialId);
+    if (!o) { toast('Not found', 'error'); return; }
 
-    const current = officials[idx].status;
-    const newStatus = current === 'active' ? 'suspended' : 'active';
+    const newStatus = o.status === 'active' ? 'suspended' : 'active';
+    if (!confirm(`${newStatus === 'suspended' ? 'Suspend' : 'Reactivate'} ${o.fullName}?`)) return;
 
-    if (newStatus === 'suspended' && !confirm(`Suspend ${officials[idx].fullName}? They will be unable to log in.`)) return;
-    if (newStatus === 'active' && !confirm(`Reactivate ${officials[idx].fullName}?`)) return;
+    try {
+        if (o.id) {
+            const result = await apiCall(`/api/admin/govt-officials/${o.id}/toggle`, {
+                method: 'POST',
+            });
+            if (!result.ok) {
+                toast('Failed to toggle', 'error');
+                return;
+            }
+        }
 
-    officials[idx].status = newStatus;
-    officials[idx].statusChangedAt = new Date().toISOString();
-    officials[idx].statusChangedBy = ADMIN_CREDENTIALS.displayName;
-    saveGovtOfficials(officials);
+        logGovtActivity(`${newStatus === 'active' ? 'Reactivated' : 'Suspended'}: ${o.fullName}`,
+                        newStatus === 'active' ? 'success' : 'error');
+        logAudit(newStatus === 'active' ? 'Activated Govt Official' : 'Suspended Govt Official',
+                 `${o.fullName} (${officialId})`);
 
-    const msg = newStatus === 'active'
-        ? `Reactivated: ${officials[idx].fullName}`
-        : `Suspended: ${officials[idx].fullName}`;
-    logGovtActivity(msg, newStatus === 'active' ? 'success' : 'error');
-    logAudit(newStatus === 'active' ? 'Activated Govt Official' : 'Suspended Govt Official',
-             `${officials[idx].fullName} (${officialId})`);
-    logActivity(msg, newStatus === 'active' ? 'success' : 'warning');
+        _backendCache.loaded = false;
+        await loadRealDataFromBackend();
 
-    renderGovtOfficials();
-    renderGovtActivityLog();
-    toast(`Official ${newStatus}`, newStatus === 'active' ? 'success' : 'info');
+        renderGovtOfficials();
+        renderGovtActivityLog();
+        toast(`Official ${newStatus}`, newStatus === 'active' ? 'success' : 'info');
+
+    } catch (err) {
+        console.error('Toggle failed:', err);
+        toast('Network error', 'error');
+    }
 }
 
-function deleteGovtOfficial(officialId) {
+async function deleteGovtOfficial(officialId) {
     const o = getGovtOfficials().find(x => x.officialId === officialId);
     if (!o) { toast('Not found', 'error'); return; }
 
-    if (!confirm(`Delete ${o.fullName} (${officialId}) permanently?\n\nThis will immediately revoke their government access.`)) return;
+    if (!confirm(`Delete ${o.fullName} (${officialId}) permanently?`)) return;
     if (!confirm('Final confirmation — this cannot be undone.')) return;
 
-    const officials = getGovtOfficials().filter(x => x.officialId !== officialId);
-    saveGovtOfficials(officials);
+    try {
+        if (o.id) {
+            const result = await apiCall(`/api/admin/govt-officials/${o.id}`, {
+                method: 'DELETE',
+            });
+            if (!result.ok) {
+                toast('Failed to delete', 'error');
+                return;
+            }
+        } else {
+            const officials = getGovtOfficials().filter(x => x.officialId !== officialId);
+            saveGovtOfficials(officials);
+        }
 
-    logGovtActivity(`Deleted: ${o.fullName} (${officialId})`, 'error');
-    logAudit('Deleted Govt Official', `${o.fullName} (${officialId})`);
-    logActivity(`Government official deleted: ${o.fullName}`, 'error');
+        logGovtActivity(`Deleted: ${o.fullName} (${officialId})`, 'error');
+        logAudit('Deleted Govt Official', `${o.fullName} (${officialId})`);
 
-    renderGovtOfficials();
-    renderGovtActivityLog();
-    updateCounts();
-    toast('Official deleted', 'info');
+        _backendCache.loaded = false;
+        await loadRealDataFromBackend();
+
+        renderGovtOfficials();
+        renderGovtActivityLog();
+        updateCounts();
+        toast('Official deleted', 'info');
+
+    } catch (err) {
+        console.error('Delete failed:', err);
+        toast('Network error', 'error');
+    }
 }
 
 function exportGovtOfficials() {
@@ -4655,9 +4781,9 @@ function updateThemeIcon() {
     const theme = document.documentElement.getAttribute('data-theme') || 'light';
     btn.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 }
+
 /* ═══════════════════════════════════════════════════════════════
    EXPOSE FUNCTIONS TO GLOBAL SCOPE
-   Ensures onclick handlers in HTML always find these functions
    ═══════════════════════════════════════════════════════════════ */
 window.adminLogin = adminLogin;
 window.adminLogout = adminLogout;
@@ -4741,11 +4867,13 @@ window.generateTempPassword = generateTempPassword;
 window.getAllUsers = getAllUsers;
 window.getData = getData;
 window.initPanel = initPanel;
+window.loadRealDataFromBackend = loadRealDataFromBackend;
+window.showPanel = showPanel;
 
-console.log('%c[SKILLINTEL Admin] Script loaded successfully',
+console.log('%c[SKILLINTEL Admin] Script loaded successfully (backend-integrated)',
     'color: #22c55e; font-weight: bold; font-size: 14px;');
-console.log('[SKILLINTEL Admin] Test: typeof adminLogin =', typeof adminLogin);
 console.log('[SKILLINTEL Admin] Username:', ADMIN_CREDENTIALS.username);
+
 if (typeof window.toggleTheme !== 'function') {
     window.toggleTheme = function() {
         const html = document.documentElement;

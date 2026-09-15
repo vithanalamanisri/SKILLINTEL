@@ -1236,152 +1236,138 @@
         }
     }
 
-    // ===== REGISTER EMPLOYER =====
-    function registerEmployer() {
-        const employerId = document.getElementById('employerId').value;
-        const contactPerson = document.getElementById('contactPerson').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const mobile = document.getElementById('mobile').value.trim();
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const orgName = document.getElementById('orgName').value.trim();
-        const registrationNumber = document.getElementById('registrationNumber').value.trim();
-        const industry = document.getElementById('industry').value;
-        const orgSize = document.getElementById('orgSize').value;
-        const orgAddress = document.getElementById('orgAddress').value.trim();
-        const state = document.getElementById('state').value;
-        const district = document.getElementById('district').value.trim();
-        const city = document.getElementById('city').value.trim();
-        const pincode = document.getElementById('pincode').value.trim();
-        const verificationAuthority = document.getElementById('verificationAuthority').value;
-        const verificationId = document.getElementById('verificationId').value.trim();
-        const hiringSectors = document.getElementById('hiringSectors').value.trim();
-        const preferredQualification = document.getElementById('preferredQualification').value;
-        const salaryRange = document.getElementById('salaryRange').value.trim();
-        const hiringSeason = document.getElementById('hiringSeason').value;
-        const skillIndiaPartner = document.getElementById('skillIndiaPartner').value;
-        const partnerId = document.getElementById('partnerId').value.trim();
-        const pastHiring = document.getElementById('pastHiring').value.trim();
-        const consentInfo = document.getElementById('consentInfo').checked;
-        const consentVerification = document.getElementById('consentVerification').checked;
-        const consentData = document.getElementById('consentData').checked;
+   // ===== REGISTER EMPLOYER (backend-first) =====
+async function registerEmployer() {
+    const employerId = document.getElementById('employerId').value;
+    const contactPerson = document.getElementById('contactPerson').value.trim();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const mobile = document.getElementById('mobile').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const orgName = document.getElementById('orgName').value.trim();
+    const registrationNumber = document.getElementById('registrationNumber').value.trim();
+    const industry = document.getElementById('industry').value;
+    const orgSize = document.getElementById('orgSize').value;
+    const orgAddress = document.getElementById('orgAddress').value.trim();
+    const state = document.getElementById('state').value;
+    const district = document.getElementById('district').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const pincode = document.getElementById('pincode').value.trim();
+    const verificationAuthority = document.getElementById('verificationAuthority').value;
+    const verificationId = document.getElementById('verificationId').value.trim();
+    const hiringSectors = document.getElementById('hiringSectors').value.trim();
+    const preferredQualification = document.getElementById('preferredQualification').value;
+    const salaryRange = document.getElementById('salaryRange').value.trim();
+    const hiringSeason = document.getElementById('hiringSeason').value;
+    const skillIndiaPartner = document.getElementById('skillIndiaPartner').value;
+    const partnerId = document.getElementById('partnerId').value.trim();
+    const pastHiring = document.getElementById('pastHiring').value.trim();
+    const consentInfo = document.getElementById('consentInfo').checked;
+    const consentVerification = document.getElementById('consentVerification').checked;
+    const consentData = document.getElementById('consentData').checked;
 
-        // --- VALIDATION ---
-        if (!contactPerson || !email || !mobile || !password || !confirmPassword) {
-            showAlert('Please fill in all <strong>Account Details</strong>.', 'error');
-            return;
-        }
-        if (password.length < 8) {
-            showAlert('Password must be at least <strong>8 characters</strong>.', 'error');
-            return;
-        }
-        if (password !== confirmPassword) {
-            showAlert('Passwords do not <strong>match</strong>.', 'error');
-            return;
-        }
-        if (mobile.length < 10) {
-            showAlert('Please enter a valid <strong>10-digit mobile number</strong>.', 'error');
-            return;
-        }
-        if (!orgName || !registrationNumber || !industry || !orgSize || !orgAddress) {
-            showAlert('Please fill in all <strong>Organization Details</strong>.', 'error');
-            return;
-        }
-        if (!state || !district || !city || !pincode) {
-            showAlert('Please fill in all <strong>Location Details</strong>.', 'error');
-            return;
-        }
-        if (pincode.length < 6) {
-            showAlert('Please enter a valid <strong>6-digit PIN code</strong>.', 'error');
-            return;
-        }
-        if (!verificationAuthority || !hiringSectors || !salaryRange) {
-            showAlert('Please fill in all <strong>Verification & Hiring Details</strong>.', 'error');
-            return;
-        }
-        if (!skillIndiaPartner) {
-            showAlert('Please fill in <strong>Government Partnership</strong> details.', 'error');
-            return;
-        }
-        if (!consentInfo || !consentVerification || !consentData) {
-            showAlert('Please <strong>accept all consent terms</strong> to register.', 'error');
-            return;
-        }
-
-        // --- Build Data Object ---
-        const employerData = {
-            employerId: employerId,
-            contactPerson: contactPerson,
-            email: email,
-            mobile: mobile,
-            password: password,
-            orgName: orgName,
-            registrationNumber: registrationNumber,
-            industry: industry,
-            orgSize: orgSize,
-            orgAddress: orgAddress,
-            state: state,
-            district: district,
-            city: city,
-            pincode: pincode,
-            verificationAuthority: verificationAuthority,
-            verificationId: verificationId || '',
-            hiringSectors: hiringSectors,
-            preferredQualification: preferredQualification || '',
-            salaryRange: salaryRange,
-            hiringSeason: hiringSeason || '',
-            skillIndiaPartner: skillIndiaPartner,
-            partnerId: partnerId || '',
-            pastHiring: pastHiring || '',
-            registrationDate: new Date().toISOString().split('T')[0],
-            status: 'Active'
-        };
-
-        console.log('📋 Employer Registration Data:', employerData);
-
-        const successHTML = `
-        <strong>Registration Successful!</strong><br>
-        <span style="font-size:0.75rem;color:inherit;">
-            Employer: ${orgName} (${employerId})<br>
-            Contact: ${contactPerson} · ${email}<br>
-            Industry: ${industry} · Size: ${orgSize}<br>
-            Location: ${city}, ${district}, ${state}<br>
-            Skill India Partner: ${skillIndiaPartner}
-        </span>
-    `;
-
-    showAlert(successHTML, 'success');
-
-    // ✅ SAVE TO localStorage
-    let allEmployers = JSON.parse(localStorage.getItem('allEmployers') || '[]');
-
-    const existingIndex = allEmployers.findIndex(e => e.email === email);
-    if (existingIndex !== -1) {
-        allEmployers[existingIndex] = { ...allEmployers[existingIndex], ...employerData };
-    } else {
-        employerData.employerId = employerData.employerId || 'EMP' + Date.now();
-        employerData.registeredAt = new Date().toISOString();
-        allEmployers.push(employerData);
+    // --- VALIDATION (same as before) ---
+    if (!contactPerson || !email || !mobile || !password || !confirmPassword) {
+        showAlert('Please fill in all <strong>Account Details</strong>.', 'error'); return;
+    }
+    if (password.length < 8) { showAlert('Password must be at least <strong>8 characters</strong>.', 'error'); return; }
+    if (password !== confirmPassword) { showAlert('Passwords do not <strong>match</strong>.', 'error'); return; }
+    if (mobile.length < 10) { showAlert('Please enter a valid <strong>10-digit mobile number</strong>.', 'error'); return; }
+    if (!orgName || !registrationNumber || !industry || !orgSize || !orgAddress) {
+        showAlert('Please fill in all <strong>Organization Details</strong>.', 'error'); return;
+    }
+    if (!state || !district || !city || !pincode) {
+        showAlert('Please fill in all <strong>Location Details</strong>.', 'error'); return;
+    }
+    if (pincode.length < 6) { showAlert('Please enter a valid <strong>6-digit PIN code</strong>.', 'error'); return; }
+    if (!verificationAuthority || !hiringSectors || !salaryRange) {
+        showAlert('Please fill in all <strong>Verification & Hiring Details</strong>.', 'error'); return;
+    }
+    if (!skillIndiaPartner) { showAlert('Please fill in <strong>Government Partnership</strong> details.', 'error'); return; }
+    if (!consentInfo || !consentVerification || !consentData) {
+        showAlert('Please <strong>accept all consent terms</strong> to register.', 'error'); return;
     }
 
-    localStorage.setItem('allEmployers', JSON.stringify(allEmployers));
-    localStorage.setItem('currentEmployerEmail', email);
+    // Lock button
+    const submitBtn = document.querySelector('.btn-primary');
+    submitBtn.disabled = true;
+    const originalHTML = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
 
-    // Backward compatibility
-    localStorage.setItem('employerData', JSON.stringify(employerData));
+    try {
+        // STEP 1: Create user account in backend
+        const userResult = await apiCall('/api/auth/register', {
+            method: 'POST',
+            body: {
+                username: email, password: password, role: 'employer',
+                full_name: contactPerson, email: email, phone: mobile,
+            },
+        });
+        if (!userResult.ok && userResult.status !== 409) {
+            throw new Error('Account creation failed: ' + (userResult.data.error || userResult.status));
+        }
 
-    console.log('✅ Employer registered. Total employers:', allEmployers.length);
+        // STEP 2: Create employer record in backend
+        const empResult = await apiCall('/api/employers', {
+            method: 'POST',
+            body: {
+                name: orgName, industry: industry, state: state,
+                district: district, contact: contactPerson, email: email,
+            },
+        });
+        if (!empResult.ok && empResult.status !== 409) {
+            throw new Error('Employer record creation failed: ' + (empResult.data.error || empResult.status));
+        }
 
-    localStorage.setItem('employerLogin', JSON.stringify({
-        email: email,
-        password: password,
-        role: 'employer'
-    }));
+        // STEP 3: Save locally (offline cache)
+        try {
+            const employerData = {
+                employerId, contactPerson, email, mobile, orgName,
+                registrationNumber, industry, orgSize, orgAddress,
+                state, district, city, pincode, verificationAuthority,
+                verificationId, hiringSectors, preferredQualification,
+                salaryRange, hiringSeason, skillIndiaPartner, partnerId,
+                pastHiring, status: 'Active',
+            };
+            let allEmployers = JSON.parse(localStorage.getItem('allEmployers') || '[]');
+            const idx = allEmployers.findIndex(e => e.email === email);
+            if (idx !== -1) allEmployers[idx] = { ...allEmployers[idx], ...employerData };
+            else allEmployers.push(employerData);
+            localStorage.setItem('allEmployers', JSON.stringify(allEmployers));
+            localStorage.setItem('currentEmployerEmail', email);
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userRole', 'employer');
+        } catch (e) { console.warn('localStorage cache failed:', e); }
 
-    // ✅ Redirect to employer dashboard
-    setTimeout(() => {
-        window.location.href = '../employer/dashboard.html';
-    }, 2500);
+        // STEP 4: Auto-login
+        await apiCall('/api/auth/login', {
+            method: 'POST',
+            body: { username: email, password: password, role: 'employer' },
+        });
+
+        showAlert(`
+            <strong>✅ Registration Successful!</strong><br>
+            <span style="font-size:0.75rem;">
+                Employer: ${orgName} (${employerId})<br>
+                Contact: ${contactPerson} · ${email}<br>
+                Industry: ${industry} · Size: ${orgSize}<br>
+                📍 ${city}, ${district}, ${state}<br><br>
+                <strong>☁️ Synced to cloud</strong> · <strong>Redirecting...</strong>
+            </span>
+        `, 'success');
+
+        setTimeout(() => { window.location.href = '../employer/dashboard.html'; }, 1800);
+
+    } catch (err) {
+        console.error('❌ Employer registration failed:', err);
+        showAlert(`
+            <strong>Registration Failed</strong><br>
+            <span style="font-size:0.75rem;">${err.message}<br>
+            Please try again or check your internet connection.</span>
+        `, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHTML;
+    }
 }
 
     // ===== INITIALIZE =====
@@ -1405,16 +1391,6 @@
         this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
     });
 
-    // ===== PREVENT DOUBLE SUBMIT =====
-    let isSubmitting = false;
-    document.querySelector('.btn-primary').addEventListener('click', function(e) {
-        if (isSubmitting) {
-            e.preventDefault();
-            return;
-        }
-        isSubmitting = true;
-        setTimeout(() => { isSubmitting = false; }, 3000);
-    });
 
     // ============================================================
     // THEME TOGGLE

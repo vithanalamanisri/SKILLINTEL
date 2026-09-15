@@ -6,6 +6,7 @@
     <title>SkillBridge · Trainee Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f4f7ff; color: #1e293b; display: flex; min-height: 100vh; }
@@ -441,48 +442,142 @@
 </div>
 
 <script>
-    // ===== LOAD ALL DATA =====
-    function loadAllData() {
-    // ✅ Get currently logged-in trainee email
-    const currentEmail = localStorage.getItem('currentTraineeEmail') || 
-                         (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
-    
-    // ✅ Get ALL trainees and find current one
-    const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
-    let traineeData = allTrainees.find(t => t.email === currentEmail);
-    
-    // ✅ Fallback to old single-object storage
-    if (!traineeData) {
-        traineeData = JSON.parse(localStorage.getItem('traineeData') || '{}');
+    // ============================================================
+    // BACKEND CACHE — set after loadAllData()
+    // ============================================================
+    let _traineeBackend = null;
+    let _trainee360 = null;
+
+    // ============================================================
+    // LOAD ALL DATA — pulls from BACKEND first, localStorage as fallback
+    // ============================================================
+    async function loadAllData() {
+        // Identify current trainee by email (stored at login)
+        const currentEmail =
+            localStorage.getItem('currentTraineeEmail') ||
+            (JSON.parse(localStorage.getItem('traineeData') || '{}').email) ||
+            localStorage.getItem('userEmail');
+
+        // Try BACKEND first
+        try {
+            const backendCacheKey = 'currentTraineeId';
+            let backendId = localStorage.getItem(backendCacheKey);
+
+            // If we don't have a numeric backend id yet, search by email
+            if (!backendId) {
+                const listRes = await apiCall('/api/trainees?search=' + encodeURIComponent(currentEmail || ''));
+                if (listRes.ok && Array.isArray(listRes.data)) {
+                    const found = listRes.data.find(t =>
+                        (t.email || '').toLowerCase() === (currentEmail || '').toLowerCase()
+                    );
+                    if (found) {
+                        backendId = found.id;
+                        localStorage.setItem(backendCacheKey, String(found.id));
+                    }
+                }
+            }
+
+            if (backendId) {
+                const [fullRes, t360Res] = await Promise.all([
+                    apiCall('/api/trainees/' + backendId + '/360'),
+                    apiCall('/api/trainees/' + backendId + '/360'),
+                ]);
+                if (fullRes.ok && fullRes.data) {
+                    _traineeBackend = fullRes.data;
+                    _trainee360 = t360Res.ok ? t360Res.data : fullRes.data;
+                }
+            }
+        } catch (e) {
+            console.warn('Backend trainee load failed, using localStorage:', e);
+        }
+
+        // ---- Build trainee object (backend → localStorage merge) ----
+        let traineeData = {};
+
+        const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+        const localTrainee = allTrainees.find(t => t.email === currentEmail) ||
+                             JSON.parse(localStorage.getItem('traineeData') || '{}');
+
+        // Start with local data, override with backend if available
+        traineeData = { ...localTrainee };
+
+        if (_traineeBackend) {
+            traineeData = {
+                ...traineeData,
+                traineeId: _traineeBackend.trainee_code || traineeData.traineeId,
+                fullName: _traineeBackend.full_name || traineeData.fullName,
+                email: _traineeBackend.email || traineeData.email,
+                mobile: _traineeBackend.phone || traineeData.mobile,
+                state: _traineeBackend.state || traineeData.state,
+                district: _traineeBackend.district || traineeData.district,
+                skillTrade: _traineeBackend.skills || traineeData.skillTrade,
+                trainingProvider: traineeData.trainingProvider,
+                batchId: traineeData.batchId,
+                registrationDate: _traineeBackend.created_at ? _traineeBackend.created_at.split('T')[0] : traineeData.registrationDate,
+                trainingProgress: _traineeBackend.assessment_score || traineeData.trainingProgress || 0,
+                assessmentScore: _traineeBackend.assessment_score,
+                trainingStatus: _traineeBackend.training_status,
+            };
+        }
+
+        // ---- Employment data ----
+        let employmentData = null;
+
+        // Backend 360 view has employments
+        if (_trainee360 && _trainee360.employments && _trainee360.employments.length > 0) {
+            const emp = _trainee360.employments[0];
+            employmentData = {
+                status: emp.status === 'verified' ? 'Employed' : 'Pending',
+                companyName: emp.employer_name || 'N/A',
+                jobRole: emp.job_role || 'N/A',
+                employmentType: emp.employment_type || 'N/A',
+                joiningDate: emp.start_date || 'N/A',
+                currentIncome: emp.monthly_income || 0,
+                previousIncome: emp.pre_training_income || 0,
+                jobCity: emp.job_location || traineeData.location || 'N/A',
+            };
+        } else {
+            // localStorage fallback
+            const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+            employmentData = allEmployment.find(e => e.traineeEmail === currentEmail) ||
+                             JSON.parse(localStorage.getItem('employmentData') || '{}');
+        }
+
+        // ---- Follow-up data ----
+        let followupData = null;
+
+        if (_trainee360 && _trainee360.followups && _trainee360.followups.length > 0) {
+            // Find earliest pending/due follow-up
+            const pending = _trainee360.followups.find(f => f.status === 'due' || f.status === 'pending') ||
+                            _trainee360.followups[0];
+            followupData = {
+                status: pending.status === 'completed' ? 'Completed' :
+                        pending.status === 'due' ? 'In Progress' : 'Pending',
+                period: String(pending.period_days || 90),
+                date: pending.due_date || 'N/A',
+                notifications: _trainee360.followups.filter(f => f.status !== 'completed').length,
+            };
+        } else {
+            const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
+            followupData = allFollowups.find(f => f.traineeEmail === currentEmail) ||
+                           JSON.parse(localStorage.getItem('followupData') || '{}');
+        }
+
+        return { traineeData, employmentData, followupData };
     }
 
-    // ✅ Get employment data for THIS trainee
-    const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-    let employmentData = allEmployment.find(e => e.traineeEmail === currentEmail);
-    if (!employmentData) {
-        employmentData = JSON.parse(localStorage.getItem('employmentData') || '{}');
-    }
-
-    // ✅ Get followup data for THIS trainee
-    const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
-    let followupData = allFollowups.find(f => f.traineeEmail === currentEmail);
-    if (!followupData) {
-        followupData = JSON.parse(localStorage.getItem('followupData') || '{}');
-    }
-
-    return { traineeData, employmentData, followupData };
-}
-
-    // ===== RENDER DASHBOARD =====
-    function renderDashboard() {
-        const { traineeData, employmentData, followupData } = loadAllData();
+    // ============================================================
+    // RENDER DASHBOARD
+    // ============================================================
+    async function renderDashboard() {
+        const { traineeData, employmentData, followupData } = await loadAllData();
 
         if (!traineeData || !traineeData.fullName) {
             document.getElementById('contentContainer').innerHTML = `
                 <div class="no-data">
                     <i class="fas fa-user-graduate"></i>
                     <h2>No Trainee Data Found</h2>
-                    <p>Please complete your registration first.</p>
+                    <p>Please complete your registration first, or log in again.</p>
                     <br>
                     <a href="../../auth/trainee-register.html" style="display:inline-block; background:linear-gradient(135deg,#2563eb,#7c3aed); color:white; padding:12px 30px; border-radius:12px; text-decoration:none; font-weight:600;">
                         <i class="fas fa-user-plus"></i> Go to Registration
@@ -492,49 +587,73 @@
             return;
         }
 
-        // ---- UPDATE HEADER ----
+        // ---- HEADER ----
         const initial = traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T';
         document.getElementById('sidebarAvatar').textContent = initial;
         document.getElementById('sidebarName').textContent = traineeData.fullName || 'Trainee';
         document.getElementById('headerUserName').textContent = traineeData.fullName || 'Trainee';
 
-        // ---- UPDATE WELCOME ----
+        // ---- WELCOME ----
         document.getElementById('welcomeTitle').innerHTML = `<i class="fas fa-hand-peace"></i> Welcome Back, ${traineeData.fullName || 'Trainee'}! 🎉`;
         document.getElementById('welcomeSub').textContent = 'Track your training, certification, employment and career growth in one place.';
 
-        // ---- UPDATE STATS ----
-        const trainingProgress = traineeData.trainingProgress || 75;
+        // ---- STATS ----
+        const trainingProgress = traineeData.trainingProgress || 0;
         document.getElementById('statTraining').textContent = trainingProgress + '%';
-        document.getElementById('statTrainingSub').textContent = `${traineeData.completedModules || 8}/${traineeData.totalModules || 10} modules`;
+        document.getElementById('statTrainingSub').textContent = `${traineeData.completedModules || 0}/${traineeData.totalModules || 10} modules`;
 
-        document.getElementById('statCertification').textContent = traineeData.certificationStatus || 'Certified';
-        document.getElementById('statCertSub').textContent = traineeData.certificateName || 'Full Stack Developer';
+        document.getElementById('statCertification').textContent = traineeData.certificationStatus || 'Pending';
+        document.getElementById('statCertSub').textContent = traineeData.certificateName || 'Not Certified';
 
-        // Get employment data
         const empStatus = employmentData.status || traineeData.employmentStatusDisplay || 'Not Updated';
         document.getElementById('statEmployment').textContent = empStatus;
         document.getElementById('statEmploySub').textContent = employmentData.companyName || traineeData.currentEmployer || 'No company';
 
-        // Get income from employment data or trainee data
-        const currentIncome = parseInt(employmentData.currentIncome) || traineeData.currentIncome || 25000;
+        const currentIncome = parseInt(employmentData.currentIncome) || traineeData.currentIncome || 0;
         document.getElementById('statIncome').textContent = '₹' + currentIncome.toLocaleString();
-        const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 5000;
+        const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 0;
         const growth = prevIncome > 0 ? Math.round(((currentIncome - prevIncome) / prevIncome) * 100) : 0;
-        document.getElementById('statIncomeSub').textContent = `⬆ ${growth}% growth`;
+        document.getElementById('statIncomeSub').textContent = growth !== 0 ? `⬆ ${growth}% growth` : 'No growth data yet';
 
         // ---- NOTIFICATION BADGE ----
-        const notifCount = followupData.notifications || 4;
+        const notifCount = followupData.notifications || 0;
         document.getElementById('notificationBadge').textContent = notifCount;
 
-        // ---- RENDER OVERVIEW ----
+        // ---- OVERVIEW ----
         renderOverview(traineeData, employmentData, followupData);
     }
 
-    // ===== RENDER OVERVIEW =====
+    // ============================================================
+    // RENDER OVERVIEW
+    // ============================================================
     function renderOverview(traineeData, employmentData, followupData) {
-        const currentIncome = parseInt(employmentData.currentIncome) || traineeData.currentIncome || 25000;
-        const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 5000;
+        const currentIncome = parseInt(employmentData.currentIncome) || traineeData.currentIncome || 0;
+        const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 0;
         const growth = prevIncome > 0 ? Math.round(((currentIncome - prevIncome) / prevIncome) * 100) : 0;
+
+        // Build follow-up grid from 360 data if available, else default
+        let followupGrid = '';
+        if (_trainee360 && _trainee360.followups && _trainee360.followups.length > 0) {
+            followupGrid = _trainee360.followups.map(f => {
+                const isCompleted = f.status === 'completed';
+                const isDue = f.status === 'due' || f.status === 'overdue';
+                const cls = isCompleted ? 'completed' : isDue ? 'due' : '';
+                const icon = isCompleted ? '✅' : isDue ? '⏳' : '📅';
+                return `
+                    <div class="followup-item ${cls}">
+                        <div class="days">${f.period_days} Days</div>
+                        <div class="status-icon">${icon}</div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            followupGrid = `
+                <div class="followup-item completed"><div class="days">30 Days</div><div class="status-icon">✅</div></div>
+                <div class="followup-item due"><div class="days">90 Days</div><div class="status-icon">⏳</div></div>
+                <div class="followup-item"><div class="days">180 Days</div><div class="status-icon">📅</div></div>
+                <div class="followup-item"><div class="days">365 Days</div><div class="status-icon">🔒</div></div>
+            `;
+        }
 
         const html = `
             <div class="content-section active" id="section-overview">
@@ -556,7 +675,7 @@
                         </div>
                     </div>
 
-                    <!-- Employment Status (from employment.html data) -->
+                    <!-- Employment Status -->
                     <div class="card">
                         <h3><i class="fas fa-briefcase"></i> Employment Status</h3>
                         <p><b>Status:</b> <span class="status-badge ${employmentData.status === 'Employed' ? 'success' : 'warning'}">${employmentData.status || traineeData.employmentStatusDisplay || 'Not Updated'}</span></p>
@@ -570,7 +689,7 @@
                         </a>
                     </div>
 
-                    <!-- Income (from employment.html data) -->
+                    <!-- Income -->
                     <div class="card">
                         <h3><i class="fas fa-chart-line"></i> Current Income</h3>
                         <p><b>Monthly Salary:</b> <span style="font-size:22px; font-weight:700; color:#1a56db;">₹${currentIncome.toLocaleString()}</span></p>
@@ -586,28 +705,13 @@
                         </a>
                     </div>
 
-                    <!-- Follow-up Status (from follow-up.html data) -->
+                    <!-- Follow-up Status -->
                     <div class="card">
-                        <h3><i class="fas fa-calendar-check"></i> Next Follow-up</h3>
+                        <h3><i class="fas fa-calendar-check"></i> Follow-up Schedule</h3>
                         <div class="followup-grid">
-                            <div class="followup-item ${followupData.status === 'Completed' ? 'completed' : (followupData.status === 'In Progress' ? 'due' : '')}">
-                                <div class="days">${followupData.period || '90'} Days</div>
-                                <div class="status-icon">${followupData.status === 'Completed' ? '✅' : (followupData.status === 'In Progress' ? '⏳' : '📅')}</div>
-                            </div>
-                            <div class="followup-item completed">
-                                <div class="days">30 Days</div>
-                                <div class="status-icon">✅</div>
-                            </div>
-                            <div class="followup-item due">
-                                <div class="days">180 Days</div>
-                                <div class="status-icon">⏳</div>
-                            </div>
-                            <div class="followup-item">
-                                <div class="days">365 Days</div>
-                                <div class="status-icon">🔒</div>
-                            </div>
+                            ${followupGrid}
                         </div>
-                        <p><b>Next Date:</b> <span>${followupData.date || '20 Sep 2026'}</span></p>
+                        <p><b>Next Date:</b> <span>${followupData.date || '—'}</span></p>
                         <p><b>Status:</b> <span class="status-badge ${followupData.status === 'Completed' ? 'success' : 'warning'}">${followupData.status || 'Pending'}</span></p>
                         <a href="follow-up.html" style="text-decoration:none;">
                             <button class="btn-success" style="font-size:12px; padding:6px 16px;"><i class="fas fa-pen"></i> Complete Follow-up</button>
@@ -619,11 +723,11 @@
                         <h3><i class="fas fa-road"></i> Career Journey</h3>
                         <div class="timeline-item">
                             <b>👤 Registration</b>
-                            <p>Successfully Registered on ${traineeData.registrationDate || '01 Jan 2026'}</p>
+                            <p>Successfully Registered on ${traineeData.registrationDate || '—'}</p>
                         </div>
                         <div class="timeline-item">
                             <b>📚 Training</b>
-                            <p>${traineeData.skillTrade || 'Training'} · ${traineeData.trainingProgress || 75}% completed</p>
+                            <p>${traineeData.skillTrade || 'Training'} · ${traineeData.trainingProgress || 0}% completed</p>
                         </div>
                         <div class="timeline-item">
                             <b>💼 Employment</b>
@@ -631,7 +735,7 @@
                         </div>
                         <div class="timeline-item">
                             <b>📅 Follow-up</b>
-                            <p>${followupData.status || 'Pending'} · ${followupData.period || '90'} Days</p>
+                            <p>${followupData.status || 'Pending'} · ${followupData.period || '—'} Days</p>
                         </div>
                         <div class="timeline-item">
                             <b>🚀 Career Growth</b>
@@ -661,21 +765,25 @@
         document.getElementById('contentContainer').innerHTML = html;
     }
 
-    // ===== SIDEBAR NAVIGATION =====
+    // ============================================================
+    // SIDEBAR NAVIGATION (no-op, links are real hrefs)
+    // ============================================================
     function setupSidebarNavigation() {
-        // Sidebar links already have href attributes pointing to actual files
-        // No need for JavaScript navigation - just use regular links
         console.log('Sidebar links configured for navigation');
     }
 
-    // ===== TOGGLE SIDEBAR =====
+    // ============================================================
+    // TOGGLE SIDEBAR
+    // ============================================================
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('open');
     }
 
-    // ===== SHOW NOTIFICATIONS =====
-    function showNotifications() {
-        const { followupData } = loadAllData();
+    // ============================================================
+    // SHOW NOTIFICATIONS
+    // ============================================================
+    async function showNotifications() {
+        const { followupData } = await loadAllData();
         let msg = '📬 Notifications:\n\n';
         if (followupData) {
             msg += `• Follow-up Status: ${followupData.status || 'Pending'}\n`;
@@ -686,20 +794,47 @@
         alert(msg);
     }
 
-    // ===== LOGOUT =====
-// ===== LOGOUT =====
-function logout() {
-    if (confirm('Are you sure you want to logout?')) {
-        alert('Logging out... Redirecting to login page.');
-        window.location.href = '../auth/login.html';
+    // ============================================================
+    // LOGOUT
+    // ============================================================
+    async function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+            localStorage.removeItem('currentTraineeId');
+            localStorage.removeItem('currentTraineeEmail');
+            window.location.href = '../auth/login.html';
+        }
     }
-}
 
-    // ===== INITIALIZE =====
-    document.addEventListener('DOMContentLoaded', function() {
-        renderDashboard();
+    // ============================================================
+    // THEME TOGGLE (used by header button)
+    // ============================================================
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
 
-        // Close sidebar on outside click (mobile)
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Apply saved theme
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
+
+        // Load real data from backend
+        await renderDashboard();
+
+        // Mobile: close sidebar on outside click
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
             const toggle = document.querySelector('.menu-toggle');
@@ -712,5 +847,6 @@ function logout() {
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

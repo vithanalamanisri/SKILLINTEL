@@ -12,6 +12,7 @@
 
     <!-- Master theme -->
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
 
     <style>
         /* ===== PAGE-SPECIFIC STYLES ===== */
@@ -429,6 +430,7 @@
         }
 
         .btn-save:hover { box-shadow: 0 12px 25px rgba(37,99,235,0.35); }
+        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1024px) {
@@ -1137,19 +1139,47 @@
     <button class="btn btn-clear" onclick="clearForm()">
         <i class="fas fa-undo"></i> Clear All
     </button>
-    <button class="btn btn-save" onclick="saveEmployment()">
+    <button class="btn btn-save" id="saveBtn" onclick="saveEmployment()">
         <i class="fas fa-save"></i> Save Employment Details
     </button>
 </div>
 
 <script>
     // ============================================================
+    // BACKEND STATE
+    // ============================================================
+    let _traineeBackendId = null;
+    let _existingEmploymentId = null;
+
+    // ============================================================
     // LOAD USER DATA
     // ============================================================
-    function loadUserData() {
+    async function loadUserData() {
         const currentEmail = localStorage.getItem('currentTraineeEmail') ||
                              (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
 
+        // Try backend first — find trainee by email
+        try {
+            const res = await apiCall('/api/trainees?search=' + encodeURIComponent(currentEmail || ''));
+            if (res.ok && Array.isArray(res.data)) {
+                const found = res.data.find(t =>
+                    (t.email || '').toLowerCase() === (currentEmail || '').toLowerCase()
+                );
+                if (found) {
+                    _traineeBackendId = found.id;
+                    localStorage.setItem('currentTraineeId', String(found.id));
+
+                    const initial = (found.full_name || 'T').charAt(0).toUpperCase();
+                    document.getElementById('userAvatar').textContent = initial;
+                    console.log('👋 Welcome, ' + (found.full_name || found.email));
+                    return found;
+                }
+            }
+        } catch (e) {
+            console.warn('Backend trainee load failed:', e);
+        }
+
+        // Fallback localStorage
         const allTrainees = JSON.parse(localStorage.getItem('allTrainees') || '[]');
         let userData = allTrainees.find(t => t.email === currentEmail);
 
@@ -1166,6 +1196,8 @@
             }
             console.log('👋 Welcome, ' + (userData.fullName || userData.email));
         }
+
+        return userData;
     }
 
     // ============================================================
@@ -1257,9 +1289,10 @@
     }
 
     // ============================================================
-    // SAVE EMPLOYMENT DATA
+    // SAVE EMPLOYMENT — backend-first
     // ============================================================
-    function saveEmployment() {
+    async function saveEmployment() {
+        const saveBtn = document.getElementById('saveBtn');
         const currentEmail = localStorage.getItem('currentTraineeEmail') ||
                              (JSON.parse(localStorage.getItem('traineeData') || '{}').email);
 
@@ -1268,41 +1301,50 @@
             return;
         }
 
+        const status = document.getElementById('employmentStatus').value;
+        const companyName = document.getElementById('companyName').value;
+        const jobRole = document.getElementById('jobRole').value;
+        const currentIncome = document.getElementById('currentIncome').value;
+
+        if (!status) { alert('Please select Employment Status'); return; }
+        if (!companyName && status !== 'Unemployed' && status !== 'Looking for Job') {
+            alert('Please enter Company / Organization Name'); return;
+        }
+        if (!jobRole && status !== 'Unemployed' && status !== 'Looking for Job') {
+            alert('Please enter Job Role'); return;
+        }
+
         const employmentData = {
             traineeEmail: currentEmail,
-            status: document.getElementById('employmentStatus').value,
+            status: status,
             startDate: document.getElementById('startDate').value,
             category: document.getElementById('employmentCategory').value,
             experience: document.getElementById('workExperience').value,
-
-            companyName: document.getElementById('companyName').value,
+            companyName: companyName,
             orgType: document.getElementById('orgType').value,
             industry: document.getElementById('industry').value,
             department: document.getElementById('department').value,
             employeeId: document.getElementById('employeeId').value,
-            jobRole: document.getElementById('jobRole').value,
+            jobRole: jobRole,
             supervisor: document.getElementById('supervisorName').value,
             employmentType: document.getElementById('employmentType').value,
             joiningDate: document.getElementById('joiningDate').value,
             workingHours: document.getElementById('workingHours').value,
             workingDays: document.getElementById('workingDays').value,
             workMode: document.getElementById('workMode').value,
-
             jobState: document.getElementById('jobState').value,
             jobDistrict: document.getElementById('jobDistrict').value,
             jobCity: document.getElementById('jobCity').value,
             jobPincode: document.getElementById('jobPincode').value,
             relocated: document.getElementById('relocated').value,
-
             previousIncome: document.getElementById('previousIncome').value,
-            currentIncome: document.getElementById('currentIncome').value,
+            currentIncome: currentIncome,
             annualSalary: document.getElementById('annualSalary').value,
             salaryType: document.getElementById('salaryType').value,
             pfAvailable: document.getElementById('pfAvailable').value,
             esiAvailable: document.getElementById('esiAvailable').value,
             incentives: document.getElementById('incentives').value,
             paymentMode: document.getElementById('paymentMode').value,
-
             businessName: document.getElementById('businessName').value,
             businessCategory: document.getElementById('businessCategory').value,
             businessType: document.getElementById('businessType').value,
@@ -1313,7 +1355,6 @@
             monthlyProfit: document.getElementById('monthlyProfit').value,
             employeeCount: document.getElementById('employeeCount').value,
             businessChallenges: document.getElementById('businessChallenges').value,
-
             internshipOrg: document.getElementById('internshipOrg').value,
             internshipRole: document.getElementById('internshipRole').value,
             internshipSector: document.getElementById('internshipSector').value,
@@ -1323,7 +1364,6 @@
             internshipStatus: document.getElementById('internshipStatus').value,
             internshipCertificate: document.getElementById('internshipCertificate').value,
             internshipSkills: document.getElementById('internshipSkills').value,
-
             currentSkills: document.getElementById('currentSkills').value,
             skillsUsed: document.getElementById('skillsUsed').value,
             newSkills: document.getElementById('newSkills').value,
@@ -1332,16 +1372,13 @@
             targetRole: document.getElementById('targetRole').value,
             targetSalary: document.getElementById('targetSalary').value,
             careerTimeline: document.getElementById('careerTimeline').value,
-
             salarySatisfaction: document.getElementById('salarySatisfaction').value,
             workEnvironment: document.getElementById('workEnvironment').value,
             careerGrowthRating: document.getElementById('careerGrowthRating').value,
             overallSatisfaction: document.getElementById('overallSatisfaction').value,
-
             mainChallenge: document.getElementById('mainChallenge').value,
             supportRequired: document.getElementById('supportRequired').value,
             challengeComments: document.getElementById('challengeComments').value,
-
             prevCompany: document.getElementById('prevCompany').value,
             prevRole: document.getElementById('prevRole').value,
             prevSalary: document.getElementById('prevSalary').value,
@@ -1350,32 +1387,83 @@
             newCompany: document.getElementById('newCompany').value,
             newRole: document.getElementById('newRole').value,
             newSalary: document.getElementById('newSalary').value,
-
             savedDate: new Date().toISOString(),
             incomeGrowth: document.getElementById('incomeGrowth').value
         };
 
+        // Lock button
+        saveBtn.disabled = true;
+        const originalHTML = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        // --- Save to localStorage first (instant feedback) ---
         try {
             let allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-
             const existingIndex = allEmployment.findIndex(e => e.traineeEmail === currentEmail);
             if (existingIndex !== -1) {
                 allEmployment[existingIndex] = { ...allEmployment[existingIndex], ...employmentData };
             } else {
                 allEmployment.push(employmentData);
             }
-
             localStorage.setItem('allEmployment', JSON.stringify(allEmployment));
             localStorage.setItem('employmentData', JSON.stringify(employmentData));
-
-            alert('✅ Employment details saved successfully!');
-            console.log('📋 Saved employment. Total records:', allEmployment.length);
-
-            updateOverview();
         } catch (e) {
-            alert('❌ Error saving data. Please try again.');
-            console.error('Error:', e);
+            console.warn('localStorage save failed:', e);
         }
+
+        // --- Save to backend ---
+        try {
+            if (_traineeBackendId) {
+                // Map frontend fields → backend schema
+                const backendPayload = {
+                    trainee_id: _traineeBackendId,
+                    job_role: jobRole,
+                    employment_type: mapEmploymentType(employmentData.employmentType || employmentData.category),
+                    start_date: employmentData.joiningDate || employmentData.startDate || null,
+                    monthly_income: parseFloat(currentIncome) || 0,
+                    pre_training_income: parseFloat(employmentData.previousIncome) || 0,
+                    job_relevance: 'high', // default
+                    skills_matched: employmentData.skillsUsed || '',
+                    skills_missing: employmentData.skillsImprovement || '',
+                    status: 'pending',
+                };
+
+                const result = await apiCall('/api/employments', {
+                    method: 'POST',
+                    body: backendPayload,
+                });
+
+                if (result.ok) {
+                    _existingEmploymentId = result.data.id;
+                    console.log('✅ Employment saved to backend, id =', _existingEmploymentId);
+                } else {
+                    console.warn('Backend employment save failed:', result.data);
+                    // Still OK — localStorage has it
+                }
+            } else {
+                console.warn('No backend trainee id — saved only to localStorage');
+            }
+        } catch (e) {
+            console.warn('Backend save error:', e);
+        }
+
+        // Restore button
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalHTML;
+
+        alert('✅ Employment details saved successfully!');
+        console.log('📋 Saved employment');
+
+        updateOverview();
+    }
+
+    function mapEmploymentType(frontType) {
+        if (!frontType) return 'full';
+        const t = frontType.toLowerCase();
+        if (t.includes('part')) return 'part';
+        if (t.includes('contract') || t.includes('temporary')) return 'contract';
+        if (t.includes('self')) return 'self';
+        return 'full';
     }
 
     // ============================================================
@@ -1406,13 +1494,26 @@
     // ============================================================
     // LOGOUT
     // ============================================================
-    function logout() {
+    async function logout() {
         if (confirm('Are you sure you want to logout?')) {
+            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
             localStorage.removeItem('currentTraineeEmail');
             localStorage.removeItem('currentTraineeId');
-            alert('Logging out... Redirecting to login page.');
             window.location.href = '../../auth/login.html';
         }
+    }
+
+    // ============================================================
+    // THEME TOGGLE
+    // ============================================================
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
     // ============================================================
@@ -1423,23 +1524,40 @@
     }
 
     // ============================================================
-    // INITIALIZE
+    // LOAD EXISTING EMPLOYMENT DATA
     // ============================================================
-    document.addEventListener('DOMContentLoaded', function() {
-        loadUserData();
-        calculateIncome();
-        updateOverview();
+    async function loadExistingEmployment() {
+        // Try backend first
+        if (_traineeBackendId) {
+            try {
+                const res = await apiCall('/api/trainees/' + _traineeBackendId + '/360');
+                if (res.ok && res.data && res.data.employments && res.data.employments.length > 0) {
+                    const emp = res.data.employments[0];
+                    _existingEmploymentId = emp.id;
 
-        const inputs = document.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            input.addEventListener('change', function() {
-                if (this.id === 'employmentStatus' || this.id === 'companyName' ||
-                    this.id === 'jobRole' || this.id === 'currentIncome') {
+                    // Populate fields from backend
+                    if (emp.job_role) document.getElementById('jobRole').value = emp.job_role;
+                    if (emp.monthly_income) document.getElementById('currentIncome').value = emp.monthly_income;
+                    if (emp.pre_training_income) document.getElementById('previousIncome').value = emp.pre_training_income;
+                    if (emp.start_date) document.getElementById('joiningDate').value = emp.start_date;
+                    if (emp.skills_matched) document.getElementById('skillsUsed').value = emp.skills_matched;
+                    if (emp.skills_missing) document.getElementById('skillsImprovement').value = emp.skills_missing;
+
+                    // Set employment status
+                    document.getElementById('employmentStatus').value = 'Employed';
+
+                    // Fill company name from employer_name if available
+                    if (emp.employer_name) document.getElementById('companyName').value = emp.employer_name;
+
+                    calculateIncome();
                     updateOverview();
+                    console.log('📂 Loaded employment from backend');
+                    return;
                 }
-            });
-        });
+            } catch (e) { console.warn('Backend emp load failed:', e); }
+        }
 
+        // Fallback localStorage
         const currentEmail = localStorage.getItem('currentTraineeEmail');
         const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
         const savedData = allEmployment.find(e => e.traineeEmail === currentEmail);
@@ -1458,24 +1576,36 @@
             } catch (e) {
                 console.error('Error loading saved data:', e);
             }
-        } else {
-            const oldData = localStorage.getItem('employmentData');
-            if (oldData) {
-                try {
-                    const data = JSON.parse(oldData);
-                    Object.keys(data).forEach(key => {
-                        const element = document.getElementById(key);
-                        if (element && data[key]) {
-                            element.value = data[key];
-                        }
-                    });
-                    calculateIncome();
-                    updateOverview();
-                } catch (e) {
-                    console.error('Error loading old data:', e);
-                }
-            }
         }
+    }
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Apply saved theme
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
+
+        await loadUserData();
+        await loadExistingEmployment();
+
+        calculateIncome();
+        updateOverview();
+
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.id === 'employmentStatus' || this.id === 'companyName' ||
+                    this.id === 'jobRole' || this.id === 'currentIncome') {
+                    updateOverview();
+                }
+            });
+        });
     });
 
     // ============================================================

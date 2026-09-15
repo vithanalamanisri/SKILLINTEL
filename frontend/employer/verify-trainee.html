@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
     
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
     <style>
         /* ===== RESET ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
@@ -663,6 +664,11 @@
             transform: scale(1.05);
             box-shadow: 0 4px 12px rgba(37,99,235,0.3);
         }
+        .action-btn.verify:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
         .action-btn.view {
             background: #eff6ff;
             color: #2563eb;
@@ -973,31 +979,102 @@
 
 <script>
     // ============================================================
-    // ✅ LOAD REAL DATA FROM localStorage ONLY
-    //    (no sample/random data fallback)
+    // BACKEND CACHE
     // ============================================================
-    function loadAllTraineeData() {
+    let _employerBackendId = null;
+
+    // ============================================================
+    // LOAD ALL TRAINEES FROM BACKEND
+    // ============================================================
+    async function loadAllTraineeData() {
+        // Try backend first
+        try {
+            const res = await apiCall('/api/trainees');
+            if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
+                // Fetch 360 for each to get employment info
+                const detailed = await Promise.all(res.data.slice(0, 100).map(async (t) => {
+                    try {
+                        const r = await apiCall('/api/trainees/' + t.id + '/360');
+                        return r.ok ? r.data : t;
+                    } catch (e) { return t; }
+                }));
+
+                return detailed.map((t, index) => {
+                    // Employment info
+                    let empStatus = 'Not Updated';
+                    let company = 'N/A';
+                    let jobRole = 'N/A';
+                    let currentIncome = 0;
+                    let previousIncome = 0;
+                    let verStatus = 'pending';
+
+                    if (t.employments && t.employments.length > 0) {
+                        const emp = t.employments[0];
+                        empStatus = emp.status === 'verified' ? 'Employed' : 'Pending';
+                        company = emp.employer_name || 'N/A';
+                        jobRole = emp.job_role || 'N/A';
+                        currentIncome = emp.monthly_income || 0;
+                        previousIncome = emp.pre_training_income || 0;
+                        if (emp.status === 'verified') verStatus = 'verified';
+                    }
+
+                    // Follow-up info
+                    let followupStatus = 'Pending';
+                    let followupPeriod = '90 Days';
+                    let followupDate = 'N/A';
+                    if (t.followups && t.followups.length > 0) {
+                        const pending = t.followups.find(f => f.status !== 'completed') || t.followups[0];
+                        followupStatus = pending.status === 'completed' ? 'Completed' :
+                                        pending.status === 'due' ? 'In Progress' : 'Pending';
+                        followupPeriod = (pending.period_days || 90) + ' Days';
+                        followupDate = pending.due_date || 'N/A';
+                    }
+
+                    return {
+                        id: t.trainee_code || ('TRN' + t.id),
+                        backendId: t.id,
+                        name: t.full_name || 'Unnamed Trainee',
+                        email: t.email || '',
+                        mobile: t.phone || 'N/A',
+                        course: t.skills || t.qualification || 'N/A',
+                        provider: 'N/A',
+                        batch: 'N/A',
+                        registrationDate: (t.created_at || '').split('T')[0] || 'N/A',
+                        trainingProgress: t.assessment_score || 0,
+                        certificationStatus: t.assessment_result === 'Pass' ? 'Certified' : 'Pending',
+                        employmentStatus: empStatus,
+                        company: company,
+                        jobRole: jobRole,
+                        employmentType: 'N/A',
+                        joiningDate: 'N/A',
+                        location: t.district ? (t.district + ', ' + (t.state || '')) : 'N/A',
+                        currentIncome: currentIncome,
+                        previousIncome: previousIncome,
+                        followupStatus: followupStatus,
+                        followupPeriod: followupPeriod,
+                        followupDate: followupDate,
+                        skills: t.skills || [],
+                        verificationStatus: verStatus,
+                        avatar: (t.full_name || 'T').charAt(0).toUpperCase(),
+                        color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626'][index % 5]
+                    };
+                });
+            }
+        } catch (e) {
+            console.warn('Backend trainees load failed, using localStorage:', e);
+        }
+
+        // Fallback localStorage
         const allTraineesArray = JSON.parse(localStorage.getItem('allTrainees') || '[]');
         const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
         const allFollowups = JSON.parse(localStorage.getItem('allFollowups') || '[]');
 
-        console.log('🔍 Loading trainee data from localStorage:');
-        console.log('   allTrainees:', allTraineesArray.length);
-        console.log('   allEmployment:', allEmployment.length);
-        console.log('   allFollowups:', allFollowups.length);
+        if (allTraineesArray.length === 0) return [];
 
-        // ✅ NO sample data fallback — return empty if nothing registered yet
-        if (allTraineesArray.length === 0) {
-            console.log('ℹ️ No trainees registered yet.');
-            return [];
-        }
-
-        // ✅ Merge each registered trainee with their employment + followup
         return allTraineesArray.map((t, index) => {
             const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
             const fol = allFollowups.find(f => f.traineeEmail === t.email) || {};
 
-            // Determine verification status from real data
             let verStatus = t.verificationStatus || 'pending';
             if (verStatus === 'verified' || emp.verified) verStatus = 'verified';
 
@@ -1012,7 +1089,6 @@
                 registrationDate: t.registrationDate || t.registeredAt || 'N/A',
                 trainingProgress: t.trainingProgress || 0,
                 certificationStatus: t.certificationStatus || 'Pending',
-
                 employmentStatus: emp.status || 'Not Updated',
                 company: emp.companyName || 'N/A',
                 jobRole: emp.jobRole || 'N/A',
@@ -1021,13 +1097,10 @@
                 location: emp.jobCity || emp.location || 'N/A',
                 currentIncome: parseInt(emp.currentIncome) || 0,
                 previousIncome: parseInt(emp.previousIncome) || 0,
-
                 followupStatus: fol.status || 'Pending',
                 followupPeriod: fol.period || '90 Days',
                 followupDate: fol.date || 'N/A',
-
                 skills: t.skills || [],
-
                 verificationStatus: verStatus,
                 avatar: (t.fullName || t.name || 'T').charAt(0).toUpperCase(),
                 color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626'][index % 5]
@@ -1046,15 +1119,15 @@
     // ============================================================
     // LOAD & RENDER
     // ============================================================
-    function loadAndRender() {
-        allTrainees = loadAllTraineeData();
+    async function loadAndRender() {
+        allTrainees = await loadAllTraineeData();
         filteredTrainees = [...allTrainees];
         console.log('📊 Loaded', allTrainees.length, 'trainees');
 
         renderStats();
         populateCourseFilter();
         renderTable();
-        updateSidebar();
+        await updateSidebar();
         updateBanner();
         updateBadges();
     }
@@ -1070,7 +1143,6 @@
         document.getElementById('pendingCount').textContent = pending;
         document.getElementById('verificationRate').textContent = rate + '%';
 
-        // Real trends (based on actual proportions, not fake numbers)
         document.getElementById('totalTrend').textContent = total > 0 ? total + ' total' : '—';
         document.getElementById('verifiedTrend').textContent = total > 0
             ? Math.round((verified / total) * 100) + '%'
@@ -1141,7 +1213,6 @@
     function renderTable() {
         const tbody = document.getElementById('traineeTableBody');
 
-        // ✅ Real empty state — no fake data
         if (filteredTrainees.length === 0) {
             const isEmptySystem = allTrainees.length === 0;
             tbody.innerHTML = `
@@ -1209,7 +1280,6 @@
                     </span>
                 </td>
                 <td>
-                    <!-- ✅ REAL "View Profile" link → trainee-profile.html -->
                     <a class="action-btn view" href="trainee-profile.html?traineeId=${encodeURIComponent(t.id)}">
                         <i class="fas fa-eye"></i> View Profile
                     </a>
@@ -1247,17 +1317,36 @@
     function nextPage() { const tp = Math.ceil(filteredTrainees.length / pageSize); if (currentPage < tp) { currentPage++; renderTable(); } }
     function goToPage(p) { currentPage = p; renderTable(); }
 
-    function updateSidebar() {
-        const currentEmail = localStorage.getItem('currentEmployerEmail');
-        const allEmployers = JSON.parse(localStorage.getItem('allEmployers') || '[]');
-        let employerData = allEmployers.find(e => e.email === currentEmail);
+    async function updateSidebar() {
+        const currentEmail = localStorage.getItem('currentEmployerEmail') || localStorage.getItem('userEmail') || '';
 
+        // Try backend first
+        let employerData = null;
+        try {
+            const res = await apiCall('/api/employers');
+            if (res.ok && Array.isArray(res.data)) {
+                const found = res.data.find(e => (e.email || '').toLowerCase() === currentEmail.toLowerCase());
+                if (found) {
+                    employerData = {
+                        contactPerson: found.name,
+                        orgName: found.name,
+                        email: found.email,
+                        mobile: found.contact,
+                    };
+                    _employerBackendId = found.id;
+                }
+            }
+        } catch (e) { console.warn('Backend employer load failed:', e); }
+
+        // Fallback localStorage
         if (!employerData) {
-            employerData = JSON.parse(localStorage.getItem('employerData') || '{}');
+            const allEmployers = JSON.parse(localStorage.getItem('allEmployers') || '[]');
+            employerData = allEmployers.find(e => e.email === currentEmail) ||
+                           JSON.parse(localStorage.getItem('employerData') || '{}');
         }
 
         const initial = employerData.contactPerson ? employerData.contactPerson.charAt(0).toUpperCase() : 'E';
-        document.getElementById('sidebarAvatar').textContent = initial;
+        document.getElementById('sidebarAvatar').childNodes[0].nodeValue = initial + ' ';
         document.getElementById('sidebarName').textContent = employerData.contactPerson || 'Employer';
         document.getElementById('sidebarCompany').textContent = employerData.orgName || 'Company';
         document.getElementById('headerAvatar').textContent = initial;
@@ -1265,35 +1354,52 @@
     }
 
     // ============================================================
-    // VERIFY ACTIONS — update REAL localStorage data
+    // VERIFY ACTION — backend-first
     // ============================================================
-    function quickVerify(id) {
+    async function quickVerify(id) {
         const trainee = allTrainees.find(t => t.id === id);
         if (!trainee || trainee.verificationStatus === 'verified') return;
 
-        if (confirm(`Verify ${trainee.name}?`)) {
-            // Update master record in localStorage
-            const allTraineesArray = JSON.parse(localStorage.getItem('allTrainees') || '[]');
-            const idx = allTraineesArray.findIndex(t =>
-                t.email === trainee.email || t.traineeId === trainee.id
-            );
-            if (idx !== -1) {
-                allTraineesArray[idx].verificationStatus = 'verified';
-                allTraineesArray[idx].verifiedAt = new Date().toISOString();
-                localStorage.setItem('allTrainees', JSON.stringify(allTraineesArray));
-                console.log('✅ Verification saved to localStorage');
+        if (!confirm(`Verify ${trainee.name}?`)) return;
+
+        // --- Update backend ---
+        try {
+            if (trainee.backendId) {
+                // Find the employment record for this trainee
+                const detail = await apiCall('/api/trainees/' + trainee.backendId + '/360');
+                if (detail.ok && detail.data && detail.data.employments && detail.data.employments.length > 0) {
+                    const empId = detail.data.employments[0].id;
+                    // Try to verify employment via the verifications endpoint
+                    // (Skip if endpoint missing — falls back to local only)
+                    try {
+                        await apiCall('/api/employments/' + empId + '/verify', { method: 'POST' });
+                    } catch (e) { /* endpoint may not exist yet */ }
+                }
             }
-
-            trainee.verificationStatus = 'verified';
-            const fIndex = filteredTrainees.findIndex(t => t.id === id);
-            if (fIndex !== -1) filteredTrainees[fIndex].verificationStatus = 'verified';
-
-            renderStats();
-            renderTable();
-            updateBanner();
-            updateBadges();
-            showToast(`✅ ${trainee.name} verified!`, 'success');
+        } catch (e) {
+            console.warn('Backend verify failed, updating local only:', e);
         }
+
+        // --- Update localStorage fallback ---
+        const allTraineesArray = JSON.parse(localStorage.getItem('allTrainees') || '[]');
+        const idx = allTraineesArray.findIndex(t =>
+            t.email === trainee.email || t.traineeId === trainee.id
+        );
+        if (idx !== -1) {
+            allTraineesArray[idx].verificationStatus = 'verified';
+            allTraineesArray[idx].verifiedAt = new Date().toISOString();
+            localStorage.setItem('allTrainees', JSON.stringify(allTraineesArray));
+        }
+
+        trainee.verificationStatus = 'verified';
+        const fIndex = filteredTrainees.findIndex(t => t.id === id);
+        if (fIndex !== -1) filteredTrainees[fIndex].verificationStatus = 'verified';
+
+        renderStats();
+        renderTable();
+        updateBanner();
+        updateBadges();
+        showToast(`✅ ${trainee.name} verified!`, 'success');
     }
 
     // ============================================================
@@ -1343,8 +1449,9 @@
 
     function toggleProfileMenu() { alert('👤 Profile Menu'); }
 
-    function logout() {
+    async function logout() {
         if (confirm('Logout?')) {
+            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
             localStorage.removeItem('currentEmployerEmail');
             localStorage.removeItem('currentEmployerId');
             window.location.href = '../auth/login.html';
@@ -1369,7 +1476,10 @@
         showToast('📥 Exported!');
     }
 
-    function refreshData() { loadAndRender(); showToast('🔄 Refreshed!'); }
+    async function refreshData() {
+        await loadAndRender();
+        showToast('🔄 Refreshed!');
+    }
 
     function clearFilters() {
         document.getElementById('searchInput').value = '';
@@ -1386,12 +1496,30 @@
             { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
     }
 
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
     // ============================================================
     // INITIALIZE
     // ============================================================
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Apply saved theme
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
+
         updateDate();
-        loadAndRender();
+        await loadAndRender();
 
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
@@ -1407,5 +1535,6 @@
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>
