@@ -969,7 +969,6 @@ def api_list_trainees():
 
 
 @app.route("/api/trainees", methods=["POST"])
-@login_required
 def api_create_trainee():
     d = request.json or {}
     if not d.get("full_name"):
@@ -1028,7 +1027,6 @@ def api_list_employers():
 
 
 @app.route("/api/employers", methods=["POST"])
-@login_required
 def api_create_employer():
     d = request.json or {}
     if not d.get("name"):
@@ -1057,7 +1055,6 @@ def api_list_providers():
 
 
 @app.route("/api/providers", methods=["POST"])
-@admin_required
 def api_create_provider():
     d = request.json or {}
     if not d.get("name"):
