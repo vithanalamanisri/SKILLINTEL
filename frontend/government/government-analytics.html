@@ -3,1022 +3,193 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Government Analytics · SkillBridge</title>
+    <title>Government Analytics · GovDash</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css">
-    <script src="../js/api.js"></script>
+
+    <!-- Firebase SDK (same as dashboard) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
-        /* ============================================================
-           RESET & BASE
-           ============================================================ */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
 
-        body {
-            background: #f0f4f9;
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* ============================================================
-           SIDEBAR - EXACT MENU AS REQUESTED
-           ============================================================ */
+        /* ===== SIDEBAR ===== */
         .sidebar {
             width: 280px;
             background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
-            color: white;
-            padding: 20px 14px;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-            transition: transform 0.3s ease;
+            color: white; padding: 20px 14px;
+            position: fixed; height: 100vh; overflow-y: auto;
+            z-index: 100; transition: transform 0.3s ease;
             scrollbar-width: thin;
         }
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 6px 8px 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 14px;
-        }
-        .sidebar-brand .icon {
-            width: 42px; height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
-        }
-        .sidebar-brand h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+        .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px; }
+        .sidebar-brand .icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35); }
+        .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
         .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
-
-        .sidebar-user {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 10px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 12px;
-        }
-        .sidebar-user .avatar {
-            width: 40px; height: 40px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 16px;
-            flex-shrink: 0;
-        }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
         .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
         .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
-
-        .menu-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.35;
-            padding: 10px 10px 4px;
-            font-weight: 700;
-        }
-        .menu a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: 10px;
-            color: rgba(255,255,255,0.65);
-            text-decoration: none;
-            transition: all 0.2s;
-            margin: 1px 0;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-        }
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.65); text-decoration: none; transition: all 0.2s; margin: 1px 0; font-size: 13px; font-weight: 500; cursor: pointer; }
         .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
-        .menu a.active {
-            background: rgba(255,255,255,0.12);
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+        .menu a.active { background: rgba(255,255,255,0.12); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .menu a i { width: 18px; text-align: center; font-size: 14px; }
-        .menu a .badge {
-            margin-left: auto;
-            background: #ef4444;
-            color: white;
-            font-size: 9px;
-            font-weight: 700;
-            padding: 1px 8px;
-            border-radius: 20px;
-        }
-
-        .sidebar-footer {
-            padding: 16px 10px 0;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            margin-top: 12px;
-        }
-        .sidebar-footer a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: 10px;
-            color: rgba(255,255,255,0.5);
-            text-decoration: none;
-            transition: 0.2s;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-        }
+        .menu a .badge { margin-left: auto; background: #ef4444; color: white; font-size: 9px; font-weight: 700; padding: 1px 8px; border-radius: 20px; }
+        .sidebar-footer { padding: 16px 10px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 12px; }
+        .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.5); text-decoration: none; transition: 0.2s; font-size: 13px; font-weight: 500; cursor: pointer; }
         .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
 
-        /* ============================================================
-           MAIN CONTENT
-           ============================================================ */
-        .main-content {
-            margin-left: 280px;
-            flex: 1;
-            padding: 0;
-            min-height: 100vh;
-        }
-
-        /* ============================================================
-           HEADER
-           ============================================================ */
-        .header {
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(16px);
-            padding: 12px 28px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(226,232,240,0.6);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #0b1a33;
-            cursor: pointer;
-        }
-        .header-left .page-title h1 {
-            font-size: 18px;
-            color: #0b1a33;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        /* ===== MAIN ===== */
+        .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
+        .header { background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226,232,240,0.6); position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 8px; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-toggle { display: none; background: none; border: none; font-size: 20px; color: #0b1a33; cursor: pointer; }
+        .header-left .page-title h1 { font-size: 18px; color: #0b1a33; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .header-left .page-title h1 i { color: #2563eb; }
-        .header-left .page-title p {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 1px;
-        }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-right .date {
-            font-size: 12px;
-            color: #64748b;
-            font-weight: 500;
-            background: #f1f5f9;
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-        .header-right .notif {
-            position: relative;
-            font-size: 18px;
-            color: #475569;
-            cursor: pointer;
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            transition: 0.2s;
-        }
+        .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right .date { font-size: 12px; color: #64748b; font-weight: 500; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; }
+        .header-right .notif { position: relative; font-size: 18px; color: #475569; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .header-right .notif:hover { background: #f1f5f9; }
-        .header-right .notif .badge {
-            position: absolute; top: 2px; right: 2px;
-            background: #ef4444; color: white;
-            width: 18px; height: 18px;
-            font-size: 9px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700;
-        }
-        .header-right .profile-btn {
-            display: flex; align-items: center; gap: 8px;
-            background: #f1f5f9;
-            padding: 4px 12px 4px 4px;
-            border-radius: 30px;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
-        }
+        .header-right .notif .badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; width: 18px; height: 18px; font-size: 9px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .header-right .profile-btn { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 12px 4px 4px; border-radius: 30px; cursor: pointer; border: none; transition: 0.2s; }
         .header-right .profile-btn:hover { background: #e2e8f0; }
-        .header-right .profile-btn .avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            color: white;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 12px;
-        }
+        .header-right .profile-btn .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
         .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
         .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
 
-        /* ============================================================
-           CONTAINER
-           ============================================================ */
-        .container {
-            padding: 20px 28px 28px;
-            max-width: 1440px;
-            margin: auto;
-        }
+        .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
 
-        /* ============================================================
-           WELCOME BANNER
-           ============================================================ */
-        .welcome-banner {
-            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
-            color: white;
-            padding: 22px 28px;
-            border-radius: 18px;
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .welcome-banner::before {
-            content: "";
-            position: absolute;
-            width: 350px; height: 350px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.05);
-            top: -150px; right: -80px;
-        }
-        .welcome-banner .banner-content { position: relative; z-index: 1; }
-        .welcome-banner h2 {
-            font-size: 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .welcome-banner p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
-        .welcome-banner .banner-stats {
-            display: flex;
-            gap: 18px;
-            position: relative;
-            z-index: 1;
-            flex-wrap: wrap;
-        }
-        .welcome-banner .banner-stats div {
-            text-align: center;
-            background: rgba(255,255,255,0.1);
-            padding: 6px 16px;
-            border-radius: 10px;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .welcome-banner .banner-stats strong {
-            font-size: 20px;
-            display: block;
-        }
-        .welcome-banner .banner-stats span {
-            font-size: 10px;
-            opacity: 0.7;
-        }
+        /* ===== DATA SOURCE BANNER ===== */
+        .data-source-banner { background: linear-gradient(135deg, #065f46, #16a34a, #22c55e); color: white; padding: 14px 22px; border-radius: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(22,163,74,0.25); }
+        .data-source-banner .ds-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .data-source-banner .ds-content { flex: 1; }
+        .data-source-banner .ds-title { font-size: 14px; font-weight: 700; }
+        .data-source-banner .ds-sub { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+        .data-source-banner .ds-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+        .data-source-banner .ds-stat { text-align: center; background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 10px; font-size: 10px; }
+        .data-source-banner .ds-stat strong { display: block; font-size: 16px; font-weight: 800; }
 
-        /* ============================================================
-           FILTERS SECTION
-           ============================================================ */
-        .filters-section {
-            background: white;
-            border-radius: 16px;
-            padding: 18px 22px;
-            border: 1px solid #eef2f6;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        }
-        .filters-section .filter-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #0b1a33;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
+        /* ===== FILTERS ===== */
+        .filters-section { background: white; border-radius: 16px; padding: 18px 22px; border: 1px solid #eef2f6; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .filters-section .filter-title { font-size: 13px; font-weight: 600; color: #0b1a33; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
         .filters-section .filter-title i { color: #2563eb; }
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 10px;
-        }
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .filter-group label {
-            font-size: 10px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
-        .filter-group select,
-        .filter-group input {
-            padding: 7px 10px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
-            color: #0b1a33;
-            background: #f8fafc;
-            transition: 0.2s;
-            outline: none;
-            width: 100%;
-        }
-        .filter-group select:focus,
-        .filter-group input:focus {
-            border-color: #2563eb;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
-        }
-        .filter-actions {
-            display: flex;
-            gap: 8px;
-            align-items: end;
-            padding-bottom: 2px;
-        }
-        .filter-actions .btn-filter {
-            padding: 7px 18px;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            color: white;
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            height: 38px;
-        }
-        .filter-actions .btn-filter:hover {
-            transform: scale(1.04);
-            box-shadow: 0 8px 20px rgba(37,99,235,0.3);
-        }
-        .filter-actions .btn-reset {
-            padding: 7px 14px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            background: #f8fafc;
-            color: #64748b;
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-            height: 38px;
-        }
-        .filter-actions .btn-reset:hover {
-            background: #f1f5f9;
-            border-color: #94a3b8;
-        }
+        .filters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+        .filter-group { display: flex; flex-direction: column; gap: 3px; }
+        .filter-group label { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
+        .filter-group select { padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 12px; font-weight: 500; color: #0b1a33; background: #f8fafc; outline: none; width: 100%; }
+        .filter-group select:focus { border-color: #2563eb; background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+        .filter-actions { display: flex; gap: 8px; align-items: end; padding-bottom: 2px; }
+        .btn-filter { padding: 7px 18px; border: none; border-radius: 8px; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; height: 38px; }
+        .btn-filter:hover { transform: scale(1.04); box-shadow: 0 8px 20px rgba(37,99,235,0.3); }
+        .btn-reset { padding: 7px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 12px; cursor: pointer; height: 38px; }
+        .btn-reset:hover { background: #f1f5f9; }
 
-        /* ============================================================
-           STATS ROW
-           ============================================================ */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .stat-box {
-            background: white;
-            border-radius: 14px;
-            padding: 14px 16px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            transition: all 0.3s;
-            text-align: center;
-        }
-        .stat-box:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
-        }
-        .stat-box .stat-icon {
-            width: 38px; height: 38px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px;
-            margin: 0 auto 6px;
-        }
+        /* ===== STATS ===== */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .stat-box { background: white; border-radius: 16px; padding: 18px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: all 0.3s; }
+        .stat-box:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(37,99,235,0.12); }
+        .stat-box .stat-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 8px; }
         .stat-box .stat-icon.blue { background: #dbeafe; color: #2563eb; }
         .stat-box .stat-icon.green { background: #dcfce7; color: #16a34a; }
         .stat-box .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
         .stat-box .stat-icon.orange { background: #fef3c7; color: #d97706; }
         .stat-box .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
         .stat-box .stat-icon.rose { background: #fce7f3; color: #db2777; }
-        .stat-box .stat-number {
-            font-size: 22px;
-            font-weight: 800;
-            color: #0b1a33;
-        }
-        .stat-box .stat-label {
-            font-size: 11px;
-            color: #64748b;
-        }
-        .stat-box .stat-trend {
-            font-size: 10px;
-            font-weight: 600;
-            padding: 1px 8px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-top: 2px;
-        }
-        .stat-box .stat-trend.up { background: #dcfce7; color: #16a34a; }
-        .stat-box .stat-trend.down { background: #fee2e2; color: #dc2626; }
-        .stat-box .stat-trend.neutral { background: #f1f5f9; color: #64748b; }
+        .stat-box .stat-number { font-size: 26px; font-weight: 800; color: #0b1a33; }
+        .stat-box .stat-label { font-size: 12px; color: #64748b; margin-top: 2px; }
 
-        /* ============================================================
-           SECTION TITLES
-           ============================================================ */
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0b1a33;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 14px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f1f5f9;
-        }
+        /* ===== SECTION TITLES ===== */
+        .section-title { font-size: 16px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
         .section-title i { color: #2563eb; }
-        .section-title .badge-count {
-            background: #f1f5f9;
-            padding: 1px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #475569;
-            margin-left: auto;
-        }
+        .section-title .badge-count { background: #f1f5f9; padding: 1px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #475569; margin-left: auto; }
 
-        /* ============================================================
-           PIPELINE ANALYTICS
-           ============================================================ */
-        .pipeline-container {
-            background: white;
-            border-radius: 16px;
-            padding: 20px 24px;
-            border: 1px solid #eef2f6;
-            margin-bottom: 20px;
-        }
-        .pipeline-steps {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            padding: 10px 0;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .pipeline-steps::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 5%;
-            right: 5%;
-            height: 4px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            transform: translateY(-50%);
-            z-index: 0;
-        }
-        .pipeline-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 1;
-            flex: 1;
-            min-width: 60px;
-            text-align: center;
-        }
-        .pipeline-step .step-circle {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 700;
-            background: #e2e8f0;
-            color: #94a3b8;
-            border: 3px solid #e2e8f0;
-            transition: all 0.3s;
-            position: relative;
-        }
-        .pipeline-step .step-circle .step-icon {
-            font-size: 16px;
-        }
-        .pipeline-step.completed .step-circle {
-            background: #22c55e;
-            color: white;
-            border-color: #22c55e;
-            box-shadow: 0 4px 16px rgba(34,197,94,0.3);
-        }
-        .pipeline-step.active .step-circle {
-            background: #2563eb;
-            color: white;
-            border-color: #2563eb;
-            box-shadow: 0 4px 16px rgba(37,99,235,0.3);
-            animation: pulse-step 2s infinite;
-        }
-        .pipeline-step.pending .step-circle {
-            background: #f1f5f9;
-            color: #94a3b8;
-            border-color: #e2e8f0;
-        }
-        @keyframes pulse-step {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-        }
-        .pipeline-step .step-label {
-            font-size: 9px;
-            font-weight: 600;
-            color: #64748b;
-            margin-top: 6px;
-        }
-        .pipeline-step .step-value {
-            font-size: 13px;
-            font-weight: 700;
-            color: #0b1a33;
-        }
-        .pipeline-step.completed .step-label { color: #16a34a; }
-        .pipeline-step.active .step-label { color: #2563eb; }
+        /* ===== PIPELINE ===== */
+        .pipeline-container { background: white; border-radius: 16px; padding: 22px 24px; border: 1px solid #eef2f6; margin-bottom: 20px; }
+        .pipeline-steps { display: flex; justify-content: space-between; align-items: center; position: relative; padding: 10px 0; flex-wrap: wrap; gap: 6px; }
+        .pipeline-steps::before { content: ''; position: absolute; top: 50%; left: 4%; right: 4%; height: 4px; background: linear-gradient(90deg, #22c55e, #2563eb, #eab308, #dc2626); border-radius: 10px; transform: translateY(-50%); z-index: 0; }
+        .pipeline-step { display: flex; flex-direction: column; align-items: center; z-index: 1; flex: 1; min-width: 70px; text-align: center; }
+        .pipeline-step .step-circle { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; background: white; border: 3px solid #e2e8f0; }
+        .pipeline-step.completed .step-circle { background: #22c55e; color: white; border-color: #22c55e; box-shadow: 0 4px 16px rgba(34,197,94,0.3); }
+        .pipeline-step.active .step-circle { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+        .pipeline-step.pending .step-circle { background: #f1f5f9; color: #94a3b8; }
+        .pipeline-step .step-label { font-size: 10px; font-weight: 600; color: #64748b; margin-top: 8px; }
+        .pipeline-step .step-value { font-size: 14px; font-weight: 700; color: #0b1a33; }
 
-        /* ============================================================
-           CHART GRID
-           ============================================================ */
-        .chart-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin-bottom: 20px;
-        }
-        .chart-card {
-            background: white;
-            border-radius: 16px;
-            padding: 18px 20px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            transition: 0.3s;
-        }
-        .chart-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
-        .chart-card .card-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        /* ===== CHARTS ===== */
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+        .chart-card { background: white; border-radius: 16px; padding: 20px 22px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .chart-card .card-title { font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
         .chart-card .card-title i { color: #2563eb; }
+        .bar-chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 160px; padding: 4px 0; gap: 8px; }
+        .bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+        .bar-group .bar { width: 100%; max-width: 40px; border-radius: 6px 6px 0 0; transition: height 0.8s; min-height: 6px; position: relative; }
+        .bar-group .bar .bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #0b1a33; }
+        .bar-group .bar-label { font-size: 9px; color: #64748b; margin-top: 6px; text-align: center; max-width: 60px; }
+        .bar-group .bar-label .count { font-weight: 600; color: #0b1a33; display: block; }
 
-        /* ============================================================
-           BAR CHARTS
-           ============================================================ */
-        .bar-chart-container {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-around;
-            height: 150px;
-            padding: 4px 0;
-            gap: 8px;
-        }
-        .bar-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-            height: 100%;
-            justify-content: flex-end;
-        }
-        .bar-group .bar {
-            width: 100%;
-            max-width: 32px;
-            border-radius: 4px 4px 0 0;
-            transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-            min-height: 6px;
-            position: relative;
-        }
-        .bar-group .bar .bar-value {
-            position: absolute;
-            top: -18px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 9px;
-            font-weight: 700;
-            color: #0b1a33;
-        }
-        .bar-group .bar-label {
-            font-size: 8px;
-            color: #64748b;
-            margin-top: 4px;
-            text-align: center;
-            max-width: 50px;
-            word-wrap: break-word;
-        }
-        .bar-group .bar-label .count {
-            font-weight: 600;
-            color: #0b1a33;
-            display: block;
-        }
+        .donut-container { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 8px 0; flex-wrap: wrap; }
+        .donut { width: 150px; height: 150px; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .donut .donut-center { width: 80px; height: 80px; border-radius: 50%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .donut .donut-center .num { font-size: 22px; font-weight: 800; color: #0b1a33; }
+        .donut .donut-center .label { font-size: 9px; color: #64748b; }
+        .donut-legend { display: flex; flex-direction: column; gap: 6px; }
+        .donut-legend .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #475569; }
+        .donut-legend .legend-item .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .donut-legend .legend-item .pct { font-weight: 700; color: #0b1a33; margin-left: auto; }
 
-        /* ============================================================
-           DONUT CHARTS
-           ============================================================ */
-        .donut-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            padding: 4px 0;
-            flex-wrap: wrap;
-        }
-        .donut {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .donut .donut-center {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .donut .donut-center .num {
-            font-size: 18px;
-            font-weight: 800;
-            color: #0b1a33;
-        }
-        .donut .donut-center .label {
-            font-size: 8px;
-            color: #64748b;
-        }
-        .donut-legend {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .donut-legend .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            color: #475569;
-        }
-        .donut-legend .legend-item .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .donut-legend .legend-item .pct {
-            font-weight: 700;
-            color: #0b1a33;
-            margin-left: auto;
-        }
+        /* ===== COHORT ===== */
+        .cohort-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+        .cohort-card { background: white; border-radius: 14px; padding: 16px 18px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); text-align: center; }
+        .cohort-card .cohort-year { font-size: 20px; font-weight: 800; color: #0b1a33; }
+        .cohort-card .cohort-badge { display: inline-block; padding: 2px 12px; border-radius: 20px; font-size: 9px; font-weight: 700; margin-bottom: 8px; }
+        .cohort-card .cohort-badge.best { background: #dcfce7; color: #16a34a; }
+        .cohort-card .cohort-badge.good { background: #dbeafe; color: #2563eb; }
+        .cohort-card .cohort-badge.average { background: #fef3c7; color: #d97706; }
+        .cohort-card .cohort-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 8px; }
+        .cohort-card .cohort-metrics .cm { font-size: 11px; color: #64748b; }
+        .cohort-card .cohort-metrics .cm strong { color: #0b1a33; display: block; font-size: 16px; }
 
-        /* ============================================================
-           SKILL DEMAND VS SUPPLY TABLE
-           ============================================================ */
-        .skill-table-container {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid #eef2f6;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        .skill-table-container .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 20px;
-            border-bottom: 1px solid #f1f5f9;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .skill-table-container .table-header h3 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0b1a33;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .skill-table-container .table-header h3 i { color: #2563eb; }
-        .skill-table-wrapper { overflow-x: auto; }
-        .skill-table-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        .skill-table-wrapper thead {
-            background: #f8fafc;
-            border-bottom: 2px solid #eef2f6;
-        }
-        .skill-table-wrapper thead th {
-            padding: 10px 14px;
-            text-align: left;
-            font-weight: 600;
-            color: #475569;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .skill-table-wrapper tbody tr {
-            border-bottom: 1px solid #f1f5f9;
-            transition: 0.2s;
-        }
-        .skill-table-wrapper tbody tr:hover { background: #f8fafc; }
-        .skill-table-wrapper tbody td {
-            padding: 10px 14px;
-            color: #0b1a33;
-            vertical-align: middle;
-        }
-        .gap-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 700;
-        }
-        .gap-indicator.high { background: #fee2e2; color: #dc2626; }
-        .gap-indicator.medium { background: #fef3c7; color: #d97706; }
-        .gap-indicator.low { background: #dcfce7; color: #16a34a; }
-        .gap-bar {
-            width: 60px;
-            height: 6px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-            display: inline-block;
-            vertical-align: middle;
-        }
-        .gap-bar .fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.8s ease;
-        }
-
-        /* ============================================================
-           PROVIDER EFFICIENCY
-           ============================================================ */
-        .provider-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-        .provider-card {
-            background: white;
-            border-radius: 14px;
-            padding: 16px 18px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            transition: 0.3s;
-        }
-        .provider-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
-        }
-        .provider-card .provider-name {
-            font-weight: 700;
-            font-size: 14px;
-            color: #0b1a33;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        /* ===== PROVIDER ===== */
+        .provider-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+        .provider-card { background: white; border-radius: 14px; padding: 16px 18px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.3s; }
+        .provider-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(37,99,235,0.08); }
+        .provider-card .provider-name { font-weight: 700; font-size: 14px; color: #0b1a33; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .provider-card .provider-name i { color: #2563eb; }
-        .provider-card .provider-metrics {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px 12px;
-        }
-        .provider-card .provider-metrics .metric {
-            font-size: 11px;
-            color: #64748b;
-            display: flex;
-            justify-content: space-between;
-        }
-        .provider-card .provider-metrics .metric strong {
-            color: #0b1a33;
-        }
-        .provider-card .provider-efficiency {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .provider-card .provider-efficiency .eff-label {
-            font-size: 11px;
-            color: #64748b;
-        }
-        .provider-card .provider-efficiency .eff-score {
-            font-weight: 800;
-            font-size: 18px;
-        }
+        .provider-card .provider-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+        .provider-card .provider-metrics .metric { font-size: 11px; color: #64748b; display: flex; justify-content: space-between; }
+        .provider-card .provider-metrics .metric strong { color: #0b1a33; }
+        .provider-card .provider-efficiency { margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .provider-card .provider-efficiency .eff-label { font-size: 11px; color: #64748b; }
+        .provider-card .provider-efficiency .eff-score { font-weight: 800; font-size: 18px; }
         .provider-card .provider-efficiency .eff-score.high { color: #16a34a; }
         .provider-card .provider-efficiency .eff-score.medium { color: #d97706; }
         .provider-card .provider-efficiency .eff-score.low { color: #dc2626; }
 
-        /* ============================================================
-           COHORT COMPARISON
-           ============================================================ */
-        .cohort-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-        .cohort-card {
-            background: white;
-            border-radius: 14px;
-            padding: 16px 18px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            transition: 0.3s;
-            text-align: center;
-        }
-        .cohort-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
-        }
-        .cohort-card .cohort-year {
-            font-size: 20px;
-            font-weight: 800;
-            color: #0b1a33;
-        }
-        .cohort-card .cohort-badge {
-            display: inline-block;
-            padding: 2px 12px;
-            border-radius: 20px;
-            font-size: 9px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .cohort-card .cohort-badge.best { background: #dcfce7; color: #16a34a; }
-        .cohort-card .cohort-badge.good { background: #dbeafe; color: #2563eb; }
-        .cohort-card .cohort-badge.average { background: #fef3c7; color: #d97706; }
-        .cohort-card .cohort-metrics {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px;
-            margin-top: 8px;
-        }
-        .cohort-card .cohort-metrics .cm {
-            font-size: 11px;
-            color: #64748b;
-        }
-        .cohort-card .cohort-metrics .cm strong {
-            color: #0b1a33;
-            display: block;
-            font-size: 16px;
-        }
-        .cohort-card .cohort-metrics .cm strong.up { color: #16a34a; }
-        .cohort-card .cohort-metrics .cm strong.down { color: #dc2626; }
-
-        /* ============================================================
-           TABLE
-           ============================================================ */
-        .table-container {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid #eef2f6;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        .table-container .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 20px;
-            border-bottom: 1px solid #f1f5f9;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .table-container .table-header h3 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0b1a33;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        /* ===== TABLE ===== */
+        .table-container { background: white; border-radius: 16px; border: 1px solid #eef2f6; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .table-container .table-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; gap: 8px; }
+        .table-container .table-header h3 { font-size: 14px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 8px; }
         .table-container .table-header h3 i { color: #2563eb; }
-        .table-container .table-header .count {
-            background: #f1f5f9;
-            padding: 1px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #475569;
-        }
+        .table-container .table-header .count { background: #f1f5f9; padding: 2px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; color: #475569; }
         .table-wrapper { overflow-x: auto; }
-        .table-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        .table-wrapper thead {
-            background: #f8fafc;
-            border-bottom: 2px solid #eef2f6;
-        }
-        .table-wrapper thead th {
-            padding: 10px 14px;
-            text-align: left;
-            font-weight: 600;
-            color: #475569;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            white-space: nowrap;
-        }
+        .table-wrapper table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .table-wrapper thead { background: #f8fafc; border-bottom: 2px solid #eef2f6; }
+        .table-wrapper thead th { padding: 12px 16px; text-align: left; font-weight: 600; color: #475569; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
         .table-wrapper thead th i { margin-right: 4px; color: #94a3b8; }
-        .table-wrapper tbody tr {
-            border-bottom: 1px solid #f1f5f9;
-            transition: 0.2s;
-        }
+        .table-wrapper tbody tr { border-bottom: 1px solid #f1f5f9; transition: 0.2s; }
         .table-wrapper tbody tr:hover { background: #f8fafc; }
-        .table-wrapper tbody td {
-            padding: 10px 14px;
-            color: #0b1a33;
-            vertical-align: middle;
-        }
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        .status-badge .dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            display: inline-block;
-        }
+        .table-wrapper tbody td { padding: 12px 16px; color: #0b1a33; vertical-align: middle; }
+        .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 12px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+        .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
         .status-badge.employed { background: #dcfce7; color: #16a34a; }
         .status-badge.employed .dot { background: #16a34a; }
         .status-badge.unemployed { background: #fee2e2; color: #dc2626; }
@@ -1027,107 +198,48 @@
         .status-badge.self .dot { background: #2563eb; }
         .status-badge.internship { background: #fef3c7; color: #d97706; }
         .status-badge.internship .dot { background: #d97706; }
+        .action-btn.view { padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .action-btn.view:hover { background: #dbeafe; }
 
-        /* ============================================================
-           QUICK ACTIONS
-           ============================================================ */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 6px;
-        }
-        .quick-actions .action-btn {
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            color: #0b1a33;
-            font-weight: 500;
-            font-size: 11px;
-        }
-        .quick-actions .action-btn:hover {
-            background: #2563eb;
-            color: white;
-            border-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
-        }
-        .quick-actions .action-btn i {
-            display: block;
-            font-size: 18px;
-            margin-bottom: 4px;
-            color: #2563eb;
-        }
-        .quick-actions .action-btn:hover i { color: white; }
+        /* ===== QUICK ACTIONS ===== */
+        .quick-actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .quick-action-card { background: white; border-radius: 14px; padding: 18px 20px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 14px; text-decoration: none; color: #0b1a33; transition: all 0.3s; }
+        .quick-action-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(37,99,235,0.12); border-color: #2563eb; }
+        .quick-action-card .qa-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .quick-action-card .qa-info .qa-title { font-size: 13px; font-weight: 700; }
+        .quick-action-card .qa-info .qa-desc { font-size: 10px; color: #64748b; margin-top: 2px; }
 
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 1200px) {
-            .chart-grid { grid-template-columns: 1fr 1fr; }
-            .provider-grid { grid-template-columns: 1fr 1fr; }
-            .cohort-grid { grid-template-columns: 1fr 1fr; }
-        }
-        @media (max-width: 992px) {
-            .filters-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-        }
+        .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+        .empty-state i { font-size: 56px; color: #c7d2fe; margin-bottom: 16px; display: block; }
+        .empty-state h3 { color: #475569; margin-bottom: 6px; font-size: 18px; }
+        .empty-state p { font-size: 13px; }
+
+        @media (max-width: 1200px) { .chart-grid { grid-template-columns: 1fr 1fr; } .provider-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; }
-            .menu-toggle { display: block; }
-            .header { padding: 10px 16px; }
-            .header-left .page-title h1 { font-size: 16px; }
-            .header-right .date { display: none; }
-            .container { padding: 12px 14px; }
-            .chart-grid { grid-template-columns: 1fr; }
-            .provider-grid { grid-template-columns: 1fr; }
-            .cohort-grid { grid-template-columns: 1fr; }
-            .stats-row { grid-template-columns: repeat(2, 1fr); }
-            .pipeline-steps { gap: 4px; }
-            .pipeline-step .step-circle { width: 34px; height: 34px; font-size: 11px; }
-            .pipeline-step .step-label { font-size: 7px; }
-            .pipeline-step .step-value { font-size: 10px; }
-            .welcome-banner { flex-direction: column; align-items: flex-start; }
-            .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
-            .filters-grid { grid-template-columns: 1fr 1fr; }
-            .filter-actions { grid-column: span 2; }
-            .quick-actions { grid-template-columns: 1fr 1fr; }
-            .donut-container { flex-direction: column; }
+            .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; } .menu-toggle { display: block; }
+            .header { padding: 10px 16px; } .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; } .container { padding: 12px 14px; }
+            .chart-grid { grid-template-columns: 1fr; } .provider-grid { grid-template-columns: 1fr; }
+            .cohort-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .pipeline-step .step-circle { width: 40px; height: 40px; font-size: 16px; }
+            .data-source-banner { flex-direction: column; align-items: flex-start; }
         }
         @media (max-width: 480px) {
             .stats-row { grid-template-columns: 1fr 1fr; }
-            .stat-box { padding: 10px; }
-            .stat-box .stat-number { font-size: 18px; }
-            .filters-grid { grid-template-columns: 1fr; }
-            .filter-actions { grid-column: span 1; flex-wrap: wrap; }
-            .filter-actions .btn-filter { width: 100%; justify-content: center; }
-            .filter-actions .btn-reset { width: 100%; justify-content: center; }
             .header-right .profile-btn .name { display: none; }
             .header-left .page-title p { display: none; }
-            .quick-actions { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<!-- ============================================================
-SIDEBAR - EXACT MENU AS REQUESTED
-============================================================ -->
+<!-- ===== SIDEBAR ===== -->
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
         <div class="icon"><i class="fas fa-brain"></i></div>
-        <div>
-            <h2>SkillBridge</h2>
-            <p>Government Portal</p>
-        </div>
+        <div><h2>GovDash</h2><p>Government Portal</p></div>
     </div>
-
     <div class="sidebar-user">
         <div class="avatar" id="sidebarAvatar">G</div>
         <div class="info">
@@ -1135,7 +247,6 @@ SIDEBAR - EXACT MENU AS REQUESTED
             <div class="role" id="sidebarRole">Admin</div>
         </div>
     </div>
-
     <div class="menu-label">Analytics</div>
     <div class="menu">
         <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
@@ -1144,20 +255,16 @@ SIDEBAR - EXACT MENU AS REQUESTED
         <a href="income.html"><i class="fas fa-rupee-sign"></i> Income/Livelihood</a>
         <a href="training-to-job-relevance.html"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
         <a href="non-placement-analysis.html"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
-        <a href="program-comparison.html"><i class="fas fa-graduation-cap"></i> Program Comparison</a>
+        <a href="program-comparison.html"><i class="fas fa-landmark"></i> Government Schemes</a>
         <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
     </div>
-
     <div class="sidebar-footer">
         <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 </nav>
 
-<!-- ============================================================
-MAIN CONTENT
-============================================================ -->
+<!-- ===== MAIN CONTENT ===== -->
 <div class="main-content">
-
     <header class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
@@ -1169,9 +276,7 @@ MAIN CONTENT
             </div>
         </div>
         <div class="header-right">
-  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
-  <i class="fas fa-moon"></i>
-</button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><i class="fas fa-moon"></i></button>
             <span class="date" id="dateDisplay"></span>
             <div class="notif" onclick="showNotifications()">
                 <i class="fas fa-bell"></i>
@@ -1187,81 +292,75 @@ MAIN CONTENT
 
     <div class="container">
 
-        <!-- ===== WELCOME BANNER ===== -->
-        <div class="welcome-banner">
-            <div class="banner-content">
-                <h2><i class="fas fa-flag"></i> Ecosystem Analytics Dashboard</h2>
-                <p>Multi-dimensional filters, pipeline analytics, cohort comparison, and AI-powered insights</p>
+        <!-- ===== DATA SOURCE BANNER ===== -->
+        <div class="data-source-banner" id="dataSourceBanner">
+            <div class="ds-icon">🟢</div>
+            <div class="ds-content">
+                <div class="ds-title">Live Firestore Data</div>
+                <div class="ds-sub">Reading directly from the same source as your dashboard</div>
             </div>
-            <div class="banner-stats">
-                <div>
-                    <strong id="bannerTotal">0</strong>
-                    <span>Total Trainees</span>
+            <div class="ds-stats">
+                <div class="ds-stat"><strong id="dsTrainees">0</strong>Trainees</div>
+                <div class="ds-stat"><strong id="dsEmployers">0</strong>Employers</div>
+                <div class="ds-stat"><strong id="dsProviders">0</strong>Providers</div>
+            </div>
+        </div>
+
+        <!-- ===== WELCOME BANNER ===== -->
+        <div class="welcome-banner" style="background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed); color: white; padding: 24px 28px; border-radius: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="position: relative; z-index: 1;">
+                <h2 style="font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-flag"></i> Ecosystem Analytics Dashboard
+                </h2>
+                <p style="font-size: 13px; opacity: 0.85; margin-top: 4px;">Multi-dimensional filters, pipeline analytics, cohort comparison, and provider efficiency</p>
+            </div>
+            <div style="display: flex; gap: 18px; position: relative; z-index: 1; flex-wrap: wrap;">
+                <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 12px;">
+                    <strong id="bannerTotal" style="font-size: 22px; display: block;">0</strong>
+                    <span style="font-size: 10px; opacity: 0.75;">Total Trainees</span>
                 </div>
-                <div>
-                    <strong id="bannerEmployed">0</strong>
-                    <span>Employed</span>
+                <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 12px;">
+                    <strong id="bannerEmployed" style="font-size: 22px; display: block;">0</strong>
+                    <span style="font-size: 10px; opacity: 0.75;">Employed</span>
                 </div>
-                <div>
-                    <strong id="bannerRate">0%</strong>
-                    <span>Employment Rate</span>
+                <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 12px;">
+                    <strong id="bannerRate" style="font-size: 22px; display: block;">0%</strong>
+                    <span style="font-size: 10px; opacity: 0.75;">Employment Rate</span>
                 </div>
-                <div>
-                    <strong id="bannerRetention">0%</strong>
-                    <span>Retention Rate</span>
+                <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 12px;">
+                    <strong id="bannerRetention" style="font-size: 22px; display: block;">0%</strong>
+                    <span style="font-size: 10px; opacity: 0.75;">Retention Rate</span>
                 </div>
             </div>
         </div>
 
-        <!-- ===== FILTERS SECTION ===== -->
+        <!-- ===== FILTERS ===== -->
         <div class="filters-section">
             <div class="filter-title"><i class="fas fa-sliders-h"></i> Multi-Dimensional Filters</div>
             <div class="filters-grid">
                 <div class="filter-group">
                     <label><i class="fas fa-map-pin"></i> State</label>
-                    <select id="filterState">
-                        <option value="all">All States</option>
-                    </select>
+                    <select id="filterState"><option value="all">All States</option></select>
                 </div>
                 <div class="filter-group">
                     <label><i class="fas fa-city"></i> District</label>
-                    <select id="filterDistrict">
-                        <option value="all">All Districts</option>
-                    </select>
+                    <select id="filterDistrict"><option value="all">All Districts</option></select>
                 </div>
                 <div class="filter-group">
                     <label><i class="fas fa-calendar"></i> Year</label>
-                    <select id="filterYear">
-                        <option value="all">All Years</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label><i class="fas fa-calendar-alt"></i> Quarter</label>
-                    <select id="filterQuarter">
-                        <option value="all">All Quarters</option>
-                        <option value="Q1">Q1 (Jan-Mar)</option>
-                        <option value="Q2">Q2 (Apr-Jun)</option>
-                        <option value="Q3">Q3 (Jul-Sep)</option>
-                        <option value="Q4">Q4 (Oct-Dec)</option>
-                    </select>
+                    <select id="filterYear"><option value="all">All Years</option></select>
                 </div>
                 <div class="filter-group">
                     <label><i class="fas fa-graduation-cap"></i> Program</label>
-                    <select id="filterProgram">
-                        <option value="all">All Programs</option>
-                    </select>
+                    <select id="filterProgram"><option value="all">All Programs</option></select>
                 </div>
                 <div class="filter-group">
                     <label><i class="fas fa-code"></i> Skill</label>
-                    <select id="filterSkill">
-                        <option value="all">All Skills</option>
-                    </select>
+                    <select id="filterSkill"><option value="all">All Skills</option></select>
                 </div>
                 <div class="filter-group">
-                    <label><i class="fas fa-chalkboard-teacher"></i> Training Provider</label>
-                    <select id="filterProvider">
-                        <option value="all">All Providers</option>
-                    </select>
+                    <label><i class="fas fa-chalkboard-teacher"></i> Provider</label>
+                    <select id="filterProvider"><option value="all">All Providers</option></select>
                 </div>
                 <div class="filter-group">
                     <label><i class="fas fa-users"></i> Gender</label>
@@ -1273,24 +372,6 @@ MAIN CONTENT
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label><i class="fas fa-calendar-plus"></i> Age Group</label>
-                    <select id="filterAge">
-                        <option value="all">All Ages</option>
-                        <option value="18-25">18-25</option>
-                        <option value="26-35">26-35</option>
-                        <option value="36-45">36-45</option>
-                        <option value="46+">46+</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label><i class="fas fa-city"></i> Area Type</label>
-                    <select id="filterArea">
-                        <option value="all">All Areas</option>
-                        <option value="urban">Urban</option>
-                        <option value="rural">Rural</option>
-                    </select>
-                </div>
-                <div class="filter-group">
                     <label><i class="fas fa-briefcase"></i> Employment Type</label>
                     <select id="filterEmploymentType">
                         <option value="all">All Types</option>
@@ -1298,11 +379,10 @@ MAIN CONTENT
                         <option value="part-time">Part Time</option>
                         <option value="self-employed">Self-Employed</option>
                         <option value="internship">Internship</option>
-                        <option value="contract">Contract</option>
                     </select>
                 </div>
                 <div class="filter-actions">
-                    <button class="btn-filter" onclick="applyFilters()"><i class="fas fa-search"></i> Apply Filters</button>
+                    <button class="btn-filter" onclick="applyFilters()"><i class="fas fa-search"></i> Apply</button>
                     <button class="btn-reset" onclick="resetFilters()"><i class="fas fa-undo"></i> Reset</button>
                 </div>
             </div>
@@ -1314,84 +394,68 @@ MAIN CONTENT
                 <div class="stat-icon blue"><i class="fas fa-users"></i></div>
                 <div class="stat-number" id="statTotal">0</div>
                 <div class="stat-label">Total Trainees</div>
-                <span class="stat-trend up">↑ 0%</span>
             </div>
             <div class="stat-box">
                 <div class="stat-icon green"><i class="fas fa-briefcase"></i></div>
                 <div class="stat-number" id="statEmployed">0</div>
                 <div class="stat-label">Employed</div>
-                <span class="stat-trend up">↑ 0%</span>
             </div>
             <div class="stat-box">
                 <div class="stat-icon purple"><i class="fas fa-percent"></i></div>
                 <div class="stat-number" id="statRate">0%</div>
                 <div class="stat-label">Employment Rate</div>
-                <span class="stat-trend up">↑ 0%</span>
             </div>
             <div class="stat-box">
                 <div class="stat-icon teal"><i class="fas fa-user-check"></i></div>
                 <div class="stat-number" id="statRetention">0%</div>
                 <div class="stat-label">Retention Rate</div>
-                <span class="stat-trend up">↑ 0%</span>
             </div>
             <div class="stat-box">
                 <div class="stat-icon orange"><i class="fas fa-rupee-sign"></i></div>
                 <div class="stat-number" id="statAvgIncome">₹0</div>
                 <div class="stat-label">Avg Income</div>
-                <span class="stat-trend up">↑ 0%</span>
             </div>
             <div class="stat-box">
                 <div class="stat-icon rose"><i class="fas fa-building"></i></div>
                 <div class="stat-number" id="statProviders">0</div>
-                <div class="stat-label">Active Providers</div>
-                <span class="stat-trend neutral">–</span>
+                <div class="stat-label">Providers</div>
             </div>
         </div>
 
-        <!-- ===== PIPELINE ANALYTICS ===== -->
+        <!-- ===== PIPELINE ===== -->
+        <div class="section-title">
+            <i class="fas fa-filter"></i> Training Pipeline Analytics
+            <span class="badge-count">Track every stage</span>
+        </div>
         <div class="pipeline-container">
-            <div class="section-title">
-                <i class="fas fa-filter"></i> Training Pipeline Analytics
-                <span class="badge-count">Track every stage</span>
-            </div>
-            <div class="pipeline-steps" id="pipelineSteps">
+            <div class="pipeline-steps">
                 <div class="pipeline-step completed">
-                    <div class="step-circle"><span class="step-icon">📋</span></div>
+                    <div class="step-circle">📋</div>
                     <div class="step-label">Registered</div>
                     <div class="step-value" id="pipelineRegistered">0</div>
                 </div>
                 <div class="pipeline-step completed">
-                    <div class="step-circle"><span class="step-icon">📝</span></div>
-                    <div class="step-label">Enrolled</div>
-                    <div class="step-value" id="pipelineEnrolled">0</div>
-                </div>
-                <div class="pipeline-step completed">
-                    <div class="step-circle"><span class="step-icon">📖</span></div>
-                    <div class="step-label">Training Started</div>
-                    <div class="step-value" id="pipelineStarted">0</div>
+                    <div class="step-circle">📖</div>
+                    <div class="step-label">Training</div>
+                    <div class="step-value" id="pipelineTraining">0</div>
                 </div>
                 <div class="pipeline-step active">
-                    <div class="step-circle"><span class="step-icon">✅</span></div>
-                    <div class="step-label">Training Completed</div>
+                    <div class="step-circle">✅</div>
+                    <div class="step-label">Completed</div>
                     <div class="step-value" id="pipelineCompleted">0</div>
                 </div>
                 <div class="pipeline-step active">
-                    <div class="step-circle"><span class="step-icon">🎓</span></div>
+                    <div class="step-circle">🎓</div>
                     <div class="step-label">Certified</div>
                     <div class="step-value" id="pipelineCertified">0</div>
                 </div>
                 <div class="pipeline-step pending">
-                    <div class="step-circle"><span class="step-icon">💼</span></div>
+                    <div class="step-circle">💼</div>
                     <div class="step-label">Placed</div>
                     <div class="step-value" id="pipelinePlaced">0</div>
                 </div>
                 <div class="pipeline-step pending">
-                    <div class="step-circle"><span class="step-icon">🤝</span></div>
-                    <div class="step-label">Joined Job</div>
-                    <div class="step-value" id="pipelineJoined">0</div>
-                </div>
-                <div class="pipeline-step pending">
-                    <div class="step-circle"><span class="step-icon">🏆</span></div>
+                    <div class="step-circle">🏆</div>
                     <div class="step-label">Retained</div>
                     <div class="step-value" id="pipelineRetained">0</div>
                 </div>
@@ -1414,7 +478,7 @@ MAIN CONTENT
             </div>
             <div class="chart-card">
                 <div class="card-title"><i class="fas fa-chart-pie"></i> Employment Status</div>
-                <div class="donut-container" id="statusDonut">
+                <div class="donut-container">
                     <div class="donut" id="statusDonutChart">
                         <div class="donut-center">
                             <div class="num" id="donutTotal">0</div>
@@ -1426,43 +490,12 @@ MAIN CONTENT
             </div>
         </div>
 
-        <!-- ===== COHORT COMPARISON ===== -->
+        <!-- ===== COHORT ===== -->
         <div class="section-title">
             <i class="fas fa-layer-group"></i> Cohort Analysis
             <span class="badge-count">Compare batches</span>
         </div>
-        <div class="cohort-grid" id="cohortGrid">
-            <div class="cohort-card">
-                <div class="cohort-badge average">2024 Batch</div>
-                <div class="cohort-year">2024</div>
-                <div class="cohort-metrics">
-                    <div class="cm"><strong id="cohort2024Placement">0%</strong>Placement</div>
-                    <div class="cm"><strong id="cohort2024Retention">0%</strong>Retention</div>
-                    <div class="cm"><strong id="cohort2024Income">₹0</strong>Income</div>
-                    <div class="cm"><strong id="cohort2024Relevance">0%</strong>Relevance</div>
-                </div>
-            </div>
-            <div class="cohort-card">
-                <div class="cohort-badge good">2025 Batch</div>
-                <div class="cohort-year">2025</div>
-                <div class="cohort-metrics">
-                    <div class="cm"><strong id="cohort2025Placement">0%</strong>Placement</div>
-                    <div class="cm"><strong id="cohort2025Retention">0%</strong>Retention</div>
-                    <div class="cm"><strong id="cohort2025Income">₹0</strong>Income</div>
-                    <div class="cm"><strong id="cohort2025Relevance">0%</strong>Relevance</div>
-                </div>
-            </div>
-            <div class="cohort-card">
-                <div class="cohort-badge best">2026 Batch</div>
-                <div class="cohort-year">2026</div>
-                <div class="cohort-metrics">
-                    <div class="cm"><strong id="cohort2026Placement">0%</strong>Placement</div>
-                    <div class="cm"><strong id="cohort2026Retention">0%</strong>Retention</div>
-                    <div class="cm"><strong id="cohort2026Income">₹0</strong>Income</div>
-                    <div class="cm"><strong id="cohort2026Relevance">0%</strong>Relevance</div>
-                </div>
-            </div>
-        </div>
+        <div class="cohort-grid" id="cohortGrid"></div>
 
         <!-- ===== PROVIDER EFFICIENCY ===== -->
         <div class="section-title">
@@ -1471,34 +504,17 @@ MAIN CONTENT
         </div>
         <div class="provider-grid" id="providerGrid"></div>
 
-        <!-- ===== SKILL DEMAND VS TRAINING SUPPLY ===== -->
-        <div class="skill-table-container">
-            <div class="table-header">
-                <h3><i class="fas fa-balance-scale"></i> Skill Demand vs Training Supply</h3>
-                <span class="count" id="skillCount">0 skills</span>
-            </div>
-            <div class="skill-table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Skill</th>
-                            <th>Training Supply</th>
-                            <th>Job Demand</th>
-                            <th>Gap Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="skillTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- ===== DETAILED TABLE ===== -->
         <div class="table-container">
             <div class="table-header">
-                <h3><i class="fas fa-list"></i> Employment Records <span class="count" id="recordCount">0</span></h3>
-                <div class="table-actions">
-                    <button onclick="exportData()"><i class="fas fa-download"></i> Export</button>
-                    <button onclick="refreshData()"><i class="fas fa-sync"></i> Refresh</button>
+                <h3><i class="fas fa-list"></i> Trainee Records <span class="count" id="recordCount">0</span></h3>
+                <div style="display:flex; gap:8px;">
+                    <button onclick="exportData()" style="padding:6px 14px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; font-size:11px; font-weight:600; color:#475569; cursor:pointer;">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button onclick="refreshData()" style="padding:6px 14px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; font-size:11px; font-weight:600; color:#475569; cursor:pointer;">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
                 </div>
             </div>
             <div class="table-wrapper">
@@ -1511,7 +527,7 @@ MAIN CONTENT
                             <th><i class="fas fa-map-pin"></i> District</th>
                             <th><i class="fas fa-briefcase"></i> Status</th>
                             <th><i class="fas fa-rupee-sign"></i> Income</th>
-                            <th><i class="fas fa-calendar-alt"></i> Joined</th>
+                            <th><i class="fas fa-cog"></i> Action</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -1520,18 +536,27 @@ MAIN CONTENT
         </div>
 
         <!-- ===== QUICK ACTIONS ===== -->
-        <div class="chart-card" style="padding:16px 20px; margin-bottom:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="font-size:14px; color:#0b1a33; display:flex; align-items:center; gap:8px; font-weight:700;">
-                    <i class="fas fa-bolt" style="color:#2563eb;"></i> Quick Actions
-                </h3>
-            </div>
-            <div class="quick-actions">
-                <a href="#" class="action-btn" onclick="exportFullReport(); return false;"><i class="fas fa-file-export"></i> Export Report</a>
-                <a href="#" class="action-btn" onclick="viewRegionalBreakdown(); return false;"><i class="fas fa-map-marked-alt"></i> Regional Breakdown</a>
-                <a href="ai-insights.html" class="action-btn"><i class="fas fa-robot"></i> AI Insights</a>
-                <a href="#" class="action-btn" onclick="window.print(); return false;"><i class="fas fa-print"></i> Print Dashboard</a>
-            </div>
+        <div class="section-title">
+            <i class="fas fa-bolt"></i> Quick Actions
+            <span class="badge-count">Navigate to detailed views</span>
+        </div>
+        <div class="quick-actions-grid">
+            <a href="dashboard.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#dbeafe; color:#2563eb;"><i class="fas fa-home"></i></div>
+                <div class="qa-info"><div class="qa-title">Dashboard</div><div class="qa-desc">Overview of all outcomes</div></div>
+            </a>
+            <a href="retention-analytics.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#dcfce7; color:#16a34a;"><i class="fas fa-user-check"></i></div>
+                <div class="qa-info"><div class="qa-title">Retention</div><div class="qa-desc">Job stability tracking</div></div>
+            </a>
+            <a href="income.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#fef3c7; color:#d97706;"><i class="fas fa-rupee-sign"></i></div>
+                <div class="qa-info"><div class="qa-title">Income</div><div class="qa-desc">Before vs after analysis</div></div>
+            </a>
+            <a href="ai-insights.html" class="quick-action-card">
+                <div class="qa-icon" style="background:#ede9fe; color:#7c3aed;"><i class="fas fa-robot"></i></div>
+                <div class="qa-info"><div class="qa-title">AI Insights</div><div class="qa-desc">Smart recommendations</div></div>
+            </a>
         </div>
 
     </div>
@@ -1539,100 +564,129 @@ MAIN CONTENT
 
 <script>
     // ============================================================
-    // STATE — real data only
+    // FIREBASE CONFIG — same as dashboard
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ============================================================
+    // STATE
     // ============================================================
     let allRecords = [];
     let filteredRecords = [];
-    let providerData = [];
-    let skillData = [];
-    let analyticsRaw = null;
     let stats = {};
+    let _govtOfficer = null;
 
     // ============================================================
-    // LOAD FROM BACKEND — real data only, NO fallbacks
+    // AUTH GUARD
+    // ============================================================
+    function requireGovtAuth() {
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        const role = localStorage.getItem('userRole');
+        if (isLoggedIn !== 'true' || role !== 'government') {
+            window.location.href = '../auth/login.html?role=government';
+            throw new Error('not-authenticated');
+        }
+        _govtOfficer = {
+            name: localStorage.getItem('govtOfficerName') || 'Government Official',
+            accessLevel: localStorage.getItem('govtAccessLevel') || 'State',
+            department: localStorage.getItem('govtDepartment') || 'Skill Development',
+            email: localStorage.getItem('userEmail') || '',
+            officialId: localStorage.getItem('currentGovtOfficialId') || '',
+        };
+        return _govtOfficer;
+    }
+
+    // ============================================================
+    // LOAD FROM FIRESTORE — same pattern as dashboard
     // ============================================================
     async function loadAllData() {
         try {
-            const [analyticsRes, traineesRes, programsRes] = await Promise.all([
-                apiCall('/api/govt/analytics'),
-                apiCall('/api/trainees'),
-                apiCall('/api/programs'),
+            const [traineesSnap, employersSnap, providersSnap] = await Promise.all([
+                db.collection('trainees').get(),
+                db.collection('employers').get(),
+                db.collection('providers').get(),
             ]);
 
-            analyticsRaw = analyticsRes.ok ? analyticsRes.data : {};
-            const trainees = (traineesRes.ok && Array.isArray(traineesRes.data)) ? traineesRes.data : [];
-            const programs = (programsRes.ok && Array.isArray(programsRes.data)) ? programsRes.data : [];
+            const trainees = [];
+            traineesSnap.forEach(d => trainees.push({ _id: d.id, ...d.data() }));
 
-            // Build rows from real backend data
-            const recentEmp = analyticsRaw.recent_employments || [];
+            const employers = [];
+            employersSnap.forEach(d => employers.push({ _id: d.id, ...d.data() }));
+
+            const providers = [];
+            providersSnap.forEach(d => providers.push({ _id: d.id, ...d.data() }));
+
+            // Build records — EXACT same field mapping as the working dashboard
             allRecords = trainees.map((t, index) => {
-                // Match employment info
-                const emp = recentEmp.find(e => String(e.trainee_id) === String(t.id));
+                const emp = t.employment || null;
                 let status = 'unemployed';
                 let income = 0;
                 let joiningDate = 'N/A';
                 let employmentType = 'N/A';
 
                 if (emp) {
-                    const empType = (emp.employment_type || '').toLowerCase();
-                    if (empType === 'self') status = 'self-employed';
-                    else if (empType === 'intern' || empType === 'apprentice') status = 'internship';
-                    else status = 'employed';
-                    income = emp.monthly_income || 0;
-                    joiningDate = emp.start_date || 'N/A';
-                    employmentType = emp.employment_type || 'N/A';
+                    const empType = (emp.status || emp.employmentType || '').toLowerCase();
+                    if (empType.includes('self')) status = 'self-employed';
+                    else if (empType.includes('intern') || empType.includes('apprentice')) status = 'internship';
+                    else if (empType.includes('employ') || empType.includes('verified') || empType.includes('full')) status = 'employed';
+                    income = Number(emp.currentIncome || emp.monthlyIncome) || 0;
+                    joiningDate = emp.joiningDate || emp.startDate || 'N/A';
+                    employmentType = emp.employmentType || emp.status || 'N/A';
                 }
 
-                const cohort = joiningDate !== 'N/A' ? new Date(joiningDate).getFullYear() : (t.created_at ? new Date(t.created_at).getFullYear() : new Date().getFullYear());
+                // Cohort from joining date or created_at
+                let cohort = new Date().getFullYear();
+                if (joiningDate !== 'N/A') {
+                    const d = new Date(joiningDate);
+                    if (!isNaN(d.getTime())) cohort = d.getFullYear();
+                } else if (t.createdAt) {
+                    const d = t.createdAt.toDate ? t.createdAt.toDate() : new Date(t.createdAt);
+                    if (!isNaN(d.getTime())) cohort = d.getFullYear();
+                }
+
+                // Skills
+                const skillsRaw = t.skillTrade || t.trainingProgram || '';
+                const skills = String(skillsRaw).split(',').map(s => s.trim()).filter(Boolean);
 
                 return {
-                    id: t.trainee_code || ('TRN' + t.id),
-                    backendId: t.id,
-                    name: t.full_name || 'Trainee',
+                    id: t.traineeCode || ('TRN' + (t.uid ? t.uid.substring(0, 6) : index)),
+                    uid: t.uid || t._id,
+                    name: t.fullName || 'Trainee',
                     email: t.email || '',
-                    program: t.skills || t.qualification || 'N/A',
-                    provider: t.training_provider || 'N/A',
+                    program: t.skillTrade || t.trainingProgram || t.qualification || 'N/A',
+                    provider: t.trainingProvider || 'N/A',
                     district: t.district || 'N/A',
                     state: t.state || 'N/A',
                     status: status,
                     income: income,
                     joiningDate: joiningDate,
                     cohort: cohort,
-                    avatar: (t.full_name || 'T').charAt(0).toUpperCase(),
-                    color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
-                    employmentType: employmentType,
-                    previousIncome: emp ? (emp.pre_training_income || 0) : 0,
                     gender: (t.gender || 'other').toLowerCase(),
-                    age: t.dob ? Math.floor((Date.now() - new Date(t.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0,
-                    area: 'urban',
-                    skills: (t.skills || '').split(',').map(s => s.trim()).filter(Boolean),
+                    employmentType: employmentType,
+                    skills: skills,
+                    completed: (t.trainingProgress || 0) >= 100 || t.certificationStatus === 'Certified',
+                    certified: t.certificationStatus === 'Certified',
+                    _raw: t,
+                    avatar: (t.fullName || 'T').charAt(0).toUpperCase(),
+                    color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'][index % 6],
                 };
             });
 
-            // Provider data from real backend
-            providerData = (analyticsRaw.by_provider || []).map(p => ({
-                name: p.provider_name || 'Unnamed',
-                trainees: p.total_trainees || 0,
-                certified: 0,   // will be set below if we have real completion data
-                placed: p.employed || 0,
-                retained: p.employed || 0,
-                funding: 0,
-                state: p.state || 'N/A'
-            }));
-
-            // Skill data from real programs — build supply/demand from real counts
-            skillData = (analyticsRaw.by_sector || []).map(s => ({
-                name: s.sector || 'Unspecified',
-                supply: s.total_trainees || 0,
-                demand: s.employed || 0,
-            }));
+            window._employers = employers;
+            window._providers = providers;
 
         } catch (e) {
-            console.error('Failed to load government analytics data:', e);
-            analyticsRaw = {};
+            console.error('Failed to load data:', e);
             allRecords = [];
-            providerData = [];
-            skillData = [];
         }
 
         filteredRecords = [...allRecords];
@@ -1640,65 +694,52 @@ MAIN CONTENT
     }
 
     // ============================================================
-    // FILTER OPTIONS — built from real data
+    // FILTER OPTIONS
     // ============================================================
     function populateFilterOptions() {
-        const states = [...new Set(allRecords.map(r => r.state))].filter(s => s && s !== 'N/A');
-        const districts = [...new Set(allRecords.map(r => r.district))].filter(d => d !== 'N/A');
-        const programs = [...new Set(allRecords.map(r => r.program))].filter(p => p !== 'N/A');
-        const providers = [...new Set(allRecords.map(r => r.provider))].filter(p => p !== 'N/A');
-        const skills = [...new Set(skillData.map(s => s.name))];
-        const years = [...new Set(allRecords.map(r => r.cohort))].filter(y => y);
-
-        const stateSelect = document.getElementById('filterState');
-        const districtSelect = document.getElementById('filterDistrict');
-        const programSelect = document.getElementById('filterProgram');
-        const providerSelect = document.getElementById('filterProvider');
-        const skillSelect = document.getElementById('filterSkill');
-        const yearSelect = document.getElementById('filterYear');
-
-        if (stateSelect) stateSelect.innerHTML = '<option value="all">All States</option>' + states.map(s => `<option value="${s}">${s}</option>`).join('');
-        if (districtSelect) districtSelect.innerHTML = '<option value="all">All Districts</option>' + districts.map(d => `<option value="${d}">${d}</option>`).join('');
-        if (programSelect) programSelect.innerHTML = '<option value="all">All Programs</option>' + programs.map(p => `<option value="${p}">${p}</option>`).join('');
-        if (providerSelect) providerSelect.innerHTML = '<option value="all">All Providers</option>' + providers.map(p => `<option value="${p}">${p}</option>`).join('');
-        if (skillSelect) skillSelect.innerHTML = '<option value="all">All Skills</option>' + skills.map(s => `<option value="${s}">${s}</option>`).join('');
-        if (yearSelect) yearSelect.innerHTML = '<option value="all">All Years</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+        const setOpts = (id, items, label) => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = `<option value="all">All ${label}</option>` +
+                items.map(i => `<option value="${i}">${i}</option>`).join('');
+        };
+        setOpts('filterState', [...new Set(allRecords.map(r => r.state))].filter(s => s && s !== 'N/A'), 'States');
+        setOpts('filterDistrict', [...new Set(allRecords.map(r => r.district))].filter(d => d !== 'N/A'), 'Districts');
+        setOpts('filterYear', [...new Set(allRecords.map(r => r.cohort))].filter(Boolean), 'Years');
+        setOpts('filterProgram', [...new Set(allRecords.map(r => r.program))].filter(p => p !== 'N/A'), 'Programs');
+        setOpts('filterSkill', [...new Set(allRecords.flatMap(r => r.skills))].filter(Boolean), 'Skills');
+        setOpts('filterProvider', [...new Set(allRecords.map(r => r.provider))].filter(p => p !== 'N/A'), 'Providers');
     }
 
     // ============================================================
     // FILTERS
     // ============================================================
     function applyFilters() {
-        const filters = {
+        const f = {
             state: document.getElementById('filterState').value,
             district: document.getElementById('filterDistrict').value,
             year: document.getElementById('filterYear').value,
-            quarter: document.getElementById('filterQuarter').value,
             program: document.getElementById('filterProgram').value,
             skill: document.getElementById('filterSkill').value,
             provider: document.getElementById('filterProvider').value,
             gender: document.getElementById('filterGender').value,
-            area: document.getElementById('filterArea').value,
             employmentType: document.getElementById('filterEmploymentType').value,
         };
 
         filteredRecords = allRecords.filter(r => {
-            if (filters.state !== 'all' && r.state !== filters.state) return false;
-            if (filters.district !== 'all' && r.district !== filters.district) return false;
-            if (filters.year !== 'all' && String(r.cohort) !== filters.year) return false;
-            if (filters.program !== 'all' && r.program !== filters.program) return false;
-            if (filters.provider !== 'all' && r.provider !== filters.provider) return false;
-            if (filters.gender !== 'all' && r.gender !== filters.gender) return false;
-            if (filters.area !== 'all' && r.area !== filters.area) return false;
-            if (filters.employmentType !== 'all') {
+            if (f.state !== 'all' && r.state !== f.state) return false;
+            if (f.district !== 'all' && r.district !== f.district) return false;
+            if (f.year !== 'all' && String(r.cohort) !== f.year) return false;
+            if (f.program !== 'all' && r.program !== f.program) return false;
+            if (f.provider !== 'all' && r.provider !== f.provider) return false;
+            if (f.gender !== 'all' && r.gender !== f.gender) return false;
+            if (f.skill !== 'all' && !r.skills.includes(f.skill)) return false;
+            if (f.employmentType !== 'all') {
                 const rt = (r.employmentType || '').toLowerCase();
-                if (filters.employmentType === 'full-time' && rt !== 'full') return false;
-                if (filters.employmentType === 'part-time' && rt !== 'part') return false;
-                if (filters.employmentType === 'self-employed' && rt !== 'self') return false;
-                if (filters.employmentType === 'contract' && rt !== 'contract') return false;
-                if (filters.employmentType === 'internship' && rt !== 'intern' && rt !== 'apprentice') return false;
+                if (f.employmentType === 'full-time' && !rt.includes('full')) return false;
+                if (f.employmentType === 'part-time' && !rt.includes('part')) return false;
+                if (f.employmentType === 'self-employed' && !rt.includes('self')) return false;
+                if (f.employmentType === 'internship' && !rt.includes('intern') && !rt.includes('apprentice')) return false;
             }
-            if (filters.skill !== 'all' && !r.skills.includes(filters.skill)) return false;
             return true;
         });
 
@@ -1707,9 +748,8 @@ MAIN CONTENT
     }
 
     function resetFilters() {
-        ['filterState', 'filterDistrict', 'filterYear', 'filterQuarter', 'filterProgram',
-         'filterSkill', 'filterProvider', 'filterGender', 'filterAge', 'filterArea',
-         'filterEmploymentType'].forEach(id => {
+        ['filterState', 'filterDistrict', 'filterYear', 'filterProgram',
+         'filterSkill', 'filterProvider', 'filterGender', 'filterEmploymentType'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = 'all';
         });
@@ -1719,7 +759,7 @@ MAIN CONTENT
     }
 
     // ============================================================
-    // CALCULATE STATS — real data only
+    // CALCULATE STATS
     // ============================================================
     function calculateStats(records) {
         const total = records.length;
@@ -1733,12 +773,14 @@ MAIN CONTENT
         const incomes = records.filter(r => r.income > 0).map(r => r.income);
         const avgIncome = incomes.length > 0 ? Math.round(incomes.reduce((a, b) => a + b, 0) / incomes.length) : 0;
 
-        // Retention from real analytics
-        const retentionData = analyticsRaw?.retention || {};
-        const retentionRate = retentionData['180d']?.rate || retentionData['90d']?.rate || retentionData['365d']?.rate || 0;
-        const retained = retentionData['180d']?.retained || retentionData['90d']?.retained || 0;
+        // Retention = employed + self-employed (stable jobs)
+        const retained = employed + selfEmployed;
+        const retentionRate = totalEmployed > 0 ? Math.round((retained / totalEmployed) * 100) : 0;
 
-        // District stats (real)
+        const completedCount = records.filter(r => r.completed).length;
+        const certifiedCount = records.filter(r => r.certified).length;
+
+        // District stats
         const districts = {};
         records.forEach(r => {
             if (r.district && r.district !== 'N/A') {
@@ -1748,7 +790,7 @@ MAIN CONTENT
             }
         });
 
-        // Program stats (real)
+        // Program stats
         const programs = {};
         records.forEach(r => {
             if (r.program && r.program !== 'N/A') {
@@ -1758,7 +800,7 @@ MAIN CONTENT
             }
         });
 
-        // Provider stats (real)
+        // Provider stats
         const providers = {};
         records.forEach(r => {
             if (r.provider && r.provider !== 'N/A') {
@@ -1768,7 +810,7 @@ MAIN CONTENT
             }
         });
 
-        // Cohort stats (real)
+        // Cohort stats
         const cohortStats = {};
         records.forEach(r => {
             if (r.cohort) {
@@ -1794,7 +836,7 @@ MAIN CONTENT
 
         return {
             total, employed, selfEmployed, internship, unemployed, totalEmployed,
-            rate, avgIncome, retentionRate, retained,
+            rate, avgIncome, retentionRate, retained, completedCount, certifiedCount,
             districts, programs, providers, cohortStats
         };
     }
@@ -1805,170 +847,129 @@ MAIN CONTENT
     function renderAll() {
         stats = calculateStats(filteredRecords);
 
-        renderBanner(stats);
-        renderStats(stats);
-        renderPipeline(stats);
-        renderDistrictChart(stats);
-        renderProgramChart(stats);
-        renderProviderChart(stats);
-        renderStatusDonut(stats);
-        renderCohorts(stats);
+        renderBanner();
+        renderStats();
+        renderPipeline();
+        renderDistrictChart();
+        renderProgramChart();
+        renderProviderChart();
+        renderStatusDonut();
+        renderCohorts();
         renderProviderEfficiency();
-        renderSkillTable();
         renderTable();
         updateSidebar();
         updateNotificationBadge();
 
-        const rc = document.getElementById('recordCount');
-        if (rc) rc.textContent = filteredRecords.length;
+        document.getElementById('recordCount').textContent = filteredRecords.length;
     }
 
-    function renderBanner(stats) {
+    function renderBanner() {
         document.getElementById('bannerTotal').textContent = stats.total;
         document.getElementById('bannerEmployed').textContent = stats.totalEmployed;
         document.getElementById('bannerRate').textContent = stats.rate + '%';
         document.getElementById('bannerRetention').textContent = stats.retentionRate + '%';
+        document.getElementById('dsTrainees').textContent = stats.total;
+        document.getElementById('dsEmployers').textContent = (window._employers || []).length;
+        document.getElementById('dsProviders').textContent = (window._providers || []).length;
     }
 
-    function renderStats(stats) {
+    function renderStats() {
         document.getElementById('statTotal').textContent = stats.total;
-        document.getElementById('statEmployed').textContent = stats.employed;
+        document.getElementById('statEmployed').textContent = stats.totalEmployed;
         document.getElementById('statRate').textContent = stats.rate + '%';
         document.getElementById('statRetention').textContent = stats.retentionRate + '%';
         document.getElementById('statAvgIncome').textContent = '₹' + (stats.avgIncome >= 1000 ? (stats.avgIncome / 1000).toFixed(0) + 'K' : stats.avgIncome);
-        document.getElementById('statProviders').textContent = Object.keys(stats.providers).length || analyticsRaw?.totals?.providers || 0;
+        document.getElementById('statProviders').textContent = Object.keys(stats.providers).length;
     }
 
-    function renderPipeline(stats) {
-        // Real numbers where we have them, 0 otherwise
-        const total = stats.total;
-        const enrolled = analyticsRaw?.totals?.trainees || total;
-        const started = total;
-        const completed = analyticsRaw?.totals?.completed || 0;
-        const certified = completed;
-        const placed = stats.totalEmployed;
-        const joined = stats.employed + stats.selfEmployed;
-        const retained = stats.retained || (analyticsRaw?.retention?.['180d']?.retained || 0);
-
-        document.getElementById('pipelineRegistered').textContent = total;
-        document.getElementById('pipelineEnrolled').textContent = enrolled;
-        document.getElementById('pipelineStarted').textContent = started;
-        document.getElementById('pipelineCompleted').textContent = completed;
-        document.getElementById('pipelineCertified').textContent = certified;
-        document.getElementById('pipelinePlaced').textContent = placed;
-        document.getElementById('pipelineJoined').textContent = joined;
-        document.getElementById('pipelineRetained').textContent = retained;
+    function renderPipeline() {
+        document.getElementById('pipelineRegistered').textContent = stats.total;
+        document.getElementById('pipelineTraining').textContent = stats.total;
+        document.getElementById('pipelineCompleted').textContent = stats.completedCount;
+        document.getElementById('pipelineCertified').textContent = stats.certifiedCount;
+        document.getElementById('pipelinePlaced').textContent = stats.totalEmployed;
+        document.getElementById('pipelineRetained').textContent = stats.retained;
     }
 
-    function renderDistrictChart(stats) {
+    function renderDistrictChart() {
         const container = document.getElementById('districtChart');
         const data = Object.keys(stats.districts).map(name => ({
             name,
             total: stats.districts[name].total,
-            rate: stats.districts[name].total > 0
-                ? Math.round((stats.districts[name].employed / stats.districts[name].total) * 100)
-                : 0
-        }));
-        data.sort((a, b) => b.total - a.total);
-        const top = data.slice(0, 5);
+            rate: stats.districts[name].total > 0 ? Math.round((stats.districts[name].employed / stats.districts[name].total) * 100) : 0
+        })).sort((a, b) => b.total - a.total).slice(0, 5);
 
-        if (top.length === 0) {
-            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No district data yet</div>`;
+        if (data.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No district data yet</div>`;
             return;
         }
 
-        const maxTotal = Math.max(...top.map(r => r.total), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = top.map(r => {
-            const height = Math.max((r.total / maxTotal) * maxHeight, 12);
+        const maxTotal = Math.max(...data.map(r => r.total), 1);
+        container.innerHTML = data.map(r => {
+            const height = Math.max((r.total / maxTotal) * 130, 16);
             const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
-            return `
-                <div class="bar-group">
-                    <div class="bar" style="height:${height}px;background:${color};">
-                        <span class="bar-value">${r.rate}%</span>
-                    </div>
-                    <div class="bar-label">
-                        ${r.name.length > 8 ? r.name.substring(0, 8) + '…' : r.name}
-                        <span class="count">${r.total}</span>
-                    </div>
-                </div>`;
+            return `<div class="bar-group">
+                <div class="bar" style="height:${height}px;background:${color};">
+                    <span class="bar-value">${r.rate}%</span>
+                </div>
+                <div class="bar-label">${r.name.length > 10 ? r.name.substring(0, 10) + '…' : r.name}<span class="count">${r.total}</span></div>
+            </div>`;
         }).join('');
     }
 
-    function renderProgramChart(stats) {
+    function renderProgramChart() {
         const container = document.getElementById('programChart');
         const data = Object.keys(stats.programs).map(name => ({
             name,
             total: stats.programs[name].total,
-            rate: stats.programs[name].total > 0
-                ? Math.round((stats.programs[name].employed / stats.programs[name].total) * 100)
-                : 0
-        }));
-        data.sort((a, b) => b.total - a.total);
-        const top = data.slice(0, 5);
+            rate: stats.programs[name].total > 0 ? Math.round((stats.programs[name].employed / stats.programs[name].total) * 100) : 0
+        })).sort((a, b) => b.total - a.total).slice(0, 5);
 
-        if (top.length === 0) {
-            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No program data yet</div>`;
+        if (data.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No program data yet</div>`;
             return;
         }
 
-        const maxTotal = Math.max(...top.map(r => r.total), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = top.map(r => {
-            const height = Math.max((r.total / maxTotal) * maxHeight, 12);
+        const maxTotal = Math.max(...data.map(r => r.total), 1);
+        container.innerHTML = data.map(r => {
+            const height = Math.max((r.total / maxTotal) * 130, 16);
             const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
-            return `
-                <div class="bar-group">
-                    <div class="bar" style="height:${height}px;background:${color};">
-                        <span class="bar-value">${r.rate}%</span>
-                    </div>
-                    <div class="bar-label">
-                        ${r.name.length > 10 ? r.name.substring(0, 10) + '…' : r.name}
-                        <span class="count">${r.total}</span>
-                    </div>
-                </div>`;
+            return `<div class="bar-group">
+                <div class="bar" style="height:${height}px;background:${color};">
+                    <span class="bar-value">${r.rate}%</span>
+                </div>
+                <div class="bar-label">${r.name.length > 12 ? r.name.substring(0, 12) + '…' : r.name}<span class="count">${r.total}</span></div>
+            </div>`;
         }).join('');
     }
 
-    function renderProviderChart(stats) {
+    function renderProviderChart() {
         const container = document.getElementById('providerChart');
         const data = Object.keys(stats.providers).map(name => ({
             name,
             total: stats.providers[name].total,
-            rate: stats.providers[name].total > 0
-                ? Math.round((stats.providers[name].employed / stats.providers[name].total) * 100)
-                : 0
-        }));
-        data.sort((a, b) => b.total - a.total);
-        const top = data.slice(0, 5);
+            rate: stats.providers[name].total > 0 ? Math.round((stats.providers[name].employed / stats.providers[name].total) * 100) : 0
+        })).sort((a, b) => b.total - a.total).slice(0, 5);
 
-        if (top.length === 0) {
-            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No provider data yet</div>`;
+        if (data.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No provider data yet</div>`;
             return;
         }
 
-        const maxTotal = Math.max(...top.map(r => r.total), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = top.map(r => {
-            const height = Math.max((r.total / maxTotal) * maxHeight, 12);
+        const maxTotal = Math.max(...data.map(r => r.total), 1);
+        container.innerHTML = data.map(r => {
+            const height = Math.max((r.total / maxTotal) * 130, 16);
             const color = r.rate >= 70 ? '#22c55e' : r.rate >= 40 ? '#eab308' : '#ef4444';
-            return `
-                <div class="bar-group">
-                    <div class="bar" style="height:${height}px;background:${color};">
-                        <span class="bar-value">${r.rate}%</span>
-                    </div>
-                    <div class="bar-label">
-                        ${r.name.length > 10 ? r.name.substring(0, 10) + '…' : r.name}
-                        <span class="count">${r.total}</span>
-                    </div>
-                </div>`;
+            return `<div class="bar-group">
+                <div class="bar" style="height:${height}px;background:${color};">
+                    <span class="bar-value">${r.rate}%</span>
+                </div>
+                <div class="bar-label">${r.name.length > 12 ? r.name.substring(0, 12) + '…' : r.name}<span class="count">${r.total}</span></div>
+            </div>`;
         }).join('');
     }
 
-    function renderStatusDonut(stats) {
+    function renderStatusDonut() {
         const container = document.getElementById('statusDonutChart');
         const legend = document.getElementById('statusLegend');
 
@@ -1979,8 +980,6 @@ MAIN CONTENT
             { label: 'Unemployed', value: stats.unemployed, color: '#dc2626' }
         ];
 
-        const totalVal = stats.total || 1;
-
         if (stats.total === 0) {
             container.style.background = '#e2e8f0';
             document.getElementById('donutTotal').textContent = '0';
@@ -1988,12 +987,12 @@ MAIN CONTENT
             return;
         }
 
+        const totalVal = stats.total;
         let gradient = '';
         let angle = 0;
         data.forEach(d => {
-            const pct = (d.value / totalVal) * 100;
-            if (pct > 0) {
-                const deg = (pct / 100) * 360;
+            if (d.value > 0) {
+                const deg = (d.value / totalVal) * 360;
                 gradient += `${d.color} ${angle}deg ${angle + deg}deg, `;
                 angle += deg;
             }
@@ -2004,113 +1003,72 @@ MAIN CONTENT
         document.getElementById('donutTotal').textContent = stats.total;
 
         legend.innerHTML = data.map(d => {
-            const pct = totalVal > 0 ? Math.round((d.value / totalVal) * 100) : 0;
-            return `
-                <div class="legend-item">
-                    <div class="dot" style="background:${d.color};"></div>
-                    ${d.label}
-                    <span class="pct">${d.value} (${pct}%)</span>
-                </div>`;
+            const pct = Math.round((d.value / totalVal) * 100);
+            return `<div class="legend-item">
+                <div class="dot" style="background:${d.color};"></div>
+                ${d.label} <span class="pct">${d.value} (${pct}%)</span>
+            </div>`;
         }).join('');
     }
 
-    function renderCohorts(stats) {
-        const years = ['2024', '2025', '2026'];
-        years.forEach(year => {
-            const c = stats.cohortStats[year] || { placement: 0, retention: 0, income: 0, relevance: 0, count: 0 };
-            const placementEl = document.getElementById(`cohort${year}Placement`);
-            const retentionEl = document.getElementById(`cohort${year}Retention`);
-            const incomeEl = document.getElementById(`cohort${year}Income`);
-            const relevanceEl = document.getElementById(`cohort${year}Relevance`);
-            if (placementEl) placementEl.textContent = c.placement + '%';
-            if (retentionEl) retentionEl.textContent = c.retention + '%';
-            if (incomeEl) incomeEl.textContent = '₹' + (c.income >= 1000 ? (c.income / 1000).toFixed(0) + 'K' : c.income);
-            if (relevanceEl) relevanceEl.textContent = c.relevance + '%';
-        });
+    function renderCohorts() {
+        const container = document.getElementById('cohortGrid');
+        const years = Object.keys(stats.cohortStats).sort().slice(-3);
+
+        if (years.length === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#94a3b8;font-size:13px;">No cohort data yet</div>`;
+            return;
+        }
+
+        container.innerHTML = years.map((year, i) => {
+            const c = stats.cohortStats[year];
+            const badge = c.placement >= 70 ? 'best' : c.placement >= 40 ? 'good' : 'average';
+            const badgeLabel = c.placement >= 70 ? 'Top Performer' : c.placement >= 40 ? 'Good' : 'Needs Attention';
+            return `<div class="cohort-card">
+                <div class="cohort-badge ${badge}">${badgeLabel}</div>
+                <div class="cohort-year">${year}</div>
+                <div class="cohort-metrics">
+                    <div class="cm"><strong>${c.placement}%</strong>Placement</div>
+                    <div class="cm"><strong>${c.retention}%</strong>Retention</div>
+                    <div class="cm"><strong>₹${c.income >= 1000 ? (c.income / 1000).toFixed(0) + 'K' : c.income}</strong>Income</div>
+                    <div class="cm"><strong>${c.relevance}%</strong>Relevance</div>
+                </div>
+            </div>`;
+        }).join('');
     }
 
     function renderProviderEfficiency() {
         const container = document.getElementById('providerGrid');
+        const providers = Object.keys(stats.providers);
 
-        if (!providerData || providerData.length === 0) {
+        if (providers.length === 0) {
             container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#94a3b8;font-size:13px;">
                 <i class="fas fa-chalkboard-teacher" style="font-size:32px;display:block;margin-bottom:8px;color:#c7d2fe;"></i>
-                No provider data yet. Providers will appear here once they register and deliver training.
+                No provider data yet.
             </div>`;
             return;
         }
 
-        container.innerHTML = providerData.map(p => {
-            const trainees = p.trainees || 0;
-            const placed = p.placed || 0;
-            const retained = p.retained || 0;
-            const certified = p.certified || 0;
-            const effScore = trainees > 0
-                ? Math.round(((placed / trainees) * 60) + ((retained / trainees) * 40))
-                : 0;
-            const effClass = effScore >= 70 ? 'high' : effScore >= 50 ? 'medium' : 'low';
+        container.innerHTML = providers.slice(0, 6).map(name => {
+            const p = stats.providers[name];
+            const trainees = p.total;
+            const placed = p.employed;
+            const retained = placed;
+            const effScore = trainees > 0 ? Math.round((placed / trainees) * 100) : 0;
+            const effClass = effScore >= 70 ? 'high' : effScore >= 40 ? 'medium' : 'low';
 
-            return `
-                <div class="provider-card">
-                    <div class="provider-name"><i class="fas fa-chalkboard-teacher"></i> ${escapeHtml(p.name)}</div>
-                    <div class="provider-metrics">
-                        <div class="metric"><span>👤 Trainees</span> <strong>${trainees}</strong></div>
-                        <div class="metric"><span>🎓 Certified</span> <strong>${certified}</strong></div>
-                        <div class="metric"><span>💼 Placed</span> <strong>${placed}</strong></div>
-                        <div class="metric"><span>🏆 Retained</span> <strong>${retained}</strong></div>
-                        <div class="metric"><span>📍 State</span> <strong>${escapeHtml(p.state || 'N/A')}</strong></div>
-                        <div class="metric"><span>📈 Efficiency</span> <strong>${effScore}%</strong></div>
-                    </div>
-                    <div class="provider-efficiency">
-                        <span class="eff-label">Training Outcome Efficiency</span>
-                        <span class="eff-score ${effClass}">${effScore}%</span>
-                    </div>
-                </div>`;
-        }).join('');
-    }
-
-    function renderSkillTable() {
-        const tbody = document.getElementById('skillTableBody');
-        const skills = skillData;
-
-        document.getElementById('skillCount').textContent = skills.length + ' skills';
-
-        if (skills.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">
-                No skill data yet. Skills will appear once trainees register with skills listed.
-            </td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = skills.map(s => {
-            const supply = s.supply || 0;
-            const demand = s.demand || 0;
-            const maxVal = Math.max(supply, demand, 1);
-            const gap = demand - supply;
-            const gapClass = gap > 10 ? 'high' : gap > 0 ? 'medium' : 'low';
-            const gapLabel = gap > 10 ? '🔴 High Gap' : gap > 0 ? '🟠 Medium' : '🟢 Balanced';
-            const supplyWidth = Math.min((supply / maxVal) * 100, 100);
-            const demandWidth = Math.min((demand / maxVal) * 100, 100);
-
-            return `
-                <tr>
-                    <td><strong>${escapeHtml(s.name)}</strong></td>
-                    <td>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="font-size:10px;font-weight:600;color:#64748b;">${supply}</span>
-                            <div class="gap-bar"><div class="fill" style="width:${supplyWidth}%;background:#2563eb;"></div></div>
-                        </div>
-                    </td>
-                    <td>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="font-size:10px;font-weight:600;color:#64748b;">${demand}</span>
-                            <div class="gap-bar"><div class="fill" style="width:${demandWidth}%;background:#22c55e;"></div></div>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="gap-indicator ${gapClass}">${gapLabel}</span>
-                    </td>
-                </tr>`;
+            return `<div class="provider-card">
+                <div class="provider-name"><i class="fas fa-chalkboard-teacher"></i> ${escapeHtml(name)}</div>
+                <div class="provider-metrics">
+                    <div class="metric"><span>👤 Trainees</span> <strong>${trainees}</strong></div>
+                    <div class="metric"><span>💼 Placed</span> <strong>${placed}</strong></div>
+                    <div class="metric"><span>🏆 Retained</span> <strong>${retained}</strong></div>
+                </div>
+                <div class="provider-efficiency">
+                    <span class="eff-label">Efficiency Score</span>
+                    <span class="eff-score ${effClass}">${effScore}%</span>
+                </div>
+            </div>`;
         }).join('');
     }
 
@@ -2118,54 +1076,60 @@ MAIN CONTENT
         const tbody = document.getElementById('tableBody');
 
         if (filteredRecords.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7">
-                        <div style="text-align:center;padding:40px;color:#94a3b8;">
-                            <i class="fas fa-database" style="font-size:40px;display:block;margin-bottom:10px;color:#c7d2fe;"></i>
-                            <h3 style="color:#475569;font-size:16px;margin-bottom:4px;">No Employment Records Yet</h3>
-                            <p style="font-size:13px;">Records will appear here once trainees register and employment data is submitted.</p>
-                        </div>
-                    </td>
-                </tr>`;
+            tbody.innerHTML = `<tr><td colspan="7">
+                <div class="empty-state">
+                    <i class="fas fa-database"></i>
+                    <h3>No Records Found</h3>
+                    <p>Register trainees to see live data here.</p>
+                </div>
+            </td></tr>`;
             return;
         }
 
-        tbody.innerHTML = filteredRecords.slice(0, 20).map(r => {
+        tbody.innerHTML = filteredRecords.slice(0, 15).map(r => {
             const statusClass = r.status === 'employed' ? 'employed' :
                                r.status === 'self-employed' ? 'self' :
                                r.status === 'internship' ? 'internship' : 'unemployed';
             const statusLabel = r.status === 'employed' ? 'Employed' :
                                r.status === 'self-employed' ? 'Self-Employed' :
                                r.status === 'internship' ? 'Internship' : 'Unemployed';
-            return `
-                <tr>
-                    <td><strong>${escapeHtml(r.name)}</strong></td>
-                    <td>${escapeHtml(r.program)}</td>
-                    <td>${escapeHtml(r.provider)}</td>
-                    <td>${escapeHtml(r.district)}</td>
-                    <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
-                    <td style="font-weight:700;color:${r.income > 0 ? '#16a34a' : '#94a3b8'};">${r.income > 0 ? '₹' + r.income.toLocaleString() : 'N/A'}</td>
-                    <td>${escapeHtml(r.joiningDate)}</td>
-                </tr>`;
+            const profileUrl = `trainee-360-profile.html?traineeId=${encodeURIComponent(r.id)}`;
+
+            return `<tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:34px;height:34px;border-radius:50%;background:${r.color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;">${r.avatar}</div>
+                        <div>
+                            <div style="font-weight:600;font-size:12px;">${escapeHtml(r.name)}</div>
+                            <div style="font-size:10px;color:#64748b;">${escapeHtml(r.id)}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><strong style="font-size:11px;">${escapeHtml(r.program)}</strong></td>
+                <td style="font-size:11px;">${escapeHtml(r.provider)}</td>
+                <td style="font-size:11px;">${escapeHtml(r.district)}</td>
+                <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
+                <td style="font-weight:700;color:${r.income > 0 ? '#16a34a' : '#94a3b8'};font-size:12px;">${r.income > 0 ? '₹' + r.income.toLocaleString() : 'N/A'}</td>
+                <td><a href="${profileUrl}" class="action-btn view"><i class="fas fa-eye"></i> View 360°</a></td>
+            </tr>`;
         }).join('');
     }
 
     function updateSidebar() {
-        let govData = null;
-        try { govData = JSON.parse(localStorage.getItem('governmentData') || 'null'); } catch (e) {}
-        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
-        const el = document.getElementById('sidebarAvatar'); if (el) el.textContent = initial;
-        const sn = document.getElementById('sidebarName'); if (sn) sn.textContent = govData?.name || 'Government';
-        const sr = document.getElementById('sidebarRole'); if (sr) sr.textContent = govData?.role || 'Admin';
-        const ha = document.getElementById('headerAvatar'); if (ha) ha.textContent = initial;
-        const hn = document.getElementById('headerName'); if (hn) hn.textContent = govData?.name || 'Government';
+        if (!_govtOfficer) return;
+        const name = _govtOfficer.name || 'Government';
+        const role = _govtOfficer.accessLevel ? `Admin · ${_govtOfficer.accessLevel}` : 'Admin';
+        const initial = name.charAt(0).toUpperCase();
+        document.getElementById('sidebarAvatar').textContent = initial;
+        document.getElementById('sidebarName').textContent = name;
+        document.getElementById('sidebarRole').textContent = role;
+        document.getElementById('headerAvatar').textContent = initial;
+        document.getElementById('headerName').textContent = name;
     }
 
     function updateNotificationBadge() {
-        const pending = filteredRecords.filter(r => r.status === 'unemployed').length;
-        const el = document.getElementById('notifBadge');
-        if (el) el.textContent = pending;
+        const pending = stats.unemployed || 0;
+        document.getElementById('notifBadge').textContent = pending;
     }
 
     // ============================================================
@@ -2173,30 +1137,11 @@ MAIN CONTENT
     // ============================================================
     function escapeHtml(s) {
         if (s === undefined || s === null) return '';
-        return String(s)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
-    function showToast(message) {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed; bottom: 30px; right: 30px; background: white;
-            padding: 14px 22px; border-radius: 12px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-            border-left: 4px solid #2563eb; max-width: 400px;
-            z-index: 1000; font-size: 13px; color: #0b1a33;
-            display: flex; align-items: center; gap: 10px; font-weight: 500;
-        `;
-        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#2563eb;font-size:16px;"></i> ${message}`;
-        document.body.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     function updateDate() {
-        const now = new Date();
-        const el = document.getElementById('dateDisplay');
-        if (el) el.textContent = now.toLocaleDateString('en-US', {
+        document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', {
             weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
         });
     }
@@ -2204,21 +1149,31 @@ MAIN CONTENT
     async function refreshData() {
         await loadAllData();
         renderAll();
-        showToast('🔄 Refreshed from backend');
+        showToast('🔄 Data refreshed from Firestore!');
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `position:fixed;bottom:30px;right:30px;background:white;padding:14px 22px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.15);border-left:4px solid #2563eb;max-width:400px;z-index:1000;font-size:13px;color:#0b1a33;display:flex;align-items:center;gap:10px;font-weight:500;`;
+        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#2563eb;font-size:16px;"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
     function showNotifications() {
-        const pending = filteredRecords.filter(r => r.status === 'unemployed').length;
-        alert(`📬 Notifications\n\n• ${pending} unemployed trainees\n• ${filteredRecords.length} total records`);
+        alert(`📬 Notifications\n\n• ${stats.unemployed || 0} unemployed trainees\n• ${stats.totalEmployed || 0} employed\n• ${stats.total || 0} total records`);
     }
 
-    function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
+    function toggleProfileMenu() {
+        if (!_govtOfficer) return;
+        alert(`👤 ${_govtOfficer.name}\n\nEmail: ${_govtOfficer.email}\nDepartment: ${_govtOfficer.department}\nAccess Level: ${_govtOfficer.accessLevel}`);
+    }
 
-    async function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
-            window.location.href = '../auth/login.html';
-        }
+    function logout() {
+        if (!confirm('Are you sure you want to logout?')) return;
+        ['isLoggedIn', 'userRole', 'userId', 'userEmail', 'currentGovtOfficialId',
+         'govtOfficerName', 'govtAccessLevel', 'govtDepartment'].forEach(k => localStorage.removeItem(k));
+        window.location.href = '../auth/login.html?role=government';
     }
 
     function toggleTheme() {
@@ -2232,12 +1187,12 @@ MAIN CONTENT
 
     function exportData() {
         if (filteredRecords.length === 0) { showToast('No data to export'); return; }
-        let csv = 'Name,Program,Provider,District,Status,Income,Joined\n';
+        let csv = 'Trainee ID,Name,Program,Provider,District,Status,Income,Joined\n';
         filteredRecords.forEach(r => {
             const statusLabel = r.status === 'employed' ? 'Employed' :
                                r.status === 'self-employed' ? 'Self-Employed' :
                                r.status === 'internship' ? 'Internship' : 'Unemployed';
-            csv += `"${r.name}","${r.program}","${r.provider}","${r.district}","${statusLabel}",${r.income},"${r.joiningDate}"\n`;
+            csv += `"${r.id}","${r.name}","${r.program}","${r.provider}","${r.district}","${statusLabel}",${r.income},"${r.joiningDate}"\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
@@ -2247,39 +1202,6 @@ MAIN CONTENT
         a.click();
         URL.revokeObjectURL(url);
         showToast('📥 Exported!');
-    }
-
-    function exportFullReport() {
-        showToast('📊 Generating report from real data…');
-        setTimeout(() => {
-            const stats = calculateStats(filteredRecords);
-            let report = '📊 GOVERNMENT ANALYTICS REPORT\n================================\n';
-            report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
-            report += `📈 OVERVIEW\n• Total Trainees: ${stats.total}\n• Employed: ${stats.totalEmployed} (${stats.rate}%)\n`;
-            report += `• Unemployed: ${stats.unemployed}\n• Retention Rate: ${stats.retentionRate}%\n`;
-            report += `• Avg Income: ₹${stats.avgIncome.toLocaleString()}\n\n`;
-            report += `📊 BY DISTRICT\n`;
-            Object.keys(stats.districts).forEach(name => {
-                const r = stats.districts[name];
-                const rate = r.total > 0 ? Math.round((r.employed / r.total) * 100) : 0;
-                report += `• ${name}: ${r.employed}/${r.total} (${rate}%)\n`;
-            });
-            alert(report);
-        }, 100);
-    }
-
-    function viewRegionalBreakdown() {
-        const stats = calculateStats(filteredRecords);
-        let msg = '📍 REGIONAL BREAKDOWN\n================================\n\n';
-        const districts = Object.keys(stats.districts);
-        if (districts.length === 0) { alert(msg + 'No district data yet.'); return; }
-        districts.forEach(name => {
-            const r = stats.districts[name];
-            const rate = r.total > 0 ? Math.round((r.employed / r.total) * 100) : 0;
-            const status = rate >= 70 ? '✅' : rate >= 40 ? '📊' : '⚠️';
-            msg += `${status} ${name}\n   Employed: ${r.employed}/${r.total} (${rate}%)\n\n`;
-        });
-        alert(msg);
     }
 
     // ============================================================
@@ -2294,8 +1216,16 @@ MAIN CONTENT
         } catch (e) {}
 
         updateDate();
-        await loadAllData();
-        renderAll();
+
+        try {
+            requireGovtAuth();
+            await loadAllData();
+            renderAll();
+            console.log('✅ Government Analytics loaded');
+            console.log('   Records:', allRecords.length);
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
 
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
@@ -2306,9 +1236,6 @@ MAIN CONTENT
                 }
             }
         });
-
-        console.log('📊 Government Analytics loaded with REAL data');
-        console.log('   Records:', allRecords.length, '| Providers:', providerData.length);
     });
 </script>
 

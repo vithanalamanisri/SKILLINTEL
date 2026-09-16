@@ -192,37 +192,214 @@
   </div>
 </div>
 
+<!-- ✅ Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <script>
 /* ============================================================
-   SAME DATA SOURCE AS EMPLOYER — localStorage
+   SAME DATA SOURCE AS TRAINEE OUTCOMES — Firestore-first
    ============================================================ */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+  authDomain: "skillbridge-70863.firebaseapp.com",
+  projectId: "skillbridge-70863",
+  storageBucket: "skillbridge-70863.firebasestorage.app",
+  messagingSenderId: "912671486056",
+  appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
 const params = new URLSearchParams(window.location.search);
 const traineeId = params.get('traineeId');
 
-function findTraineeById(id) {
+let _firebaseUser = null;
+let _userProfile = null;
+let _providerData = null;
+
+// ============================================================
+// AUTH GUARD
+// ============================================================
+function requireAuth() {
+  return new Promise((resolve, reject) => {
+    const unsub = auth.onAuthStateChanged(async (fbUser) => {
+      unsub();
+      if (!fbUser) {
+        window.location.href = '../auth/login.html?role=provider';
+        reject('not-authenticated');
+        return;
+      }
+      try {
+        const snap = await db.collection('users').doc(fbUser.uid).get();
+        if (!snap.exists) {
+          window.location.href = '../auth/login.html?role=provider';
+          reject('no-profile');
+          return;
+        }
+        const profile = snap.data();
+        if (profile.role !== 'provider') {
+          await auth.signOut();
+          window.location.href = '../auth/login.html?role=provider';
+          reject('wrong-role');
+          return;
+        }
+        _firebaseUser = fbUser;
+        _userProfile = profile;
+        resolve(fbUser);
+      } catch (e) {
+        console.error('Auth guard error:', e);
+        reject(e);
+      }
+    });
+  });
+}
+
+// ============================================================
+// PROVIDER DATA
+// ============================================================
+async function getProviderData() {
+  if (!_firebaseUser) return { providerId: '', orgName: 'Your Training Centre' };
+
+  const uid = _firebaseUser.uid;
+  let data = {};
+
+  try {
+    const provSnap = await db.collection('providers').doc(uid).get();
+    if (provSnap.exists) data = provSnap.data();
+  } catch (e) {}
+
+  if (!data.orgName) {
+    try {
+      const userSnap = await db.collection('users').doc(uid).get();
+      if (userSnap.exists) data = { ...userSnap.data(), ...data };
+    } catch (e) {}
+  }
+  if (_userProfile) data = { ..._userProfile, ...data };
+
+  return {
+    uid: uid,
+    providerId: data.providerCode || data.providerId || ('PRV' + uid.substring(0, 6).toUpperCase()),
+    orgName: data.orgName || data.organizationName || data.centreName || _firebaseUser.displayName || 'Your Training Centre',
+    contactPerson: data.repName || data.contactPerson || data.ownerName || _firebaseUser.displayName || 'Provider',
+    email: data.email || _firebaseUser.email || ''
+  };
+}
+
+// ============================================================
+// FIND TRAINEE — Firestore-first, localStorage fallback
+// ============================================================
+async function findTraineeById(id) {
   if (!id) return null;
 
-  const allTrainees   = JSON.parse(localStorage.getItem('allTrainees')   || '[]');
-  const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-  const allFollowups  = JSON.parse(localStorage.getItem('allFollowups')  || '[]');
+  let t = null;
+  let emp = {};
+  let fol = {};
 
-  let index = allTrainees.findIndex(t => t.traineeId === id || t.id === id);
+  // --- Try Firestore ---
+  try {
+    const providerUid = _firebaseUser?.uid;
 
-  if (index === -1 && /^TRN\d+$/.test(id)) {
-    const num = parseInt(id.replace('TRN', ''), 10) - 1;
-    if (num >= 0 && num < allTrainees.length) index = num;
+    // 1. providers/{uid}/trainees/{id}
+    if (providerUid) {
+      try {
+        const subDoc = await db.collection('providers').doc(providerUid).collection('trainees').doc(id).get();
+        if (subDoc.exists) t = { _id: subDoc.id, ...subDoc.data() };
+      } catch (e) {}
+    }
+
+    // 2. Query root trainees by traineeCode
+    if (!t) {
+      const codeSnap = await db.collection('trainees').where('traineeCode', '==', id).limit(1).get();
+      if (!codeSnap.empty) t = { _id: codeSnap.docs[0].id, ...codeSnap.docs[0].data() };
+    }
+
+    // 3. Query root trainees by traineeId
+    if (!t) {
+      const idSnap = await db.collection('trainees').where('traineeId', '==', id).limit(1).get();
+      if (!idSnap.empty) t = { _id: idSnap.docs[0].id, ...idSnap.docs[0].data() };
+    }
+
+    // 4. Query by uid
+    if (!t) {
+      const uidSnap = await db.collection('trainees').where('uid', '==', id).limit(1).get();
+      if (!uidSnap.empty) t = { _id: uidSnap.docs[0].id, ...uidSnap.docs[0].data() };
+    }
+
+    // 5. Try direct doc by ID
+    if (!t) {
+      const directDoc = await db.collection('trainees').doc(id).get();
+      if (directDoc.exists) t = { _id: directDoc.id, ...directDoc.data() };
+    }
+
+    // Load employment/followup data if we found the trainee
+    if (t) {
+      if (t.employment) emp = t.employment;
+      else if (t.currentEmployment) emp = t.currentEmployment;
+      else if (t.placement) emp = t.placement;
+
+      if (t.followups && t.followups[0]) fol = t.followups[0];
+      else if (t.followUps && t.followUps[0]) fol = t.followUps[0];
+
+      // Also try separate employment collection
+      if (!emp.companyName && t.email) {
+        try {
+          const empSnap = await db.collection('employment').where('traineeEmail', '==', t.email).limit(1).get();
+          if (!empSnap.empty) emp = empSnap.docs[0].data();
+        } catch (e) {}
+      }
+      if (!fol.status && t.email) {
+        try {
+          const folSnap = await db.collection('followups').where('traineeEmail', '==', t.email).limit(1).get();
+          if (!folSnap.empty) fol = folSnap.docs[0].data();
+        } catch (e) {}
+      }
+    }
+  } catch (e) {
+    console.warn('Firestore lookup failed:', e);
   }
-  if (index === -1) return null;
 
-  const t   = allTrainees[index];
-  const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
-  const fol = allFollowups.find(f => f.traineeEmail === t.email)  || {};
+  // --- Fallback to localStorage if Firestore missed ---
+  if (!t) {
+    const allTrainees   = JSON.parse(localStorage.getItem('allTrainees')   || '[]');
+    const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
+    const allFollowups  = JSON.parse(localStorage.getItem('allFollowups')  || '[]');
 
+    let index = allTrainees.findIndex(x => x.traineeId === id || x.id === id);
+    if (index === -1 && /^TRN\d+$/.test(id)) {
+      const num = parseInt(id.replace('TRN', ''), 10) - 1;
+      if (num >= 0 && num < allTrainees.length) index = num;
+    }
+    if (index >= 0) {
+      t = allTrainees[index];
+      emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
+      fol = allFollowups.find(f => f.traineeEmail === t.email)  || {};
+    }
+  }
+
+  // --- Final fallback: sample ---
+  if (!t) {
+    const samples = getSampleTrainees();
+    const found = samples.find(x => x.id === id);
+    if (found) {
+      t = found;
+      emp = found.employment || {};
+      fol = (found.followups && found.followups[0]) || {};
+    }
+  }
+
+  if (!t) return null;
+
+  // --- Map to the shape the page expects ---
   let verStatus = t.verificationStatus || 'pending';
   if (verStatus === 'verified' || emp.verified) verStatus = 'verified';
 
   return {
-    id: t.traineeId || id,
+    id: t.traineeCode || t.traineeId || t.id || id,
     name: t.fullName || t.name || 'Unnamed Trainee',
     dob: t.dateOfBirth || t.dob || '',
     gender: t.gender || '',
@@ -236,11 +413,11 @@ function findTraineeById(id) {
     passYear: t.yearOfPassing || t.passYear || '',
     score: t.percentage || t.cgpa || t.score || '',
 
-    course: t.skillTrade || t.course || '',
-    provider: t.trainingProvider || t.provider || '',
+    course: t.skillTrade || t.course || t.qualification || t.trade || '',
+    provider: t.trainingProvider || t.providerName || _providerData?.orgName || '',
     batch: t.batchId || t.batch || '',
     trainingStatus: t.trainingStatus || t.certificationStatus || '',
-    trainingProgress: t.trainingProgress || 0,
+    trainingProgress: t.trainingProgress || t.progress || 0,
 
     skills: t.skills || [],
     certifications: t.certifications || t.certs || [],
@@ -253,20 +430,20 @@ function findTraineeById(id) {
     prefLocation: t.preferredLocation || t.prefLoc || '',
     prefSalary: t.expectedSalary || t.prefSalary || '',
 
-    empStatus: emp.status || '',
-    empCompany: emp.companyName || '',
-    empRole: emp.jobRole || '',
-    empType: emp.employmentType || '',
-    empJoining: emp.joiningDate || '',
-    empLocation: emp.jobCity || '',
-    empIncome: emp.currentIncome || '',
-    empPrevIncome: emp.previousIncome || '',
+    empStatus: emp.status || emp.employmentStatus || t.employmentStatus || '',
+    empCompany: emp.companyName || emp.employerName || emp.company || t.currentEmployer || '',
+    empRole: emp.jobRole || emp.designation || emp.role || t.currentJobRole || '',
+    empType: emp.employmentType || emp.type || '',
+    empJoining: emp.joiningDate || emp.startDate || emp.dateOfJoining || '',
+    empLocation: emp.jobCity || emp.location || '',
+    empIncome: emp.currentIncome || emp.monthlyIncome || emp.salary || t.currentIncome || '',
+    empPrevIncome: emp.previousIncome || t.previousIncome || '',
 
     followupStatus: fol.status || '',
     followupPeriod: fol.period || '',
     followupDate: fol.date || '',
 
-    regDate: t.registrationDate || t.registeredAt || '',
+    regDate: t.registrationDate || t.registeredAt || t.createdAt || '',
     regBy: t.registeredBy || 'Self (Online Portal)',
 
     verificationStatus: verStatus,
@@ -275,14 +452,35 @@ function findTraineeById(id) {
   };
 }
 
-function render() {
+// ============================================================
+// SAMPLE FALLBACK
+// ============================================================
+function getSampleTrainees() {
+  return [
+    { id: 'TRN001', name: 'Priya Sharma', email: 'priya@email.com', course: 'Data Analytics', skills: ['Python', 'SQL', 'Tableau', 'Excel', 'Statistics'] },
+    { id: 'TRN002', name: 'Rahul Verma', email: 'rahul@email.com', course: 'Full Stack Development', skills: ['JavaScript', 'React', 'Node.js', 'MongoDB', 'Express'] },
+    { id: 'TRN003', name: 'Ananya Reddy', email: 'ananya@email.com', course: 'Digital Marketing', skills: ['SEO', 'Social Media', 'Content', 'Analytics', 'Ads'] },
+    { id: 'TRN004', name: 'Vikram Singh', email: 'vikram@email.com', course: 'Data Science', skills: ['Python', 'ML', 'TensorFlow', 'Statistics', 'Pandas'] }
+  ];
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+async function render() {
   const container = document.getElementById('container');
 
   if (!traineeId) {
     container.innerHTML = notFoundHTML('No trainee ID provided in the URL.');
     return;
   }
-  const t = findTraineeById(traineeId);
+
+  let t = null;
+  try {
+    t = await findTraineeById(traineeId);
+  } catch (e) {
+    console.error(e);
+  }
 
   if (!t) {
     container.innerHTML = notFoundHTML('This trainee record could not be found.', traineeId);
@@ -447,8 +645,20 @@ function notFoundHTML(message, id) {
   `;
 }
 
-render();
+// ============================================================
+// INIT
+// ============================================================
+(async function init() {
+  try {
+    await requireAuth();
+    _providerData = await getProviderData();
+  } catch (e) {
+    console.warn('Auth issue, continuing in read-only mode:', e);
+  }
+  await render();
+})();
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

@@ -245,6 +245,18 @@
     }
     .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
     .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+    .theme-toggle {
+      background: #f1f5f9;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #475569;
+      transition: 0.2s;
+    }
+    .theme-toggle:hover { background: #e2e8f0; }
     /* ===== CONTAINER ===== */
     .container {
       padding: 24px 32px 32px;
@@ -840,57 +852,215 @@
   </div>
 </div>
 
+<!-- ✅ Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <script>
   // ============================================================
-  // ✅ REAL DATA — Same localStorage keys as employer & government
-  //    allTrainees    → master trainee records
-  //    allEmployment  → employment outcome records
-  //    allFollowups   → follow-up records
+  // FIREBASE CONFIG
   // ============================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+  };
 
-  function loadAllTrainees() {
-    const allTrainees   = JSON.parse(localStorage.getItem('allTrainees')   || '[]');
-    const allEmployment = JSON.parse(localStorage.getItem('allEmployment') || '[]');
-    const allFollowups  = JSON.parse(localStorage.getItem('allFollowups')  || '[]');
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    console.log('🔍 Provider loading trainees:');
-    console.log('   allTrainees:', allTrainees.length);
-    console.log('   allEmployment:', allEmployment.length);
-    console.log('   allFollowups:', allFollowups.length);
+  let _firebaseUser = null;
+  let _userProfile = null;
+  let _providerData = null;
 
-    return allTrainees.map((t, index) => {
-      const emp = allEmployment.find(e => e.traineeEmail === t.email) || {};
-      const fol = allFollowups.find(f => f.traineeEmail === t.email) || {};
+  // ============================================================
+  // AUTH GUARD
+  // ============================================================
+  function requireAuth() {
+    return new Promise((resolve, reject) => {
+      const unsub = auth.onAuthStateChanged(async (fbUser) => {
+        unsub();
+        if (!fbUser) {
+          window.location.href = '../auth/login.html?role=provider';
+          reject('not-authenticated');
+          return;
+        }
+        try {
+          const snap = await db.collection('users').doc(fbUser.uid).get();
+          if (!snap.exists) {
+            window.location.href = '../auth/login.html?role=provider';
+            reject('no-profile');
+            return;
+          }
+          const profile = snap.data();
+          if (profile.role !== 'provider') {
+            await auth.signOut();
+            window.location.href = '../auth/login.html?role=provider';
+            reject('wrong-role');
+            return;
+          }
+          _firebaseUser = fbUser;
+          _userProfile = profile;
+          resolve(fbUser);
+        } catch (e) {
+          console.error('Auth guard error:', e);
+          reject(e);
+        }
+      });
+    });
+  }
+
+  // ============================================================
+  // PROVIDER DATA
+  // ============================================================
+  async function getProviderData() {
+    if (!_firebaseUser) {
+      return { providerId: 'PRV2026-0000', orgName: 'Your Training Centre', contactPerson: 'Provider' };
+    }
+
+    const uid = _firebaseUser.uid;
+    let data = {};
+
+    try {
+      const provSnap = await db.collection('providers').doc(uid).get();
+      if (provSnap.exists) data = provSnap.data();
+    } catch (e) { console.warn('providers/{uid} read failed:', e); }
+
+    if (!data.orgName) {
+      try {
+        const userSnap = await db.collection('users').doc(uid).get();
+        if (userSnap.exists) data = { ...userSnap.data(), ...data };
+      } catch (e) {}
+    }
+    if (_userProfile) data = { ..._userProfile, ...data };
+
+    return {
+      uid: uid,
+      providerId: data.providerCode || data.providerId || ('PRV' + uid.substring(0, 6).toUpperCase()),
+      orgName: data.orgName || data.organizationName || data.centreName || _firebaseUser.displayName || 'Your Training Centre',
+      contactPerson: data.repName || data.contactPerson || data.ownerName || _firebaseUser.displayName || 'Provider',
+      email: data.email || _firebaseUser.email || ''
+    };
+  }
+
+  // ============================================================
+  // ✅ REAL DATA — Firestore-first, with sample fallback
+  //    Strategy:
+  //      1. providers/{uid}/trainees (subcollection)
+  //      2. root trainees collection (filtered by provider)
+  //      3. sample data
+  // ============================================================
+  async function loadAllTrainees(providerData) {
+    if (!_firebaseUser) return { trainees: [], isSample: true };
+
+    const providerUid   = _firebaseUser.uid;
+    const providerCode  = (providerData?.providerId || '').toLowerCase().trim();
+    const providerName  = (providerData?.orgName || '').toLowerCase().trim();
+    const providerEmail = (providerData?.email || '').toLowerCase().trim();
+
+    let docs = [];
+
+    // Strategy 1: subcollection providers/{uid}/trainees
+    try {
+      const snap = await db.collection('providers').doc(providerUid).collection('trainees').get();
+      if (!snap.empty) snap.forEach(d => docs.push({ _id: d.id, _source: 'sub', ...d.data() }));
+    } catch (e) { console.warn('trainees subcollection read failed:', e); }
+
+    // Strategy 2: root trainees collection
+    if (docs.length === 0) {
+      try {
+        const snap = await db.collection('trainees').get();
+        snap.forEach(d => docs.push({ _id: d.id, _source: 'root', ...d.data() }));
+      } catch (e) { console.warn('trainees read failed:', e); }
+    }
+
+    // No data → sample
+    if (docs.length === 0) {
+      return { trainees: getSampleTrainees(), isSample: true };
+    }
+
+    // Strict provider filter
+    const mine = docs.filter(t => {
+      if (t.providerUid && t.providerUid === providerUid) return true;
+      const tCode = (t.providerCode || t.providerId || '').toLowerCase().trim();
+      if (providerCode && tCode && tCode === providerCode) return true;
+      if (t._source === 'sub') return true;
+      const tName = (t.trainingProvider || t.providerName || t.orgName || '').toLowerCase().trim();
+      if (providerName && tName && (tName === providerName || tName.includes(providerName) || providerName.includes(tName))) return true;
+      const tEmail = (t.providerEmail || '').toLowerCase().trim();
+      if (providerEmail && tEmail && tEmail === providerEmail) return true;
+      return false;
+    });
+
+    if (mine.length === 0) {
+      console.warn('⚠️ No trainees matched this provider.');
+      return { trainees: getSampleTrainees(), isSample: true, linkIssue: true };
+    }
+
+    // Map to the shape the page already expects
+    const COLOR_PALETTE = ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'];
+
+    const mapped = mine.map((t, index) => {
+      const emp = t.employment || t.currentEmployment || t.placement || t.jobDetails || {};
 
       // Determine employment status
       let status = 'other';
-      const empStatus = (emp.status || t.employmentStatus || '').toLowerCase();
-      if (empStatus.includes('self'))             status = 'self-employed';
-      else if (empStatus.includes('employ'))      status = 'employed';
-      else if (empStatus.includes('unemploy'))    status = 'unemployed';
-      else if (empStatus.includes('looking'))     status = 'unemployed';
-      else if (empStatus.includes('intern'))      status = 'other';
-      else if (empStatus.includes('apprentice'))  status = 'other';
+      const empStatus = (emp.status || emp.employmentStatus || t.employmentStatus || '').toLowerCase();
+      if (empStatus.includes('self'))            status = 'self-employed';
+      else if (empStatus.includes('unemploy'))   status = 'unemployed';
+      else if (empStatus.includes('looking'))    status = 'unemployed';
+      else if (empStatus.includes('employ'))     status = 'employed';
+      else if (empStatus.includes('placed'))     status = 'employed';
+      else if (empStatus.includes('verified'))   status = 'employed';
+      else if (empStatus.includes('intern'))     status = 'other';
+      else if (empStatus.includes('apprentice')) status = 'other';
+
+      const traineeName = t.fullName || t.name || [t.firstName, t.lastName].filter(Boolean).join(' ') || 'Unnamed Trainee';
 
       return {
-        id: t.traineeId || t.id || 'TRN' + (index + 1),
-        name: t.fullName || t.name || 'Unnamed Trainee',
+        id: t.traineeCode || t.traineeId || ('TRN' + (t.uid ? t.uid.substring(0,6) : (index + 1))),
+        name: traineeName,
         email: t.email || '',
-        course: t.skillTrade || t.course || 'N/A',
-        provider: t.trainingProvider || t.provider || 'N/A',
+        course: t.skillTrade || t.course || t.qualification || t.trade || 'N/A',
+        provider: t.trainingProvider || t.providerName || providerData?.orgName || 'N/A',
         status: status,
-        avatar: (t.fullName || t.name || 'T').charAt(0).toUpperCase(),
-        color: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626'][index % 5],
-        company: emp.companyName || t.currentEmployer || '',
-        jobRole: emp.jobRole || t.currentJobRole || '',
-        joiningDate: emp.joiningDate || '',
-        salary: parseInt(emp.currentIncome) || 0,
-        previousSalary: parseInt(emp.previousIncome) || 0,
-        followupStatus: fol.status || '',
-        followupDate: fol.date || '',
-        skills: t.skills || []
+        avatar: traineeName.charAt(0).toUpperCase(),
+        color: COLOR_PALETTE[index % COLOR_PALETTE.length],
+        company: emp.companyName || emp.employerName || emp.company || t.currentEmployer || '',
+        jobRole: emp.jobRole || emp.designation || emp.role || t.currentJobRole || '',
+        joiningDate: emp.joiningDate || emp.startDate || emp.dateOfJoining || '',
+        salary: parseInt(emp.currentIncome || emp.monthlyIncome || emp.salary || t.currentIncome) || 0,
+        previousSalary: parseInt(emp.previousIncome || t.previousIncome) || 0,
+        followupStatus: (t.followups && t.followups[0] && t.followups[0].status) || '',
+        followupDate: (t.followups && t.followups[0] && t.followups[0].date) || '',
+        skills: t.skills || [],
+        _sample: false
       };
     });
+
+    return { trainees: mapped, isSample: false };
+  }
+
+  // ============================================================
+  // SAMPLE DATA (Fallback — same shape as real data)
+  // ============================================================
+  function getSampleTrainees() {
+    const arr = [
+      { id: 'TRN001', name: 'Priya Sharma', email: 'priya@email.com', course: 'Data Analytics', status: 'employed', avatar: 'P', color: '#2563eb', company: 'ABC Technologies', jobRole: 'Data Analyst', joiningDate: '2026-04-12', salary: 28000, previousSalary: 12000, skills: ['Python', 'SQL', 'Tableau', 'Excel', 'Statistics'] },
+      { id: 'TRN002', name: 'Rahul Verma', email: 'rahul@email.com', course: 'Full Stack Development', status: 'employed', avatar: 'R', color: '#7c3aed', company: 'Tech Solutions Ltd', jobRole: 'Full Stack Developer', joiningDate: '2026-05-15', salary: 32000, previousSalary: 15000, skills: ['JavaScript', 'React', 'Node.js', 'MongoDB', 'Express'] },
+      { id: 'TRN003', name: 'Ananya Reddy', email: 'ananya@email.com', course: 'Digital Marketing', status: 'self-employed', avatar: 'A', color: '#16a34a', company: 'Growth Media', jobRole: 'Marketing Consultant', joiningDate: '2026-06-01', salary: 25000, previousSalary: 10000, skills: ['SEO', 'Social Media', 'Content', 'Analytics', 'Ads'] },
+      { id: 'TRN004', name: 'Vikram Singh', email: 'vikram@email.com', course: 'Data Science', status: 'employed', avatar: 'V', color: '#d97706', company: 'AI Solutions', jobRole: 'Data Scientist', joiningDate: '2026-07-01', salary: 35000, previousSalary: 18000, skills: ['Python', 'ML', 'TensorFlow', 'Statistics', 'Pandas'] },
+      { id: 'TRN005', name: 'Sneha Patel', email: 'sneha@email.com', course: 'UI/UX Design', status: 'unemployed', avatar: 'S', color: '#dc2626', company: '', jobRole: '', joiningDate: '', salary: 0, previousSalary: 8000, skills: ['Figma', 'Sketch', 'Prototyping', 'User Research'] },
+      { id: 'TRN006', name: 'Arjun Nair', email: 'arjun@email.com', course: 'Cloud Computing', status: 'employed', avatar: 'A', color: '#0d9488', company: 'Cloud Infra', jobRole: 'Cloud Engineer', joiningDate: '2026-08-01', salary: 30000, previousSalary: 14000, skills: ['AWS', 'Docker', 'Kubernetes', 'Linux', 'Terraform'] },
+      { id: 'TRN007', name: 'Kiran Joshi', email: 'kiran@email.com', course: 'Full Stack Development', status: 'other', avatar: 'K', color: '#7c3aed', company: 'Startup Hub', jobRole: 'Junior Developer', joiningDate: '2026-09-01', salary: 15000, previousSalary: 5000, skills: ['JavaScript', 'React', 'Node.js'] },
+      { id: 'TRN008', name: 'Divya K', email: 'divya@email.com', course: 'Data Analytics', status: 'employed', avatar: 'D', color: '#2563eb', company: 'Data Corp', jobRole: 'Data Analyst Intern', joiningDate: '2026-08-15', salary: 18000, previousSalary: 0, skills: ['Python', 'SQL', 'Excel'] }
+    ];
+    return arr.map(t => ({ ...t, _sample: true }));
   }
 
   // ============================================================
@@ -953,9 +1123,9 @@
   let allTrainees = [];
   let stats = {};
   let skills = [];
+  let isSampleData = false;
 
   function loadAndRender() {
-    allTrainees = loadAllTrainees();
     stats = calculateStats(allTrainees);
     skills = buildAggregateSkills(allTrainees);
 
@@ -1119,22 +1289,29 @@
   }
 
   function updateSidebar() {
-    const currentEmail = localStorage.getItem('currentProviderEmail');
-    const allProviders = JSON.parse(localStorage.getItem('allProviders') || '[]');
-    let providerData = allProviders.find(p => p.email === currentEmail);
-
-    if (!providerData) {
-      providerData = JSON.parse(localStorage.getItem('providerData') || '{}');
-    }
-
-    const name = providerData.contactPerson || providerData.orgName || 'Provider';
+    const name = _providerData?.contactPerson || _providerData?.orgName || 'Provider';
     const initial = name.charAt(0).toUpperCase();
 
     document.getElementById('sidebarAvatar').textContent = initial;
     document.getElementById('sidebarName').textContent = name;
-    document.getElementById('sidebarRole').textContent = providerData.orgName || 'Training Partner';
+    document.getElementById('sidebarRole').textContent = _providerData?.orgName || 'Training Partner';
     document.getElementById('headerAvatar').textContent = initial;
     document.getElementById('headerName').textContent = name;
+  }
+
+  function showSampleBanner(linkIssue) {
+    const old = document.querySelector('.sample-banner');
+    if (old) old.remove();
+
+    const msg = linkIssue
+      ? '⚠️ Showing sample data — no trainee records are linked to this provider yet. Add `providerUid`, `providerCode`, or `trainingProvider` to trainee docs.'
+      : 'ℹ️ Showing sample data — no trainee records found in Firestore.';
+
+    const el = document.createElement('div');
+    el.className = 'sample-banner';
+    el.style.cssText = 'background:#fef3c7;color:#92400e;padding:10px 16px;border-radius:12px;margin-bottom:16px;font-size:13px;font-weight:500;border:1px solid #fde68a;';
+    el.textContent = msg;
+    document.querySelector('.container').prepend(el);
   }
 
   // ============================================================
@@ -1168,21 +1345,65 @@
     a.href = url;
     a.download = `trainee-outcomes-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    URL.revokeObjectURL(url);
   }
 
   function logout() {
     if (confirm('Logout?')) {
-      localStorage.removeItem('currentProviderEmail');
-      window.location.href = '../auth/login.html';
+      auth.signOut().finally(() => {
+        try {
+          localStorage.removeItem('currentProviderEmail');
+          localStorage.removeItem('currentProviderId');
+          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('userId');
+        } catch (e) {}
+        window.location.href = '../auth/login.html?role=provider';
+      });
     }
+  }
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+    const icon = document.querySelector('.theme-toggle i');
+    if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
   }
 
   // ============================================================
   // INIT
   // ============================================================
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Apply saved theme
+    try {
+      const saved = localStorage.getItem('skillintel-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      const icon = document.querySelector('.theme-toggle i');
+      if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    } catch (e) {}
+
     updateDate();
-    loadAndRender();
+
+    try {
+      await requireAuth();
+      _providerData = await getProviderData();
+
+      const result = await loadAllTrainees(_providerData);
+      allTrainees = result.trainees;
+      isSampleData = result.isSample;
+
+      console.log(`✅ Loaded ${allTrainees.length} trainees (sample: ${result.isSample})`);
+
+      loadAndRender();
+
+      if (result.isSample) showSampleBanner(result.linkIssue);
+
+    } catch (e) {
+      console.warn('Init aborted:', e);
+    }
 
     document.addEventListener('click', function(e) {
       const sidebar = document.getElementById('sidebar');
@@ -1194,9 +1415,10 @@
       }
     });
 
-    console.log('✅ Provider Trainee Outcomes loaded with', allTrainees.length, 'real trainees');
+    console.log('✅ Provider Trainee Outcomes loaded');
   });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

@@ -10,6 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     
     <link rel="stylesheet" href="../css/style.css">
+
+    <!-- ✅ Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
         body {
@@ -191,6 +197,17 @@
         }
         .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
         .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+        .theme-toggle {
+            background: #f1f5f9;
+            border: none;
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #475569;
+            transition: 0.2s;
+        }
+        .theme-toggle:hover { background: #e2e8f0; }
         /* ===== CONTAINER ===== */
         .container {
             padding: 24px 32px 32px;
@@ -533,6 +550,13 @@
             box-shadow: 0 8px 20px rgba(37,99,235,0.3);
         }
         .connect-btn i { font-size: 14px; }
+        /* ===== SAMPLE BANNER ===== */
+        .sample-banner {
+            background: #fef3c7; color: #92400e;
+            padding: 10px 16px; border-radius: 12px;
+            margin-bottom: 16px; font-size: 13px;
+            font-weight: 500; border: 1px solid #fde68a;
+        }
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1024px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -611,15 +635,15 @@
             </div>
         </div>
         <div class="header-right">
-  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
-      <i class="fas fa-moon"></i>
-    </button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
             <span class="date" id="dateDisplay"></span>
-            <div class="notif">
+            <div class="notif" onclick="showNotifications()">
                 <i class="fas fa-bell"></i>
                 <span class="badge" id="notifBadge">0</span>
             </div>
-            <button class="profile-btn">
+            <button class="profile-btn" onclick="toggleProfileMenu()">
                 <div class="avatar" id="headerAvatar">P</div>
                 <span class="name" id="headerName">Provider</span>
                 <i class="fas fa-chevron-down"></i>
@@ -628,7 +652,7 @@
     </header>
 
     <!-- ===== CONTAINER ===== -->
-    <div class="container">
+    <div class="container" id="mainContainer">
 
         <!-- WELCOME -->
         <div class="welcome">
@@ -722,7 +746,10 @@
             <div class="rating-card">
                 <div class="card-title"><i class="fas fa-chart-bar"></i> Competency Ratings</div>
                 <div class="rating-bar" id="competencyRatings">
-                    <!-- Dynamic -->
+                    <div style="text-align:center;padding:20px;color:#94a3b8;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                        Loading…
+                    </div>
                 </div>
             </div>
 
@@ -733,7 +760,7 @@
 
             <!-- FEEDBACK CARDS -->
             <div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
                     <h3 style="font-size:16px; color:#0b1a33; display:flex; align-items:center; gap:10px; font-weight:700;">
                         <i class="fas fa-comment-dots" style="color:#2563eb;"></i> Recent Feedback
                     </h3>
@@ -745,7 +772,10 @@
                     </div>
                 </div>
                 <div class="feedback-grid" id="feedbackGrid">
-                    <!-- Dynamic -->
+                    <div style="grid-column:1/-1;text-align:center;padding:30px;color:#94a3b8;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:30px;display:block;margin-bottom:8px;"></i>
+                        Loading feedback…
+                    </div>
                 </div>
             </div>
 
@@ -759,7 +789,10 @@
                         <a class="view-all" href="#" onclick="exportFeedback(); return false;">Export <i class="fas fa-arrow-right"></i></a>
                     </div>
                     <div id="feedbackSummary">
-                        <!-- Dynamic -->
+                        <div style="text-align:center;padding:20px;color:#94a3b8;">
+                            <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                            Loading…
+                        </div>
                     </div>
                 </div>
 
@@ -792,200 +825,310 @@
 
 <script>
     // ============================================================
-    // DATA LOADER - From localStorage (Real Data)
+    // FIREBASE CONFIG
     // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
 
-    function getEmployerData() {
-        let data = localStorage.getItem('employerData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing employerData:', e); }
-        }
-        return null;
-    }
-
-    function getTraineeData() {
-        let data = localStorage.getItem('traineeData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing traineeData:', e); }
-        }
-        return null;
-    }
-
-    function getEmploymentData() {
-        let data = localStorage.getItem('employmentData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing employmentData:', e); }
-        }
-        return null;
-    }
-
-    function getFollowupData() {
-        let data = localStorage.getItem('followupData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing followupData:', e); }
-        }
-        return null;
-    }
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     // ============================================================
-    // GET FEEDBACK DATA FROM LOCALSTORAGE
+    // CACHE
     // ============================================================
-
-    function getFeedbackData() {
-        let data = localStorage.getItem('employerFeedbackData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing feedback data:', e); }
-        }
-        return [];
-    }
+    let _firebaseUser = null;
+    let _userProfile = null;
+    let _providerData = null;
 
     // ============================================================
-    // BUILD FEEDBACK DATA
+    // AUTH GUARD
     // ============================================================
-
-    function buildFeedbackData() {
-        // First check if there's stored feedback data from employers
-        const storedFeedback = getFeedbackData();
-        
-        if (storedFeedback && storedFeedback.length > 0) {
-            console.log('📋 Loaded stored feedback from employers:', storedFeedback.length);
-            return storedFeedback;
-        }
-
-        // If no stored data, try to generate from trainee/employer data
-        const traineeData = getTraineeData();
-        const employerData = getEmployerData();
-        const employmentData = getEmploymentData();
-        const followupData = getFollowupData();
-
-        const feedbacks = [];
-
-        // Generate from available data
-        if (traineeData && employerData) {
-            const rating = calculateRating(traineeData, employmentData, followupData);
-            const competencies = getCompetencies(traineeData, employmentData);
-            
-            feedbacks.push({
-                id: 'FB001',
-                traineeName: traineeData.fullName || 'Trainee',
-                traineeId: traineeData.traineeId || 'TRN001',
-                employerName: employerData.contactPerson || 'Employer',
-                employerOrg: employerData.orgName || 'Organization',
-                rating: rating,
-                date: new Date().toISOString().split('T')[0],
-                text: generateFeedbackText(traineeData, employmentData, followupData),
-                competencies: competencies,
-                avatar: traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T',
-                color: '#2563eb',
-                tags: generateTags(traineeData, employmentData)
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=provider';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=provider';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'provider') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=provider';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
             });
-        }
-
-        if (feedbacks.length === 0) {
-            console.log('⚠️ No feedback data found. Please submit feedback from employer portal.');
-        }
-
-        return feedbacks;
+        });
     }
 
     // ============================================================
-    // HELPER FUNCTIONS
+    // PROVIDER DATA
     // ============================================================
-
-    function calculateRating(traineeData, employmentData, followupData) {
-        let rating = 3;
-        if (employmentData?.status === 'Employed') rating += 1;
-        if (employmentData?.status === 'Self-Employed') rating += 0.5;
-        if (followupData?.status === 'Completed') rating += 0.5;
-        if (traineeData?.trainingProgress >= 90) rating += 0.5;
-        if (employmentData?.currentIncome && employmentData?.currentIncome > 25000) rating += 0.5;
-        return Math.min(Math.round(rating * 2) / 2, 5);
-    }
-
-    function getCompetencies(traineeData, employmentData) {
-        const competencies = [
-            { name: 'Technical Skills', score: 0 },
-            { name: 'Communication', score: 0 },
-            { name: 'Problem Solving', score: 0 },
-            { name: 'Teamwork', score: 0 },
-            { name: 'Work Ethic', score: 0 },
-            { name: 'Adaptability', score: 0 }
-        ];
-
-        if (traineeData) {
-            competencies[0].score = traineeData.technicalSkills || 75;
-            competencies[1].score = traineeData.communication || 70;
-            competencies[2].score = traineeData.problemSolving || 72;
-            competencies[3].score = traineeData.teamwork || 78;
-            competencies[4].score = traineeData.workEthic || 80;
-            competencies[5].score = traineeData.adaptability || 68;
+    async function getProviderData() {
+        if (!_firebaseUser) {
+            return { providerId: 'PRV2026-0000', orgName: 'Your Training Centre', contactPerson: 'Provider' };
         }
 
-        if (employmentData?.status === 'Employed') {
-            competencies.forEach(c => c.score += 5);
-        }
+        const uid = _firebaseUser.uid;
+        let data = {};
 
-        competencies.forEach(c => c.score = Math.min(c.score, 100));
-        return competencies;
+        try {
+            const provSnap = await db.collection('providers').doc(uid).get();
+            if (provSnap.exists) data = provSnap.data();
+        } catch (e) { console.warn('providers/{uid} read failed:', e); }
+
+        if (!data.orgName) {
+            try {
+                const userSnap = await db.collection('users').doc(uid).get();
+                if (userSnap.exists) data = { ...userSnap.data(), ...data };
+            } catch (e) {}
+        }
+        if (_userProfile) data = { ..._userProfile, ...data };
+
+        return {
+            uid: uid,
+            providerId: data.providerCode || data.providerId || ('PRV' + uid.substring(0, 6).toUpperCase()),
+            orgName: data.orgName || data.organizationName || data.centreName || _firebaseUser.displayName || 'Your Training Centre',
+            contactPerson: data.repName || data.contactPerson || data.ownerName || _firebaseUser.displayName || 'Provider',
+            email: data.email || _firebaseUser.email || ''
+        };
     }
 
-    function generateFeedbackText(traineeData, employmentData, followupData) {
-        let text = '';
-        if (employmentData?.status === 'Employed') {
-            text = `${traineeData?.fullName || 'The trainee'} has performed exceptionally well in their role. `;
-            if (employmentData.companyName) {
-                text += `They have been a valuable asset to ${employmentData.companyName}. `;
+    // ============================================================
+    // LOAD FEEDBACK FROM FIRESTORE
+    // ============================================================
+    async function loadFeedbackFromFirestore(providerData) {
+        if (!_firebaseUser) return { feedbacks: [], isSample: true };
+
+        const providerUid   = _firebaseUser.uid;
+        const providerCode  = (providerData?.providerId || '').toLowerCase().trim();
+        const providerName  = (providerData?.orgName || '').toLowerCase().trim();
+        const providerEmail = (providerData?.email || '').toLowerCase().trim();
+
+        let docs = [];
+
+        // Strategy 1: providers/{uid}/feedback
+        try {
+            const snap = await db.collection('providers').doc(providerUid).collection('feedback').get();
+            if (!snap.empty) snap.forEach(d => docs.push({ _id: d.id, _source: 'sub', ...d.data() }));
+        } catch (e) { console.warn('feedback subcollection read failed:', e); }
+
+        // Strategy 2: providers/{uid}/employerFeedback
+        if (docs.length === 0) {
+            try {
+                const snap = await db.collection('providers').doc(providerUid).collection('employerFeedback').get();
+                if (!snap.empty) snap.forEach(d => docs.push({ _id: d.id, _source: 'sub', ...d.data() }));
+            } catch (e) {}
+        }
+
+        // Strategy 3: root employerFeedback collection
+        if (docs.length === 0) {
+            try {
+                const snap = await db.collection('employerFeedback').get();
+                snap.forEach(d => docs.push({ _id: d.id, _source: 'root', ...d.data() }));
+            } catch (e) { console.warn('employerFeedback read failed:', e); }
+        }
+
+        // Strategy 4: root feedback collection
+        if (docs.length === 0) {
+            try {
+                const snap = await db.collection('feedback').get();
+                snap.forEach(d => docs.push({ _id: d.id, _source: 'root', ...d.data() }));
+            } catch (e) {}
+        }
+
+        // No data at all → sample
+        if (docs.length === 0) {
+            return { feedbacks: getSampleFeedbacks(), isSample: true };
+        }
+
+        // Strict provider filter
+        const mine = docs.filter(f => {
+            if (f.providerUid && f.providerUid === providerUid) return true;
+            const fCode = (f.providerCode || f.providerId || '').toLowerCase().trim();
+            if (providerCode && fCode && fCode === providerCode) return true;
+            if (f._source === 'sub') return true;
+            const fName = (f.trainingProvider || f.providerName || f.orgName || '').toLowerCase().trim();
+            if (providerName && fName && (fName === providerName || fName.includes(providerName) || providerName.includes(fName))) return true;
+            const fEmail = (f.providerEmail || '').toLowerCase().trim();
+            if (providerEmail && fEmail && fEmail === providerEmail) return true;
+            return false;
+        });
+
+        if (mine.length === 0) {
+            console.warn('⚠️ No feedback matched this provider. Check `providerUid`, `providerCode`, or `trainingProvider`.');
+            return { feedbacks: getSampleFeedbacks(), isSample: true, linkIssue: true };
+        }
+
+        const COLOR_PALETTE = ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'];
+
+        const mapped = mine.map((f, idx) => {
+            const ratingRaw = f.rating ?? f.overallRating ?? f.stars ?? f.score ?? 0;
+            const rating = Math.min(Math.max(parseFloat(ratingRaw) || 0, 0), 5);
+
+            // Competencies: array OR object OR individual fields
+            let competencies = [];
+            if (Array.isArray(f.competencies)) {
+                competencies = f.competencies.map(c => ({
+                    name: c.name || c.label || 'Skill',
+                    score: Math.min(Math.max(Number(c.score || c.value || 0), 0), 100)
+                }));
+            } else if (f.competencies && typeof f.competencies === 'object') {
+                competencies = Object.keys(f.competencies).map(k => ({
+                    name: k,
+                    score: Math.min(Math.max(Number(f.competencies[k]) || 0, 0), 100)
+                }));
+            } else {
+                const fieldMap = {
+                    'Technical Skills': f.technicalSkills ?? f.technical,
+                    'Communication':    f.communication,
+                    'Problem Solving':  f.problemSolving,
+                    'Teamwork':         f.teamwork,
+                    'Work Ethic':       f.workEthic,
+                    'Adaptability':     f.adaptability
+                };
+                Object.keys(fieldMap).forEach(k => {
+                    if (fieldMap[k] != null) competencies.push({ name: k, score: Math.min(Math.max(Number(fieldMap[k]), 0), 100) });
+                });
             }
-        } else if (employmentData?.status === 'Self-Employed') {
-            text = `${traineeData?.fullName || 'The trainee'} has successfully established their own venture. `;
-        } else {
-            text = `${traineeData?.fullName || 'The trainee'} has completed their training and is ready for employment. `;
-        }
-        if (followupData?.status === 'Completed') {
-            text += 'The follow-up process has been completed successfully. ';
-        }
-        return text;
+
+            const traineeName = f.traineeName || f.trainee || f.fullName || 'Trainee';
+            const employerName = f.employerName || f.reviewerName || f.contactPerson || 'Employer';
+            const employerOrg  = f.employerOrg || f.organizationName || f.companyName || f.orgName || 'Organization';
+            const dateRaw = f.date || f.submittedAt || f.createdAt || '';
+            const date = dateRaw ? String(dateRaw).split('T')[0] : new Date().toISOString().split('T')[0];
+
+            let tags = [];
+            if (Array.isArray(f.tags) && f.tags.length) {
+                tags = f.tags.map(t => typeof t === 'string' ? { label: t, type: 'technical' } : t);
+            } else {
+                if (rating >= 4) tags.push({ label: 'Positive', type: 'strong' });
+                if (rating <= 2) tags.push({ label: 'Needs Improvement', type: 'weak' });
+                if (competencies.some(c => c.score >= 85)) tags.push({ label: 'Top Performer', type: 'strong' });
+                if (!tags.length) tags.push({ label: 'Reviewed', type: 'technical' });
+            }
+
+            return {
+                id: f.feedbackId || f._id || ('FB' + idx),
+                traineeName,
+                traineeId: f.traineeId || f.traineeCode || 'N/A',
+                employerName,
+                employerOrg,
+                rating,
+                date,
+                text: f.text || f.comment || f.feedbackText || f.remarks || 'No comment provided.',
+                competencies,
+                avatar: traineeName.charAt(0).toUpperCase(),
+                color: COLOR_PALETTE[idx % COLOR_PALETTE.length],
+                tags,
+                _sample: false
+            };
+        });
+
+        return { feedbacks: mapped, isSample: false };
     }
 
-    function generateTags(traineeData, employmentData) {
-        const tags = [];
-        if (traineeData?.trainingProgress >= 90) tags.push({ label: 'Training Complete', type: 'strong' });
-        if (employmentData?.status === 'Employed') tags.push({ label: 'Employed', type: 'strong' });
-        if (employmentData?.status === 'Self-Employed') tags.push({ label: 'Self-Employed', type: 'technical' });
-        if (tags.length === 0) tags.push({ label: 'Pending Review', type: 'weak' });
-        return tags;
+    function getSampleFeedbacks() {
+        const samples = [
+            {
+                id: 'FB001', traineeName: 'Priya Sharma', traineeId: 'TRN001',
+                employerName: 'Rajesh Kumar', employerOrg: 'ABC Tech Pvt Ltd',
+                rating: 5, date: '2026-04-12',
+                text: 'Priya has been an exceptional addition to our data analytics team. Her technical skills and ability to communicate insights clearly are outstanding.',
+                competencies: [
+                    { name: 'Technical Skills', score: 92 }, { name: 'Communication', score: 88 },
+                    { name: 'Problem Solving', score: 90 }, { name: 'Teamwork', score: 85 },
+                    { name: 'Work Ethic', score: 95 }, { name: 'Adaptability', score: 87 }
+                ],
+                tags: [{ label: 'Top Performer', type: 'strong' }, { label: 'Technical', type: 'technical' }],
+                avatar: 'P', color: '#2563eb'
+            },
+            {
+                id: 'FB002', traineeName: 'Rahul Verma', traineeId: 'TRN002',
+                employerName: 'Sneha Patel', employerOrg: 'Tech Solutions Inc',
+                rating: 4, date: '2026-04-08',
+                text: 'Rahul shows great promise. His coding skills are strong. Would benefit from more exposure to client-facing discussions.',
+                competencies: [
+                    { name: 'Technical Skills', score: 85 }, { name: 'Communication', score: 68 },
+                    { name: 'Problem Solving', score: 82 }, { name: 'Teamwork', score: 80 },
+                    { name: 'Work Ethic', score: 88 }, { name: 'Adaptability', score: 75 }
+                ],
+                tags: [{ label: 'Strong Technical', type: 'technical' }, { label: 'Improve Communication', type: 'improve' }],
+                avatar: 'R', color: '#7c3aed'
+            },
+            {
+                id: 'FB003', traineeName: 'Ananya Reddy', traineeId: 'TRN003',
+                employerName: 'Meera Iyer', employerOrg: 'Growth Media Co',
+                rating: 5, date: '2026-04-02',
+                text: 'Ananya has built a thriving digital marketing practice. Her entrepreneurial spirit and client-handling skills are excellent.',
+                competencies: [
+                    { name: 'Technical Skills', score: 88 }, { name: 'Communication', score: 95 },
+                    { name: 'Problem Solving', score: 84 }, { name: 'Teamwork', score: 90 },
+                    { name: 'Work Ethic', score: 92 }, { name: 'Adaptability', score: 90 }
+                ],
+                tags: [{ label: 'Self-Employed', type: 'technical' }, { label: 'Excellent', type: 'strong' }],
+                avatar: 'A', color: '#16a34a'
+            },
+            {
+                id: 'FB004', traineeName: 'Vikram Singh', traineeId: 'TRN004',
+                employerName: 'Arun Nair', employerOrg: 'AI Solutions Ltd',
+                rating: 4, date: '2026-03-28',
+                text: 'Vikram is a solid data scientist. Model building skills are strong. Should work on documentation and reporting.',
+                competencies: [
+                    { name: 'Technical Skills', score: 90 }, { name: 'Communication', score: 72 },
+                    { name: 'Problem Solving', score: 88 }, { name: 'Teamwork', score: 78 },
+                    { name: 'Work Ethic', score: 85 }, { name: 'Adaptability', score: 80 }
+                ],
+                tags: [{ label: 'Strong Analytical', type: 'technical' }, { label: 'Improve Reporting', type: 'improve' }],
+                avatar: 'V', color: '#d97706'
+            }
+        ];
+        return samples.map(s => ({ ...s, _sample: true }));
     }
 
     // ============================================================
-    // RENDER FUNCTIONS
+    // STATE
     // ============================================================
-
     let allFeedbacks = [];
     let stats = {};
-
-    function loadAndRender() {
-        allFeedbacks = buildFeedbackData();
-        stats = calculateStats(allFeedbacks);
-        renderAll();
-        updateSidebar();
-        updateNotificationBadge();
-    }
+    let isSampleData = false;
 
     function calculateStats(feedbacks) {
         const total = feedbacks.length;
         const ratings = feedbacks.map(f => f.rating);
-        const avg = ratings.length > 0 ? (ratings.reduce((a,b) => a + b, 0) / ratings.length) : 0;
+        const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
         const satisfied = ratings.filter(r => r >= 4).length;
-        const satRate = total > 0 ? Math.round((satisfied / total) * 100) : 0;
-        const employers = new Set(feedbacks.map(f => f.employerOrg));
+        const satRate = total ? Math.round((satisfied / total) * 100) : 0;
+        const employers = new Set(feedbacks.map(f => f.employerOrg).filter(Boolean));
         return { total, avg, satRate, employers: employers.size, ratings };
     }
 
+    // ============================================================
+    // RENDER
+    // ============================================================
     function renderAll() {
         renderStats();
         renderOverallRating();
@@ -993,6 +1136,7 @@
         renderFeedbackGrid();
         renderFeedbackSummary();
         updateWelcomeStats();
+        document.getElementById('notifBadge').textContent = stats.total;
     }
 
     function renderStats() {
@@ -1009,14 +1153,10 @@
         document.getElementById('activeEmployers').textContent = stats.employers;
     }
 
-    function updateNotificationBadge() {
-        document.getElementById('notifBadge').textContent = stats.total;
-    }
-
     function renderOverallRating() {
         const avg = stats.avg || 0;
         document.getElementById('overallRating').textContent = avg.toFixed(1);
-        
+
         const fullStars = Math.floor(avg);
         const halfStar = avg - fullStars >= 0.5;
         let starsHtml = '';
@@ -1028,26 +1168,22 @@
         document.getElementById('overallStars').textContent = starsHtml;
 
         const labels = {
-            5: 'Excellent Performance ⭐',
-            4: 'Very Good Performance 🌟',
-            3: 'Good Performance 👍',
-            2: 'Needs Improvement 📈',
-            1: 'Requires Attention ⚠️',
-            0: 'No ratings yet'
+            5: 'Excellent Performance ⭐', 4: 'Very Good Performance 🌟',
+            3: 'Good Performance 👍', 2: 'Needs Improvement 📈',
+            1: 'Requires Attention ⚠️', 0: 'No ratings yet'
         };
         const labelKey = avg >= 4.5 ? 5 : Math.floor(avg);
         document.getElementById('ratingLabel').textContent = labels[labelKey] || labels[0];
 
-        const ratingCounts = {1:0, 2:0, 3:0, 4:0, 5:0};
+        const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         stats.ratings.forEach(r => {
             const key = Math.min(Math.max(Math.round(r), 1), 5);
-            ratingCounts[key] = (ratingCounts[key] || 0) + 1;
+            ratingCounts[key]++;
         });
 
         const maxCount = Math.max(...Object.values(ratingCounts), 1);
         for (let i = 1; i <= 5; i++) {
-            const pct = (ratingCounts[i] / maxCount) * 100;
-            document.getElementById('bar' + i).style.width = pct + '%';
+            document.getElementById('bar' + i).style.width = ((ratingCounts[i] / maxCount) * 100) + '%';
             document.getElementById('val' + i).textContent = ratingCounts[i];
         }
     }
@@ -1055,26 +1191,23 @@
     function renderCompetencyRatings() {
         const container = document.getElementById('competencyRatings');
         const compMap = {};
-        allFeedbacks.forEach(f => {
-            f.competencies.forEach(c => {
-                if (!compMap[c.name]) compMap[c.name] = { total: 0, count: 0 };
-                compMap[c.name].total += c.score;
-                compMap[c.name].count += 1;
-            });
-        });
+        allFeedbacks.forEach(f => (f.competencies || []).forEach(c => {
+            if (!compMap[c.name]) compMap[c.name] = { total: 0, count: 0 };
+            compMap[c.name].total += c.score;
+            compMap[c.name].count++;
+        }));
 
         const comps = Object.keys(compMap).map(name => ({
-            name: name,
+            name,
             score: Math.round(compMap[name].total / compMap[name].count)
         }));
 
-        if (comps.length === 0) {
+        if (!comps.length) {
             container.innerHTML = `
                 <div style="text-align:center;padding:20px;color:#94a3b8;">
                     <i class="fas fa-chart-bar" style="font-size:30px;display:block;margin-bottom:8px;"></i>
                     No competency data available
-                </div>
-            `;
+                </div>`;
             return;
         }
 
@@ -1083,18 +1216,15 @@
             return `
                 <div class="bar-item">
                     <span class="bar-label">${c.name}</span>
-                    <div class="bar-track">
-                        <div class="fill ${level}" style="width:${c.score}%;"></div>
-                    </div>
+                    <div class="bar-track"><div class="fill ${level}" style="width:${c.score}%;"></div></div>
                     <span class="bar-value">${c.score}%</span>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
     function renderFeedbackGrid() {
         const container = document.getElementById('feedbackGrid');
-        
+
         if (allFeedbacks.length === 0) {
             container.innerHTML = `
                 <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">
@@ -1105,13 +1235,14 @@
                     <a href="../../employer/employer-feedback-form.html" style="display:inline-block;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:8px;">
                         <i class="fas fa-pen"></i> Submit Feedback Now
                     </a>
-                </div>
-            `;
+                </div>`;
             return;
         }
 
         container.innerHTML = allFeedbacks.slice(0, 4).map(f => {
-            const stars = '★'.repeat(Math.round(f.rating)) + '☆'.repeat(5 - Math.round(f.rating));
+            const rounded = Math.round(f.rating);
+            const stars = '★'.repeat(rounded) + '☆'.repeat(5 - rounded);
+            const tagsHtml = (f.tags || []).map(t => `<span class="tag ${t.type}">${t.label}</span>`).join('');
             return `
                 <div class="feedback-card">
                     <div class="fb-header">
@@ -1126,29 +1257,29 @@
                     </div>
                     <div class="fb-body">
                         <div class="fb-text">"${f.text}"</div>
-                        <div class="fb-tags">
-                            ${f.tags.map(t => `<span class="tag ${t.type}">${t.label}</span>`).join('')}
-                        </div>
+                        <div class="fb-tags">${tagsHtml}</div>
                     </div>
                     <div class="fb-footer">
                         <span><i class="fas fa-user"></i> ${f.employerName}</span>
                         <span><i class="fas fa-id-card"></i> ${f.traineeId}</span>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
     function renderFeedbackSummary() {
         const container = document.getElementById('feedbackSummary');
-        const total = stats.total;
-        const avg = stats.avg || 0;
-        const satRate = stats.satRate || 0;
-        const employers = stats.employers || 0;
+        const { total, avg, satRate, employers, ratings } = stats;
 
-        const high = stats.ratings.filter(r => r >= 4).length;
-        const medium = stats.ratings.filter(r => r >= 3 && r < 4).length;
-        const low = stats.ratings.filter(r => r < 3).length;
+        if (total === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;">No feedback data yet</div>`;
+            return;
+        }
+
+        const high   = ratings.filter(r => r >= 4).length;
+        const medium = ratings.filter(r => r >= 3 && r < 4).length;
+        const low    = ratings.filter(r => r < 3).length;
+        const pct = n => total ? Math.round((n / total) * 100) : 0;
 
         container.innerHTML = `
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
@@ -1160,174 +1291,176 @@
                     <strong>Rating Distribution:</strong>
                 </div>
                 <div style="grid-column:span 2;">
-                    <div style="display:flex;gap:8px;margin-top:4px;">
-                        <span style="background:#dcfce7;padding:2px 10px;border-radius:12px;font-size:11px;">🌟 High (4-5): ${high}</span>
-                        <span style="background:#fef3c7;padding:2px 10px;border-radius:12px;font-size:11px;">📊 Medium (3): ${medium}</span>
-                        <span style="background:#fee2e2;padding:2px 10px;border-radius:12px;font-size:11px;">⚠️ Low (1-2): ${low}</span>
+                    <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+                        <span style="background:#dcfce7;padding:2px 10px;border-radius:12px;font-size:11px;">🌟 High (4-5): ${high} (${pct(high)}%)</span>
+                        <span style="background:#fef3c7;padding:2px 10px;border-radius:12px;font-size:11px;">📊 Medium (3): ${medium} (${pct(medium)}%)</span>
+                        <span style="background:#fee2e2;padding:2px 10px;border-radius:12px;font-size:11px;">⚠️ Low (1-2): ${low} (${pct(low)}%)</span>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
-    function updateSidebar() {
-        const employerData = getEmployerData();
-        if (employerData && employerData.contactPerson) {
-            const initial = employerData.contactPerson.charAt(0).toUpperCase();
-            document.getElementById('sidebarAvatar').textContent = initial;
-            document.getElementById('sidebarName').textContent = employerData.contactPerson;
-            document.getElementById('sidebarRole').textContent = employerData.orgName || 'Provider';
-            document.getElementById('headerAvatar').textContent = initial;
-            document.getElementById('headerName').textContent = employerData.contactPerson;
-        }
+    function showSampleBanner(linkIssue) {
+        const old = document.querySelector('.sample-banner');
+        if (old) old.remove();
+
+        const msg = linkIssue
+            ? '⚠️ Showing sample feedback — no employer feedback records are linked to this provider yet. Add `providerUid`, `providerCode`, or `trainingProvider` to feedback documents.'
+            : 'ℹ️ Showing sample feedback — no employer feedback records found in Firestore.';
+
+        const el = document.createElement('div');
+        el.className = 'sample-banner';
+        el.textContent = msg;
+        document.getElementById('mainContainer').prepend(el);
     }
 
     // ============================================================
     // QUICK ACTIONS
     // ============================================================
-
     function exportFeedback() {
-        if (allFeedbacks.length === 0) {
-            alert('No feedback data to export!');
-            return;
-        }
+        if (allFeedbacks.length === 0) { alert('No feedback data to export!'); return; }
 
-        let report = '📊 EMPLOYER FEEDBACK REPORT\n';
-        report += '================================\n';
-        report += `📅 Generated: ${new Date().toLocaleDateString()}\n\n`;
-        report += `📈 SUMMARY\n`;
-        report += `• Total Feedback: ${stats.total}\n`;
-        report += `• Average Rating: ${stats.avg.toFixed(1)} ⭐\n`;
-        report += `• Satisfaction Rate: ${stats.satRate}%\n`;
-        report += `• Active Employers: ${stats.employers}\n\n`;
-        report += `📋 DETAILED FEEDBACK\n`;
-        report += '================================\n\n';
+        let report = '📊 EMPLOYER FEEDBACK REPORT\n================================\n';
+        report += `📅 Generated: ${new Date().toLocaleDateString()}\n`;
+        report += `👤 Provider: ${_providerData?.orgName || 'N/A'}\n\n`;
+        report += `📈 SUMMARY\n• Total: ${stats.total}\n• Avg Rating: ${stats.avg.toFixed(1)}\n• Satisfaction: ${stats.satRate}%\n• Employers: ${stats.employers}\n\n`;
+        report += `📋 DETAILED FEEDBACK\n================================\n\n`;
 
         allFeedbacks.forEach((f, i) => {
-            report += `${i+1}. ${f.traineeName} (${f.traineeId})\n`;
-            report += `   👤 Employer: ${f.employerName} - ${f.employerOrg}\n`;
-            report += `   ⭐ Rating: ${f.rating}/5\n`;
-            report += `   📅 Date: ${f.date}\n`;
+            report += `${i + 1}. ${f.traineeName} (${f.traineeId})\n`;
+            report += `   👤 ${f.employerName} - ${f.employerOrg}\n`;
+            report += `   ⭐ ${f.rating}/5 · 📅 ${f.date}\n`;
             report += `   💬 "${f.text}"\n`;
-            report += `   🏷️ Tags: ${f.tags.map(t => t.label).join(', ')}\n`;
+            report += `   🏷️ ${(f.tags || []).map(t => t.label).join(', ')}\n`;
             report += `   📊 Competencies:\n`;
-            f.competencies.forEach(c => {
-                report += `      • ${c.name}: ${c.score}%\n`;
-            });
+            (f.competencies || []).forEach(c => report += `      • ${c.name}: ${c.score}%\n`);
             report += '\n';
         });
 
-        report += '================================\n';
-        report += '📌 Generated by SkillBridge Platform';
-
         alert(report);
-        console.log('📊 Feedback Report:\n', report);
+        console.log(report);
     }
 
     function viewAnalytics() {
-        const high = stats.ratings.filter(r => r >= 4).length;
+        if (allFeedbacks.length === 0) { alert('No feedback data available.'); return; }
+
+        const high   = stats.ratings.filter(r => r >= 4).length;
         const medium = stats.ratings.filter(r => r >= 3 && r < 4).length;
-        const low = stats.ratings.filter(r => r < 3).length;
-        
+        const low    = stats.ratings.filter(r => r < 3).length;
+
         const avgComp = {};
-        allFeedbacks.forEach(f => {
-            f.competencies.forEach(c => {
-                if (!avgComp[c.name]) avgComp[c.name] = { total: 0, count: 0 };
-                avgComp[c.name].total += c.score;
-                avgComp[c.name].count += 1;
-            });
-        });
+        allFeedbacks.forEach(f => (f.competencies || []).forEach(c => {
+            if (!avgComp[c.name]) avgComp[c.name] = { total: 0, count: 0 };
+            avgComp[c.name].total += c.score;
+            avgComp[c.name].count++;
+        }));
 
         let compStr = '';
         Object.keys(avgComp).forEach(name => {
-            const score = Math.round(avgComp[name].total / avgComp[name].count);
-            compStr += `   • ${name}: ${score}%\n`;
+            compStr += `   • ${name}: ${Math.round(avgComp[name].total / avgComp[name].count)}%\n`;
         });
 
+        const p = n => stats.total ? Math.round((n / stats.total) * 100) : 0;
+
         alert(`📊 FEEDBACK ANALYTICS\n\n` +
-              `📈 OVERVIEW\n` +
-              `• Total Feedback: ${stats.total}\n` +
-              `• Average Rating: ${stats.avg.toFixed(1)} ⭐\n` +
-              `• Satisfaction Rate: ${stats.satRate}%\n\n` +
-              `📊 RATING DISTRIBUTION\n` +
-              `• 🌟 High (4-5): ${high} (${Math.round((high/stats.total)*100)}%)\n` +
-              `• 📊 Medium (3): ${medium} (${Math.round((medium/stats.total)*100)}%)\n` +
-              `• ⚠️ Low (1-2): ${low} (${Math.round((low/stats.total)*100)}%)\n\n` +
-              `🎯 COMPETENCY AVERAGES\n` +
-              compStr + '\n' +
-              `💡 RECOMMENDATIONS\n` +
-              `${low > stats.total * 0.2 ? '• ⚠️ High number of low ratings. Consider training improvements.\n' : '• ✅ Most feedback is positive.\n'}`);
+              `📈 OVERVIEW\n• Total: ${stats.total}\n• Avg Rating: ${stats.avg.toFixed(1)} ⭐\n• Satisfaction: ${stats.satRate}%\n\n` +
+              `📊 DISTRIBUTION\n• 🌟 High: ${high} (${p(high)}%)\n• 📊 Medium: ${medium} (${p(medium)}%)\n• ⚠️ Low: ${low} (${p(low)}%)\n\n` +
+              `🎯 COMPETENCY AVERAGES\n${compStr}\n` +
+              `💡 RECOMMENDATIONS\n${low > stats.total * 0.2 ? '• ⚠️ High low-rating count. Consider training improvements.\n' : '• ✅ Most feedback is positive.\n'}`);
     }
 
     function viewAllFeedback() {
-        if (allFeedbacks.length === 0) {
-            alert('No feedback available.');
-            return;
-        }
+        if (allFeedbacks.length === 0) { alert('No feedback available.'); return; }
 
-        let msg = '📋 ALL FEEDBACK\n';
-        msg += '================================\n\n';
+        let msg = '📋 ALL FEEDBACK\n================================\n\n';
         allFeedbacks.forEach((f, i) => {
-            msg += `${i+1}. ${f.traineeName} - ⭐ ${f.rating}/5\n`;
+            msg += `${i + 1}. ${f.traineeName} - ⭐ ${f.rating}/5\n`;
             msg += `   ${f.employerOrg} · ${f.date}\n`;
             msg += `   "${f.text.substring(0, 80)}${f.text.length > 80 ? '...' : ''}"\n\n`;
         });
-        msg += '================================\n';
-        msg += `Total: ${allFeedbacks.length} feedback entries`;
+        msg += `Total: ${allFeedbacks.length} entries`;
         alert(msg);
+    }
+
+    function showNotifications() {
+        alert(`📬 Notifications\n\n• ${stats.total} employer feedback entries\n• Avg rating: ${stats.avg.toFixed(1)} ⭐\n• ${stats.employers} active employers${isSampleData ? '\n\nℹ️ Currently showing sample data' : ''}`);
+    }
+
+    function toggleProfileMenu() {
+        alert('👤 Profile Menu\n\nSettings · Support · Logout');
     }
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            alert('Logging out... Redirecting to login page.');
-            window.location.href = '../../auth/login.html';
+            auth.signOut().finally(() => {
+                try {
+                    localStorage.removeItem('currentProviderEmail');
+                    localStorage.removeItem('currentProviderId');
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('userRole');
+                    localStorage.removeItem('userId');
+                } catch (e) {}
+                window.location.href = '../auth/login.html?role=provider';
+            });
         }
     }
 
-    // ============================================================
-    // UTILITY
-    // ============================================================
-
-    function updateDate() {
-        const now = new Date();
-        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
-            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
-        });
-    }
-
-    function setActiveSidebar() {
-        const currentPage = window.location.pathname.split('/').pop() || 'employer-feedback.html';
-        const pageMap = {
-            'employer-feedback.html': 'feedback',
-            'dashboard.html': 'overview',
-            'trainee-outcomes.html': 'outcomes',
-            'employment&retention.html': 'retention',
-            'skill-gaps.html': 'skills'
-        };
-        const currentId = pageMap[currentPage] || 'feedback';
-
-        document.querySelectorAll('.menu a').forEach(link => {
-            link.classList.remove('active');
-            const href = link.getAttribute('href');
-            if (href) {
-                const page = href.split('/').pop();
-                const pageId = pageMap[page] || '';
-                if (pageId === currentId) {
-                    link.classList.add('active');
-                }
-            }
-        });
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
     // ============================================================
     // INIT
     // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Theme
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
 
-    document.addEventListener('DOMContentLoaded', function() {
-        updateDate();
-        loadAndRender();
-        setActiveSidebar();
+        // Date
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
 
+        try {
+            await requireAuth();
+            _providerData = await getProviderData();
+
+            // Update sidebar / header
+            const initial = (_providerData.orgName || 'P').charAt(0).toUpperCase();
+            document.getElementById('sidebarAvatar').textContent = initial;
+            document.getElementById('sidebarName').textContent   = _providerData.orgName;
+            document.getElementById('sidebarRole').textContent   = 'Training Provider';
+            document.getElementById('headerAvatar').textContent  = initial;
+            document.getElementById('headerName').textContent    = _providerData.orgName;
+
+            const result = await loadFeedbackFromFirestore(_providerData);
+            allFeedbacks = result.feedbacks;
+            isSampleData = result.isSample;
+
+            console.log(`✅ Loaded ${allFeedbacks.length} feedback entries (sample: ${result.isSample})`);
+
+            stats = calculateStats(allFeedbacks);
+            renderAll();
+
+            if (result.isSample) showSampleBanner(result.linkIssue);
+
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
+
+        // Sidebar toggle on mobile
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
             const toggle = document.querySelector('.menu-toggle');
@@ -1337,13 +1470,9 @@
                 }
             }
         });
-
-        console.log('📊 Employer Feedback page loaded in PROVIDER folder!');
-        console.log('📋 Feedback entries:', allFeedbacks.length);
-        console.log('📊 Stats:', stats);
-        console.log('🔗 Connected to: ../../employer/employer-feedback-form.html');
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>

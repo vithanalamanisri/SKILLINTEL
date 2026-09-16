@@ -9,796 +9,196 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css">
-    <script src="../js/api.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
         body { background: #f0f4f9; display: flex; min-height: 100vh; }
 
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            width: 280px;
-            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
-            color: white;
-            padding: 20px 14px;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-            transition: transform 0.3s ease;
-            scrollbar-width: thin;
-        }
+        .sidebar { width: 280px; background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%); color: white; padding: 20px 14px; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; transition: transform 0.3s ease; scrollbar-width: thin; }
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-
-        .sidebar-brand {
-            display: flex; align-items: center; gap: 10px;
-            padding: 6px 8px 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 14px;
-        }
-        .sidebar-brand .icon {
-            width: 42px; height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
-        }
+        .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px; }
+        .sidebar-brand .icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35); }
         .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
         .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
-
-        .sidebar-user {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 10px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 12px;
-        }
-        .sidebar-user .avatar {
-            width: 40px; height: 40px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 16px;
-            flex-shrink: 0;
-        }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
         .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
         .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
-
-        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
-            opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
-        .menu a {
-            display: flex; align-items: center; gap: 10px;
-            padding: 8px 12px; border-radius: 10px;
-            color: rgba(255,255,255,0.65);
-            text-decoration: none; transition: all 0.2s;
-            margin: 1px 0; font-size: 13px; font-weight: 500;
-            cursor: pointer;
-        }
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.65); text-decoration: none; transition: all 0.2s; margin: 1px 0; font-size: 13px; font-weight: 500; cursor: pointer; }
         .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
-        .menu a.active {
-            background: rgba(255,255,255,0.12);
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+        .menu a.active { background: rgba(255,255,255,0.12); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .menu a i { width: 18px; text-align: center; font-size: 14px; }
-        .menu a .badge {
-            margin-left: auto;
-            background: #ef4444;
-            color: white;
-            font-size: 9px;
-            font-weight: 700;
-            padding: 1px 8px;
-            border-radius: 20px;
-        }
-
-        .sidebar-footer {
-            padding: 16px 10px 0;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            margin-top: 12px;
-        }
-        .sidebar-footer a {
-            display: flex; align-items: center; gap: 10px;
-            padding: 8px 12px; border-radius: 10px;
-            color: rgba(255,255,255,0.5);
-            text-decoration: none; transition: 0.2s;
-            font-size: 13px; font-weight: 500;
-            cursor: pointer;
-        }
+        .menu a .badge { margin-left: auto; background: #ef4444; color: white; font-size: 9px; font-weight: 700; padding: 1px 8px; border-radius: 20px; }
+        .sidebar-footer { padding: 16px 10px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 12px; }
+        .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.5); text-decoration: none; transition: 0.2s; font-size: 13px; font-weight: 500; cursor: pointer; }
         .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
 
-        /* ===== MAIN ===== */
         .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
-
-        /* ===== HEADER ===== */
-        .header {
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(16px);
-            padding: 12px 28px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(226,232,240,0.6);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+        .header { background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226,232,240,0.6); position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 8px; }
         .header-left { display: flex; align-items: center; gap: 14px; }
-        .menu-toggle {
-            display: none;
-            background: none; border: none;
-            font-size: 20px; color: #0b1a33;
-            cursor: pointer;
-        }
-        .header-left .page-title h1 {
-            font-size: 18px; color: #0b1a33;
-            font-weight: 700;
-            display: flex; align-items: center; gap: 8px;
-        }
+        .menu-toggle { display: none; background: none; border: none; font-size: 20px; color: #0b1a33; cursor: pointer; }
+        .header-left .page-title h1 { font-size: 18px; color: #0b1a33; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .header-left .page-title h1 i { color: #2563eb; }
         .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
-        .header-right {
-            display: flex; align-items: center; gap: 12px;
-        }
-        .header-right .date {
-            font-size: 12px; color: #64748b;
-            font-weight: 500;
-            background: #f1f5f9;
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-        .header-right .notif {
-            position: relative;
-            font-size: 18px; color: #475569;
-            cursor: pointer;
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            transition: 0.2s;
-        }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right .date { font-size: 12px; color: #64748b; font-weight: 500; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; }
+        .header-right .notif { position: relative; font-size: 18px; color: #475569; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .header-right .notif:hover { background: #f1f5f9; }
-        .header-right .notif .badge {
-            position: absolute; top: 2px; right: 2px;
-            background: #ef4444; color: white;
-            width: 18px; height: 18px;
-            font-size: 9px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700;
-        }
-        .header-right .profile-btn {
-            display: flex; align-items: center; gap: 8px;
-            background: #f1f5f9;
-            padding: 4px 12px 4px 4px;
-            border-radius: 30px;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
-        }
+        .header-right .notif .badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; width: 18px; height: 18px; font-size: 9px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .header-right .profile-btn { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 12px 4px 4px; border-radius: 30px; cursor: pointer; border: none; transition: 0.2s; }
         .header-right .profile-btn:hover { background: #e2e8f0; }
-        .header-right .profile-btn .avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            color: white;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 12px;
-        }
+        .header-right .profile-btn .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
         .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
         .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
 
-        /* ===== CONTAINER ===== */
         .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
 
-        /* ===== WELCOME BANNER ===== */
-        .welcome-banner {
-            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
-            color: white;
-            padding: 22px 28px;
-            border-radius: 18px;
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .welcome-banner::before {
-            content: "";
-            position: absolute;
-            width: 350px; height: 350px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.05);
-            top: -150px; right: -80px;
-        }
-        .welcome-banner .banner-content { position: relative; z-index: 1; }
-        .welcome-banner h2 {
-            font-size: 20px;
-            font-weight: 700;
-            display: flex; align-items: center; gap: 8px;
-        }
+        /* Data source banner — shows both counts */
+        .data-source-banner { background: linear-gradient(135deg, #065f46, #16a34a, #22c55e); color: white; padding: 12px 20px; border-radius: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(22,163,74,0.25); font-size: 12px; }
+        .data-source-banner .ds-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .data-source-banner .ds-content { flex: 1; }
+        .data-source-banner .ds-title { font-size: 13px; font-weight: 700; }
+        .data-source-banner .ds-sub { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+        .data-source-banner .ds-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+        .data-source-banner .ds-stat { text-align: center; background: rgba(255,255,255,0.12); padding: 4px 12px; border-radius: 8px; font-size: 10px; }
+        .data-source-banner .ds-stat strong { display: block; font-size: 15px; font-weight: 800; }
+
+        .welcome-banner { background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed); color: white; padding: 22px 28px; border-radius: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .welcome-banner h2 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .welcome-banner p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
-        .welcome-banner .banner-stats {
-            display: flex;
-            gap: 18px;
-            position: relative;
-            z-index: 1;
-            flex-wrap: wrap;
-        }
-        .welcome-banner .banner-stats div {
-            text-align: center;
-            background: rgba(255,255,255,0.1);
-            padding: 6px 16px;
-            border-radius: 10px;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .welcome-banner .banner-stats strong {
-            font-size: 20px;
-            display: block;
-        }
+        .welcome-banner .banner-stats { display: flex; gap: 18px; flex-wrap: wrap; }
+        .welcome-banner .banner-stats div { text-align: center; background: rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 10px; }
+        .welcome-banner .banner-stats strong { font-size: 20px; display: block; }
         .welcome-banner .banner-stats span { font-size: 10px; opacity: 0.7; }
 
-        /* ===== SECTION TITLES ===== */
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0b1a33;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 14px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f1f5f9;
-        }
+        .section-title { font-size: 16px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
         .section-title i { color: #2563eb; }
-        .section-title .badge-count {
-            background: #f1f5f9;
-            padding: 1px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #475569;
-            margin-left: auto;
-        }
+        .section-title .badge-count { background: #f1f5f9; padding: 1px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #475569; margin-left: auto; }
 
-        /* ===== STATS ROW ===== */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .stat-box {
-            background: white;
-            border-radius: 14px;
-            padding: 14px 16px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            transition: all 0.3s;
-            text-align: center;
-        }
-        .stat-box:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
-        }
-        .stat-box .stat-icon {
-            width: 38px; height: 38px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px;
-            margin: 0 auto 6px;
-        }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: white; border-radius: 14px; padding: 14px 16px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: all 0.3s; text-align: center; }
+        .stat-box:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(37,99,235,0.08); }
+        .stat-box .stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 0 auto 6px; }
         .stat-box .stat-icon.blue { background: #dbeafe; color: #2563eb; }
         .stat-box .stat-icon.green { background: #dcfce7; color: #16a34a; }
         .stat-box .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
         .stat-box .stat-icon.orange { background: #fef3c7; color: #d97706; }
         .stat-box .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
         .stat-box .stat-icon.rose { background: #fce7f3; color: #db2777; }
-        .stat-box .stat-number {
-            font-size: 22px;
-            font-weight: 800;
-            color: #0b1a33;
-        }
+        .stat-box .stat-number { font-size: 22px; font-weight: 800; color: #0b1a33; }
         .stat-box .stat-label { font-size: 11px; color: #64748b; }
-        .stat-box .stat-trend {
-            font-size: 10px;
-            font-weight: 600;
-            padding: 1px 8px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-top: 2px;
-        }
+        .stat-box .stat-trend { font-size: 10px; font-weight: 600; padding: 1px 8px; border-radius: 20px; display: inline-block; margin-top: 2px; }
         .stat-box .stat-trend.up { background: #dcfce7; color: #16a34a; }
         .stat-box .stat-trend.down { background: #fee2e2; color: #dc2626; }
         .stat-box .stat-trend.neutral { background: #f1f5f9; color: #64748b; }
 
-        /* ===== CHART GRID ===== */
-        .chart-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin-bottom: 20px;
-        }
-        .chart-grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 18px;
-            margin-bottom: 20px;
-        }
-        .chart-card {
-            background: white;
-            border-radius: 16px;
-            padding: 18px 20px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            transition: 0.3s;
-        }
-        .chart-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
-        .chart-card .card-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .income-growth-card { background: linear-gradient(135deg, #059669, #10b981); color: white; border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .income-growth-card .before-after { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .income-growth-card .before-after .before, .income-growth-card .before-after .after { text-align: center; }
+        .income-growth-card .before-after .before .label, .income-growth-card .before-after .after .label { font-size: 11px; opacity: 0.8; }
+        .income-growth-card .before-after .before .value, .income-growth-card .before-after .after .value { font-size: 24px; font-weight: 800; }
+        .income-growth-card .before-after .arrow { font-size: 24px; opacity: 0.6; }
+        .income-growth-card .growth-info { text-align: right; }
+        .income-growth-card .growth-info .label { font-size: 12px; opacity: 0.8; }
+        .income-growth-card .growth-info .value { font-size: 32px; font-weight: 900; }
+        .income-growth-card .growth-info .sub { font-size: 11px; opacity: 0.7; }
+
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+        .chart-card { background: white; border-radius: 16px; padding: 18px 20px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .chart-card .card-title { font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .chart-card .card-title i { color: #2563eb; }
 
-        /* ===== BAR CHARTS ===== */
-        .bar-chart-container {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-around;
-            height: 150px;
-            padding: 4px 0;
-            gap: 8px;
-        }
-        .bar-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-            height: 100%;
-            justify-content: flex-end;
-        }
-        .bar-group .bar {
-            width: 100%;
-            max-width: 32px;
-            border-radius: 4px 4px 0 0;
-            transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-            min-height: 6px;
-            position: relative;
-        }
-        .bar-group .bar .bar-value {
-            position: absolute;
-            top: -18px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 9px;
-            font-weight: 700;
-            color: #0b1a33;
-        }
-        .bar-group .bar-label {
-            font-size: 8px;
-            color: #64748b;
-            margin-top: 4px;
-            text-align: center;
-            max-width: 50px;
-            word-wrap: break-word;
-        }
-        .bar-group .bar-label .count {
-            font-weight: 600;
-            color: #0b1a33;
-            display: block;
-        }
+        .bar-chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 150px; padding: 4px 0; gap: 8px; }
+        .bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+        .bar-group .bar { width: 100%; max-width: 32px; border-radius: 4px 4px 0 0; transition: height 0.8s; min-height: 6px; position: relative; }
+        .bar-group .bar .bar-value { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 700; color: #0b1a33; }
+        .bar-group .bar-label { font-size: 8px; color: #64748b; margin-top: 4px; text-align: center; max-width: 50px; word-wrap: break-word; }
+        .bar-group .bar-label .count { font-weight: 600; color: #0b1a33; display: block; }
 
-        /* ===== DONUT CHARTS ===== */
-        .donut-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            padding: 4px 0;
-            flex-wrap: wrap;
-        }
-        .donut {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .donut .donut-center {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .donut .donut-center .num {
-            font-size: 18px;
-            font-weight: 800;
-            color: #0b1a33;
-        }
-        .donut .donut-center .label {
-            font-size: 8px;
-            color: #64748b;
-        }
-        .donut-legend {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .donut-legend .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            color: #475569;
-        }
-        .donut-legend .legend-item .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .donut-legend .legend-item .pct {
-            font-weight: 700;
-            color: #0b1a33;
-            margin-left: auto;
-        }
+        .donut-container { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 4px 0; flex-wrap: wrap; }
+        .donut { width: 130px; height: 130px; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .donut .donut-center { width: 70px; height: 70px; border-radius: 50%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .donut .donut-center .num { font-size: 18px; font-weight: 800; color: #0b1a33; }
+        .donut .donut-center .label { font-size: 8px; color: #64748b; }
+        .donut-legend { display: flex; flex-direction: column; gap: 4px; }
+        .donut-legend .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #475569; }
+        .donut-legend .legend-item .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .donut-legend .legend-item .pct { font-weight: 700; color: #0b1a33; margin-left: auto; }
 
-        /* ===== INCOME GROWTH CARD ===== */
-        .income-growth-card {
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: white;
-            border-radius: 16px;
-            padding: 20px 24px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        .income-growth-card .before-after {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .income-growth-card .before-after .before,
-        .income-growth-card .before-after .after {
-            text-align: center;
-        }
-        .income-growth-card .before-after .before .label,
-        .income-growth-card .before-after .after .label {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-        .income-growth-card .before-after .before .value,
-        .income-growth-card .before-after .after .value {
-            font-size: 24px;
-            font-weight: 800;
-        }
-        .income-growth-card .before-after .arrow {
-            font-size: 24px;
-            opacity: 0.6;
-        }
-        .income-growth-card .growth-info {
-            text-align: right;
-        }
-        .income-growth-card .growth-info .label {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-        .income-growth-card .growth-info .value {
-            font-size: 32px;
-            font-weight: 900;
-        }
-        .income-growth-card .growth-info .sub {
-            font-size: 11px;
-            opacity: 0.7;
-        }
+        .livelihood-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .livelihood-item { background: #f8fafc; border-radius: 12px; padding: 12px 14px; border: 1px solid #eef2f6; text-align: center; transition: 0.2s; }
+        .livelihood-item:hover { background: #f1f5f9; transform: scale(1.02); }
+        .livelihood-item .lv-icon { font-size: 22px; margin-bottom: 4px; }
+        .livelihood-item .lv-count { font-size: 18px; font-weight: 800; color: #0b1a33; }
+        .livelihood-item .lv-label { font-size: 10px; color: #64748b; }
 
-        /* ===== LIVELIHOOD STATUS ===== */
-        .livelihood-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .livelihood-item {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 12px 14px;
-            border: 1px solid #eef2f6;
-            text-align: center;
-            transition: 0.2s;
-        }
-        .livelihood-item:hover {
-            background: #f1f5f9;
-            transform: scale(1.02);
-        }
-        .livelihood-item .lv-icon {
-            font-size: 22px;
-            margin-bottom: 4px;
-        }
-        .livelihood-item .lv-count {
-            font-size: 18px;
-            font-weight: 800;
-            color: #0b1a33;
-        }
-        .livelihood-item .lv-label {
-            font-size: 10px;
-            color: #64748b;
-        }
+        .impact-score-container { display: flex; align-items: center; gap: 24px; background: white; border-radius: 16px; padding: 20px 24px; border: 1px solid #eef2f6; margin-bottom: 20px; flex-wrap: wrap; }
+        .impact-score-ring { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .impact-score-inner { width: 90px; height: 90px; border-radius: 50%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .impact-score-inner .score { font-size: 28px; font-weight: 800; color: #0b1a33; }
+        .impact-score-inner .label { font-size: 9px; color: #64748b; }
+        .impact-score-breakdown { flex: 1; }
+        .impact-score-breakdown .breakdown-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: #475569; flex-wrap: wrap; }
+        .impact-score-breakdown .breakdown-item .score-value { font-weight: 700; color: #0b1a33; }
+        .impact-score-breakdown .breakdown-item .score-bar { width: 100px; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-top: 4px; }
+        .impact-score-breakdown .breakdown-item .score-bar .fill { height: 100%; border-radius: 10px; }
 
-        /* ===== TABLE ===== */
-        .table-container {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid #eef2f6;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        .table-container .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 20px;
-            border-bottom: 1px solid #f1f5f9;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .table-container .table-header h3 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0b1a33;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .economic-impact-card { background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed); color: white; border-radius: 16px; padding: 24px 28px; margin-bottom: 20px; }
+        .economic-impact-card h3 { font-size: 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .economic-impact-card .impact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+        .economic-impact-card .impact-item { background: rgba(255,255,255,0.1); padding: 14px 16px; border-radius: 12px; }
+        .economic-impact-card .impact-item .label { font-size: 11px; opacity: 0.8; }
+        .economic-impact-card .impact-item .value { font-size: 22px; font-weight: 800; margin-top: 2px; }
+        .economic-impact-card .impact-item .sub { font-size: 10px; opacity: 0.6; margin-top: 2px; }
+
+        .table-container { background: white; border-radius: 16px; border: 1px solid #eef2f6; overflow: hidden; margin-bottom: 20px; }
+        .table-container .table-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; gap: 8px; }
+        .table-container .table-header h3 { font-size: 14px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 8px; }
         .table-container .table-header h3 i { color: #2563eb; }
-        .table-container .table-header .count {
-            background: #f1f5f9;
-            padding: 1px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #475569;
-        }
+        .table-container .table-header .count { background: #f1f5f9; padding: 1px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; color: #475569; }
+        .table-actions { display: flex; gap: 8px; }
+        .table-actions button { padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; font-size: 11px; font-weight: 600; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .table-actions button:hover { background: #2563eb; color: white; border-color: #2563eb; }
         .table-wrapper { overflow-x: auto; }
-        .table-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        .table-wrapper thead {
-            background: #f8fafc;
-            border-bottom: 2px solid #eef2f6;
-        }
-        .table-wrapper thead th {
-            padding: 10px 14px;
-            text-align: left;
-            font-weight: 600;
-            color: #475569;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            white-space: nowrap;
-        }
+        .table-wrapper table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .table-wrapper thead { background: #f8fafc; border-bottom: 2px solid #eef2f6; }
+        .table-wrapper thead th { padding: 10px 14px; text-align: left; font-weight: 600; color: #475569; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
         .table-wrapper thead th i { margin-right: 4px; color: #94a3b8; }
-        .table-wrapper tbody tr {
-            border-bottom: 1px solid #f1f5f9;
-            transition: 0.2s;
-        }
+        .table-wrapper tbody tr { border-bottom: 1px solid #f1f5f9; transition: 0.2s; }
         .table-wrapper tbody tr:hover { background: #f8fafc; }
-        .table-wrapper tbody td {
-            padding: 10px 14px;
-            color: #0b1a33;
-            vertical-align: middle;
-        }
-
-        .growth-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 700;
-        }
+        .table-wrapper tbody tr.sample-row { background: #fffbeb; }
+        .table-wrapper tbody tr.sample-row:hover { background: #fef3c7; }
+        .table-wrapper tbody td { padding: 10px 14px; color: #0b1a33; vertical-align: middle; }
+        .growth-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
         .growth-badge.positive { background: #dcfce7; color: #16a34a; }
         .growth-badge.negative { background: #fee2e2; color: #dc2626; }
         .growth-badge.neutral { background: #f1f5f9; color: #64748b; }
 
-        /* ===== ECONOMIC IMPACT ===== */
-        .economic-impact-card {
-            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
-            color: white;
-            border-radius: 16px;
-            padding: 24px 28px;
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-        .economic-impact-card::before {
-            content: "";
-            position: absolute;
-            width: 300px; height: 300px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.05);
-            top: -120px; right: -60px;
-        }
-        .economic-impact-card .impact-content {
-            position: relative;
-            z-index: 1;
-        }
-        .economic-impact-card h3 {
-            font-size: 18px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .economic-impact-card .impact-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
-        }
-        .economic-impact-card .impact-item {
-            background: rgba(255,255,255,0.1);
-            padding: 14px 16px;
-            border-radius: 12px;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .economic-impact-card .impact-item .label {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-        .economic-impact-card .impact-item .value {
-            font-size: 22px;
-            font-weight: 800;
-            margin-top: 2px;
-        }
-        .economic-impact-card .impact-item .sub {
-            font-size: 10px;
-            opacity: 0.6;
-            margin-top: 2px;
-        }
+        .source-tag { display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 8px; font-weight: 700; text-transform: uppercase; margin-left: 4px; }
+        .source-tag.live { background: #dcfce7; color: #16a34a; }
+        .source-tag.sample { background: #fef3c7; color: #d97706; }
 
-        /* ===== LIVELIHOOD IMPACT SCORE ===== */
-        .impact-score-container {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            background: white;
-            border-radius: 16px;
-            padding: 20px 24px;
-            border: 1px solid #eef2f6;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .impact-score-ring {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .impact-score-inner {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .impact-score-inner .score {
-            font-size: 28px;
-            font-weight: 800;
-            color: #0b1a33;
-        }
-        .impact-score-inner .label {
-            font-size: 9px;
-            color: #64748b;
-        }
-        .impact-score-breakdown {
-            flex: 1;
-        }
-        .impact-score-breakdown .breakdown-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            font-size: 12px;
-            color: #475569;
-        }
-        .impact-score-breakdown .breakdown-item .score-value {
-            font-weight: 700;
-            color: #0b1a33;
-        }
-        .impact-score-breakdown .breakdown-item .score-bar {
-            width: 100px;
-            height: 6px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 4px;
-        }
-        .impact-score-breakdown .breakdown-item .score-bar .fill {
-            height: 100%;
-            border-radius: 10px;
-        }
-
-        /* ===== QUICK ACTIONS ===== */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 6px;
-        }
-        .quick-actions .action-btn {
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            color: #0b1a33;
-            font-weight: 500;
-            font-size: 11px;
-        }
-        .quick-actions .action-btn:hover {
-            background: #2563eb;
-            color: white;
-            border-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
-        }
-        .quick-actions .action-btn i {
-            display: block;
-            font-size: 18px;
-            margin-bottom: 4px;
-            color: #2563eb;
-        }
+        .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 6px; }
+        .quick-actions .action-btn { padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; color: #0b1a33; font-weight: 500; font-size: 11px; }
+        .quick-actions .action-btn:hover { background: #2563eb; color: white; border-color: #2563eb; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37,99,235,0.2); }
+        .quick-actions .action-btn i { display: block; font-size: 18px; margin-bottom: 4px; color: #2563eb; }
         .quick-actions .action-btn:hover i { color: white; }
 
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 1200px) {
-            .chart-grid { grid-template-columns: 1fr 1fr; }
-            .chart-grid-3 { grid-template-columns: 1fr 1fr; }
-        }
+        .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+        .empty-state i { font-size: 40px; display: block; margin-bottom: 10px; color: #c7d2fe; }
+
+        @media (max-width: 1200px) { .chart-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; }
-            .menu-toggle { display: block; }
-            .header { padding: 10px 16px; }
-            .header-left .page-title h1 { font-size: 16px; }
-            .header-right .date { display: none; }
-            .container { padding: 12px 14px; }
-            .chart-grid { grid-template-columns: 1fr; }
-            .chart-grid-3 { grid-template-columns: 1fr; }
-            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; } .menu-toggle { display: block; }
+            .header { padding: 10px 16px; } .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; } .container { padding: 12px 14px; }
+            .chart-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); }
             .welcome-banner { flex-direction: column; align-items: flex-start; }
             .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
             .income-growth-card { flex-direction: column; align-items: flex-start; }
@@ -806,26 +206,18 @@
         }
         @media (max-width: 480px) {
             .stats-row { grid-template-columns: 1fr 1fr; }
-            .stat-box { padding: 10px; }
-            .stat-box .stat-number { font-size: 18px; }
             .header-right .profile-btn .name { display: none; }
             .header-left .page-title p { display: none; }
-            .impact-score-container { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
 
-<!-- ===== SIDEBAR ===== -->
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
         <div class="icon"><i class="fas fa-brain"></i></div>
-        <div>
-            <h2>SkillBridge</h2>
-            <p>Government Portal</p>
-        </div>
+        <div><h2>SkillBridge</h2><p>Government Portal</p></div>
     </div>
-
     <div class="sidebar-user">
         <div class="avatar" id="sidebarAvatar">G</div>
         <div class="info">
@@ -833,7 +225,6 @@
             <div class="role" id="sidebarRole">Admin</div>
         </div>
     </div>
-
     <div class="menu-label">Analytics</div>
     <div class="menu">
         <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
@@ -845,15 +236,12 @@
         <a href="program-comparison.html"><i class="fas fa-graduation-cap"></i> Program Comparison</a>
         <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
     </div>
-
     <div class="sidebar-footer">
         <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 </nav>
 
-<!-- ===== MAIN CONTENT ===== -->
 <div class="main-content">
-
     <header class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
@@ -865,9 +253,7 @@
             </div>
         </div>
         <div class="header-right">
-  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
-  <i class="fas fa-moon"></i>
-</button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><i class="fas fa-moon"></i></button>
             <span class="date" id="dateDisplay"></span>
             <div class="notif" onclick="showNotifications()">
                 <i class="fas fa-bell"></i>
@@ -883,33 +269,32 @@
 
     <div class="container">
 
-        <!-- WELCOME BANNER -->
-        <div class="welcome-banner">
-            <div class="banner-content">
-                <h2><i class="fas fa-flag"></i> Income & Livelihood Dashboard</h2>
-                <p>Prove whether training actually improved economic condition · SIH26135</p>
+        <div class="data-source-banner" id="dataSourceBanner">
+            <div class="ds-icon" id="dsIcon">🟢</div>
+            <div class="ds-content">
+                <div class="ds-title" id="dsTitle">Loading…</div>
+                <div class="ds-sub" id="dsSub">Connecting to Firestore</div>
             </div>
-            <div class="banner-stats">
-                <div>
-                    <strong id="bannerAvgIncome">₹0</strong>
-                    <span>Avg Income</span>
-                </div>
-                <div>
-                    <strong id="bannerGrowth">0%</strong>
-                    <span>Income Growth</span>
-                </div>
-                <div>
-                    <strong id="bannerImproved">0%</strong>
-                    <span>Income Improved</span>
-                </div>
-                <div>
-                    <strong id="bannerEarning">0%</strong>
-                    <span>Earning Rate</span>
-                </div>
+            <div class="ds-stats">
+                <div class="ds-stat"><strong id="dsTrainees">0</strong>Total</div>
+                <div class="ds-stat"><strong id="dsLiveCount">0</strong>Live</div>
+                <div class="ds-stat"><strong id="dsSampleCount">0</strong>Sample</div>
             </div>
         </div>
 
-        <!-- CORE KPI CARDS -->
+        <div class="welcome-banner">
+            <div>
+                <h2><i class="fas fa-flag"></i> Income & Livelihood Dashboard</h2>
+                <p>Prove whether training actually improved economic condition</p>
+            </div>
+            <div class="banner-stats">
+                <div><strong id="bannerAvgIncome">₹0</strong><span>Avg Income</span></div>
+                <div><strong id="bannerGrowth">0%</strong><span>Income Growth</span></div>
+                <div><strong id="bannerImproved">0%</strong><span>Income Improved</span></div>
+                <div><strong id="bannerEarning">0%</strong><span>Earning Rate</span></div>
+            </div>
+        </div>
+
         <div class="stats-row">
             <div class="stat-box">
                 <div class="stat-icon blue"><i class="fas fa-rupee-sign"></i></div>
@@ -926,13 +311,13 @@
             <div class="stat-box">
                 <div class="stat-icon orange"><i class="fas fa-history"></i></div>
                 <div class="stat-number" id="kpiBeforeIncome">₹0</div>
-                <div class="stat-label">Income Before Training</div>
+                <div class="stat-label">Income Before</div>
                 <span class="stat-trend neutral">–</span>
             </div>
             <div class="stat-box">
                 <div class="stat-icon green"><i class="fas fa-arrow-up"></i></div>
                 <div class="stat-number" id="kpiAfterIncome">₹0</div>
-                <div class="stat-label">Income After Training</div>
+                <div class="stat-label">Income After</div>
                 <span class="stat-trend up">↑ 0%</span>
             </div>
             <div class="stat-box">
@@ -944,7 +329,7 @@
             <div class="stat-box">
                 <div class="stat-icon rose"><i class="fas fa-percent"></i></div>
                 <div class="stat-number" id="kpiGrowthPct">0%</div>
-                <div class="stat-label">Income Growth %</div>
+                <div class="stat-label">Growth %</div>
                 <span class="stat-trend up">↑</span>
             </div>
             <div class="stat-box">
@@ -962,7 +347,7 @@
             <div class="stat-box">
                 <div class="stat-icon orange"><i class="fas fa-arrow-up"></i></div>
                 <div class="stat-number" id="kpiImprovementRate">0%</div>
-                <div class="stat-label">Income Improvement Rate</div>
+                <div class="stat-label">Income Improvement</div>
                 <span class="stat-trend up">↑</span>
             </div>
             <div class="stat-box">
@@ -973,7 +358,6 @@
             </div>
         </div>
 
-        <!-- INCOME GROWTH ANALYSIS (Before vs After) -->
         <div class="income-growth-card">
             <div class="before-after">
                 <div class="before">
@@ -993,18 +377,17 @@
             </div>
         </div>
 
-        <!-- INCOME GROWTH ANALYSIS DETAILS -->
         <div class="chart-grid">
             <div class="chart-card">
                 <div class="card-title"><i class="fas fa-chart-bar"></i> Income Growth Analysis</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;padding:4px 0;">
                     <div style="padding:8px;background:#f8fafc;border-radius:8px;">
                         <div style="color:#64748b;font-size:10px;">Avg Before</div>
-                        <div style="font-weight:700;color:#0b1a33;" id="analysisBefore">₹0</div>
+                        <div style="font-weight:700;" id="analysisBefore">₹0</div>
                     </div>
                     <div style="padding:8px;background:#f8fafc;border-radius:8px;">
                         <div style="color:#64748b;font-size:10px;">Avg After</div>
-                        <div style="font-weight:700;color:#0b1a33;" id="analysisAfter">₹0</div>
+                        <div style="font-weight:700;" id="analysisAfter">₹0</div>
                     </div>
                     <div style="padding:8px;background:#f8fafc;border-radius:8px;">
                         <div style="color:#64748b;font-size:10px;">Absolute Increase</div>
@@ -1015,10 +398,6 @@
                         <div style="font-weight:700;color:#16a34a;" id="analysisGrowthPct">+0%</div>
                     </div>
                     <div style="padding:8px;background:#f8fafc;border-radius:8px;">
-                        <div style="color:#64748b;font-size:10px;">Median Growth</div>
-                        <div style="font-weight:700;color:#0b1a33;" id="analysisMedianGrowth">+₹0</div>
-                    </div>
-                    <div style="padding:8px;background:#f8fafc;border-radius:8px;">
                         <div style="color:#64748b;font-size:10px;">% Increased</div>
                         <div style="font-weight:700;color:#16a34a;" id="analysisPctIncreased">0%</div>
                     </div>
@@ -1026,15 +405,11 @@
                         <div style="color:#64748b;font-size:10px;">% Decreased</div>
                         <div style="font-weight:700;color:#dc2626;" id="analysisPctDecreased">0%</div>
                     </div>
-                    <div style="padding:8px;background:#f8fafc;border-radius:8px;">
-                        <div style="color:#64748b;font-size:10px;">% No Change</div>
-                        <div style="font-weight:700;color:#64748b;" id="analysisPctNoChange">0%</div>
-                    </div>
                 </div>
             </div>
             <div class="chart-card">
                 <div class="card-title"><i class="fas fa-chart-pie"></i> Income Distribution</div>
-                <div class="donut-container" id="incomeDonut">
+                <div class="donut-container">
                     <div class="donut" id="incomeDonutChart">
                         <div class="donut-center">
                             <div class="num" id="incomeDonutTotal">0</div>
@@ -1046,14 +421,12 @@
             </div>
         </div>
 
-        <!-- LIVELIHOOD STATUS -->
         <div class="section-title">
             <i class="fas fa-briefcase"></i> Livelihood Status
             <span class="badge-count">Economic outcome types</span>
         </div>
         <div class="livelihood-grid" id="livelihoodGrid"></div>
 
-        <!-- INCOME GROWTH BY PROGRAM -->
         <div class="chart-grid">
             <div class="chart-card">
                 <div class="card-title"><i class="fas fa-graduation-cap"></i> Income Growth by Program</div>
@@ -1065,39 +438,6 @@
             </div>
         </div>
 
-        <!-- INCOME VS RELEVANCE -->
-        <div class="chart-grid">
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-bullseye"></i> Income vs Course Relevance</div>
-                <div class="bar-chart-container" id="relevanceChart"></div>
-            </div>
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-clock"></i> Income Sustainability (30/90/180/365 Days)</div>
-                <div class="bar-chart-container" id="sustainabilityChart"></div>
-            </div>
-        </div>
-
-        <!-- INCOME STABILITY -->
-        <div class="chart-grid">
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-chart-line"></i> Income Stability</div>
-                <div class="donut-container" id="stabilityDonut">
-                    <div class="donut" id="stabilityDonutChart">
-                        <div class="donut-center">
-                            <div class="num" id="stabilityDonutTotal">0</div>
-                            <div class="label">Trainees</div>
-                        </div>
-                    </div>
-                    <div class="donut-legend" id="stabilityLegend"></div>
-                </div>
-            </div>
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-arrow-down"></i> Income Loss / Decline Analysis</div>
-                <div class="bar-chart-container" id="declineChart"></div>
-            </div>
-        </div>
-
-        <!-- LIVELIHOOD IMPACT SCORE -->
         <div class="section-title">
             <i class="fas fa-star"></i> Livelihood Impact Score
             <span class="badge-count">Explainable scoring</span>
@@ -1112,36 +452,32 @@
             <div class="impact-score-breakdown" id="impactBreakdown"></div>
         </div>
 
-        <!-- ECONOMIC IMPACT -->
         <div class="economic-impact-card">
-            <div class="impact-content">
-                <h3><i class="fas fa-chart-line"></i> Economic Impact of Training</h3>
-                <div class="impact-grid">
-                    <div class="impact-item">
-                        <div class="label">Trainees Impacted</div>
-                        <div class="value" id="impactTrainees">0</div>
-                        <div class="sub">earning after training</div>
-                    </div>
-                    <div class="impact-item">
-                        <div class="label">Avg Monthly Increase</div>
-                        <div class="value" id="impactMonthlyIncrease">₹0</div>
-                        <div class="sub">per trainee</div>
-                    </div>
-                    <div class="impact-item">
-                        <div class="label">Additional Monthly Income</div>
-                        <div class="value" id="impactMonthlyTotal">₹0</div>
-                        <div class="sub">estimated total</div>
-                    </div>
-                    <div class="impact-item">
-                        <div class="label">Estimated Annual Income</div>
-                        <div class="value" id="impactAnnualTotal">₹0</div>
-                        <div class="sub">estimated total</div>
-                    </div>
+            <h3><i class="fas fa-chart-line"></i> Economic Impact of Training</h3>
+            <div class="impact-grid">
+                <div class="impact-item">
+                    <div class="label">Trainees Impacted</div>
+                    <div class="value" id="impactTrainees">0</div>
+                    <div class="sub">earning after training</div>
+                </div>
+                <div class="impact-item">
+                    <div class="label">Avg Monthly Increase</div>
+                    <div class="value" id="impactMonthlyIncrease">₹0</div>
+                    <div class="sub">per trainee</div>
+                </div>
+                <div class="impact-item">
+                    <div class="label">Additional Monthly Income</div>
+                    <div class="value" id="impactMonthlyTotal">₹0</div>
+                    <div class="sub">estimated total</div>
+                </div>
+                <div class="impact-item">
+                    <div class="label">Estimated Annual Income</div>
+                    <div class="value" id="impactAnnualTotal">₹0</div>
+                    <div class="sub">estimated total</div>
                 </div>
             </div>
         </div>
 
-        <!-- DETAILED TABLE -->
         <div class="table-container">
             <div class="table-header">
                 <h3><i class="fas fa-list"></i> Income Records <span class="count" id="recordCount">0</span></h3>
@@ -1169,29 +505,10 @@
             </div>
         </div>
 
-        <!-- AI INSIGHTS & RECOMMENDATIONS -->
-        <div class="section-title">
-            <i class="fas fa-robot"></i> AI Insights & Recommendations
-            <span class="badge-count">Decision intelligence</span>
-        </div>
-        <div class="chart-grid">
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i> Key Insights</div>
-                <div id="aiInsights" style="font-size:12px;color:#475569;line-height:1.8;"></div>
-            </div>
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-lightbulb" style="color:#2563eb;"></i> Policy Recommendations</div>
-                <div id="aiRecommendations" style="font-size:12px;color:#475569;line-height:1.8;"></div>
-            </div>
-        </div>
-
-        <!-- QUICK ACTIONS -->
         <div class="chart-card" style="padding:16px 20px; margin-bottom:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="font-size:14px; color:#0b1a33; display:flex; align-items:center; gap:8px; font-weight:700;">
-                    <i class="fas fa-bolt" style="color:#2563eb;"></i> Quick Actions
-                </h3>
-            </div>
+            <h3 style="font-size:14px; color:#0b1a33; display:flex; align-items:center; gap:8px; font-weight:700; margin-bottom:10px;">
+                <i class="fas fa-bolt" style="color:#2563eb;"></i> Quick Actions
+            </h3>
             <div class="quick-actions">
                 <a href="#" class="action-btn" onclick="exportFullReport(); return false;"><i class="fas fa-file-export"></i> Export Full Report</a>
                 <a href="#" class="action-btn" onclick="viewEconomicImpact(); return false;"><i class="fas fa-chart-line"></i> Economic Impact</a>
@@ -1205,81 +522,158 @@
 
 <script>
     // ============================================================
-    // STATE — real data only
+    // FIREBASE
     // ============================================================
-    let allRecords = [];
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    let db = null;
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    } catch (e) { console.warn('Firebase init failed:', e.message); }
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let allRecords = [];      // Merged (live + sample)
+    let liveCount = 0;
+    let sampleCount = 0;
     let stats = {};
-    let analyticsRaw = null;
+    let _govtOfficer = null;
 
     // ============================================================
-    // LOAD REAL DATA FROM BACKEND
+    // SAMPLE DATA — 30 records
     // ============================================================
-    async function loadAllData() {
-        try {
-            const [analyticsRes, traineesRes, employmentsRes] = await Promise.all([
-                apiCall('/api/govt/analytics'),
-                apiCall('/api/trainees'),
-                apiCall('/api/employments'),
-            ]);
+    const SAMPLE_RECORDS = [
+        { name: 'Ravi Kumar',     program: 'Welding & Fabrication',    provider: 'NTTF Bangalore',      district: 'Bangalore', state: 'Karnataka',    before: 0,     after: 22000, livelihood: 'Formal Employment' },
+        { name: 'Priya Sharma',   program: 'Data Entry Operations',     provider: 'NIIT Foundation',     district: 'Pune',      state: 'Maharashtra', before: 6000,  after: 18000, livelihood: 'Formal Employment' },
+        { name: 'Amit Patel',     program: 'Electrical Technician',     provider: 'IL&FS Skills',        district: 'Ahmedabad', state: 'Gujarat',     before: 0,     after: 19500, livelihood: 'Formal Employment' },
+        { name: 'Sunita Devi',    program: 'Beauty & Wellness',         provider: 'NIESBUD',             district: 'Patna',     state: 'Bihar',       before: 4000,  after: 14000, livelihood: 'Self-Employment' },
+        { name: 'Mohammed Aslam', program: 'Automotive Repair',         provider: 'TVS Training',        district: 'Chennai',   state: 'Tamil Nadu',  before: 0,     after: 24000, livelihood: 'Formal Employment' },
+        { name: 'Kavita Reddy',   program: 'Hospitality Management',    provider: 'IHM Hyderabad',       district: 'Hyderabad', state: 'Telangana',   before: 8000,  after: 26000, livelihood: 'Formal Employment' },
+        { name: 'Rajesh Singh',   program: 'Construction Supervision',  provider: 'CIDC',                district: 'Lucknow',   state: 'Uttar Pradesh', before: 0,   after: 21000, livelihood: 'Informal Employment' },
+        { name: 'Anita Kumari',   program: 'Sewing Machine Operation',  provider: 'Apparel Training',    district: 'Jaipur',    state: 'Rajasthan',   before: 3000,  after: 11000, livelihood: 'Self-Employment' },
+        { name: 'Vikram Joshi',   program: 'IT Helpdesk',               provider: 'NASSCOM Foundation',  district: 'Indore',    state: 'Madhya Pradesh', before: 0, after: 28000, livelihood: 'Formal Employment' },
+        { name: 'Deepa Nair',     program: 'Nursing Assistant',         provider: 'Apollo MedSkills',    district: 'Kochi',     state: 'Kerala',      before: 5000,  after: 23000, livelihood: 'Formal Employment' },
+        { name: 'Suresh Yadav',   program: 'Welding & Fabrication',     provider: 'NTTF Bangalore',      district: 'Bangalore', state: 'Karnataka',   before: 0,     after: 20500, livelihood: 'Formal Employment' },
+        { name: 'Meena Kumari',   program: 'Data Entry Operations',     provider: 'NIIT Foundation',     district: 'Pune',      state: 'Maharashtra', before: 7000,  after: 19000, livelihood: 'Formal Employment' },
+        { name: 'Karthik S',      program: 'Electrical Technician',     provider: 'IL&FS Skills',        district: 'Coimbatore',state: 'Tamil Nadu',  before: 0,     after: 20000, livelihood: 'Formal Employment' },
+        { name: 'Lakshmi Devi',   program: 'Beauty & Wellness',         provider: 'NIESBUD',             district: 'Varanasi',  state: 'Uttar Pradesh', before: 0,   after: 13000, livelihood: 'Self-Employment' },
+        { name: 'Arjun Mehta',    program: 'Automotive Repair',         provider: 'TVS Training',        district: 'Surat',     state: 'Gujarat',     before: 0,     after: 25000, livelihood: 'Formal Employment' },
+        { name: 'Divya Menon',    program: 'Hospitality Management',    provider: 'IHM Hyderabad',       district: 'Hyderabad', state: 'Telangana',   before: 9000,  after: 27000, livelihood: 'Formal Employment' },
+        { name: 'Ramesh Kumar',   program: 'Construction Supervision',  provider: 'CIDC',                district: 'Kanpur',    state: 'Uttar Pradesh', before: 0,   after: 18500, livelihood: 'Informal Employment' },
+        { name: 'Pooja Sharma',   program: 'IT Helpdesk',               provider: 'NASSCOM Foundation',  district: 'Bhopal',    state: 'Madhya Pradesh', before: 0, after: 26500, livelihood: 'Formal Employment' },
+        { name: 'Sneha Thomas',   program: 'Nursing Assistant',         provider: 'Apollo MedSkills',    district: 'Thiruvananthapuram', state: 'Kerala', before: 0, after: 24000, livelihood: 'Formal Employment' },
+        { name: 'Ganesh Patil',   program: 'Welding & Fabrication',     provider: 'NTTF Bangalore',      district: 'Mumbai',    state: 'Maharashtra', before: 5000,  after: 21500, livelihood: 'Formal Employment' },
+        { name: 'Rekha Verma',    program: 'Sewing Machine Operation',  provider: 'Apparel Training',    district: 'Agra',      state: 'Uttar Pradesh', before: 0,   after: 12000, livelihood: 'Self-Employment' },
+        { name: 'Naveen Kumar',   program: 'Electrical Technician',     provider: 'IL&FS Skills',        district: 'Mysore',    state: 'Karnataka',   before: 0,     after: 19500, livelihood: 'Formal Employment' },
+        { name: 'Ayesha Khan',    program: 'Data Entry Operations',     provider: 'NIIT Foundation',     district: 'Nagpur',    state: 'Maharashtra', before: 6000,  after: 17500, livelihood: 'Apprenticeship' },
+        { name: 'Suresh Reddy',   program: 'Automotive Repair',         provider: 'TVS Training',        district: 'Vijayawada',state: 'Andhra Pradesh', before: 0, after: 22000, livelihood: 'Formal Employment' },
+        { name: 'Nisha Gupta',    program: 'Beauty & Wellness',         provider: 'NIESBUD',             district: 'Delhi',     state: 'Delhi',       before: 0,     after: 16000, livelihood: 'Self-Employment' },
+        { name: 'Vinod Kumar',    program: 'Hospitality Management',    provider: 'IHM Hyderabad',       district: 'Goa',       state: 'Goa',         before: 7000,  after: 24000, livelihood: 'Formal Employment' },
+        { name: 'Pallavi Joshi',  program: 'Nursing Assistant',         provider: 'Apollo MedSkills',    district: 'Nashik',    state: 'Maharashtra', before: 0,     after: 22500, livelihood: 'Formal Employment' },
+        { name: 'Sanjay Verma',   program: 'Construction Supervision',  provider: 'CIDC',                district: 'Raipur',    state: 'Chhattisgarh', before: 0,   after: 17000, livelihood: 'Informal Employment' },
+        { name: 'Bhavna Patel',   program: 'IT Helpdesk',               provider: 'NASSCOM Foundation',  district: 'Rajkot',    state: 'Gujarat',     before: 0,     after: 25000, livelihood: 'Formal Employment' },
+        { name: 'Mohan Das',      program: 'Sewing Machine Operation',  provider: 'Apparel Training',    district: 'Kolkata',   state: 'West Bengal', before: 4000,  after: 13000, livelihood: 'Self-Employment' },
+    ];
 
-            analyticsRaw = analyticsRes.ok ? analyticsRes.data : {};
-            const trainees = (traineesRes.ok && Array.isArray(traineesRes.data)) ? traineesRes.data : [];
-            const employments = (employmentsRes.ok && Array.isArray(employmentsRes.data)) ? employmentsRes.data : [];
-
-            allRecords = trainees.map(t => {
-                // Find latest employment for this trainee
-                const empList = employments.filter(e => String(e.trainee_id) === String(t.id));
-                empList.sort((a, b) => (b.id || 0) - (a.id || 0));
-                const emp = empList[0] || null;
-
-                const beforeIncome = emp ? (emp.pre_training_income || 0) : 0;
-                const afterIncome = emp ? (emp.monthly_income || 0) : 0;
-
-                let livelihood = 'Not Currently Earning';
-                const empType = (emp?.employment_type || '').toLowerCase();
-                if (afterIncome > 0) {
-                    if (empType === 'self') livelihood = 'Self-Employment';
-                    else if (empType === 'intern' || empType === 'apprentice') livelihood = 'Apprenticeship';
-                    else livelihood = 'Formal Employment';
-                } else if (t.training_status === 'training') {
-                    livelihood = 'In Training';
-                } else {
-                    livelihood = 'Seeking Employment';
-                }
-
-                let stability = 'No Income';
-                if (afterIncome > 0) {
-                    stability = emp?.status === 'verified' ? 'Stable' : 'Irregular';
-                }
-
-                return {
-                    id: t.trainee_code || ('TRN' + t.id),
-                    backendId: t.id,
-                    name: t.full_name || 'Trainee',
-                    program: t.skills || t.qualification || 'N/A',
-                    provider: t.training_provider || 'N/A',
-                    district: t.district || 'N/A',
-                    beforeIncome: beforeIncome,
-                    afterIncome: afterIncome,
-                    livelihood: livelihood,
-                    courseRelevance: 'Medium',
-                    jobRelevance: emp?.job_relevance || 'Relevant',
-                    stability: stability,
-                };
-            });
-        } catch (e) {
-            console.error('Failed to load income data:', e);
-            analyticsRaw = {};
-            allRecords = [];
-        }
+    // ============================================================
+    // AUTH (read localStorage)
+    // ============================================================
+    function readGovtOfficer() {
+        _govtOfficer = {
+            name: localStorage.getItem('govtOfficerName') || 'Government Official',
+            accessLevel: localStorage.getItem('govtAccessLevel') || 'State',
+            department: localStorage.getItem('govtDepartment') || 'Skill Development',
+            email: localStorage.getItem('userEmail') || '',
+        };
+        return _govtOfficer;
     }
 
     // ============================================================
-    // CALCULATE INCOME STATISTICS
+    // LOAD: LIVE + SAMPLE MERGED
+    // ============================================================
+    async function loadAllData() {
+        const liveRecords = [];
+
+        // --- 1. Fetch live data from Firestore ---
+        if (db) {
+            try {
+                const traineesSnap = await db.collection('trainees').get();
+                const trainees = [];
+                traineesSnap.forEach(d => trainees.push({ _id: d.id, ...d.data() }));
+
+                trainees.forEach((t, index) => {
+                    const emp = t.employment || null;
+                    const beforeIncome = emp ? Number(emp.preTrainingIncome || emp.previousIncome || 0) : 0;
+                    const afterIncome = emp ? Number(emp.currentIncome || emp.monthlyIncome || 0) : 0;
+
+                    // Skip if no income data at all
+                    if (beforeIncome === 0 && afterIncome === 0) return;
+
+                    let livelihood = 'Not Currently Earning';
+                    const empType = (emp?.employmentType || emp?.status || '').toLowerCase();
+                    if (afterIncome > 0) {
+                        if (empType.includes('self')) livelihood = 'Self-Employment';
+                        else if (empType.includes('intern') || empType.includes('apprentice')) livelihood = 'Apprenticeship';
+                        else if (empType.includes('contract')) livelihood = 'Informal Employment';
+                        else livelihood = 'Formal Employment';
+                    } else if (t.trainingStatus === 'training' || (t.trainingProgress || 0) < 100) {
+                        livelihood = 'In Training';
+                    } else {
+                        livelihood = 'Seeking Employment';
+                    }
+
+                    liveRecords.push({
+                        id: t.traineeCode || ('TRN' + (t.uid ? t.uid.substring(0, 6) : index)),
+                        name: t.fullName || 'Trainee',
+                        program: t.skillTrade || t.trainingProgram || t.qualification || 'N/A',
+                        provider: t.trainingProvider || 'N/A',
+                        district: t.district || 'N/A',
+                        state: t.state || 'N/A',
+                        beforeIncome: beforeIncome,
+                        afterIncome: afterIncome,
+                        livelihood: livelihood,
+                        isSample: false,
+                    });
+                });
+            } catch (e) {
+                console.warn('Firestore load failed:', e.message);
+            }
+        }
+
+        // --- 2. Always add sample data ---
+        const sampleRecords = SAMPLE_RECORDS.map((s, i) => ({
+            id: 'SMP' + (i + 1).toString().padStart(3, '0'),
+            name: s.name,
+            program: s.program,
+            provider: s.provider,
+            district: s.district,
+            state: s.state,
+            beforeIncome: s.before,
+            afterIncome: s.after,
+            livelihood: s.livelihood,
+            isSample: true,
+        }));
+
+        // --- 3. Merge: live first, then sample ---
+        allRecords = [...liveRecords, ...sampleRecords];
+        liveCount = liveRecords.length;
+        sampleCount = sampleRecords.length;
+    }
+
+    // ============================================================
+    // CALCULATE STATS
     // ============================================================
     function calculateIncomeStats(records) {
         const total = records.length;
-
         const beforeIncomes = records.map(r => r.beforeIncome).filter(i => i > 0);
         const afterIncomes = records.map(r => r.afterIncome).filter(i => i > 0);
 
@@ -1290,14 +684,12 @@
         const medianAfter = sortedAfter.length > 0 ? sortedAfter[Math.floor(sortedAfter.length / 2)] : 0;
 
         const incomeGrowth = avgAfter - avgBefore;
-        const growthPct = avgBefore > 0 ? Math.round((incomeGrowth / avgBefore) * 100) : 0;
+        const growthPct = avgBefore > 0 ? Math.round((incomeGrowth / avgBefore) * 100) : (avgAfter > 0 ? 100 : 0);
 
         const earning = records.filter(r => r.afterIncome > 0).length;
         const earningRate = total > 0 ? Math.round((earning / total) * 100) : 0;
 
-        const selfEmployed = records.filter(r =>
-            r.livelihood === 'Self-Employment' || r.livelihood === 'Entrepreneurship' || r.livelihood === 'Freelancing'
-        ).length;
+        const selfEmployed = records.filter(r => r.livelihood === 'Self-Employment').length;
         const selfEmploymentRate = earning > 0 ? Math.round((selfEmployed / earning) * 100) : 0;
 
         const improved = records.filter(r => r.afterIncome > r.beforeIncome).length;
@@ -1308,43 +700,35 @@
 
         const increased = records.filter(r => r.afterIncome > r.beforeIncome).length;
         const decreased = records.filter(r => r.afterIncome < r.beforeIncome && r.afterIncome > 0).length;
-        const noChange = records.filter(r => r.afterIncome === r.beforeIncome && r.afterIncome > 0).length;
-        const lostIncome = records.filter(r => r.afterIncome === 0).length;
 
         const pctIncreased = total > 0 ? Math.round((increased / total) * 100) : 0;
         const pctDecreased = total > 0 ? Math.round((decreased / total) * 100) : 0;
-        const pctNoChange = total > 0 ? Math.round((noChange / total) * 100) : 0;
 
         const distribution = {
             'No Income': records.filter(r => r.afterIncome === 0).length,
-            '₹0-5K': records.filter(r => r.afterIncome > 0 && r.afterIncome <= 5000).length,
-            '₹5K-10K': records.filter(r => r.afterIncome > 5000 && r.afterIncome <= 10000).length,
+            '₹0-10K': records.filter(r => r.afterIncome > 0 && r.afterIncome <= 10000).length,
             '₹10K-20K': records.filter(r => r.afterIncome > 10000 && r.afterIncome <= 20000).length,
             '₹20K-30K': records.filter(r => r.afterIncome > 20000 && r.afterIncome <= 30000).length,
-            '₹30K-50K': records.filter(r => r.afterIncome > 30000 && r.afterIncome <= 50000).length,
-            '₹50K+': records.filter(r => r.afterIncome > 50000).length
+            '₹30K+': records.filter(r => r.afterIncome > 30000).length,
         };
 
         const livelihoodStatus = {};
-        records.forEach(r => {
-            livelihoodStatus[r.livelihood] = (livelihoodStatus[r.livelihood] || 0) + 1;
-        });
+        records.forEach(r => { livelihoodStatus[r.livelihood] = (livelihoodStatus[r.livelihood] || 0) + 1; });
 
         const programGrowth = {};
         records.forEach(r => {
             if (r.program && r.program !== 'N/A') {
-                if (!programGrowth[r.program]) programGrowth[r.program] = { before: 0, after: 0, count: 0, improved: 0 };
+                if (!programGrowth[r.program]) programGrowth[r.program] = { before: 0, after: 0, count: 0 };
                 programGrowth[r.program].before += r.beforeIncome;
                 programGrowth[r.program].after += r.afterIncome;
                 programGrowth[r.program].count++;
-                if (r.afterIncome > r.beforeIncome) programGrowth[r.program].improved++;
             }
         });
-        Object.keys(programGrowth).forEach(key => {
-            const p = programGrowth[key];
+        Object.keys(programGrowth).forEach(k => {
+            const p = programGrowth[k];
             p.avgBefore = Math.round(p.before / p.count);
             p.avgAfter = Math.round(p.after / p.count);
-            p.growthPct = p.avgBefore > 0 ? Math.round(((p.avgAfter - p.avgBefore) / p.avgBefore) * 100) : 0;
+            p.growthPct = p.avgBefore > 0 ? Math.round(((p.avgAfter - p.avgBefore) / p.avgBefore) * 100) : (p.avgAfter > 0 ? 100 : 0);
         });
 
         const regionGrowth = {};
@@ -1356,46 +740,14 @@
                 regionGrowth[r.district].count++;
             }
         });
-        Object.keys(regionGrowth).forEach(key => {
-            const p = regionGrowth[key];
+        Object.keys(regionGrowth).forEach(k => {
+            const p = regionGrowth[k];
             p.avgBefore = Math.round(p.before / p.count);
             p.avgAfter = Math.round(p.after / p.count);
-            p.growthPct = p.avgBefore > 0 ? Math.round(((p.avgAfter - p.avgBefore) / p.avgBefore) * 100) : 0;
+            p.growthPct = p.avgBefore > 0 ? Math.round(((p.avgAfter - p.avgBefore) / p.avgBefore) * 100) : (p.avgAfter > 0 ? 100 : 0);
         });
 
-        const relevanceGrowth = {};
-        records.forEach(r => {
-            if (!relevanceGrowth[r.courseRelevance]) relevanceGrowth[r.courseRelevance] = { total: 0, earning: 0, beforeSum: 0, afterSum: 0 };
-            relevanceGrowth[r.courseRelevance].total++;
-            if (r.afterIncome > 0) {
-                relevanceGrowth[r.courseRelevance].earning++;
-                relevanceGrowth[r.courseRelevance].beforeSum += r.beforeIncome;
-                relevanceGrowth[r.courseRelevance].afterSum += r.afterIncome;
-            }
-        });
-        Object.keys(relevanceGrowth).forEach(key => {
-            const r = relevanceGrowth[key];
-            r.employmentRate = r.total > 0 ? Math.round((r.earning / r.total) * 100) : 0;
-            const avgB = r.earning > 0 ? r.beforeSum / r.earning : 0;
-            const avgA = r.earning > 0 ? r.afterSum / r.earning : 0;
-            r.growthPct = avgB > 0 ? Math.round(((avgA - avgB) / avgB) * 100) : 0;
-        });
-
-        const stability = {};
-        records.forEach(r => {
-            stability[r.stability] = (stability[r.stability] || 0) + 1;
-        });
-
-        const decline = {
-            'Increased': increased,
-            'Unchanged': noChange,
-            'Decreased': decreased,
-            'Lost Employment': lostIncome,
-            'Returned to Unemployment': records.filter(r => r.beforeIncome > 0 && r.afterIncome === 0).length,
-            'Business Closed': 0
-        };
-
-        const totalIncrease = records.reduce((sum, r) => sum + Math.max(0, r.afterIncome - r.beforeIncome), 0);
+        const totalIncrease = records.reduce((s, r) => s + Math.max(0, r.afterIncome - r.beforeIncome), 0);
         const avgIncrease = earning > 0 ? Math.round(totalIncrease / earning) : 0;
         const monthlyTotal = totalIncrease;
         const annualTotal = monthlyTotal * 12;
@@ -1404,24 +756,21 @@
             employment: { score: Math.min(100, earningRate), weight: 20, label: 'Earning Rate' },
             incomeGrowth: { score: Math.min(100, Math.max(0, growthPct)), weight: 25, label: 'Income Growth' },
             improvement: { score: improvementRate, weight: 20, label: 'Income Improvement' },
-            stability: { score: Math.min(100, Math.round(((stability['Stable'] || 0) + (stability['Increasing'] || 0)) / Math.max(total, 1) * 100)), weight: 15, label: 'Income Stability' },
-            relevance: { score: Math.min(100, Math.round(((relevanceGrowth['High']?.employmentRate || 0)) * 0.6 + ((relevanceGrowth['Medium']?.employmentRate || 0)) * 0.3 + 20)), weight: 20, label: 'Course Relevance' }
+            stability: { score: Math.min(100, Math.round((earning / Math.max(total, 1)) * 100)), weight: 15, label: 'Income Stability' },
+            selfEmployment: { score: Math.min(100, selfEmploymentRate * 2), weight: 20, label: 'Self-Employment' },
         };
-
-        let weightedScore = 0;
-        Object.keys(scoreComponents).forEach(key => {
-            const c = scoreComponents[key];
-            weightedScore += c.score * (c.weight / 100);
-        });
-        const livelihoodScore = Math.round(weightedScore);
+        let weighted = 0;
+        Object.keys(scoreComponents).forEach(k => weighted += scoreComponents[k].score * (scoreComponents[k].weight / 100));
+        const livelihoodScore = Math.round(weighted);
 
         return {
             total, avgBefore, avgAfter, medianAfter, incomeGrowth, growthPct,
             earningRate, selfEmploymentRate, improvementRate, noIncomeRate,
-            pctIncreased, pctDecreased, pctNoChange,
+            pctIncreased, pctDecreased,
             distribution, livelihoodStatus, programGrowth, regionGrowth,
-            relevanceGrowth, stability, decline, avgIncrease, monthlyTotal, annualTotal,
-            livelihoodScore, scoreComponents, earning, selfEmployed, improved, noIncome
+            avgIncrease, monthlyTotal, annualTotal,
+            livelihoodScore, scoreComponents,
+            earning, selfEmployed, improved, noIncome,
         };
     }
 
@@ -1437,34 +786,40 @@
     }
 
     function renderAll() {
-        renderBanner(stats);
-        renderKPIs(stats);
-        renderIncomeGrowth(stats);
-        renderAnalysisDetails(stats);
-        renderIncomeDistribution(stats);
-        renderLivelihoodStatus(stats);
-        renderProgramGrowth(stats);
-        renderRegionGrowth(stats);
-        renderRelevanceChart(stats);
-        renderSustainability();
-        renderStability(stats);
-        renderDecline(stats);
-        renderImpactScore(stats);
-        renderEconomicImpact(stats);
-        renderTable(stats);
-        renderAIInsights(stats);
-        const rc = document.getElementById('recordCount');
-        if (rc) rc.textContent = allRecords.length;
+        renderDataSourceBanner();
+        renderBanner();
+        renderKPIs();
+        renderIncomeGrowth();
+        renderAnalysisDetails();
+        renderIncomeDistribution();
+        renderLivelihoodStatus();
+        renderProgramGrowth();
+        renderRegionGrowth();
+        renderImpactScore();
+        renderEconomicImpact();
+        renderTable();
+        document.getElementById('recordCount').textContent = allRecords.length;
     }
 
-    function renderBanner(stats) {
+    function renderDataSourceBanner() {
+        const banner = document.getElementById('dataSourceBanner');
+        banner.className = 'data-source-banner';
+        document.getElementById('dsIcon').textContent = '🔀';
+        document.getElementById('dsTitle').textContent = 'Combined Dataset: Live + Sample';
+        document.getElementById('dsSub').textContent = `${liveCount} live Firestore record(s) + ${sampleCount} sample records = ${allRecords.length} total`;
+        document.getElementById('dsTrainees').textContent = allRecords.length;
+        document.getElementById('dsLiveCount').textContent = liveCount;
+        document.getElementById('dsSampleCount').textContent = sampleCount;
+    }
+
+    function renderBanner() {
         document.getElementById('bannerAvgIncome').textContent = '₹' + (stats.avgAfter >= 1000 ? (stats.avgAfter / 1000).toFixed(1) + 'K' : stats.avgAfter);
         document.getElementById('bannerGrowth').textContent = stats.growthPct + '%';
         document.getElementById('bannerImproved').textContent = stats.improvementRate + '%';
         document.getElementById('bannerEarning').textContent = stats.earningRate + '%';
     }
 
-    function renderKPIs(stats) {
+    function renderKPIs() {
         document.getElementById('kpiAvgIncome').textContent = '₹' + stats.avgAfter.toLocaleString();
         document.getElementById('kpiAvgIncomeTrend').textContent = '↑ ' + stats.growthPct + '%';
         document.getElementById('kpiMedianIncome').textContent = '₹' + stats.medianAfter.toLocaleString();
@@ -1479,29 +834,27 @@
         document.getElementById('kpiNoIncomeRate').textContent = stats.noIncomeRate + '%';
     }
 
-    function renderIncomeGrowth(stats) {
+    function renderIncomeGrowth() {
         document.getElementById('beforeValue').textContent = '₹' + stats.avgBefore.toLocaleString();
         document.getElementById('afterValue').textContent = '₹' + stats.avgAfter.toLocaleString();
         document.getElementById('growthValue').textContent = (stats.incomeGrowth >= 0 ? '+₹' : '-₹') + Math.abs(stats.incomeGrowth).toLocaleString();
         document.getElementById('growthPctValue').textContent = (stats.growthPct >= 0 ? '+' : '') + stats.growthPct + '% improvement';
     }
 
-    function renderAnalysisDetails(stats) {
+    function renderAnalysisDetails() {
         document.getElementById('analysisBefore').textContent = '₹' + stats.avgBefore.toLocaleString();
         document.getElementById('analysisAfter').textContent = '₹' + stats.avgAfter.toLocaleString();
         document.getElementById('analysisIncrease').textContent = '+₹' + Math.max(stats.incomeGrowth, 0).toLocaleString();
         document.getElementById('analysisGrowthPct').textContent = (stats.growthPct >= 0 ? '+' : '') + stats.growthPct + '%';
-        document.getElementById('analysisMedianGrowth').textContent = '+₹' + Math.max(stats.medianAfter - stats.avgBefore, 0).toLocaleString();
         document.getElementById('analysisPctIncreased').textContent = stats.pctIncreased + '%';
         document.getElementById('analysisPctDecreased').textContent = stats.pctDecreased + '%';
-        document.getElementById('analysisPctNoChange').textContent = stats.pctNoChange + '%';
     }
 
-    function renderIncomeDistribution(stats) {
+    function renderIncomeDistribution() {
         const container = document.getElementById('incomeDonutChart');
         const legend = document.getElementById('incomeLegend');
         const dist = stats.distribution;
-        const colors = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#2563eb', '#7c3aed', '#0d9488'];
+        const colors = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#2563eb'];
         const labels = Object.keys(dist);
         const values = Object.values(dist);
         const totalVal = values.reduce((a, b) => a + b, 0) || 1;
@@ -1514,13 +867,13 @@
         }
 
         let gradient = '';
-        let currentAngle = 0;
+        let angle = 0;
         values.forEach((val, i) => {
             const pct = (val / totalVal) * 100;
             if (pct > 0) {
-                const angle = (pct / 100) * 360;
-                gradient += `${colors[i]} ${currentAngle}deg ${currentAngle + angle}deg, `;
-                currentAngle += angle;
+                const deg = (pct / 100) * 360;
+                gradient += `${colors[i]} ${angle}deg ${angle + deg}deg, `;
+                angle += deg;
             }
         });
         gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
@@ -1537,22 +890,13 @@
         }).join('');
     }
 
-    function renderLivelihoodStatus(stats) {
+    function renderLivelihoodStatus() {
         const container = document.getElementById('livelihoodGrid');
         const statusIcons = {
-            'Formal Employment': '💼',
-            'Informal Employment': '🔧',
-            'Self-Employment': '🚀',
-            'Entrepreneurship': '🏢',
-            'Apprenticeship': '🎓',
-            'Freelancing': '💻',
-            'Family Business': '🏪',
-            'Agriculture / Allied Livelihood': '🌾',
-            'Seeking Employment': '🔍',
-            'In Training': '📚',
-            'Not Currently Earning': '❌'
+            'Formal Employment': '💼', 'Informal Employment': '🔧', 'Self-Employment': '🚀',
+            'Apprenticeship': '🎓', 'In Training': '📚', 'Seeking Employment': '🔍', 'Not Currently Earning': '❌',
         };
-        const statusOrder = ['Formal Employment', 'Self-Employment', 'Entrepreneurship', 'Freelancing', 'Informal Employment', 'Apprenticeship', 'In Training', 'Family Business', 'Seeking Employment', 'Not Currently Earning'];
+        const statusOrder = ['Formal Employment', 'Self-Employment', 'Informal Employment', 'Apprenticeship', 'In Training', 'Seeking Employment', 'Not Currently Earning'];
 
         container.innerHTML = statusOrder.map(status => {
             const count = stats.livelihoodStatus[status] || 0;
@@ -1565,26 +909,22 @@
         }).join('');
     }
 
-    function renderProgramGrowth(stats) {
+    function renderProgramGrowth() {
         const container = document.getElementById('programGrowthChart');
         const data = Object.keys(stats.programGrowth).map(name => ({
             name,
             growthPct: stats.programGrowth[name].growthPct,
             avgAfter: stats.programGrowth[name].avgAfter,
-        }));
-        data.sort((a, b) => b.growthPct - a.growthPct);
-        const top = data.slice(0, 5);
+        })).sort((a, b) => b.growthPct - a.growthPct).slice(0, 5);
 
-        if (top.length === 0) {
-            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No program data yet</div>`;
+        if (data.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No program data yet</div>`;
             return;
         }
 
-        const maxGrowth = Math.max(...top.map(r => r.growthPct), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = top.map(r => {
-            const height = Math.max((r.growthPct / maxGrowth) * maxHeight, 12);
+        const maxGrowth = Math.max(...data.map(r => r.growthPct), 1);
+        container.innerHTML = data.map(r => {
+            const height = Math.max((r.growthPct / maxGrowth) * 120, 12);
             const color = r.growthPct >= 60 ? '#22c55e' : r.growthPct >= 30 ? '#eab308' : '#ef4444';
             return `<div class="bar-group">
                 <div class="bar" style="height:${height}px;background:${color};">
@@ -1598,26 +938,22 @@
         }).join('');
     }
 
-    function renderRegionGrowth(stats) {
+    function renderRegionGrowth() {
         const container = document.getElementById('regionGrowthChart');
         const data = Object.keys(stats.regionGrowth).map(name => ({
             name,
             growthPct: stats.regionGrowth[name].growthPct,
             avgAfter: stats.regionGrowth[name].avgAfter,
-        }));
-        data.sort((a, b) => b.growthPct - a.growthPct);
-        const top = data.slice(0, 5);
+        })).sort((a, b) => b.growthPct - a.growthPct).slice(0, 5);
 
-        if (top.length === 0) {
-            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No region data yet</div>`;
+        if (data.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No region data yet</div>`;
             return;
         }
 
-        const maxGrowth = Math.max(...top.map(r => r.growthPct), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = top.map(r => {
-            const height = Math.max((r.growthPct / maxGrowth) * maxHeight, 12);
+        const maxGrowth = Math.max(...data.map(r => r.growthPct), 1);
+        container.innerHTML = data.map(r => {
+            const height = Math.max((r.growthPct / maxGrowth) * 120, 12);
             const color = r.growthPct >= 60 ? '#22c55e' : r.growthPct >= 30 ? '#eab308' : '#ef4444';
             return `<div class="bar-group">
                 <div class="bar" style="height:${height}px;background:${color};">
@@ -1631,177 +967,50 @@
         }).join('');
     }
 
-    function renderRelevanceChart(stats) {
-        const container = document.getElementById('relevanceChart');
-        const rel = stats.relevanceGrowth;
-        const categories = ['High', 'Medium', 'Low'];
-        const colors = ['#22c55e', '#eab308', '#ef4444'];
-
-        const hasData = categories.some(c => (rel[c] || {}).total > 0);
-        if (!hasData) {
-            container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No relevance data yet</div>`;
-            return;
-        }
-
-        container.innerHTML = categories.map((cat, i) => {
-            const data = rel[cat] || { employmentRate: 0, growthPct: 0, total: 0 };
-            const height = Math.max((Math.max(data.growthPct, 0) / 100) * 120, 12);
-            return `<div class="bar-group">
-                <div class="bar" style="height:${height}px;background:${data.total > 0 ? colors[i] : '#e2e8f0'};">
-                    <span class="bar-value">${data.employmentRate}%</span>
-                </div>
-                <div class="bar-label">
-                    ${cat} Relevance
-                    <span class="count">${data.total} trainees</span>
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function renderSustainability() {
-        const container = document.getElementById('sustainabilityChart');
-        // Based on retention periods — fetch real data from API response
-        const retentionData = analyticsRaw?.retention || {};
-
-        const sustainability = [
-            { label: 'Initial', value: analyticsRaw?.income?.avg_previous || 0, color: '#2563eb' },
-            { label: '30 Days', value: analyticsRaw?.income?.avg_current || 0, color: '#22c55e' },
-            { label: '90 Days', value: analyticsRaw?.income?.avg_current || 0, color: '#22c55e' },
-            { label: '180 Days', value: analyticsRaw?.income?.avg_current || 0, color: '#eab308' },
-            { label: '365 Days', value: analyticsRaw?.income?.avg_current || 0, color: '#16a34a' }
-        ];
-
-        const maxVal = Math.max(...sustainability.map(s => s.value), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = sustainability.map(s => {
-            const height = Math.max((s.value / maxVal) * maxHeight, 12);
-            return `<div class="bar-group">
-                <div class="bar" style="height:${height}px;background:${s.color};">
-                    <span class="bar-value">₹${(s.value / 1000).toFixed(1)}K</span>
-                </div>
-                <div class="bar-label">${s.label}</div>
-            </div>`;
-        }).join('');
-    }
-
-    function renderStability(stats) {
-        const container = document.getElementById('stabilityDonutChart');
-        const legend = document.getElementById('stabilityLegend');
-        const stab = stats.stability;
-        const colors = {
-            'Stable': '#22c55e',
-            'Increasing': '#2563eb',
-            'Decreasing': '#eab308',
-            'Irregular': '#f97316',
-            'Seasonal': '#7c3aed',
-            'No Income': '#dc2626'
-        };
-        const labels = Object.keys(stab);
-        const values = Object.values(stab);
-        const totalVal = values.reduce((a, b) => a + b, 0) || 1;
-
-        if (stats.total === 0) {
-            container.style.background = '#e2e8f0';
-            document.getElementById('stabilityDonutTotal').textContent = '0';
-            legend.innerHTML = `<div style="color:#94a3b8;font-size:11px;padding:8px;">No data</div>`;
-            return;
-        }
-
-        let gradient = '';
-        let currentAngle = 0;
-        labels.forEach((label, i) => {
-            const pct = (values[i] / totalVal) * 100;
-            if (pct > 0) {
-                const angle = (pct / 100) * 360;
-                gradient += `${colors[label] || '#94a3b8'} ${currentAngle}deg ${currentAngle + angle}deg, `;
-                currentAngle += angle;
-            }
-        });
-        gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
-
-        container.style.background = `conic-gradient(${gradient})`;
-        document.getElementById('stabilityDonutTotal').textContent = stats.total;
-
-        legend.innerHTML = labels.map((label, i) => {
-            const pct = totalVal > 0 ? Math.round((values[i] / totalVal) * 100) : 0;
-            return `<div class="legend-item">
-                <div class="dot" style="background:${colors[label] || '#94a3b8'};"></div>
-                ${label} <span class="pct">${values[i]} (${pct}%)</span>
-            </div>`;
-        }).join('');
-    }
-
-    function renderDecline(stats) {
-        const container = document.getElementById('declineChart');
-        const data = [
-            { label: 'Increased', value: stats.decline['Increased'], color: '#22c55e' },
-            { label: 'Unchanged', value: stats.decline['Unchanged'], color: '#94a3b8' },
-            { label: 'Decreased', value: stats.decline['Decreased'], color: '#eab308' },
-            { label: 'Lost Job', value: stats.decline['Lost Employment'], color: '#dc2626' },
-            { label: 'Unemployed', value: stats.decline['Returned to Unemployment'], color: '#991b1b' }
-        ];
-        const maxVal = Math.max(...data.map(d => d.value), 1);
-        const maxHeight = 120;
-
-        container.innerHTML = data.map(d => {
-            const height = Math.max((d.value / maxVal) * maxHeight, 12);
-            return `<div class="bar-group">
-                <div class="bar" style="height:${height}px;background:${d.color};">
-                    <span class="bar-value">${d.value}</span>
-                </div>
-                <div class="bar-label">${d.label}</div>
-            </div>`;
-        }).join('');
-    }
-
-    function renderImpactScore(stats) {
+    function renderImpactScore() {
         const score = stats.livelihoodScore;
         const ring = document.getElementById('impactScoreRing');
         document.getElementById('impactScore').textContent = score;
-
         const color = score >= 75 ? '#22c55e' : score >= 50 ? '#eab308' : '#dc2626';
         ring.style.background = `conic-gradient(${color} 0deg ${score * 3.6}deg, #e2e8f0 ${score * 3.6}deg 360deg)`;
 
-        const breakdown = document.getElementById('impactBreakdown');
-        const components = stats.scoreComponents;
-        breakdown.innerHTML = Object.keys(components).map(key => {
-            const c = components[key];
-            const color = c.score >= 75 ? '#22c55e' : c.score >= 50 ? '#eab308' : '#dc2626';
+        document.getElementById('impactBreakdown').innerHTML = Object.keys(stats.scoreComponents).map(key => {
+            const c = stats.scoreComponents[key];
+            const col = c.score >= 75 ? '#22c55e' : c.score >= 50 ? '#eab308' : '#dc2626';
             return `<div class="breakdown-item">
                 <span>${c.label} (${c.weight}%)</span>
                 <span class="score-value">${Math.round(c.score)}/100</span>
-                <div class="score-bar"><div class="fill" style="width:${c.score}%;background:${color};"></div></div>
+                <div class="score-bar"><div class="fill" style="width:${c.score}%;background:${col};"></div></div>
             </div>`;
         }).join('');
     }
 
-    function renderEconomicImpact(stats) {
+    function renderEconomicImpact() {
         document.getElementById('impactTrainees').textContent = stats.earning;
         document.getElementById('impactMonthlyIncrease').textContent = '₹' + stats.avgIncrease.toLocaleString();
         document.getElementById('impactMonthlyTotal').textContent = '₹' + (stats.monthlyTotal >= 10000000 ? (stats.monthlyTotal / 10000000).toFixed(2) + ' Cr' : stats.monthlyTotal >= 100000 ? (stats.monthlyTotal / 100000).toFixed(2) + ' L' : stats.monthlyTotal.toLocaleString());
         document.getElementById('impactAnnualTotal').textContent = '₹' + (stats.annualTotal >= 10000000 ? (stats.annualTotal / 10000000).toFixed(2) + ' Cr' : stats.annualTotal >= 100000 ? (stats.annualTotal / 100000).toFixed(2) + ' L' : stats.annualTotal.toLocaleString());
     }
 
-    function renderTable(stats) {
+    function renderTable() {
         const tbody = document.getElementById('tableBody');
 
         if (allRecords.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">
-                <i class="fas fa-rupee-sign" style="font-size:40px;display:block;margin-bottom:10px;color:#c7d2fe;"></i>
-                <h3 style="color:#475569;font-size:16px;margin-bottom:4px;">No Income Records Yet</h3>
-                <p style="font-size:13px;">Income data will appear here once trainees report employment with income.</p>
-            </td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fas fa-rupee-sign"></i><h3>No Income Records Yet</h3></div></td></tr>`;
             return;
         }
 
-        tbody.innerHTML = allRecords.slice(0, 15).map(r => {
+        tbody.innerHTML = allRecords.map(r => {
             const growth = r.afterIncome - r.beforeIncome;
-            const growthPct = r.beforeIncome > 0 ? Math.round((growth / r.beforeIncome) * 100) : 0;
+            const growthPct = r.beforeIncome > 0 ? Math.round((growth / r.beforeIncome) * 100) : (growth > 0 ? 100 : 0);
             const growthClass = growth > 0 ? 'positive' : growth < 0 ? 'negative' : 'neutral';
             const growthLabel = growth > 0 ? `+₹${growth.toLocaleString()} (+${growthPct}%)` : growth < 0 ? `-₹${Math.abs(growth).toLocaleString()}` : 'No change';
-            return `<tr>
-                <td><strong>${escapeHtml(r.name)}</strong></td>
+            const rowClass = r.isSample ? 'sample-row' : '';
+            const sourceTag = r.isSample
+                ? '<span class="source-tag sample">Sample</span>'
+                : '<span class="source-tag live">Live</span>';
+            return `<tr class="${rowClass}">
+                <td><strong>${escapeHtml(r.name)}</strong>${sourceTag}</td>
                 <td>${escapeHtml(r.program)}</td>
                 <td>${escapeHtml(r.provider)}</td>
                 <td>${escapeHtml(r.district)}</td>
@@ -1813,62 +1022,19 @@
         }).join('');
     }
 
-    function renderAIInsights(stats) {
-        const insights = document.getElementById('aiInsights');
-        const recs = document.getElementById('aiRecommendations');
-
-        let insightHtml = '';
-        let recHtml = '';
-
-        if (stats.total === 0) {
-            insightHtml = `<div style="padding:6px 0;">📊 No data yet — insights will appear once trainees register and report employment.</div>`;
-            recHtml = `<div style="padding:6px 0;">📌 Focus on getting initial trainee and employment data flowing into the system.</div>`;
-            insights.innerHTML = insightHtml;
-            recs.innerHTML = recHtml;
-            return;
-        }
-
-        const lowGrowthPrograms = Object.keys(stats.programGrowth).filter(p => stats.programGrowth[p].growthPct < 30);
-        if (lowGrowthPrograms.length > 0) {
-            insightHtml += `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">⚠️ <strong>${escapeHtml(lowGrowthPrograms[0])}</strong> shows low income improvement (${stats.programGrowth[lowGrowthPrograms[0]].growthPct}%).</div>`;
-            recHtml += `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">📌 Review curriculum alignment for <strong>${escapeHtml(lowGrowthPrograms[0])}</strong>.</div>`;
-        }
-
-        if (stats.earningRate >= 70) {
-            insightHtml += `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">✅ Earning rate is <strong>${stats.earningRate}%</strong> — strong employment outcome.</div>`;
-        } else {
-            insightHtml += `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">⚠️ Earning rate is <strong>${stats.earningRate}%</strong> — needs improvement.</div>`;
-            recHtml += `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9;">📈 Increase placement support for unemployed trainees.</div>`;
-        }
-
-        if (stats.selfEmploymentRate > 20) {
-            insightHtml += `<div style="padding:6px 0;">💼 Self-employment rate is <strong>${stats.selfEmploymentRate}%</strong> — entrepreneurship is growing.</div>`;
-            recHtml += `<div style="padding:6px 0;">🏦 Improve access to finance for self-employed trainees.</div>`;
-        }
-
-        if (!recHtml) recHtml = `<div style="padding:6px 0;">✅ Programs are performing well. Continue monitoring.</div>`;
-        if (!insightHtml) insightHtml = `<div style="padding:6px 0;">📊 Insufficient data for detailed insights.</div>`;
-
-        insights.innerHTML = insightHtml;
-        recs.innerHTML = recHtml;
-    }
-
     function updateSidebar() {
-        let govData = null;
-        try { govData = JSON.parse(localStorage.getItem('governmentData') || 'null'); } catch (e) {}
-        const initial = govData?.name ? govData.name.charAt(0).toUpperCase() : 'G';
-        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        set('sidebarAvatar', initial);
-        set('sidebarName', govData?.name || 'Government');
-        set('sidebarRole', govData?.role || 'Admin');
-        set('headerAvatar', initial);
-        set('headerName', govData?.name || 'Government');
+        const name = _govtOfficer?.name || 'Government';
+        const role = _govtOfficer?.accessLevel ? `Admin · ${_govtOfficer.accessLevel}` : 'Admin';
+        const initial = name.charAt(0).toUpperCase();
+        document.getElementById('sidebarAvatar').textContent = initial;
+        document.getElementById('sidebarName').textContent = name;
+        document.getElementById('sidebarRole').textContent = role;
+        document.getElementById('headerAvatar').textContent = initial;
+        document.getElementById('headerName').textContent = name;
     }
 
     function updateNotificationBadge() {
-        const noIncome = allRecords.filter(r => r.afterIncome === 0).length;
-        const el = document.getElementById('notifBadge');
-        if (el) el.textContent = noIncome;
+        document.getElementById('notifBadge').textContent = stats.noIncome || 0;
     }
 
     // ============================================================
@@ -1876,32 +1042,42 @@
     // ============================================================
     function escapeHtml(s) {
         if (s === undefined || s === null) return '';
-        return String(s)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     function updateDate() {
-        const now = new Date();
-        const el = document.getElementById('dateDisplay');
-        if (el) el.textContent = now.toLocaleDateString('en-US', {
+        document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', {
             weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
         });
     }
 
-    function showNotifications() {
-        const noIncome = allRecords.filter(r => r.afterIncome === 0).length;
-        const lowGrowth = allRecords.filter(r => r.afterIncome > 0 && r.afterIncome <= r.beforeIncome).length;
-        alert(`📬 Notifications\n\n• ${noIncome} trainees have no income\n• ${lowGrowth} trainees have stagnant income\n• ${allRecords.length} total records`);
+    async function refreshData() {
+        await loadAndRender();
+        showToast(`🔄 Refreshed — ${liveCount} live + ${sampleCount} sample`);
     }
 
-    function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `position:fixed;bottom:30px;right:30px;background:white;padding:14px 22px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.15);border-left:4px solid #2563eb;max-width:400px;z-index:1000;font-size:13px;color:#0b1a33;display:flex;align-items:center;gap:10px;font-weight:500;`;
+        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#2563eb;font-size:16px;"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
 
-    async function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            try { await apiCall('/api/auth/logout', { method: 'POST' }); } catch (e) {}
-            window.location.href = '../auth/login.html';
-        }
+    function showNotifications() {
+        alert(`📬 Notifications\n\n• ${liveCount} live record(s)\n• ${sampleCount} sample records\n• ${allRecords.length} total records`);
+    }
+
+    function toggleProfileMenu() {
+        if (!_govtOfficer) return;
+        alert(`👤 ${_govtOfficer.name}\n\nEmail: ${_govtOfficer.email}\nDepartment: ${_govtOfficer.department}`);
+    }
+
+    function logout() {
+        if (!confirm('Are you sure you want to logout?')) return;
+        ['isLoggedIn', 'userRole', 'userId', 'userEmail', 'currentGovtOfficialId',
+         'govtOfficerName', 'govtAccessLevel', 'govtDepartment'].forEach(k => localStorage.removeItem(k));
+        window.location.href = '../auth/login.html?role=government';
     }
 
     function toggleTheme() {
@@ -1915,11 +1091,11 @@
 
     function exportData() {
         if (allRecords.length === 0) { alert('No data to export'); return; }
-        let csv = 'Name,Program,Provider,District,Before Income,After Income,Growth %,Livelihood,Stability\n';
+        let csv = 'Source,Name,Program,Provider,District,Before Income,After Income,Growth %,Livelihood\n';
         allRecords.forEach(r => {
             const growth = r.afterIncome - r.beforeIncome;
             const growthPct = r.beforeIncome > 0 ? Math.round((growth / r.beforeIncome) * 100) : 0;
-            csv += `"${r.name}","${r.program}","${r.provider}","${r.district}",${r.beforeIncome},${r.afterIncome},${growthPct}%,"${r.livelihood}","${r.stability}"\n`;
+            csv += `"${r.isSample ? 'Sample' : 'Live'}","${r.name}","${r.program}","${r.provider}","${r.district}",${r.beforeIncome},${r.afterIncome},${growthPct}%,"${r.livelihood}"\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
@@ -1931,24 +1107,18 @@
         alert('📥 Data exported!');
     }
 
-    async function refreshData() {
-        await loadAndRender();
-        showToast('🔄 Data refreshed');
-    }
-
     function exportFullReport() {
         let report = '📊 INCOME & LIVELIHOOD REPORT\n================================\n';
-        report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
+        report += `📅 Generated: ${new Date().toLocaleString()}\n`;
+        report += `📌 Live: ${liveCount} | Sample: ${sampleCount} | Total: ${allRecords.length}\n\n`;
         report += `📈 CORE KPIs\n`;
         report += `• Average Income: ₹${stats.avgAfter.toLocaleString()}\n`;
         report += `• Median Income: ₹${stats.medianAfter.toLocaleString()}\n`;
-        report += `• Income Before Training: ₹${stats.avgBefore.toLocaleString()}\n`;
-        report += `• Income After Training: ₹${stats.avgAfter.toLocaleString()}\n`;
+        report += `• Income Before: ₹${stats.avgBefore.toLocaleString()}\n`;
         report += `• Income Growth: ₹${stats.incomeGrowth.toLocaleString()} (${stats.growthPct}%)\n`;
         report += `• Earning Rate: ${stats.earningRate}%\n`;
         report += `• Self-Employment Rate: ${stats.selfEmploymentRate}%\n`;
-        report += `• Income Improvement Rate: ${stats.improvementRate}%\n`;
-        report += `• No-Income Rate: ${stats.noIncomeRate}%\n\n`;
+        report += `• Income Improvement Rate: ${stats.improvementRate}%\n\n`;
         report += `💰 ECONOMIC IMPACT\n`;
         report += `• Trainees Impacted: ${stats.earning}\n`;
         report += `• Avg Monthly Increase: ₹${stats.avgIncrease.toLocaleString()}\n`;
@@ -1963,16 +1133,7 @@
               `📊 Trainees Earning: ${stats.earning}\n` +
               `📈 Avg Monthly Increase: ₹${stats.avgIncrease.toLocaleString()}\n` +
               `💵 Additional Monthly Income: ₹${stats.monthlyTotal.toLocaleString()}\n` +
-              `📅 Estimated Annual Income: ₹${stats.annualTotal.toLocaleString()}\n\n` +
-              `💡 Represents additional income generated after training.`);
-    }
-
-    function showToast(message) {
-        const toast = document.createElement('div');
-        toast.style.cssText = `position:fixed;bottom:30px;right:30px;background:white;padding:14px 22px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.15);border-left:4px solid #2563eb;max-width:400px;z-index:1000;font-size:13px;color:#0b1a33;display:flex;align-items:center;gap:10px;font-weight:500;`;
-        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#2563eb;font-size:16px;"></i> ${message}`;
-        document.body.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+              `📅 Estimated Annual Income: ₹${stats.annualTotal.toLocaleString()}`);
     }
 
     // ============================================================
@@ -1987,7 +1148,11 @@
         } catch (e) {}
 
         updateDate();
+        readGovtOfficer();
         await loadAndRender();
+
+        console.log('✅ Income & Livelihood loaded');
+        console.log(`   Live: ${liveCount} | Sample: ${sampleCount} | Total: ${allRecords.length}`);
 
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
@@ -1998,9 +1163,6 @@
                 }
             }
         });
-
-        console.log('📊 Income & Livelihood loaded with REAL data');
-        console.log('   Records:', allRecords.length, '| Avg After:', '₹' + stats.avgAfter.toLocaleString());
     });
 </script>
 

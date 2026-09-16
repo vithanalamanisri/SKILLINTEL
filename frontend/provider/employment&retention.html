@@ -9,6 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css">
+
+    <!-- ✅ Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
         body {
@@ -185,6 +191,17 @@
         }
         .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
         .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+        .theme-toggle {
+            background: #f1f5f9;
+            border: none;
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #475569;
+            transition: 0.2s;
+        }
+        .theme-toggle:hover { background: #e2e8f0; }
         .container {
             padding: 24px 32px 32px;
             max-width: 1440px;
@@ -369,9 +386,6 @@
             gap: 22px;
             margin-bottom: 24px;
         }
-        @media (max-width: 1024px) {
-            .two-column { grid-template-columns: 1fr; }
-        }
         .card {
             background: white;
             border-radius: 18px;
@@ -537,8 +551,16 @@
             font-size: 12px; font-weight: 700;
             color: #0b1a33; margin-bottom: 4px;
         }
+        /* ===== SAMPLE BANNER ===== */
+        .sample-banner {
+            background: #fef3c7; color: #92400e;
+            padding: 10px 16px; border-radius: 12px;
+            margin-bottom: 16px; font-size: 13px;
+            font-weight: 500; border: 1px solid #fde68a;
+        }
         @media (max-width: 1024px) {
             .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .two-column { grid-template-columns: 1fr; }
         }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
@@ -578,14 +600,14 @@
         <div class="icon"><i class="fas fa-brain"></i></div>
         <div>
             <h2>SkillBridge</h2>
-            <p>Outcomes</p>
+            <p>Provider Portal</p>
         </div>
     </div>
     <div class="sidebar-user">
-        <div class="avatar">A</div>
+        <div class="avatar" id="sidebarAvatar">P</div>
         <div class="info">
-            <div class="name">Admin</div>
-            <div class="role">Program Manager</div>
+            <div class="name" id="sidebarName">Provider</div>
+            <div class="role" id="sidebarRole">Training Provider</div>
         </div>
     </div>
     <div class="menu-label">Main</div>
@@ -597,14 +619,13 @@
         <a href="skill-gaps.html"><i class="fas fa-arrow-up"></i> Skills Gaps</a>
     </div>
     <div class="sidebar-footer">
-        <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 </nav>
 
 <!-- ===== MAIN CONTENT ===== -->
 <div class="main-content">
 
-    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
@@ -616,24 +637,23 @@
             </div>
         </div>
         <div class="header-right">
-  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
-      <i class="fas fa-moon"></i>
-    </button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
             <span class="date" id="dateDisplay"></span>
-            <div class="notif">
+            <div class="notif" onclick="showNotifications()">
                 <i class="fas fa-bell"></i>
-                <span class="badge">3</span>
+                <span class="badge" id="notifBadge">0</span>
             </div>
-            <button class="profile-btn">
-                <div class="avatar">A</div>
-                <span class="name">Admin</span>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">P</div>
+                <span class="name" id="headerName">Provider</span>
                 <i class="fas fa-chevron-down"></i>
             </button>
         </div>
     </header>
 
-    <!-- ===== CONTAINER ===== -->
-    <div class="container">
+    <div class="container" id="mainContainer">
 
         <!-- WELCOME -->
         <div class="welcome">
@@ -720,22 +740,20 @@
 
         <!-- TWO COLUMN -->
         <div class="two-column">
-
-            <!-- LEFT: Retention Details + Chart -->
             <div>
-
-                <!-- RETENTION DETAILS -->
                 <div class="card" style="margin-bottom:22px;">
                     <div class="card-header">
                         <h3><i class="fas fa-chart-line"></i> Retention Details</h3>
                         <a class="view-all" href="#" onclick="exportRetentionDetails(); return false;">Export <i class="fas fa-arrow-right"></i></a>
                     </div>
                     <div id="retentionDetails">
-                        <!-- Dynamic -->
+                        <div style="text-align:center;padding:20px;color:#94a3b8;">
+                            <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                            Loading…
+                        </div>
                     </div>
                 </div>
 
-                <!-- RETENTION CHART -->
                 <div class="card">
                     <div class="card-header">
                         <h3><i class="fas fa-chart-bar"></i> Retention Distribution</h3>
@@ -764,24 +782,22 @@
                         <span><span style="color:#dc2626;">●</span> Left: <strong id="legendLeft">0</strong></span>
                     </div>
                 </div>
-
             </div>
 
-            <!-- RIGHT: Recent Trainees + Actions -->
             <div>
-
-                <!-- RECENT TRAINEES -->
                 <div class="card" style="margin-bottom:22px;">
                     <div class="card-header">
                         <h3><i class="fas fa-user-graduate"></i> Recent Trainees</h3>
                         <a class="view-all" href="#" onclick="viewAllTrainees(); return false;">View All <i class="fas fa-arrow-right"></i></a>
                     </div>
                     <div id="traineeList">
-                        <!-- Dynamic -->
+                        <div style="text-align:center;padding:20px;color:#94a3b8;">
+                            <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                            Loading…
+                        </div>
                     </div>
                 </div>
 
-                <!-- RETENTION BAR -->
                 <div class="card" style="margin-bottom:22px;">
                     <div class="card-header">
                         <h3><i class="fas fa-tachometer-alt"></i> Retention Progress</h3>
@@ -804,7 +820,6 @@
                     </div>
                 </div>
 
-                <!-- QUICK ACTIONS -->
                 <div class="card">
                     <div class="card-header">
                         <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
@@ -816,7 +831,6 @@
                         <a href="#" class="action-btn" onclick="window.print(); return false;"><i class="fas fa-print"></i> Print Report</a>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -825,128 +839,205 @@
 
 <script>
     // ============================================================
-    // DATA LOADER - From localStorage (Real Data)
+    // FIREBASE CONFIG
     // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
 
-    function getTraineeData() {
-        let data = localStorage.getItem('traineeData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing traineeData:', e); }
-        }
-        return null;
-    }
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    function getEmployerData() {
-        let data = localStorage.getItem('employerData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing employerData:', e); }
-        }
-        return null;
-    }
-
-    function getEmploymentData() {
-        let data = localStorage.getItem('employmentData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing employmentData:', e); }
-        }
-        return null;
-    }
-
-    function getFollowupData() {
-        let data = localStorage.getItem('followupData');
-        if (data) {
-            try { return JSON.parse(data); }
-            catch(e) { console.error('Error parsing followupData:', e); }
-        }
-        return null;
-    }
+    let _firebaseUser = null;
+    let _userProfile = null;
+    let _providerData = null;
 
     // ============================================================
-    // BUILD TRAINEES ARRAY FROM STORED DATA
+    // AUTH GUARD
     // ============================================================
-
-    function buildTraineesFromData() {
-        const trainees = [];
-        const traineeData = getTraineeData();
-        const employmentData = getEmploymentData();
-        const followupData = getFollowupData();
-
-        // If we have trainee data, use it
-        if (traineeData && traineeData.fullName) {
-            const status = determineStatus(traineeData, employmentData, followupData);
-            trainees.push({
-                id: traineeData.traineeId || 'TRN001',
-                name: traineeData.fullName || 'Trainee',
-                email: traineeData.email || 'trainee@email.com',
-                course: traineeData.skillTrade || 'N/A',
-                provider: traineeData.trainingProvider || 'N/A',
-                status: status,
-                avatar: traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T',
-                color: '#2563eb',
-                company: employmentData?.companyName || traineeData.currentEmployer || 'N/A',
-                jobRole: employmentData?.jobRole || traineeData.currentJobRole || 'N/A',
-                joiningDate: employmentData?.joiningDate || traineeData.joiningDate || 'N/A',
-                salary: parseInt(employmentData?.currentIncome) || parseInt(traineeData.currentIncome) || 0,
-                previousSalary: parseInt(employmentData?.previousIncome) || parseInt(traineeData.prevIncome) || 0,
-                employmentType: employmentData?.employmentType || traineeData.employmentType || 'N/A',
-                location: employmentData?.jobCity || traineeData.location || 'N/A',
-                followupPeriod: followupData?.period || '90 Days',
-                followupStatus: followupData?.status || 'Pending',
-                followupDate: followupData?.date || 'N/A'
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=provider';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=provider';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'provider') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=provider';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
             });
-        }
-
-        // If we have employer data, add as additional context
-        const employerData = getEmployerData();
-        if (employerData && employerData.orgName) {
-            console.log('📋 Employer data found:', employerData.orgName);
-            // We could use this to filter or tag trainees
-        }
-
-        // Return at least some data if nothing exists
-        if (trainees.length === 0) {
-            // Use sample data as fallback
-            return getSampleTrainees();
-        }
-
-        return trainees;
+        });
     }
 
     // ============================================================
-    // DETERMINE STATUS FROM DATA
+    // PROVIDER DATA
     // ============================================================
-
-    function determineStatus(traineeData, employmentData, followupData) {
-        // Check employment status from employmentData or traineeData
-        const empStatus = employmentData?.status || traineeData?.employmentStatusDisplay || '';
-
-        if (empStatus === 'Employed') {
-            // Check retention based on follow-up status
-            if (followupData?.status === 'Completed') {
-                return 'retained';
-            } else if (followupData?.status === 'In Progress') {
-                return 'at-risk';
-            }
-            return 'retained';
-        } else if (empStatus === 'Apprenticeship' || empStatus === 'Internship') {
-            return 'at-risk';
-        } else if (empStatus === 'Looking for Job' || empStatus === 'Unemployed') {
-            return 'left';
+    async function getProviderData() {
+        if (!_firebaseUser) {
+            return { providerId: 'PRV2026-0000', orgName: 'Your Training Centre', contactPerson: 'Provider' };
         }
 
-        // Default to pending if status unknown
-        return 'pending';
+        const uid = _firebaseUser.uid;
+        let data = {};
+
+        try {
+            const provSnap = await db.collection('providers').doc(uid).get();
+            if (provSnap.exists) data = provSnap.data();
+        } catch (e) { console.warn('providers/{uid} read failed:', e); }
+
+        if (!data.orgName) {
+            try {
+                const userSnap = await db.collection('users').doc(uid).get();
+                if (userSnap.exists) data = { ...userSnap.data(), ...data };
+            } catch (e) {}
+        }
+        if (_userProfile) data = { ..._userProfile, ...data };
+
+        return {
+            uid,
+            providerId: data.providerCode || data.providerId || ('PRV' + uid.substring(0, 6).toUpperCase()),
+            orgName: data.orgName || data.organizationName || data.centreName || _firebaseUser.displayName || 'Your Training Centre',
+            contactPerson: data.repName || data.contactPerson || data.ownerName || _firebaseUser.displayName || 'Provider',
+            email: data.email || _firebaseUser.email || ''
+        };
+    }
+
+    // ============================================================
+    // LOAD TRAINEES (with employment data) FROM FIRESTORE
+    // ============================================================
+    async function loadTraineesFromFirestore(providerData) {
+        if (!_firebaseUser) return { trainees: [], isSample: true };
+
+        const providerUid   = _firebaseUser.uid;
+        const providerCode  = (providerData?.providerId || '').toLowerCase().trim();
+        const providerName  = (providerData?.orgName || '').toLowerCase().trim();
+        const providerEmail = (providerData?.email || '').toLowerCase().trim();
+
+        let docs = [];
+
+        // Strategy 1: providers/{uid}/trainees
+        try {
+            const snap = await db.collection('providers').doc(providerUid).collection('trainees').get();
+            if (!snap.empty) snap.forEach(d => docs.push({ _id: d.id, _source: 'sub', ...d.data() }));
+        } catch (e) { console.warn('trainees subcollection read failed:', e); }
+
+        // Strategy 2: root trainees
+        if (docs.length === 0) {
+            try {
+                const snap = await db.collection('trainees').get();
+                snap.forEach(d => docs.push({ _id: d.id, _source: 'root', ...d.data() }));
+            } catch (e) { console.warn('trainees read failed:', e); }
+        }
+
+        if (docs.length === 0) {
+            return { trainees: getSampleTrainees(), isSample: true };
+        }
+
+        // Strict provider filter
+        const mine = docs.filter(t => {
+            if (t.providerUid && t.providerUid === providerUid) return true;
+            const tCode = (t.providerCode || t.providerId || '').toLowerCase().trim();
+            if (providerCode && tCode && tCode === providerCode) return true;
+            if (t._source === 'sub') return true;
+            const tName = (t.trainingProvider || t.providerName || t.orgName || '').toLowerCase().trim();
+            if (providerName && tName && (tName === providerName || tName.includes(providerName) || providerName.includes(tName))) return true;
+            const tEmail = (t.providerEmail || '').toLowerCase().trim();
+            if (providerEmail && tEmail && tEmail === providerEmail) return true;
+            return false;
+        });
+
+        if (mine.length === 0) {
+            console.warn('⚠️ No trainees matched this provider.');
+            return { trainees: getSampleTrainees(), isSample: true, linkIssue: true };
+        }
+
+        const COLOR_PALETTE = ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'];
+
+        const mapped = mine.map((t, idx) => {
+            const emp = t.employment || t.currentEmployment || t.placement || t.jobDetails || null;
+
+            const rawEmpStatus =
+                (emp && (emp.status || emp.employmentStatus)) ||
+                t.employmentStatus || t.placementStatus || '';
+
+            const empLower = String(rawEmpStatus).toLowerCase();
+            let status = 'pending';
+            if (empLower.includes('self')) status = 'retained';
+            else if (empLower.includes('employ') && !empLower.includes('unemploy')) status = 'retained';
+            else if (empLower.includes('apprentice') || empLower.includes('intern')) status = 'at-risk';
+            else if (empLower.includes('unemploy') || empLower.includes('looking') || empLower.includes('left')) status = 'left';
+            else if (empLower.includes('placed') || empLower.includes('verified')) status = 'retained';
+
+            // Override: if follow-ups say "left"/"resigned", mark as left
+            const followups = Array.isArray(t.followups) ? t.followups
+                            : Array.isArray(t.followUps) ? t.followUps
+                            : [];
+            if (followups.length) {
+                const latest = followups[followups.length - 1];
+                const fs = String(latest.status || '').toLowerCase();
+                if (fs.includes('resign') || fs.includes('left') || fs.includes('terminat')) status = 'left';
+                else if (fs.includes('at-risk') || fs.includes('at risk')) status = 'at-risk';
+            }
+
+            const traineeName = t.fullName || t.name || [t.firstName, t.lastName].filter(Boolean).join(' ') || 'Trainee';
+
+            return {
+                id: t.traineeCode || t.traineeId || ('TRN' + (t.uid ? t.uid.substring(0,6) : idx)),
+                name: traineeName,
+                email: t.email || 'N/A',
+                course: t.skillTrade || t.course || t.qualification || t.trade || 'N/A',
+                provider: t.trainingProvider || t.providerName || providerData?.orgName || 'N/A',
+                status: status,
+                avatar: traineeName.charAt(0).toUpperCase(),
+                color: COLOR_PALETTE[idx % COLOR_PALETTE.length],
+                company: (emp && (emp.companyName || emp.employerName || emp.company)) || t.employerName || 'N/A',
+                jobRole: (emp && (emp.jobRole || emp.designation || emp.role)) || t.jobRole || 'N/A',
+                joiningDate: (emp && (emp.joiningDate || emp.startDate || emp.dateOfJoining)) || t.joiningDate || 'N/A',
+                salary: Number((emp && (emp.currentIncome || emp.monthlyIncome || emp.salary)) || t.currentIncome) || 0,
+                previousSalary: Number((emp && emp.previousIncome) || t.previousIncome) || 0,
+                employmentType: (emp && (emp.employmentType || emp.type)) || t.employmentType || 'N/A',
+                location: (emp && (emp.jobCity || emp.location)) || t.location || 'N/A',
+                followupPeriod: (followups[0] && followups[0].period) || t.followupPeriod || '90 Days',
+                followupStatus: (followups[0] && followups[0].status) || t.followupStatus || 'Pending',
+                followupDate: (followups[0] && followups[0].date) || t.followupDate || 'N/A',
+                _sample: false
+            };
+        });
+
+        return { trainees: mapped, isSample: false };
     }
 
     // ============================================================
     // SAMPLE DATA (Fallback)
     // ============================================================
-
     function getSampleTrainees() {
-        return [
+        const arr = [
             { id: 'TRN001', name: 'Priya Sharma', email: 'priya@email.com', course: 'Data Analytics', provider: 'Skill India Centre', status: 'retained', avatar: 'P', color: '#2563eb', company: 'ABC Technologies', jobRole: 'Data Analyst', joiningDate: '2026-04-12', salary: 28000, previousSalary: 12000, employmentType: 'Full Time', location: 'Bengaluru', followupPeriod: '90 Days', followupStatus: 'Completed', followupDate: '2026-09-20' },
             { id: 'TRN002', name: 'Rahul Verma', email: 'rahul@email.com', course: 'Full Stack Development', provider: 'NITC Training', status: 'retained', avatar: 'R', color: '#7c3aed', company: 'Tech Solutions Ltd', jobRole: 'Full Stack Developer', joiningDate: '2026-05-15', salary: 32000, previousSalary: 15000, employmentType: 'Full Time', location: 'Mumbai', followupPeriod: '90 Days', followupStatus: 'In Progress', followupDate: '2026-09-15' },
             { id: 'TRN003', name: 'Ananya Reddy', email: 'ananya@email.com', course: 'Digital Marketing', provider: 'Digital India Academy', status: 'retained', avatar: 'A', color: '#16a34a', company: 'Growth Media', jobRole: 'Marketing Lead', joiningDate: '2026-06-01', salary: 25000, previousSalary: 10000, employmentType: 'Full Time', location: 'Delhi', followupPeriod: '180 Days', followupStatus: 'Pending', followupDate: '2026-09-30' },
@@ -956,115 +1047,71 @@
             { id: 'TRN007', name: 'Kiran Joshi', email: 'kiran@email.com', course: 'Full Stack Development', provider: 'Code Institute', status: 'at-risk', avatar: 'K', color: '#7c3aed', company: 'Startup Hub', jobRole: 'Junior Developer', joiningDate: '2026-09-01', salary: 15000, previousSalary: 5000, employmentType: 'Apprenticeship', location: 'Pune', followupPeriod: '90 Days', followupStatus: 'Pending', followupDate: '2026-10-01' },
             { id: 'TRN008', name: 'Divya K', email: 'divya@email.com', course: 'Data Analytics', provider: 'Analytics School', status: 'retained', avatar: 'D', color: '#2563eb', company: 'Data Corp', jobRole: 'Data Analyst Intern', joiningDate: '2026-08-15', salary: 18000, previousSalary: 0, employmentType: 'Internship', location: 'Bengaluru', followupPeriod: '30 Days', followupStatus: 'In Progress', followupDate: '2026-09-10' }
         ];
+        return arr.map(t => ({ ...t, _sample: true }));
     }
 
     // ============================================================
-    // CALCULATE RETENTION METRICS
+    // RETENTION METRICS
     // ============================================================
-
     function calculateRetentionMetrics(trainees) {
         const total = trainees.length;
         const employed = trainees.filter(t => t.status === 'retained' || t.status === 'at-risk').length;
         const retained = trainees.filter(t => t.status === 'retained').length;
-        const atRisk = trainees.filter(t => t.status === 'at-risk').length;
-        const left = trainees.filter(t => t.status === 'left').length;
+        const atRisk   = trainees.filter(t => t.status === 'at-risk').length;
+        const left     = trainees.filter(t => t.status === 'left').length;
 
         const now = new Date();
-        
-        // Calculate retention rates based on joining dates
         let ret30 = 0, ret90 = 0, ret180 = 0, ret365 = 0;
         let eligible30 = 0, eligible90 = 0, eligible180 = 0, eligible365 = 0;
 
         trainees.forEach(t => {
             if (!t.joiningDate || t.joiningDate === 'N/A') return;
             const joinDate = new Date(t.joiningDate);
+            if (isNaN(joinDate)) return;
             const daysDiff = (now - joinDate) / (1000 * 60 * 60 * 24);
 
-            if (daysDiff >= 30) {
-                eligible30++;
-                if (t.status !== 'left') ret30++;
-            }
-            if (daysDiff >= 90) {
-                eligible90++;
-                if (t.status !== 'left') ret90++;
-            }
-            if (daysDiff >= 180) {
-                eligible180++;
-                if (t.status !== 'left') ret180++;
-            }
-            if (daysDiff >= 365) {
-                eligible365++;
-                if (t.status !== 'left') ret365++;
-            }
+            if (daysDiff >= 30)  { eligible30++;  if (t.status !== 'left') ret30++; }
+            if (daysDiff >= 90)  { eligible90++;  if (t.status !== 'left') ret90++; }
+            if (daysDiff >= 180) { eligible180++; if (t.status !== 'left') ret180++; }
+            if (daysDiff >= 365) { eligible365++; if (t.status !== 'left') ret365++; }
         });
 
-        const placementRate = total > 0 ? Math.round((employed / total) * 100) : 0;
-        const retentionRate = employed > 0 ? Math.round((retained / employed) * 100) : 0;
-        const ret30Rate = eligible30 > 0 ? Math.round((ret30 / eligible30) * 100) : 0;
-        const ret90Rate = eligible90 > 0 ? Math.round((ret90 / eligible90) * 100) : 0;
-        const ret180Rate = eligible180 > 0 ? Math.round((ret180 / eligible180) * 100) : 0;
-        const ret365Rate = eligible365 > 0 ? Math.round((ret365 / eligible365) * 100) : 0;
-
         return {
-            total,
-            employed,
-            retained,
-            atRisk,
-            left,
-            ret30: ret30Rate,
-            ret90: ret90Rate,
-            ret180: ret180Rate,
-            ret365: ret365Rate,
-            placementRate,
-            retentionRate,
-            eligible30,
-            eligible90,
-            eligible180,
-            eligible365
+            total, employed, retained, atRisk, left,
+            ret30:  eligible30  ? Math.round((ret30  / eligible30)  * 100) : 0,
+            ret90:  eligible90  ? Math.round((ret90  / eligible90)  * 100) : 0,
+            ret180: eligible180 ? Math.round((ret180 / eligible180) * 100) : 0,
+            ret365: eligible365 ? Math.round((ret365 / eligible365) * 100) : 0,
+            placementRate: total ? Math.round((employed / total) * 100) : 0,
+            retentionRate: employed ? Math.round((retained / employed) * 100) : 0
         };
     }
 
     // ============================================================
-    // RENDER FUNCTIONS
+    // STATE
     // ============================================================
-
     let allTrainees = [];
+    let isSampleData = false;
 
-    function loadAndRender() {
-        allTrainees = buildTraineesFromData();
-        renderAll();
-        
-        // Update sidebar user info if employer data exists
-        const employerData = getEmployerData();
-        if (employerData && employerData.contactPerson) {
-            const avatar = document.querySelector('.sidebar-user .avatar');
-            const name = document.querySelector('.sidebar-user .info .name');
-            const company = document.querySelector('.sidebar-user .info .role');
-            if (avatar) avatar.textContent = employerData.contactPerson.charAt(0).toUpperCase();
-            if (name) name.textContent = employerData.contactPerson;
-            if (company) company.textContent = employerData.orgName || 'Employer';
-        }
-    }
-
+    // ============================================================
+    // RENDER
+    // ============================================================
     function renderAll() {
         const metrics = calculateRetentionMetrics(allTrainees);
 
-        // Welcome stats
-        document.getElementById('totalPlaced').textContent = metrics.employed;
-        document.getElementById('placementRate').textContent = metrics.placementRate + '%';
-        document.getElementById('avgRetention').textContent = metrics.retentionRate + '%';
-        document.getElementById('activeEmployed').textContent = metrics.retained;
+        document.getElementById('totalPlaced').textContent      = metrics.employed;
+        document.getElementById('placementRate').textContent    = metrics.placementRate + '%';
+        document.getElementById('avgRetention').textContent     = metrics.retentionRate + '%';
+        document.getElementById('activeEmployed').textContent   = metrics.retained;
 
-        // Stats cards
         document.getElementById('statPlacementRate').textContent = metrics.placementRate + '%';
-        document.getElementById('statRetention30').textContent = metrics.ret30 + '%';
-        document.getElementById('statRetention90').textContent = metrics.ret90 + '%';
-        document.getElementById('statRetention180').textContent = metrics.ret180 + '%';
-        document.getElementById('statRetention365').textContent = metrics.ret365 + '%';
+        document.getElementById('statRetention30').textContent   = metrics.ret30 + '%';
+        document.getElementById('statRetention90').textContent   = metrics.ret90 + '%';
+        document.getElementById('statRetention180').textContent  = metrics.ret180 + '%';
+        document.getElementById('statRetention365').textContent  = metrics.ret365 + '%';
 
-        // Timeline nodes
-        document.getElementById('node30Value').textContent = metrics.ret30 + '%';
-        document.getElementById('node90Value').textContent = metrics.ret90 + '%';
+        document.getElementById('node30Value').textContent  = metrics.ret30 + '%';
+        document.getElementById('node90Value').textContent  = metrics.ret90 + '%';
         document.getElementById('node180Value').textContent = metrics.ret180 + '%';
         document.getElementById('node365Value').textContent = metrics.ret365 + '%';
 
@@ -1076,86 +1123,73 @@
         const avgRet = Math.round((metrics.ret30 + metrics.ret90 + metrics.ret180 + metrics.ret365) / 4);
         document.getElementById('trackFill').style.width = Math.min(avgRet, 100) + '%';
 
-        // Retention details
         renderRetentionDetails(metrics);
-
-        // Chart
         renderRetentionChart(metrics);
-
-        // Trainee list
         renderTraineeList();
 
-        // Retention bar
-        const overallRate = metrics.retentionRate;
-        document.getElementById('retentionPercent').textContent = overallRate + '%';
-        document.getElementById('retentionProgressLabel').textContent = overallRate + '%';
-        document.getElementById('retentionBarFill').style.width = overallRate + '%';
-        document.getElementById('bar30').textContent = metrics.ret30 + '%';
-        document.getElementById('bar90').textContent = metrics.ret90 + '%';
+        document.getElementById('retentionPercent').textContent = metrics.retentionRate + '%';
+        document.getElementById('retentionProgressLabel').textContent = metrics.retentionRate + '%';
+        document.getElementById('retentionBarFill').style.width = metrics.retentionRate + '%';
+        document.getElementById('bar30').textContent  = metrics.ret30 + '%';
+        document.getElementById('bar90').textContent  = metrics.ret90 + '%';
         document.getElementById('bar180').textContent = metrics.ret180 + '%';
         document.getElementById('bar365').textContent = metrics.ret365 + '%';
+
+        document.getElementById('notifBadge').textContent = metrics.atRisk;
     }
 
     function updateTimelineNode(nodeId, value) {
         const node = document.getElementById(nodeId);
         if (!node) return;
         node.classList.remove('completed', 'active', 'upcoming');
-        if (value >= 75) {
-            node.classList.add('completed');
-        } else if (value >= 40) {
-            node.classList.add('active');
-        } else {
-            node.classList.add('upcoming');
-        }
+        if (value >= 75) node.classList.add('completed');
+        else if (value >= 40) node.classList.add('active');
+        else node.classList.add('upcoming');
     }
 
-    function renderRetentionDetails(metrics) {
+    function renderRetentionDetails(m) {
         const container = document.getElementById('retentionDetails');
         container.innerHTML = `
             <div class="retention-detail-item">
                 <span class="label"><i class="fas fa-users"></i> Total Placed</span>
-                <span class="value">${metrics.employed}</span>
+                <span class="value">${m.employed}</span>
             </div>
             <div class="retention-detail-item">
                 <span class="label"><i class="fas fa-check-circle"></i> Retained</span>
-                <span class="value positive">${metrics.retained} (${metrics.retentionRate}%)</span>
+                <span class="value positive">${m.retained} (${m.retentionRate}%)</span>
             </div>
             <div class="retention-detail-item">
                 <span class="label"><i class="fas fa-exclamation-triangle"></i> At Risk</span>
-                <span class="value warning">${metrics.atRisk}</span>
+                <span class="value warning">${m.atRisk}</span>
             </div>
             <div class="retention-detail-item">
                 <span class="label"><i class="fas fa-times-circle"></i> Left</span>
-                <span class="value danger">${metrics.left}</span>
+                <span class="value danger">${m.left}</span>
             </div>
             <div class="retention-detail-item">
                 <span class="label"><i class="fas fa-percent"></i> Placement Rate</span>
-                <span class="value positive">${metrics.placementRate}%</span>
+                <span class="value positive">${m.placementRate}%</span>
             </div>
             <div class="retention-detail-item">
                 <span class="label"><i class="fas fa-calendar-check"></i> 30-Day Retention</span>
-                <span class="value positive">${metrics.ret30}%</span>
+                <span class="value positive">${m.ret30}%</span>
             </div>
             <div class="retention-detail-item">
                 <span class="label"><i class="fas fa-calendar-alt"></i> 90-Day Retention</span>
-                <span class="value positive">${metrics.ret90}%</span>
+                <span class="value positive">${m.ret90}%</span>
             </div>
             <div class="retention-detail-item">
                 <span class="label"><i class="fas fa-calendar-week"></i> 180-Day Retention</span>
-                <span class="value">${metrics.ret180}%</span>
+                <span class="value">${m.ret180}%</span>
             </div>
             <div class="retention-detail-item">
                 <span class="label"><i class="fas fa-calendar-plus"></i> 365-Day Retention</span>
-                <span class="value">${metrics.ret365}%</span>
-            </div>
-        `;
+                <span class="value">${m.ret365}%</span>
+            </div>`;
     }
 
-    function renderRetentionChart(metrics) {
-        const retained = metrics.retained;
-        const atRisk = metrics.atRisk;
-        const left = metrics.left;
-        const total = metrics.total || 1;
+    function renderRetentionChart(m) {
+        const { retained, atRisk, left, total } = m;
         const maxVal = Math.max(retained, atRisk, left, 1);
         const maxHeight = 100;
 
@@ -1175,16 +1209,20 @@
     function renderTraineeList() {
         const container = document.getElementById('traineeList');
         const list = allTrainees.slice(0, 5);
-
         const statusMap = {
             'retained': { label: 'Retained', class: 'retained' },
-            'at-risk': { label: 'At Risk', class: 'at-risk' },
-            'left': { label: 'Left', class: 'left' },
-            'pending': { label: 'Pending', class: 'pending' }
+            'at-risk':  { label: 'At Risk',  class: 'at-risk' },
+            'left':     { label: 'Left',     class: 'left' },
+            'pending':  { label: 'Pending',  class: 'pending' }
         };
 
+        if (!list.length) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;">No trainees yet</div>`;
+            return;
+        }
+
         container.innerHTML = list.map(t => {
-            const status = statusMap[t.status] || statusMap['pending'];
+            const s = statusMap[t.status] || statusMap['pending'];
             return `
                 <div class="trainee-item">
                     <div class="info">
@@ -1194,99 +1232,76 @@
                             <div class="sub">${t.course} · ${t.company || 'N/A'}</div>
                         </div>
                     </div>
-                    <span class="status ${status.class}">${status.label}</span>
-                </div>
-            `;
+                    <span class="status ${s.class}">${s.label}</span>
+                </div>`;
         }).join('');
     }
 
-    // ============================================================
-    // QUICK ACTIONS - All Working
-    // ============================================================
+    function showSampleBanner(linkIssue) {
+        const old = document.querySelector('.sample-banner');
+        if (old) old.remove();
 
-    // Export Report
+        const msg = linkIssue
+            ? '⚠️ Showing sample data — no trainee records are linked to this provider yet. Add `providerUid`, `providerCode`, or `trainingProvider` to trainee docs.'
+            : 'ℹ️ Showing sample data — no trainee records found in Firestore.';
+
+        const el = document.createElement('div');
+        el.className = 'sample-banner';
+        el.textContent = msg;
+        document.getElementById('mainContainer').prepend(el);
+    }
+
+    // ============================================================
+    // QUICK ACTIONS
+    // ============================================================
     function exportRetentionDetails() {
-        const metrics = calculateRetentionMetrics(allTrainees);
+        const m = calculateRetentionMetrics(allTrainees);
         const report = `
 📊 EMPLOYMENT & RETENTION REPORT
 ================================
 📅 Generated: ${new Date().toLocaleDateString()}
+👤 Provider: ${_providerData?.orgName || 'N/A'}
 
 📈 PLACEMENT STATISTICS
-• Total Trainees: ${metrics.total}
-• Total Placed: ${metrics.employed}
-• Placement Rate: ${metrics.placementRate}%
+• Total Trainees: ${m.total}
+• Total Placed: ${m.employed}
+• Placement Rate: ${m.placementRate}%
 
 🔄 RETENTION METRICS
-• Retained: ${metrics.retained} (${metrics.retentionRate}%)
-• At Risk: ${metrics.atRisk}
-• Left: ${metrics.left}
+• Retained: ${m.retained} (${m.retentionRate}%)
+• At Risk: ${m.atRisk}
+• Left: ${m.left}
 
 📅 RETENTION RATES
-• 30-Day Retention: ${metrics.ret30}%
-• 90-Day Retention: ${metrics.ret90}%
-• 180-Day Retention: ${metrics.ret180}%
-• 365-Day Retention: ${metrics.ret365}%
+• 30-Day: ${m.ret30}%
+• 90-Day: ${m.ret90}%
+• 180-Day: ${m.ret180}%
+• 365-Day: ${m.ret365}%
 
 📋 TRAINEE LIST
 ${allTrainees.map(t => `• ${t.name} - ${t.course} - ${t.company} - ${t.status}`).join('\n')}
-================================
-        `;
+================================`;
         alert(report);
-        console.log('📊 Report:', report);
+        console.log(report);
     }
 
-    // View Analytics
     function viewAnalytics() {
-        const metrics = calculateRetentionMetrics(allTrainees);
-        const empData = getEmploymentData();
-        const traineeData = getTraineeData();
-        
-        let analyticsMsg = `
-📊 RETENTION ANALYTICS
-================================
-📅 Generated: ${new Date().toLocaleString()}
-
-📈 OVERVIEW
-• Total Trainees: ${metrics.total}
-• Placement Rate: ${metrics.placementRate}%
-• Retention Rate: ${metrics.retentionRate}%
-
-🔄 STATUS DISTRIBUTION
-• ✅ Retained: ${metrics.retained} (${Math.round((metrics.retained/metrics.total)*100)}%)
-• ⚠️ At Risk: ${metrics.atRisk} (${Math.round((metrics.atRisk/metrics.total)*100)}%)
-• ❌ Left: ${metrics.left} (${Math.round((metrics.left/metrics.total)*100)}%)
-
-📅 RETENTION MILESTONES
-• 30 Days: ${metrics.ret30}% ${metrics.ret30 >= 75 ? '✅' : metrics.ret30 >= 40 ? '⚠️' : '❌'}
-• 90 Days: ${metrics.ret90}% ${metrics.ret90 >= 75 ? '✅' : metrics.ret90 >= 40 ? '⚠️' : '❌'}
-• 180 Days: ${metrics.ret180}% ${metrics.ret180 >= 75 ? '✅' : metrics.ret180 >= 40 ? '⚠️' : '❌'}
-• 365 Days: ${metrics.ret365}% ${metrics.ret365 >= 75 ? '✅' : metrics.ret365 >= 40 ? '⚠️' : '❌'}
-
-💡 RECOMMENDATIONS
-${metrics.ret30 < 60 ? '• ⚠️ 30-Day retention is low. Consider early engagement programs.\n' : '• ✅ 30-Day retention is strong.\n'}
-${metrics.ret90 < 60 ? '• ⚠️ 90-Day retention needs improvement. Consider mentorship programs.\n' : '• ✅ 90-Day retention is strong.\n'}
-${metrics.atRisk > metrics.total * 0.2 ? '• ⚠️ High number of at-risk trainees. Schedule follow-ups.\n' : '• ✅ At-risk trainees are within acceptable range.\n'}
-${metrics.left > metrics.total * 0.15 ? '• ⚠️ High attrition rate. Investigate reasons for leaving.\n' : '• ✅ Attrition rate is under control.\n'}
-
-📋 CURRENT USER DATA
-${traineeData ? `• Trainee: ${traineeData.fullName || 'N/A'}` : '• No trainee data found'}
-${empData ? `• Employer: ${empData.contactPerson || 'N/A'} (${empData.orgName || 'N/A'})` : '• No employer data found'}
-================================
-        `;
-        alert(analyticsMsg);
+        const m = calculateRetentionMetrics(allTrainees);
+        alert(`📊 RETENTION ANALYTICS\n\n` +
+              `📈 OVERVIEW\n• Total: ${m.total}\n• Placement Rate: ${m.placementRate}%\n• Retention Rate: ${m.retentionRate}%\n\n` +
+              `🔄 STATUS\n• ✅ Retained: ${m.retained}\n• ⚠️ At Risk: ${m.atRisk}\n• ❌ Left: ${m.left}\n\n` +
+              `📅 MILESTONES\n• 30 Day: ${m.ret30}%\n• 90 Day: ${m.ret90}%\n• 180 Day: ${m.ret180}%\n• 365 Day: ${m.ret365}%\n\n` +
+              `💡 RECOMMENDATIONS\n` +
+              `${m.ret30 < 60 ? '• ⚠️ 30-day retention low. Consider early engagement.\n' : '• ✅ 30-day retention strong.\n'}` +
+              `${m.atRisk > m.total * 0.2 ? '• ⚠️ High at-risk count. Schedule follow-ups.\n' : '• ✅ At-risk within range.\n'}`);
     }
 
-    // Download CSV
     function downloadCSV() {
-        if (allTrainees.length === 0) {
-            alert('No data to export!');
-            return;
-        }
+        if (allTrainees.length === 0) { alert('No data to export!'); return; }
 
         let csv = 'Name,Email,Course,Company,Job Role,Joining Date,Salary,Status,Follow-up Status\n';
         allTrainees.forEach(t => {
-            csv += `${t.name},${t.email || 'N/A'},${t.course},${t.company},${t.jobRole || 'N/A'},${t.joiningDate},${t.salary},${t.status},${t.followupStatus || 'N/A'}\n`;
+            csv += `"${t.name}","${t.email || 'N/A'}","${t.course}","${t.company}","${t.jobRole || 'N/A'}","${t.joiningDate}",${t.salary},"${t.status}","${t.followupStatus || 'N/A'}"\n`;
         });
 
         const blob = new Blob([csv], { type: 'text/csv' });
@@ -1301,27 +1316,52 @@ ${empData ? `• Employer: ${empData.contactPerson || 'N/A'} (${empData.orgName 
         alert('✅ CSV downloaded successfully!');
     }
 
-    // View All Trainees
     function viewAllTrainees() {
-        if (allTrainees.length === 0) {
-            alert('No trainees found!');
-            return;
-        }
-
+        if (allTrainees.length === 0) { alert('No trainees found!'); return; }
         let msg = '📋 ALL TRAINEES\n================================\n\n';
         allTrainees.forEach((t, i) => {
-            msg += `${i+1}. ${t.name}\n`;
+            msg += `${i + 1}. ${t.name}\n`;
             msg += `   📚 ${t.course} | 🏢 ${t.company}\n`;
             msg += `   💰 ₹${t.salary.toLocaleString()} | 📅 ${t.joiningDate}\n`;
             msg += `   📊 Status: ${t.status.toUpperCase()}\n\n`;
         });
-        msg += `================================\nTotal: ${allTrainees.length} trainees`;
+        msg += `Total: ${allTrainees.length} trainees`;
         alert(msg);
     }
 
-    // ============================================================
-    // UTILITY
-    // ============================================================
+    function showNotifications() {
+        const m = calculateRetentionMetrics(allTrainees);
+        alert(`📬 Notifications\n\n• ${m.atRisk} trainees at risk\n• ${m.left} trainees left\n• ${m.retained} currently retained${isSampleData ? '\n\nℹ️ Showing sample data' : ''}`);
+    }
+
+    function toggleProfileMenu() {
+        alert('👤 Profile Menu\n\nSettings · Support · Logout');
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            auth.signOut().finally(() => {
+                try {
+                    localStorage.removeItem('currentProviderEmail');
+                    localStorage.removeItem('currentProviderId');
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('userRole');
+                    localStorage.removeItem('userId');
+                } catch (e) {}
+                window.location.href = '../auth/login.html?role=provider';
+            });
+        }
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
 
     function updateDate() {
         const now = new Date();
@@ -1333,12 +1373,41 @@ ${empData ? `• Employer: ${empData.contactPerson || 'N/A'} (${empData.orgName 
     // ============================================================
     // INIT
     // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
 
-    document.addEventListener('DOMContentLoaded', function() {
         updateDate();
-        loadAndRender();
 
-        // Close sidebar on outside click (mobile)
+        try {
+            await requireAuth();
+            _providerData = await getProviderData();
+
+            const initial = (_providerData.orgName || 'P').charAt(0).toUpperCase();
+            document.getElementById('sidebarAvatar').textContent = initial;
+            document.getElementById('sidebarName').textContent   = _providerData.orgName;
+            document.getElementById('sidebarRole').textContent   = 'Training Provider';
+            document.getElementById('headerAvatar').textContent  = initial;
+            document.getElementById('headerName').textContent    = _providerData.orgName;
+
+            const result = await loadTraineesFromFirestore(_providerData);
+            allTrainees = result.trainees;
+            isSampleData = result.isSample;
+
+            console.log(`✅ Loaded ${allTrainees.length} trainees (sample: ${result.isSample})`);
+
+            renderAll();
+
+            if (result.isSample) showSampleBanner(result.linkIssue);
+
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
+
         document.addEventListener('click', function(e) {
             const sidebar = document.getElementById('sidebar');
             const toggle = document.querySelector('.menu-toggle');
@@ -1348,23 +1417,9 @@ ${empData ? `• Employer: ${empData.contactPerson || 'N/A'} (${empData.orgName 
                 }
             }
         });
-
-        console.log('📊 Employment & Retention page loaded!');
-        console.log('📋 Trainees loaded:', allTrainees.length);
-        
-        // Log data sources
-        const traineeData = getTraineeData();
-        const employerData = getEmployerData();
-        const employmentData = getEmploymentData();
-        const followupData = getFollowupData();
-        
-        console.log('📁 Data Sources:');
-        console.log('  • traineeData:', traineeData ? '✅ Found' : '❌ Not found');
-        console.log('  • employerData:', employerData ? '✅ Found' : '❌ Not found');
-        console.log('  • employmentData:', employmentData ? '✅ Found' : '❌ Not found');
-        console.log('  • followupData:', followupData ? '✅ Found' : '❌ Not found');
     });
 </script>
 
-<script src="../js/script.js"></script>\n</body>
+<script src="../js/script.js"></script>
+</body>
 </html>
