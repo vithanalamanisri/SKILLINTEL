@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Training Programs · SkillBridge</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css">
+
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+body { background: #f0f4f9; display: flex; min-height: 100vh; color: #0b1a33; transition: background .3s, color .3s; }
+
+/* ========== SIDEBAR ========== */
+.sidebar { width: 275px; background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%); color: white; padding: 24px 16px; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; transition: transform 0.3s ease; }
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+.sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 8px 10px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 18px; }
+.sidebar-brand .icon { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35); }
+.sidebar-brand h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.sidebar-brand p { font-size: 10px; opacity: 0.5; font-weight: 500; margin-top: 2px; }
+.sidebar-user { display: flex; align-items: center; gap: 12px; padding: 12px 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 16px; }
+.sidebar-user .avatar { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0; }
+.sidebar-user .info .name { font-size: 14px; font-weight: 600; }
+.sidebar-user .info .role { font-size: 11px; opacity: 0.5; }
+.menu-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.35; padding: 12px 12px 6px; font-weight: 700; }
+.menu a { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; color: rgba(255,255,255,0.65); text-decoration: none; transition: all 0.2s; margin: 2px 0; font-size: 14px; font-weight: 500; cursor: pointer; position: relative; }
+.menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+.menu a.active { background: rgba(255,255,255,0.12); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.menu a.active::before { content: ''; position: absolute; left: -16px; top: 50%; transform: translateY(-50%); width: 4px; height: 24px; background: linear-gradient(180deg, #2563eb, #7c3aed); border-radius: 0 4px 4px 0; }
+.menu a i { width: 20px; text-align: center; font-size: 15px; }
+.menu a .badge { margin-left: auto; background: #ef4444; color: white; font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+.menu a .badge.new { background: linear-gradient(135deg,#f59e0b,#ec4899); animation: pulse-badge 2s infinite; }
+@keyframes pulse-badge { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.sidebar-footer { padding: 20px 12px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 16px; }
+.sidebar-footer a { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; color: rgba(255,255,255,0.5); text-decoration: none; transition: 0.2s; font-size: 14px; font-weight: 500; cursor: pointer; }
+.sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+/* ========== MAIN ========== */
+.main-content { margin-left: 275px; flex: 1; padding: 0; min-height: 100vh; }
+.header { background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226,232,240,0.6); position: sticky; top: 0; z-index: 50; transition: background .3s, border-color .3s; }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.menu-toggle { display: none; background: none; border: none; font-size: 22px; color: #0b1a33; cursor: pointer; }
+.header-left .page-title h1 { font-size: 20px; color: #0b1a33; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.header-left .page-title h1 i { color: #2563eb; }
+.header-left .page-title p { font-size: 12px; color: #64748b; margin-top: 1px; }
+.header-right { display: flex; align-items: center; gap: 16px; }
+.header-right .date { font-size: 13px; color: #64748b; font-weight: 500; background: #f1f5f9; padding: 6px 14px; border-radius: 20px; }
+.header-right .notif { position: relative; font-size: 20px; color: #475569; cursor: pointer; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+.header-right .notif:hover { background: #f1f5f9; }
+.header-right .notif .badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; width: 20px; height: 20px; font-size: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.header-right .profile-btn { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 5px 14px 5px 5px; border-radius: 30px; cursor: pointer; border: none; transition: 0.2s; }
+.header-right .profile-btn:hover { background: #e2e8f0; }
+.header-right .profile-btn .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+.header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
+.header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+.theme-toggle { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; font-size: 16px; color: #475569; transition: 0.2s; }
+.theme-toggle:hover { background: #e2e8f0; }
+
+.container { padding: 24px 32px 32px; max-width: 1440px; margin: auto; }
+
+/* ========== WELCOME ========== */
+.welcome { background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed); color: white; padding: 28px 32px; border-radius: 20px; margin-bottom: 24px; position: relative; overflow: hidden; }
+.welcome::before { content: ""; position: absolute; width: 350px; height: 350px; border-radius: 50%; background: rgba(255,255,255,0.05); top: -130px; right: -80px; }
+.welcome-content { position: relative; z-index: 1; }
+.welcome h2 { font-size: 26px; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; color: white; }
+.welcome p { font-size: 15px; opacity: 0.85; color: white; }
+.welcome .welcome-stats { display: flex; gap: 30px; margin-top: 16px; flex-wrap: wrap; }
+.welcome .welcome-stats div { font-size: 13px; color: white; }
+.welcome .welcome-stats strong { font-size: 20px; display: block; color: white; }
+
+/* Demo banner */
+.demo-banner { background: #fef3c7; color: #92400e; padding: 10px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; font-weight: 500; border: 1px solid #fde68a; display: flex; align-items: center; gap: 12px; }
+.demo-banner i { color: #d97706; font-size: 16px; flex-shrink: 0; }
+.demo-banner strong { color: #78350f; }
+.demo-banner .demo-close { margin-left: auto; background: none; border: none; color: #92400e; cursor: pointer; font-size: 14px; padding: 4px 8px; border-radius: 6px; }
+.demo-banner .demo-close:hover { background: rgba(0,0,0,.08); }
+
+/* ========== STATS GRID ========== */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: white; padding: 18px 20px; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); border: 1px solid #eef2f6; transition: all 0.3s; }
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(37,99,235,0.08); }
+.stat-card .stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.stat-card .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.stat-card .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+.stat-card .stat-icon.green { background: #dcfce7; color: #16a34a; }
+.stat-card .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+.stat-card .stat-icon.orange { background: #fef3c7; color: #d97706; }
+.stat-card .stat-icon.rose { background: #fce7f3; color: #db2777; }
+.stat-card .stat-number { font-size: 28px; font-weight: 800; color: #0b1a33; }
+.stat-card .stat-label { font-size: 13px; color: #64748b; margin-top: 2px; }
+.stat-card .stat-change { font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
+.stat-card .stat-change.up { background: #dcfce7; color: #16a34a; }
+.stat-card .stat-change.neutral { background: #f1f5f9; color: #64748b; }
+.stat-card .stat-change.alert { background: #fef3c7; color: #d97706; animation: pulse-badge 2s infinite; }
+
+/* ========== TOOLBAR ========== */
+.toolbar { background: white; border-radius: 18px; padding: 18px 24px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 22px; }
+.toolbar-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.tb-group { display: flex; flex-direction: column; gap: 5px; min-width: 160px; }
+.tb-group label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; gap: 5px; }
+.tb-group label i { color: #2563eb; font-size: 11px; }
+.tb-group input, .tb-group select { padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 13px; font-weight: 500; color: #0b1a33; background: #f8fafc; outline: none; transition: .2s; font-family: inherit; width: 100%; }
+.tb-group input:focus, .tb-group select:focus { border-color: #2563eb; background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+.tb-group.grow { flex: 1; min-width: 220px; }
+.tb-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.btn-add-program { padding: 10px 20px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .2s; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg,#2563eb,#7c3aed); color: white; box-shadow: 0 6px 16px rgba(37,99,235,.3); }
+.btn-add-program:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(37,99,235,.4); }
+.chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #f1f5f9; color: #475569; cursor: pointer; transition: .2s; border: 1.5px solid transparent; user-select: none; }
+.chip:hover { background: #e2e8f0; }
+.chip.active { background: linear-gradient(135deg,#2563eb,#7c3aed); color: white; box-shadow: 0 4px 12px rgba(37,99,235,.3); }
+.chip .chip-count { display: inline-block; margin-left: 5px; background: rgba(255,255,255,.3); padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 800; }
+.chip.active .chip-count { background: rgba(255,255,255,.25); }
+
+/* ========== PROGRAM GRID ========== */
+.program-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; margin-bottom: 22px; }
+.program-card { background: white; border-radius: 18px; padding: 0; border: 1.5px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: .3s; position: relative; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
+.program-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(37,99,235,0.13); border-color: #c7d2fe; }
+.program-card.demo-card { border-style: dashed; }
+.program-card.demo-card::after { content: 'SAMPLE'; position: absolute; top: 14px; right: 14px; background: #fef3c7; color: #92400e; font-size: 9px; font-weight: 800; padding: 3px 9px; border-radius: 8px; letter-spacing: .5px; z-index: 2; }
+.program-card .pc-banner { height: 96px; background: linear-gradient(135deg,#2563eb,#7c3aed); position: relative; display: flex; align-items: center; padding: 0 22px; color: white; overflow: hidden; }
+.program-card .pc-banner::before { content: ''; position: absolute; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,.08); top: -80px; right: -40px; }
+.pc-banner .pc-icon { width: 52px; height: 52px; border-radius: 15px; background: rgba(255,255,255,.2); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; font-size: 24px; position: relative; z-index: 1; flex-shrink: 0; color: white; }
+.pc-banner .pc-title-wrap { position: relative; z-index: 1; margin-left: 14px; min-width: 0; }
+.pc-banner .pc-cat { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: .85; color: white; }
+.pc-banner .pc-title { font-size: 15px; font-weight: 800; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: white; }
+.pc-status-pill { position: absolute; top: 14px; left: 14px; font-size: 9.5px; font-weight: 800; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: .5px; z-index: 2; }
+.pc-status-pill.active { background: #dcfce7; color: #16a34a; }
+.pc-status-pill.draft { background: #f1f5f9; color: #64748b; }
+.pc-status-pill.upcoming { background: #dbeafe; color: #2563eb; }
+.pc-status-pill.completed { background: #ede9fe; color: #7c3aed; }
+.pc-status-pill.archived { background: #fee2e2; color: #dc2626; }
+
+/* Enrollment notification badge on card */
+.pc-enroll-badge { position: absolute; top: 14px; right: 14px; background: #ec4899; color: white; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 12px; z-index: 3; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 12px rgba(236,72,153,.4); animation: pulse-badge 2s infinite; }
+.program-card.demo-card .pc-enroll-badge { right: auto; left: 90px; }
+
+.program-card .pc-body { padding: 18px 22px 20px; flex: 1; display: flex; flex-direction: column; }
+.pc-desc { font-size: 13px; color: #475569; line-height: 1.55; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 40px; }
+.pc-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.pc-meta-item { background: #f8fafc; border-radius: 10px; padding: 9px 12px; border: 1px solid #f1f5f9; }
+.pc-meta-item .k { font-size: 9.5px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.pc-meta-item .v { font-size: 13px; font-weight: 800; color: #0b1a33; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+.pc-meta-item .v i { color: #2563eb; font-size: 11px; }
+.pc-meta-item .v.green { color: #059669; }
+.pc-meta-item .v.rose { color: #db2777; }
+.pc-skills-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #64748b; margin-bottom: 8px; }
+.pc-skills { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; min-height: 26px; }
+.sk-tag { font-size: 10.5px; padding: 4px 9px; border-radius: 7px; font-weight: 700; letter-spacing: .2px; display: inline-flex; align-items: center; gap: 4px; }
+.sk-critical { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.sk-important { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.sk-nice { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.sk-neutral { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.sk-tag .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* Progress bar inside card */
+.pc-progress { margin-bottom: 14px; }
+.pc-progress-head { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+.pc-progress-track { width: 100%; height: 7px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+.pc-progress-fill { height: 100%; background: linear-gradient(90deg,#2563eb,#7c3aed); border-radius: 10px; transition: width .8s ease; }
+.pc-progress-fill.green { background: linear-gradient(90deg,#10b981,#059669); }
+.pc-progress-fill.amber { background: linear-gradient(90deg,#f59e0b,#d97706); }
+
+.pc-footer { display: flex; gap: 7px; padding-top: 14px; border-top: 1px solid #f1f5f9; margin-top: auto; }
+.pc-btn { flex: 1; padding: 9px; border-radius: 10px; border: none; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .2s; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+.pc-btn.primary { background: linear-gradient(135deg,#2563eb,#7c3aed); color: white; }
+.pc-btn.primary:hover { box-shadow: 0 8px 18px rgba(37,99,235,.3); transform: translateY(-1px); }
+.pc-btn.ghost { background: #f1f5f9; color: #475569; }
+.pc-btn.ghost:hover { background: #e2e8f0; }
+.pc-btn.icon-only { flex: 0 0 40px; padding: 9px 0; }
+
+/* ========== EMPTY STATE ========== */
+.empty-state { text-align: center; padding: 70px 24px; background: white; border: 2px dashed #e2e8f0; border-radius: 18px; color: #94a3b8; grid-column: 1/-1; }
+.empty-state i { font-size: 56px; color: #c7d2fe; margin-bottom: 14px; display: block; }
+.empty-state h3 { font-size: 17px; color: #0b1a33; margin-bottom: 6px; font-weight: 800; }
+.empty-state p { font-size: 13px; color: #64748b; max-width: 400px; margin: 0 auto 16px; }
+.empty-state button { padding: 10px 20px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; background: linear-gradient(135deg,#2563eb,#7c3aed); color: white; }
+
+/* ========== MODAL ========== */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.65); backdrop-filter: blur(6px); z-index: 200; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
+.modal-overlay.active { display: flex; }
+.modal { background: white; border-radius: 22px; max-width: 800px; width: 100%; margin: 20px auto; box-shadow: 0 40px 100px -20px rgba(0,0,0,.4); animation: modalIn .3s cubic-bezier(.34,1.56,.64,1); overflow: hidden; }
+@keyframes modalIn { from { opacity: 0; transform: scale(.94) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.modal-header { padding: 22px 28px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg,#1e3a8a,#2563eb,#7c3aed); color: white; }
+.modal-header h3 { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: white; }
+.modal-header h3 i { color: #fde68a; }
+.modal-close { background: rgba(255,255,255,.15); border: none; color: white; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 16px; transition: .2s; }
+.modal-close:hover { background: rgba(255,255,255,.28); transform: rotate(90deg); }
+.modal-body { padding: 24px 28px; max-height: calc(100vh - 220px); overflow-y: auto; }
+.modal-footer { padding: 16px 28px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; background: #fafbff; }
+
+.form-section { margin-bottom: 20px; }
+.form-section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.form-section-header h4 { font-size: 13px; font-weight: 800; color: #0b1a33; text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; gap: 8px; }
+.form-section-header h4 i { color: #2563eb; font-size: 13px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid .full { grid-column: 1/-1; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 12.5px; font-weight: 600; color: #334155; display: flex; align-items: center; gap: 5px; }
+.form-group label i { color: #2563eb; font-size: 12px; }
+.form-group label .req { color: #ef4444; }
+.form-group input, .form-group select, .form-group textarea { padding: 11px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 13.5px; font-weight: 500; color: #0b1a33; background: #f8fafc; outline: none; transition: .2s; font-family: inherit; width: 100%; }
+.form-group textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #2563eb; background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+.form-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+/* Skill picker */
+.skill-picker { background: #f8fafc; border: 1.5px dashed #e2e8f0; border-radius: 12px; padding: 12px; min-height: 70px; display: flex; flex-wrap: wrap; gap: 7px; align-items: flex-start; transition: .2s; }
+.skill-picker:focus-within { border-color: #2563eb; background: white; }
+.skill-chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 9px; font-size: 12px; font-weight: 700; border: 1.5px solid transparent; cursor: pointer; user-select: none; transition: .15s; }
+.skill-chip.critical { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.skill-chip.important { background: #fef3c7; color: #d97706; border-color: #fde68a; }
+.skill-chip.nice { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.skill-chip:hover { transform: translateY(-2px); }
+.skill-chip .weight-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.skill-chip .remove { cursor: pointer; opacity: .55; font-size: 11px; margin-left: 2px; }
+.skill-chip .remove:hover { opacity: 1; color: #dc2626; }
+.skill-input-mini { background: transparent; border: none; outline: none; padding: 6px; font-size: 12.5px; font-weight: 500; color: #0b1a33; flex: 1; min-width: 120px; font-family: inherit; }
+.skill-input-mini::placeholder { color: #94a3b8; }
+.weight-legend { display: flex; gap: 14px; margin-top: 10px; font-size: 11px; color: #64748b; flex-wrap: wrap; }
+.weight-legend-item { display: flex; align-items: center; gap: 6px; }
+.weight-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ========== DRAWER ========== */
+.drawer-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); z-index: 200; opacity: 0; pointer-events: none; transition: .3s; }
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 600px; max-width: 94vw; background: white; z-index: 201; transform: translateX(100%); transition: transform .4s cubic-bezier(.16,1,.3,1); box-shadow: -20px 0 60px rgba(15,23,42,.2); overflow-y: auto; }
+.drawer.open { transform: translateX(0); }
+.drawer::-webkit-scrollbar { width: 5px; }
+.drawer::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.drawer-head { padding: 24px 26px; background: linear-gradient(135deg,#1e3a8a,#2563eb,#7c3aed); color: white; position: sticky; top: 0; z-index: 2; }
+.drawer-head h2, .drawer-head p { color: white; }
+.drawer-close { position: absolute; top: 18px; right: 18px; width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,.15); border: none; color: white; font-size: 15px; cursor: pointer; transition: .2s; }
+.drawer-close:hover { background: rgba(255,255,255,.28); transform: rotate(90deg); }
+.drawer-body { padding: 22px 26px 40px; }
+.drawer-sec { margin-bottom: 24px; }
+.drawer-sec h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: #64748b; margin-bottom: 12px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.drawer-sec h4 i { color: #2563eb; }
+.drawer-sec h4 .count-pill { background: #f1f5f9; color: #475569; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 800; letter-spacing: 0; }
+.drawer-sec h4 .count-pill.alert { background: #fef3c7; color: #d97706; animation: pulse-badge 2s infinite; }
+
+.kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kv-box { background: #f8fafc; border-radius: 12px; padding: 12px 14px; border: 1px solid #f1f5f9; }
+.kv-box .k { font-size: 10.5px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.kv-box .v { font-size: 14px; font-weight: 700; color: #0b1a33; margin-top: 4px; word-break: break-word; }
+.kv-box .v.highlight { color: #2563eb; }
+.kv-box .v.salary { color: #059669; }
+
+/* Enrolled trainees list */
+.enrolled-list { display: flex; flex-direction: column; gap: 10px; }
+.enrolled-item { background: #f8fafc; border-radius: 12px; padding: 14px 16px; border: 1px solid #f1f5f9; transition: .2s; display: flex; flex-direction: column; gap: 10px; }
+.enrolled-item:hover { background: #f1f5f9; }
+.enrolled-item.pending { border-left: 4px solid #d97706; background: linear-gradient(90deg, #fffbeb, #f8fafc); }
+.enrolled-item.approved { border-left: 4px solid #059669; background: linear-gradient(90deg, #f0fdf4, #f8fafc); }
+.enrolled-item.rejected { border-left: 4px solid #dc2626; background: linear-gradient(90deg, #fef2f2, #f8fafc); opacity: 0.75; }
+
+.enrolled-head { display: flex; gap: 12px; align-items: flex-start; }
+.enrolled-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 16px; flex-shrink: 0; }
+.enrolled-info { flex: 1; min-width: 0; }
+.enrolled-name { font-weight: 800; font-size: 14px; color: #0b1a33; margin-bottom: 3px; }
+.enrolled-meta { font-size: 11.5px; color: #64748b; display: flex; flex-wrap: wrap; gap: 10px; }
+.enrolled-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.enrolled-meta i { color: #2563eb; font-size: 10px; }
+.enrolled-status { padding: 4px 10px; border-radius: 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0; }
+.enrolled-status.pending { background: #fef3c7; color: #d97706; }
+.enrolled-status.approved { background: #dcfce7; color: #059669; }
+.enrolled-status.rejected { background: #fee2e2; color: #dc2626; }
+
+.enrolled-skills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.enrolled-skill { padding: 3px 8px; border-radius: 6px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 10px; font-weight: 700; }
+
+.enrolled-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.enrolled-btn { flex: 1; padding: 7px 12px; border-radius: 8px; border: none; font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit; transition: .2s; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-width: 90px; }
+.enrolled-btn.approve { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+.enrolled-btn.approve:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(16,185,129,.35); }
+.enrolled-btn.reject { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.enrolled-btn.reject:hover { background: #fee2e2; }
+.enrolled-btn.contact { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.enrolled-btn.contact:hover { background: #dbeafe; }
+.enrolled-btn:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
+
+/* ========== TOAST ========== */
+.toast-stack { position: fixed; top: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 10px; }
+.toast { background: #0b1120; color: white; padding: 13px 18px; border-radius: 13px; font-size: 13px; font-weight: 600; box-shadow: 0 12px 30px rgba(11,17,32,.3); display: flex; align-items: center; gap: 10px; animation: toastIn .35s cubic-bezier(.16,1,.3,1); min-width: 250px; }
+.toast.success { border-left: 4px solid #10b981; }
+.toast.error { border-left: 4px solid #ef4444; }
+.toast.info { border-left: 4px solid #2563eb; }
+.toast i { font-size: 16px; }
+.toast.success i { color: #10b981; }
+.toast.error i { color: #ef4444; }
+.toast.info i { color: #60a5fa; }
+@keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ============================================================
+   🌙 DARK MODE
+   ============================================================ */
+[data-theme="dark"] body { background: #0b1220; color: #e2e8f0; }
+[data-theme="dark"] .main-content { background: #0b1220; }
+[data-theme="dark"] .header { background: rgba(15,23,42,.92); border-bottom-color: rgba(51,65,85,.6); }
+[data-theme="dark"] .page-title h1 { color: #f1f5f9; }
+[data-theme="dark"] .page-title h1 i { color: #93c5fd; }
+[data-theme="dark"] .page-title p { color: #94a3b8; }
+[data-theme="dark"] .menu-toggle { color: #e2e8f0; }
+[data-theme="dark"] .header-right .date { background: #1e293b; color: #cbd5e1; }
+[data-theme="dark"] .header-right .notif { color: #cbd5e1; }
+[data-theme="dark"] .header-right .notif:hover { background: #1e293b; }
+[data-theme="dark"] .header-right .profile-btn { background: #1e293b; }
+[data-theme="dark"] .header-right .profile-btn:hover { background: #334155; }
+[data-theme="dark"] .header-right .profile-btn .name { color: #f1f5f9; }
+[data-theme="dark"] .theme-toggle { background: #1e293b; color: #cbd5e1; }
+[data-theme="dark"] .theme-toggle:hover { background: #334155; }
+[data-theme="dark"] .welcome { background: linear-gradient(135deg,#0f172a,#1e3a8a,#4c1d95); }
+[data-theme="dark"] .demo-banner { background: linear-gradient(90deg,#78350f,#831843); border-color: #92400e; color: #fde68a; }
+[data-theme="dark"] .demo-banner strong { color: #fcd34d; }
+[data-theme="dark"] .demo-banner .demo-close { color: #fde68a; }
+[data-theme="dark"] .stat-card { background: #111c33; border-color: #1e293b; box-shadow: 0 2px 12px rgba(0,0,0,.4); }
+[data-theme="dark"] .stat-card .stat-number { color: #f1f5f9; }
+[data-theme="dark"] .stat-card .stat-label { color: #94a3b8; }
+[data-theme="dark"] .stat-card .stat-icon.blue { background: #1e3a8a; color: #93c5fd; }
+[data-theme="dark"] .stat-card .stat-icon.green { background: #064e3b; color: #6ee7b7; }
+[data-theme="dark"] .stat-card .stat-icon.purple { background: #4c1d95; color: #c4b5fd; }
+[data-theme="dark"] .stat-card .stat-icon.orange { background: #78350f; color: #fcd34d; }
+[data-theme="dark"] .stat-card .stat-icon.rose { background: #831843; color: #f9a8d4; }
+[data-theme="dark"] .stat-card .stat-change.up { background: #064e3b; color: #6ee7b7; }
+[data-theme="dark"] .stat-card .stat-change.neutral { background: #1e293b; color: #cbd5e1; }
+[data-theme="dark"] .stat-card .stat-change.alert { background: #78350f; color: #fcd34d; }
+[data-theme="dark"] .toolbar { background: #111c33; border-color: #1e293b; }
+[data-theme="dark"] .tb-group label { color: #cbd5e1; }
+[data-theme="dark"] .tb-group label i { color: #60a5fa; }
+[data-theme="dark"] .tb-group input, [data-theme="dark"] .tb-group select { background: #0b1220; border-color: #334155; color: #f1f5f9; }
+[data-theme="dark"] .tb-group input::placeholder { color: #64748b; }
+[data-theme="dark"] .tb-group input:focus, [data-theme="dark"] .tb-group select:focus { background: #111c33; border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,.15); }
+[data-theme="dark"] .chip { background: #1e293b; color: #cbd5e1; }
+[data-theme="dark"] .chip:hover { background: #334155; }
+[data-theme="dark"] .chip.active { background: linear-gradient(135deg,#2563eb,#7c3aed); color: white; }
+[data-theme="dark"] .program-card { background: #111c33; border-color: #1e293b; box-shadow: 0 2px 12px rgba(0,0,0,.35); }
+[data-theme="dark"] .program-card:hover { box-shadow: 0 16px 40px rgba(37,99,235,.25); border-color: #3b82f6; }
+[data-theme="dark"] .program-card.demo-card::after { background: #78350f; color: #fde68a; }
+[data-theme="dark"] .pc-desc { color: #94a3b8; }
+[data-theme="dark"] .pc-meta-item { background: #0b1220; border-color: #1e293b; }
+[data-theme="dark"] .pc-meta-item .k { color: #64748b; }
+[data-theme="dark"] .pc-meta-item .v { color: #f1f5f9; }
+[data-theme="dark"] .pc-meta-item .v i { color: #60a5fa; }
+[data-theme="dark"] .pc-skills-label { color: #94a3b8; }
+[data-theme="dark"] .sk-critical { background: #7f1d1d; color: #fca5a5; border-color: #b91c1c; }
+[data-theme="dark"] .sk-important { background: #78350f; color: #fcd34d; border-color: #b45309; }
+[data-theme="dark"] .sk-nice { background: #1e3a8a; color: #93c5fd; border-color: #2563eb; }
+[data-theme="dark"] .sk-neutral { background: #1e293b; color: #cbd5e1; border-color: #334155; }
+[data-theme="dark"] .pc-progress-head { color: #94a3b8; }
+[data-theme="dark"] .pc-progress-track { background: #1e293b; }
+[data-theme="dark"] .pc-footer { border-top-color: #1e293b; }
+[data-theme="dark"] .pc-btn.ghost { background: #1e293b; color: #cbd5e1; }
+[data-theme="dark"] .pc-btn.ghost:hover { background: #334155; }
+[data-theme="dark"] .empty-state { background: #111c33; border-color: #334155; color: #94a3b8; }
+[data-theme="dark"] .empty-state i { color: #334155; }
+[data-theme="dark"] .empty-state h3 { color: #e2e8f0; }
+[data-theme="dark"] .empty-state p { color: #94a3b8; }
+[data-theme="dark"] .modal { background: #0b1220; }
+[data-theme="dark"] .modal-body { background: #0b1220; color: #e2e8f0; }
+[data-theme="dark"] .modal-footer { background: #111c33; border-top-color: #1e293b; }
+[data-theme="dark"] .form-section-header h4 { color: #e2e8f0; }
+[data-theme="dark"] .form-section-header h4 i { color: #60a5fa; }
+[data-theme="dark"] .form-group label { color: #cbd5e1; }
+[data-theme="dark"] .form-group input, [data-theme="dark"] .form-group select, [data-theme="dark"] .form-group textarea { background: #111c33; border-color: #334155; color: #f1f5f9; }
+[data-theme="dark"] .form-group input::placeholder, [data-theme="dark"] .form-group textarea::placeholder { color: #64748b; }
+[data-theme="dark"] .form-group input:focus, [data-theme="dark"] .form-group select:focus, [data-theme="dark"] .form-group textarea:focus { background: #0b1220; border-color: #60a5fa; }
+[data-theme="dark"] .skill-picker { background: #111c33; border-color: #334155; }
+[data-theme="dark"] .skill-picker:focus-within { background: #0b1220; border-color: #60a5fa; }
+[data-theme="dark"] .skill-chip.critical { background: #7f1d1d; color: #fca5a5; border-color: #b91c1c; }
+[data-theme="dark"] .skill-chip.important { background: #78350f; color: #fcd34d; border-color: #b45309; }
+[data-theme="dark"] .skill-chip.nice { background: #1e3a8a; color: #93c5fd; border-color: #2563eb; }
+[data-theme="dark"] .skill-input-mini { color: #f1f5f9; }
+[data-theme="dark"] .weight-legend { color: #94a3b8; }
+[data-theme="dark"] .drawer { background: #0b1220; }
+[data-theme="dark"] .drawer-body { background: #0b1220; color: #e2e8f0; }
+[data-theme="dark"] .drawer-sec h4 { color: #94a3b8; }
+[data-theme="dark"] .drawer-sec h4 i { color: #60a5fa; }
+[data-theme="dark"] .drawer-sec h4 .count-pill { background: #1e293b; color: #cbd5e1; }
+[data-theme="dark"] .drawer-sec h4 .count-pill.alert { background: #78350f; color: #fcd34d; }
+[data-theme="dark"] .kv-box { background: #111c33; border-color: #1e293b; }
+[data-theme="dark"] .kv-box .k { color: #64748b; }
+[data-theme="dark"] .kv-box .v { color: #f1f5f9; }
+[data-theme="dark"] .kv-box .v.highlight { color: #60a5fa; }
+[data-theme="dark"] .kv-box .v.salary { color: #6ee7b7; }
+[data-theme="dark"] .enrolled-item { background: #111c33; border-color: #1e293b; }
+[data-theme="dark"] .enrolled-item:hover { background: #1e293b; }
+[data-theme="dark"] .enrolled-item.pending { background: linear-gradient(90deg, #4a2d06, #111c33); }
+[data-theme="dark"] .enrolled-item.approved { background: linear-gradient(90deg, #064e3b, #111c33); }
+[data-theme="dark"] .enrolled-item.rejected { background: linear-gradient(90deg, #4c1d1d, #111c33); }
+[data-theme="dark"] .enrolled-name { color: #f1f5f9; }
+[data-theme="dark"] .enrolled-meta { color: #94a3b8; }
+[data-theme="dark"] .enrolled-meta i { color: #60a5fa; }
+[data-theme="dark"] .enrolled-skill { background: #1e3a8a; color: #93c5fd; border-color: #2563eb; }
+[data-theme="dark"] .enrolled-btn.contact { background: #1e3a8a; color: #93c5fd; border-color: #2563eb; }
+[data-theme="dark"] .enrolled-btn.reject { background: #7f1d1d; color: #fca5a5; border-color: #b91c1c; }
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .form-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; }
+  .menu-toggle { display: block; }
+  .header { padding: 12px 18px; flex-wrap: wrap; gap: 8px; }
+  .header-left .page-title h1 { font-size: 17px; }
+  .header-right .date { display: none; }
+  .container { padding: 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .program-grid { grid-template-columns: 1fr; }
+  .kv-grid { grid-template-columns: 1fr; }
+  .drawer { width: 100vw; }
+  .welcome { padding: 20px; }
+  .welcome h2 { font-size: 20px; }
+}
+@media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } .header-right .profile-btn .name { display: none; } .header-left .page-title p { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- ========== SIDEBAR ========== -->
+<nav class="sidebar" id="sidebar">
+<div class="sidebar-brand">
+<div class="icon"><i class="fas fa-brain"></i></div>
+<div>
+<h2>SkillBridge</h2>
+<p>Provider Portal</p>
+</div>
+</div>
+<div class="sidebar-user">
+<div class="avatar" id="sidebarAvatar">P</div>
+<div class="info">
+<div class="name" id="sidebarName">Provider</div>
+<div class="role" id="sidebarRole">Training Provider</div>
+</div>
+</div>
+<div class="menu-label">Main</div>
+<div class="menu">
+<a href="dashboard.html"><i class="fas fa-chart-pie"></i> Overview</a>
+<a href="trainee-outcomes.html"><i class="fas fa-users"></i> Trainee Outcomes</a>
+<a href="employment&retention.html"><i class="fas fa-briefcase"></i> Employment & Retention</a>
+<a href="employer-feedback.html"><i class="fas fa-comment"></i> Employer Feedback</a>
+<a href="skill-gaps.html"><i class="fas fa-arrow-up"></i> Skills Gaps</a>
+<div class="menu-label" style="margin-top:14px;">Programs</div>
+<a class="active" href="training-programs.html"><i class="fas fa-graduation-cap"></i> Training Programs <span class="badge new">NEW</span></a>
+</div>
+<div class="sidebar-footer">
+<a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
+</nav>
+
+<!-- ========== MAIN ========== -->
+<div class="main-content">
+
+<header class="header">
+<div class="header-left">
+<button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+<i class="fas fa-bars"></i>
+</button>
+<div class="page-title">
+<h1><i class="fas fa-graduation-cap"></i> Training Programs</h1>
+<p>Create programs, manage enrollments, track trainee progress</p>
+</div>
+</div>
+<div class="header-right">
+<button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+<i class="fas fa-moon"></i>
+</button>
+<span class="date" id="dateDisplay"></span>
+<div class="notif" onclick="showNotifications()">
+<i class="fas fa-bell"></i>
+<span class="badge" id="notifBadge">0</span>
+</div>
+<button class="profile-btn" onclick="toggleProfileMenu()">
+<div class="avatar" id="headerAvatar">P</div>
+<span class="name" id="headerName">Provider</span>
+<i class="fas fa-chevron-down"></i>
+</button>
+</div>
+</header>
+
+<div class="container">
+
+<!-- ========== WELCOME ========== -->
+<div class="welcome">
+<div class="welcome-content">
+<h2><i class="fas fa-hand-peace"></i> Manage Your Training Programs</h2>
+<p>Create programs, review trainee enrollments, approve candidates, and track curriculum coverage across all your offerings.</p>
+<div class="welcome-stats">
+<div><strong id="statTotalPrograms">0</strong> Total Programs</div>
+<div><strong id="statActivePrograms">0</strong> Active</div>
+<div><strong id="statTotalEnrolled">0</strong> Enrolled Trainees</div>
+<div><strong id="statPendingEnrollments">0</strong> Pending</div>
+</div>
+</div>
+</div>
+
+<!-- ========== DEMO BANNER ========== -->
+<div class="demo-banner" id="demoBanner" style="display:none;">
+<i class="fas fa-flask"></i>
+<div>
+<strong>Demo mode active.</strong> Showing <span id="demoCount">0</span> sample programs to help you explore the program management tools. Your real Firestore data is untouched — sample cards are marked with a "SAMPLE" tag.
+</div>
+<button class="demo-close" onclick="hideDemoBanner()" title="Dismiss"><i class="fas fa-times"></i></button>
+</div>
+
+<!-- ========== STATS ========== -->
+<div class="stats-grid">
+<div class="stat-card">
+<div class="stat-top">
+<div class="stat-icon blue"><i class="fas fa-graduation-cap"></i></div>
+<span class="stat-change up" id="trendTotal">—</span>
+</div>
+<div class="stat-number" id="statTotal">0</div>
+<div class="stat-label">Total Programs</div>
+</div>
+<div class="stat-card">
+<div class="stat-top">
+<div class="stat-icon green"><i class="fas fa-play-circle"></i></div>
+<span class="stat-change up">Active</span>
+</div>
+<div class="stat-number" id="statActive">0</div>
+<div class="stat-label">Active Programs</div>
+</div>
+<div class="stat-card">
+<div class="stat-top">
+<div class="stat-icon purple"><i class="fas fa-users"></i></div>
+<span class="stat-change neutral">Enrolled</span>
+</div>
+<div class="stat-number" id="statEnrolled">0</div>
+<div class="stat-label">Trainees Enrolled</div>
+</div>
+<div class="stat-card">
+<div class="stat-top">
+<div class="stat-icon rose"><i class="fas fa-hourglass-half"></i></div>
+<span class="stat-change alert" id="pendingBadgeTop">0</span>
+</div>
+<div class="stat-number" id="statPending">0</div>
+<div class="stat-label">Pending Enrollments</div>
+</div>
+</div>
+
+<!-- ========== TOOLBAR ========== -->
+<div class="toolbar">
+<div class="toolbar-row">
+<div class="tb-group grow">
+<label><i class="fas fa-search"></i> Search Programs</label>
+<input type="text" id="searchInput" placeholder="Program name, category, trainer..." oninput="applyFilters()">
+</div>
+<div class="tb-group">
+<label><i class="fas fa-layer-group"></i> Category</label>
+<select id="categoryFilter" onchange="applyFilters()">
+<option value="all">All Categories</option>
+<option value="IT & Software">IT & Software</option>
+<option value="Data & AI">Data & AI</option>
+<option value="Cloud & Cyber">Cloud & Cyber</option>
+<option value="Design">Design</option>
+<option value="Business">Business</option>
+<option value="Engineering">Engineering</option>
+<option value="Healthcare">Healthcare</option>
+<option value="Skilled Trades">Skilled Trades</option>
+</select>
+</div>
+<div class="tb-group">
+<label><i class="fas fa-sort"></i> Sort By</label>
+<select id="sortSelect" onchange="applyFilters()">
+<option value="recent">Most Recent</option>
+<option value="name-asc">Name (A–Z)</option>
+<option value="enrolled-desc">Most Enrolled</option>
+<option value="pending-desc">Most Pending Enrollments</option>
+<option value="progress-desc">Highest Progress</option>
+<option value="duration-asc">Shortest Duration</option>
+</select>
+</div>
+<button class="btn-add-program" onclick="openCreateModal()">
+<i class="fas fa-plus-circle"></i> Create Program
+</button>
+</div>
+<div class="chip-row">
+<span class="chip active" data-filter="all" onclick="setStatusFilter(this)">All Status</span>
+<span class="chip" data-filter="active" onclick="setStatusFilter(this)">▶ Active</span>
+<span class="chip" data-filter="upcoming" onclick="setStatusFilter(this)">📅 Upcoming</span>
+<span class="chip" data-filter="completed" onclick="setStatusFilter(this)">✓ Completed</span>
+<span class="chip" data-filter="draft" onclick="setStatusFilter(this)">📝 Draft</span>
+<span class="chip" data-filter="archived" onclick="setStatusFilter(this)">🗄️ Archived</span>
+<span class="chip" data-filter="pending" onclick="setStatusFilter(this)">⏳ Has Pending</span>
+<span class="chip" data-filter="real" onclick="setStatusFilter(this)">🌐 Real Only</span>
+<span class="chip" data-filter="sample" onclick="setStatusFilter(this)">🧪 Sample Only</span>
+</div>
+</div>
+
+<!-- ========== PROGRAM GRID ========== -->
+<div class="program-grid" id="programGrid">
+<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><h3>Loading programs…</h3></div>
+</div>
+
+</div>
+</div>
+
+<!-- ========== DRAWER (Program Details) ========== -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+<div class="drawer-head">
+<button class="drawer-close" onclick="closeDrawer()"><i class="fas fa-times"></i></button>
+<div style="display:flex;gap:14px;align-items:center;">
+<div class="pc-icon" id="drawerIcon" style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;color:white;">📚</div>
+<div>
+<h2 id="drawerName" style="font-size:19px;font-weight:800;color:white;">Program Name</h2>
+<p id="drawerCat" style="font-size:12px;opacity:.85;margin-top:3px;color:white;">Category</p>
+<p id="drawerStatus" style="font-size:11px;opacity:.7;margin-top:3px;color:white;"></p>
+</div>
+</div>
+</div>
+<div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- ========== MODAL (Create/Edit) ========== -->
+<div class="modal-overlay" id="programModal">
+<div class="modal">
+<div class="modal-header">
+<h3><i class="fas fa-plus-circle"></i> <span id="modalTitle">Create New Program</span></h3>
+<button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+</div>
+<div class="modal-body">
+<!-- Basic Info -->
+<div class="form-section">
+<div class="form-section-header"><h4><i class="fas fa-info-circle"></i> Basic Information</h4></div>
+<div class="form-grid">
+<div class="form-group full">
+<label><i class="fas fa-graduation-cap"></i> Program Name <span class="req">*</span></label>
+<input type="text" id="progName" placeholder="e.g. Full Stack Web Development" />
+</div>
+<div class="form-group">
+<label><i class="fas fa-layer-group"></i> Category <span class="req">*</span></label>
+<select id="progCategory">
+<option value="">Select Category</option>
+<option>IT & Software</option>
+<option>Data & AI</option>
+<option>Cloud & Cyber</option>
+<option>Design</option>
+<option>Business</option>
+<option>Engineering</option>
+<option>Healthcare</option>
+<option>Skilled Trades</option>
+</select>
+</div>
+<div class="form-group">
+<label><i class="fas fa-signal"></i> Level</label>
+<select id="progLevel">
+<option>Beginner</option>
+<option>Intermediate</option>
+<option>Advanced</option>
+</select>
+</div>
+<div class="form-group">
+<label><i class="fas fa-clock"></i> Duration (weeks)</label>
+<input type="number" id="progDuration" placeholder="12" min="1" />
+</div>
+<div class="form-group">
+<label><i class="fas fa-user-tie"></i> Trainer Name</label>
+<input type="text" id="progTrainer" placeholder="e.g. Mr. Rajesh Kumar" />
+</div>
+<div class="form-group">
+<label><i class="fas fa-calendar-alt"></i> Start Date</label>
+<input type="date" id="progStartDate" />
+</div>
+<div class="form-group">
+<label><i class="fas fa-users"></i> Max Seats</label>
+<input type="number" id="progMaxSeats" placeholder="30" min="1" />
+</div>
+<div class="form-group full">
+<label><i class="fas fa-align-left"></i> Description</label>
+<textarea id="progDescription" placeholder="Brief overview of the program..."></textarea>
+</div>
+</div>
+</div>
+
+<!-- Skills -->
+<div class="form-section">
+<div class="form-section-header"><h4><i class="fas fa-code"></i> Skills Covered</h4></div>
+<div class="skill-picker" id="skillPicker">
+<input type="text" class="skill-input-mini" id="skillInput" placeholder="Type a skill + Enter" />
+</div>
+<div class="weight-legend">
+<div class="weight-legend-item"><span class="weight-legend-dot" style="background:#dc2626"></span> Critical</div>
+<div class="weight-legend-item"><span class="weight-legend-dot" style="background:#d97706"></span> Important</div>
+<div class="weight-legend-item"><span class="weight-legend-dot" style="background:#2563eb"></span> Nice-to-have</div>
+</div>
+</div>
+
+<!-- Status -->
+<div class="form-section">
+<div class="form-section-header"><h4><i class="fas fa-toggle-on"></i> Status</h4></div>
+<div class="form-grid">
+<div class="form-group">
+<label><i class="fas fa-circle"></i> Program Status</label>
+<select id="progStatus">
+<option value="draft">Draft</option>
+<option value="upcoming">Upcoming</option>
+<option value="active">Active</option>
+<option value="completed">Completed</option>
+<option value="archived">Archived</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<div class="modal-footer">
+<button class="pc-btn ghost" style="padding:10px 20px;" onclick="closeModal()">
+<i class="fas fa-times"></i> Cancel
+</button>
+<button class="pc-btn primary" style="padding:10px 22px;" onclick="saveProgram()">
+<i class="fas fa-save"></i> Save Program
+</button>
+</div>
+</div>
+</div>
+
+<!-- ========== TOAST STACK ========== -->
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* ============================================================
+   FIREBASE CONFIG
+   ============================================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let _firebaseUser = null;
+let _userProfile = null;
+let _providerData = null;
+let allPrograms = [];
+let filteredPrograms = [];
+let allEnrollments = [];              // ← enrollments for this provider
+let enrollmentsByProgram = {};         // ← { programId: [enrollments] }
+let unsubscribeEnrollments = null;    // ← real-time listener
+let demoAdded = 0;
+let activeStatusFilter = 'all';
+let editingProgramId = null;
+let currentSkills = [];
+let _demoBannerDismissed = false;
+let _prevEnrollmentCount = 0;
+
+const MIN_REAL_PROGRAMS = 10;
+const DEFAULT_WEIGHTS = { critical: 3, important: 2, nice: 1 };
+
+/* ============================================================
+   📦 DEMO PROGRAM DATA
+   ============================================================ */
+const DEMO_PROGRAMS_RAW = [
+  { name:'Full Stack Web Development',      category:'IT & Software', level:'Intermediate', duration:16, trainer:'Mr. Rajesh Kumar',   startDate:'2026-10-01', maxSeats:30, enrolled:28, completed:12, status:'active',   icon:'💻', desc:'Master modern web development with React, Node.js, MongoDB and REST APIs.', skills:[{name:'javascript',weight:'critical'},{name:'react',weight:'critical'},{name:'node.js',weight:'important'},{name:'mongodb',weight:'important'},{name:'git',weight:'nice'}] },
+  { name:'Python for Beginners',             category:'IT & Software', level:'Beginner',     duration:8,  trainer:'Ms. Priya Nair',     startDate:'2026-10-15', maxSeats:40, enrolled:38, completed:30, status:'active',   icon:'🐍', desc:'Learn Python programming from scratch — syntax, OOP, and real projects.',         skills:[{name:'python',weight:'critical'},{name:'oop',weight:'important'},{name:'debugging',weight:'nice'},{name:'git',weight:'nice'}] },
+  { name:'Java Backend Development',         category:'IT & Software', level:'Advanced',     duration:20, trainer:'Mr. Suresh Iyer',    startDate:'2026-11-01', maxSeats:25, enrolled:22, completed:5,  status:'upcoming', icon:'☕', desc:'Enterprise Java with Spring Boot, microservices, and databases.',                  skills:[{name:'java',weight:'critical'},{name:'spring boot',weight:'critical'},{name:'sql',weight:'important'},{name:'docker',weight:'nice'}] },
+  { name:'Android App Development',          category:'IT & Software', level:'Intermediate', duration:14, trainer:'Ms. Neha Gupta',     startDate:'2026-10-20', maxSeats:30, enrolled:26, completed:10, status:'active',   icon:'📱', desc:'Build native Android apps using Kotlin, Jetpack Compose and Firebase.',           skills:[{name:'kotlin',weight:'critical'},{name:'android studio',weight:'critical'},{name:'firebase',weight:'important'},{name:'rest api',weight:'important'}] },
+  { name:'iOS App Development',              category:'IT & Software', level:'Intermediate', duration:14, trainer:'Mr. Sameer Joshi',   startDate:'2026-11-10', maxSeats:20, enrolled:15, completed:0,  status:'upcoming', icon:'🍎', desc:'Swift and SwiftUI for building beautiful iOS applications.',                       skills:[{name:'swift',weight:'critical'},{name:'swiftui',weight:'critical'},{name:'xcode',weight:'important'},{name:'firebase',weight:'nice'}] },
+  { name:'Software Testing Automation',      category:'IT & Software', level:'Intermediate', duration:10, trainer:'Mr. Rohit Bansal',   startDate:'2026-10-25', maxSeats:25, enrolled:20, completed:8,  status:'active',   icon:'🧪', desc:'Automated testing with Selenium, TestNG and API testing frameworks.',              skills:[{name:'selenium',weight:'critical'},{name:'java',weight:'important'},{name:'testng',weight:'important'},{name:'api testing',weight:'nice'}] },
+  { name:'DevOps Engineering',               category:'IT & Software', level:'Advanced',     duration:12, trainer:'Mr. Aditya Joshi',   startDate:'2026-09-15', maxSeats:20, enrolled:18, completed:15, status:'active',   icon:'⚙️', desc:'CI/CD, Docker, Kubernetes, Terraform and modern DevOps practices.',                skills:[{name:'docker',weight:'critical'},{name:'kubernetes',weight:'critical'},{name:'terraform',weight:'important'},{name:'jenkins',weight:'important'}] },
+  { name:'Data Analytics Bootcamp',          category:'Data & AI',     level:'Intermediate', duration:12, trainer:'Ms. Divya Krishnan', startDate:'2026-10-05', maxSeats:30, enrolled:28, completed:20, status:'active',   icon:'📊', desc:'Master SQL, Power BI, Tableau and statistical analysis for real-world data.',       skills:[{name:'sql',weight:'critical'},{name:'power bi',weight:'critical'},{name:'tableau',weight:'important'},{name:'statistics',weight:'important'}] },
+  { name:'Data Science with Python',         category:'Data & AI',     level:'Advanced',     duration:20, trainer:'Mr. Arjun Kumar',    startDate:'2026-11-05', maxSeats:25, enrolled:22, completed:3,  status:'upcoming', icon:'🔬', desc:'Python, Pandas, NumPy, and statistical modelling for data science roles.',           skills:[{name:'python',weight:'critical'},{name:'pandas',weight:'critical'},{name:'numpy',weight:'important'},{name:'statistics',weight:'important'}] },
+  { name:'Machine Learning Engineering',     category:'Data & AI',     level:'Advanced',     duration:24, trainer:'Dr. Sameer Khan',    startDate:'2026-11-20', maxSeats:20, enrolled:16, completed:0,  status:'upcoming', icon:'🤖', desc:'Production ML with TensorFlow, PyTorch, MLOps and deployment.',                     skills:[{name:'python',weight:'critical'},{name:'tensorflow',weight:'critical'},{name:'pytorch',weight:'important'},{name:'mlops',weight:'important'}] },
+  { name:'Business Analytics',               category:'Data & AI',     level:'Intermediate', duration:10, trainer:'Ms. Divya Krishnan', startDate:'2026-10-10', maxSeats:35, enrolled:32, completed:25, status:'active',   icon:'📈', desc:'Excel, SQL, and BI tools for business decision-making and reporting.',               skills:[{name:'excel',weight:'critical'},{name:'sql',weight:'important'},{name:'power bi',weight:'important'},{name:'jira',weight:'nice'}] },
+  { name:'Deep Learning Specialization',     category:'Data & AI',     level:'Advanced',     duration:16, trainer:'Dr. Sameer Khan',    startDate:'2026-12-01', maxSeats:15, enrolled:10, completed:0,  status:'upcoming', icon:'🧠', desc:'Neural networks, CNNs, RNNs and transformers with hands-on projects.',                skills:[{name:'python',weight:'critical'},{name:'pytorch',weight:'critical'},{name:'neural networks',weight:'critical'},{name:'keras',weight:'important'}] },
+  { name:'Data Engineering with Spark',      category:'Data & AI',     level:'Advanced',     duration:16, trainer:'Mr. Nikhil Pillai',  startDate:'2026-10-08', maxSeats:20, enrolled:18, completed:6,  status:'active',   icon:'🛠️', desc:'Apache Spark, Hadoop, Kafka and building modern data pipelines.',                     skills:[{name:'spark',weight:'critical'},{name:'kafka',weight:'critical'},{name:'python',weight:'important'},{name:'sql',weight:'important'}] },
+  { name:'AWS Cloud Practitioner',           category:'Cloud & Cyber', level:'Beginner',     duration:8,  trainer:'Ms. Shreya Banerjee', startDate:'2026-10-12', maxSeats:40, enrolled:38, completed:22, status:'active',   icon:'☁️', desc:'AWS fundamentals: EC2, S3, IAM, VPC and preparing for the CCP exam.',                skills:[{name:'aws',weight:'critical'},{name:'networking',weight:'important'},{name:'linux',weight:'important'},{name:'bash',weight:'nice'}] },
+  { name:'Kubernetes Administration',        category:'Cloud & Cyber', level:'Advanced',     duration:12, trainer:'Mr. Aditya Joshi',   startDate:'2026-11-15', maxSeats:20, enrolled:14, completed:0,  status:'upcoming', icon:'⎈',  desc:'Kubernetes architecture, deployments, services and CKA exam prep.',                   skills:[{name:'kubernetes',weight:'critical'},{name:'docker',weight:'critical'},{name:'linux',weight:'important'},{name:'bash',weight:'important'}] },
+  { name:'Cybersecurity Fundamentals',       category:'Cloud & Cyber', level:'Intermediate', duration:12, trainer:'Mr. Ravi Deshmukh',  startDate:'2026-10-18', maxSeats:30, enrolled:26, completed:10, status:'active',   icon:'🛡️', desc:'Network security, ethical hacking, and incident response basics.',                   skills:[{name:'networking',weight:'critical'},{name:'linux',weight:'important'},{name:'wireshark',weight:'important'},{name:'python',weight:'nice'}] },
+  { name:'Ethical Hacking Advanced',         category:'Cloud & Cyber', level:'Advanced',     duration:16, trainer:'Mr. Ravi Deshmukh',  startDate:'2026-12-05', maxSeats:20, enrolled:15, completed:0,  status:'upcoming', icon:'🔓', desc:'Advanced penetration testing, red teaming, and exploit development.',                  skills:[{name:'penetration testing',weight:'critical'},{name:'python',weight:'critical'},{name:'owasp',weight:'important'},{name:'networking',weight:'important'}] },
+  { name:'Azure Cloud Engineering',          category:'Cloud & Cyber', level:'Intermediate', duration:12, trainer:'Mr. Mohit Saxena',   startDate:'2026-10-22', maxSeats:25, enrolled:20, completed:8,  status:'active',   icon:'🔷', desc:'Microsoft Azure services, ARM templates, and cloud architecture.',                   skills:[{name:'azure',weight:'critical'},{name:'powershell',weight:'important'},{name:'networking',weight:'important'},{name:'docker',weight:'nice'}] },
+  { name:'UI/UX Design Masterclass',         category:'Design',        level:'Intermediate', duration:12, trainer:'Ms. Sneha Iyer',     startDate:'2026-10-03', maxSeats:30, enrolled:28, completed:18, status:'active',   icon:'🎨', desc:'Figma, prototyping, user research and design systems for modern products.',            skills:[{name:'figma',weight:'critical'},{name:'wireframing',weight:'important'},{name:'user research',weight:'critical'},{name:'prototyping',weight:'important'}] },
+  { name:'Graphic Design with Adobe Suite',  category:'Design',        level:'Beginner',     duration:8,  trainer:'Ms. Tanya Kapoor',   startDate:'2026-10-20', maxSeats:35, enrolled:30, completed:12, status:'active',   icon:'✏️', desc:'Photoshop, Illustrator, InDesign and brand design fundamentals.',                     skills:[{name:'photoshop',weight:'critical'},{name:'illustrator',weight:'critical'},{name:'indesign',weight:'important'},{name:'canva',weight:'nice'}] },
+  { name:'Motion Graphics & Animation',      category:'Design',        level:'Intermediate', duration:10, trainer:'Mr. Kiran Desai',    startDate:'2026-11-12', maxSeats:20, enrolled:12, completed:0,  status:'upcoming', icon:'🎬', desc:'After Effects, motion design, 2D/3D animation for media.',                            skills:[{name:'after effects',weight:'critical'},{name:'motion design',weight:'critical'},{name:'premiere pro',weight:'important'}] },
+  { name:'Digital Marketing Certification',  category:'Business',      level:'Beginner',     duration:10, trainer:'Mr. Karan Mehta',    startDate:'2026-10-08', maxSeats:40, enrolled:35, completed:22, status:'active',   icon:'📣', desc:'SEO, SEM, social media, email marketing, and analytics.',                             skills:[{name:'seo',weight:'critical'},{name:'google analytics',weight:'critical'},{name:'social media',weight:'important'},{name:'canva',weight:'nice'}] },
+  { name:'Project Management (PMP Prep)',    category:'Business',      level:'Advanced',     duration:16, trainer:'Ms. Ritu Chauhan',   startDate:'2026-11-01', maxSeats:25, enrolled:20, completed:2,  status:'upcoming', icon:'📋', desc:'PMP exam preparation covering scope, time, cost, risk and agile methodologies.',       skills:[{name:'project management',weight:'critical'},{name:'agile',weight:'important'},{name:'scrum',weight:'important'},{name:'communication',weight:'nice'}] },
+  { name:'Human Resource Management',        category:'Business',      level:'Intermediate', duration:8,  trainer:'Ms. Lakshmi Rao',    startDate:'2026-10-15', maxSeats:30, enrolled:24, completed:10, status:'active',   icon:'👥', desc:'Recruitment, onboarding, HR operations, compliance and payroll.',                     skills:[{name:'recruitment',weight:'critical'},{name:'hr operations',weight:'important'},{name:'payroll',weight:'important'},{name:'communication',weight:'nice'}] },
+  { name:'Sales & Business Development',     category:'Business',      level:'Beginner',     duration:6,  trainer:'Mr. Deepak Yadav',   startDate:'2026-10-05', maxSeats:35, enrolled:30, completed:20, status:'active',   icon:'💼', desc:'B2B and B2C sales, negotiation, CRM tools and customer acquisition.',                  skills:[{name:'sales',weight:'critical'},{name:'negotiation',weight:'critical'},{name:'crm',weight:'important'},{name:'communication',weight:'important'}] },
+  { name:'AutoCAD for Civil Engineers',      category:'Engineering',   level:'Intermediate', duration:12, trainer:'Mr. Rohan Malhotra', startDate:'2026-10-12', maxSeats:30, enrolled:26, completed:14, status:'active',   icon:'📐', desc:'2D/3D drafting, construction drawings and AutoCAD Civil 3D.',                          skills:[{name:'autocad',weight:'critical'},{name:'drafting',weight:'important'},{name:'3d modeling',weight:'important'},{name:'construction management',weight:'nice'}] },
+  { name:'PLC & SCADA Programming',          category:'Engineering',   level:'Advanced',     duration:16, trainer:'Mr. Vikram Singh',   startDate:'2026-11-08', maxSeats:20, enrolled:15, completed:3,  status:'upcoming', icon:'⚡', desc:'Industrial automation, PLC programming, SCADA systems.',                               skills:[{name:'plc',weight:'critical'},{name:'scada',weight:'critical'},{name:'instrumentation',weight:'important'},{name:'matlab',weight:'nice'}] },
+  { name:'Mechanical CAD Design',            category:'Engineering',   level:'Intermediate', duration:12, trainer:'Mr. Ravi Deshmukh',  startDate:'2026-10-18', maxSeats:25, enrolled:22, completed:10, status:'active',   icon:'🔧', desc:'SolidWorks, CATIA, GD&T and mechanical component design.',                            skills:[{name:'solidworks',weight:'critical'},{name:'catia',weight:'important'},{name:'gd&t',weight:'important'},{name:'3d modeling',weight:'nice'}] },
+  { name:'Healthcare Assistant Training',    category:'Healthcare',    level:'Beginner',     duration:10, trainer:'Dr. Meera Patel',    startDate:'2026-10-08', maxSeats:30, enrolled:28, completed:15, status:'active',   icon:'🏥', desc:'Patient care, first aid, medical terminology and hospital protocols.',                 skills:[{name:'patient care',weight:'critical'},{name:'first aid',weight:'critical'},{name:'communication',weight:'important'},{name:'medical terminology',weight:'important'}] },
+  { name:'Accounting with Tally & GST',      category:'Skilled Trades', level:'Intermediate', duration:8,  trainer:'Ms. Meera Patel',    startDate:'2026-10-01', maxSeats:30, enrolled:28, completed:20, status:'active',   icon:'💰', desc:'Tally ERP, GST filing, bookkeeping and financial reporting.',                          skills:[{name:'tally',weight:'critical'},{name:'gst',weight:'critical'},{name:'accounting',weight:'important'},{name:'excel',weight:'important'}] }
+];
+
+/* ============================================================
+   AUTH GUARD
+   ============================================================ */
+function requireAuth() {
+    return new Promise((resolve, reject) => {
+        const unsub = auth.onAuthStateChanged(async (fbUser) => {
+            unsub();
+            if (!fbUser) {
+                window.location.href = '../auth/login.html?role=provider';
+                reject('not-authenticated');
+                return;
+            }
+            try {
+                const snap = await db.collection('users').doc(fbUser.uid).get();
+                if (!snap.exists) {
+                    window.location.href = '../auth/login.html?role=provider';
+                    reject('no-profile');
+                    return;
+                }
+                const profile = snap.data();
+                if (profile.role !== 'provider') {
+                    await auth.signOut();
+                    window.location.href = '../auth/login.html?role=provider';
+                    reject('wrong-role');
+                    return;
+                }
+                _firebaseUser = fbUser;
+                _userProfile = profile;
+                resolve(fbUser);
+            } catch (e) {
+                console.error('Auth guard error:', e);
+                reject(e);
+            }
+        });
+    });
+}
+
+/* ============================================================
+   PROVIDER DATA
+   ============================================================ */
+async function getProviderData() {
+    if (!_firebaseUser) return { orgName: 'Your Training Centre', contactPerson: 'Provider' };
+    const uid = _firebaseUser.uid;
+    let data = {};
+    try {
+        const provSnap = await db.collection('providers').doc(uid).get();
+        if (provSnap.exists) data = provSnap.data();
+    } catch (e) {}
+    if (!data.orgName) {
+        try {
+            const userSnap = await db.collection('users').doc(uid).get();
+            if (userSnap.exists) data = { ...userSnap.data(), ...data };
+        } catch (e) {}
+    }
+    if (_userProfile) data = { ..._userProfile, ...data };
+    return {
+        uid,
+        providerId: data.providerCode || data.providerId || ('PRV' + uid.substring(0, 6).toUpperCase()),
+        orgName: data.orgName || data.organizationName || data.centreName || _firebaseUser.displayName || 'Your Training Centre',
+        contactPerson: data.repName || data.contactPerson || data.ownerName || _firebaseUser.displayName || 'Provider',
+        email: data.email || _firebaseUser.email || ''
+    };
+}
+
+/* ============================================================
+   LOAD PROGRAMS (real only)
+   ============================================================ */
+async function loadPrograms() {
+    const realPrograms = [];
+    if (_firebaseUser) {
+        try {
+            const snap = await db.collection('programs').where('providerUid','==',_firebaseUser.uid).get();
+            snap.forEach(d => realPrograms.push({ id: d.id, ...d.data(), _isDemo: false }));
+        } catch (e) {
+            try {
+                const snap2 = await db.collection('providers').doc(_firebaseUser.uid).collection('programs').get();
+                snap2.forEach(d => realPrograms.push({ id: d.id, ...d.data(), _isDemo: false }));
+            } catch (e2) { console.warn('programs read failed:', e2); }
+        }
+    }
+    return realPrograms;
+}
+
+/* ============================================================
+   ⚡ SUBSCRIBE TO ENROLLMENTS (real-time!)
+   ============================================================ */
+function subscribeToEnrollments() {
+    if (!_firebaseUser) return;
+    if (unsubscribeEnrollments) { try { unsubscribeEnrollments(); } catch(e){} unsubscribeEnrollments = null; }
+
+    try {
+        unsubscribeEnrollments = db.collection('enrollments')
+            .where('providerUid', '==', _firebaseUser.uid)
+            .onSnapshot(snap => {
+                allEnrollments = [];
+                snap.forEach(d => allEnrollments.push({ id: d.id, ...d.data() }));
+
+                // Sort by most recent
+                allEnrollments.sort((a,b) => {
+                    const ta = a.enrolledAt && a.enrolledAt.toDate ? a.enrolledAt.toDate().getTime() : 0;
+                    const tb = b.enrolledAt && b.enrolledAt.toDate ? b.enrolledAt.toDate().getTime() : 0;
+                    return tb - ta;
+                });
+
+                // Group by programId
+                enrollmentsByProgram = {};
+                allEnrollments.forEach(e => {
+                    if (!enrollmentsByProgram[e.programId]) enrollmentsByProgram[e.programId] = [];
+                    enrollmentsByProgram[e.programId].push(e);
+                });
+
+                // New enrollment notification
+                if (_prevEnrollmentCount > 0 && allEnrollments.length > _prevEnrollmentCount) {
+                    const diff = allEnrollments.length - _prevEnrollmentCount;
+                    showToast(`🎉 ${diff} new enrollment${diff>1?'s':''} received!`, 'success');
+                }
+                _prevEnrollmentCount = allEnrollments.length;
+
+                // Re-render
+                renderStats();
+                renderPrograms();
+                updateNotifBadge();
+
+                // Refresh drawer if open
+                const drawer = document.getElementById('drawer');
+                if (drawer && drawer.classList.contains('open') && _currentDrawerProgramId) {
+                    renderDrawerContent(_currentDrawerProgramId);
+                }
+            }, err => console.warn('Enrollments listener:', err));
+    } catch (e) { console.warn(e); }
+}
+
+/* ============================================================
+   BUILD DEMO PROGRAMS
+   ============================================================ */
+function buildDemoPrograms() {
+    return DEMO_PROGRAMS_RAW.map((p, i) => ({
+        id: 'demo-prog-' + i,
+        name: p.name,
+        category: p.category,
+        level: p.level,
+        duration: p.duration,
+        trainer: p.trainer,
+        startDate: p.startDate,
+        maxSeats: p.maxSeats,
+        enrolled: p.enrolled,
+        completed: p.completed,
+        status: p.status,
+        icon: p.icon,
+        description: p.desc,
+        skills: p.skills,
+        _isDemo: true
+    }));
+}
+
+/* Merge real + demo */
+function mergeWithDemo() {
+    const realPrograms = allPrograms.filter(p => !p._isDemo);
+    const demoPrograms = buildDemoPrograms();
+
+    let merged = [...realPrograms];
+    let added = 0;
+    if (merged.length < MIN_REAL_PROGRAMS) {
+        const need = MIN_REAL_PROGRAMS - merged.length;
+        const realNames = new Set(realPrograms.map(p => (p.name || '').toLowerCase()));
+        const fresh = demoPrograms.filter(p => !realNames.has(p.name.toLowerCase()));
+        merged = merged.concat(fresh.slice(0, need));
+        added = Math.min(need, fresh.length);
+    }
+    allPrograms = merged;
+    window._demoCount = added;
+    return added;
+}
+
+/* ============================================================
+   STATS
+   ============================================================ */
+function computeStats() {
+    const total = allPrograms.length;
+    const active = allPrograms.filter(p => p.status === 'active').length;
+    // Merge real enrollment count with demo enrolled count
+    const enrolledFromPrograms = allPrograms.reduce((a, p) => a + (Number(p.enrolled) || 0), 0);
+    const pending = allEnrollments.filter(e => e.status === 'pending').length;
+
+    return {
+        total,
+        active,
+        enrolled: enrolledFromPrograms,
+        pending
+    };
+}
+
+function renderStats() {
+    const s = computeStats();
+    document.getElementById('statTotal').textContent = s.total;
+    document.getElementById('statActive').textContent = s.active;
+    document.getElementById('statEnrolled').textContent = s.enrolled;
+    document.getElementById('statPending').textContent = s.pending;
+
+    document.getElementById('statTotalPrograms').textContent = s.total;
+    document.getElementById('statActivePrograms').textContent = s.active;
+    document.getElementById('statTotalEnrolled').textContent = s.enrolled;
+    document.getElementById('statPendingEnrollments').textContent = s.pending;
+
+    document.getElementById('trendTotal').textContent = s.total > 0 ? s.total + ' total' : '—';
+    const pb = document.getElementById('pendingBadgeTop');
+    if (pb) pb.textContent = s.pending;
+}
+
+/* ============================================================
+   PROGRAM HELPERS
+   ============================================================ */
+function getEnrollmentsForProgram(programId) {
+    return enrollmentsByProgram[programId] || [];
+}
+function getPendingCount(programId) {
+    return getEnrollmentsForProgram(programId).filter(e => e.status === 'pending').length;
+}
+function getTotalEnrolledCount(program) {
+    // Real enrollments + program's own counter (for demo)
+    const realCount = getEnrollmentsForProgram(program.id).filter(e => e.status !== 'rejected').length;
+    return Number(program.enrolled) || realCount || 0;
+}
+
+/* ============================================================
+   RENDER: PROGRAM GRID
+   ============================================================ */
+function renderPrograms() {
+    const grid = document.getElementById('programGrid');
+
+    if (filteredPrograms.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-graduation-cap"></i>
+                <h3>No Programs Match Your Filters</h3>
+                <p>Try adjusting the search, category, or status filter — or create your first program.</p>
+                <button onclick="openCreateModal()"><i class="fas fa-plus-circle"></i> Create Program</button>
+            </div>`;
+        return;
+    }
+
+    grid.innerHTML = filteredPrograms.map(p => {
+        const enrolled = Number(p.enrolled) || 0;
+        const completed = Number(p.completed) || 0;
+        const maxSeats = Number(p.maxSeats) || 1;
+        const progress = enrolled ? Math.round((completed / enrolled) * 100) : 0;
+        const progressClass = progress >= 70 ? 'green' : progress >= 40 ? '' : 'amber';
+        const statusClass = p.status || 'draft';
+        const statusLabel = (p.status || 'draft').charAt(0).toUpperCase() + (p.status || 'draft').slice(1);
+        const isDemo = p._isDemo;
+        const skillsArr = Array.isArray(p.skills) ? p.skills : [];
+        const topSkills = skillsArr.slice(0, 4);
+        const remaining = skillsArr.length - topSkills.length;
+        const pendingCount = getPendingCount(p.id);
+
+        return `
+        <div class="program-card ${isDemo?'demo-card':''}" onclick="openDrawer('${escapeJs(p.id)}')">
+            <div class="pc-banner">
+                <span class="pc-status-pill ${statusClass}">${statusLabel}</span>
+                ${pendingCount > 0 ? `<div class="pc-enroll-badge"><i class="fas fa-bell"></i> ${pendingCount} NEW</div>` : ''}
+                <div class="pc-icon">${p.icon || '📚'}</div>
+                <div class="pc-title-wrap">
+                    <div class="pc-cat">${escapeHtml(p.category || 'General')}</div>
+                    <div class="pc-title">${escapeHtml(p.name || 'Untitled Program')}</div>
+                </div>
+            </div>
+            <div class="pc-body">
+                <div class="pc-desc">${escapeHtml(p.description || 'No description provided.')}</div>
+
+                <div class="pc-meta">
+                    <div class="pc-meta-item">
+                        <div class="k">Duration</div>
+                        <div class="v"><i class="fas fa-clock"></i> ${p.duration || '—'} wks</div>
+                    </div>
+                    <div class="pc-meta-item">
+                        <div class="k">Level</div>
+                        <div class="v">${escapeHtml(p.level || '—')}</div>
+                    </div>
+                    <div class="pc-meta-item">
+                        <div class="k">Enrolled</div>
+                        <div class="v green"><i class="fas fa-users"></i> ${enrolled}/${maxSeats}</div>
+                    </div>
+                    <div class="pc-meta-item">
+                        <div class="k">${pendingCount>0?'Pending ⚡':'Trainer'}</div>
+                        <div class="v ${pendingCount>0?'rose':''}" style="font-size:${pendingCount>0?'13px':'11.5px'};">
+                            ${pendingCount>0 ? `<i class="fas fa-hourglass-half"></i> ${pendingCount} enrollments` : escapeHtml((p.trainer||'—').split(' ').slice(-1)[0])}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pc-skills-label">Skills Covered (${skillsArr.length})</div>
+                <div class="pc-skills">
+                    ${topSkills.map(s => `<span class="sk-tag sk-${s.weight||'important'}"><span class="dot"></span>${escapeHtml(s.name||s)}</span>`).join('')}
+                    ${remaining > 0 ? `<span class="sk-tag sk-neutral">+${remaining}</span>` : ''}
+                </div>
+
+                <div class="pc-progress">
+                    <div class="pc-progress-head"><span>Completion</span><span>${progress}%</span></div>
+                    <div class="pc-progress-track"><div class="pc-progress-fill ${progressClass}" style="width:${progress}%"></div></div>
+                </div>
+
+                <div class="pc-footer" onclick="event.stopPropagation()">
+                    <button class="pc-btn primary" onclick="openDrawer('${escapeJs(p.id)}')">
+                        <i class="fas fa-users"></i> View Enrollments
+                    </button>
+                    <button class="pc-btn ghost icon-only" title="Edit" onclick="editProgram('${escapeJs(p.id)}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="pc-btn ghost icon-only" title="More" onclick="showToast('More options for ${escapeJs(p.name)}','info')">
+                        <i class="fas fa-ellipsis-vertical"></i>
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+function setStatusFilter(el) {
+    document.querySelectorAll('.chip[data-filter]').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    activeStatusFilter = el.dataset.filter;
+    applyFilters();
+}
+
+function applyFilters() {
+    const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+    const cat = document.getElementById('categoryFilter')?.value || 'all';
+    const sort = document.getElementById('sortSelect')?.value || 'recent';
+
+    filteredPrograms = allPrograms.filter(p => {
+        if (activeStatusFilter === 'real') { if (p._isDemo) return false; }
+        else if (activeStatusFilter === 'sample') { if (!p._isDemo) return false; }
+        else if (activeStatusFilter === 'pending') {
+            if (getPendingCount(p.id) === 0) return false;
+        }
+        else if (activeStatusFilter !== 'all') {
+            if ((p.status || 'draft') !== activeStatusFilter) return false;
+        }
+
+        if (cat !== 'all' && p.category !== cat) return false;
+
+        if (!q) return true;
+        const hay = `${p.name} ${p.category} ${p.trainer} ${(p.skills||[]).map(s=>s.name||s).join(' ')}`.toLowerCase();
+        return hay.includes(q);
+    });
+
+    filteredPrograms.sort((a, b) => {
+        switch (sort) {
+            case 'name-asc': return (a.name || '').localeCompare(b.name || '');
+            case 'enrolled-desc': return (b.enrolled || 0) - (a.enrolled || 0);
+            case 'pending-desc': return getPendingCount(b.id) - getPendingCount(a.id);
+            case 'progress-desc': {
+                const pa = a.enrolled ? (a.completed || 0) / a.enrolled : 0;
+                const pb = b.enrolled ? (b.completed || 0) / b.enrolled : 0;
+                return pb - pa;
+            }
+            case 'duration-asc': return (a.duration || 0) - (b.duration || 0);
+            default: return 0;
+        }
+    });
+
+    renderPrograms();
+}
+
+/* ============================================================
+   DRAWER (with enrolled trainees list!)
+   ============================================================ */
+let _currentDrawerProgramId = null;
+
+function openDrawer(id) {
+    _currentDrawerProgramId = id;
+    renderDrawerContent(id);
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawerOverlay').classList.add('open');
+}
+
+function renderDrawerContent(id) {
+    const p = allPrograms.find(x => x.id === id);
+    if (!p) return;
+
+    const enrolled = Number(p.enrolled) || 0;
+    const completed = Number(p.completed) || 0;
+    const maxSeats = Number(p.maxSeats) || 1;
+    const progress = enrolled ? Math.round((completed / enrolled) * 100) : 0;
+    const skillsArr = Array.isArray(p.skills) ? p.skills : [];
+    const statusLabel = (p.status || 'draft').charAt(0).toUpperCase() + (p.status || 'draft').slice(1);
+
+    // ⚡ Real enrollments for this program
+    const enrollments = getEnrollmentsForProgram(p.id);
+    const pendingEnrollments = enrollments.filter(e => e.status === 'pending');
+    const approvedEnrollments = enrollments.filter(e => e.status === 'approved');
+    const rejectedEnrollments = enrollments.filter(e => e.status === 'rejected');
+
+    document.getElementById('drawerIcon').textContent = p.icon || '📚';
+    document.getElementById('drawerName').textContent = p.name || 'Untitled';
+    document.getElementById('drawerCat').textContent = p.category || 'General';
+    document.getElementById('drawerStatus').innerHTML = `<i class="fas fa-circle" style="font-size:8px;"></i> ${statusLabel}${p._isDemo?' · <span style="background:#78350f;color:#fde68a;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;">SAMPLE</span>':''}`;
+
+    document.getElementById('drawerBody').innerHTML = `
+        <div class="drawer-sec">
+            <h4><i class="fas fa-chart-pie"></i> Program Overview</h4>
+            <div class="kv-grid">
+                <div class="kv-box"><div class="k">Duration</div><div class="v">${p.duration || '—'} weeks</div></div>
+                <div class="kv-box"><div class="k">Level</div><div class="v">${escapeHtml(p.level || '—')}</div></div>
+                <div class="kv-box"><div class="k">Start Date</div><div class="v">${escapeHtml(p.startDate || '—')}</div></div>
+                <div class="kv-box"><div class="k">Trainer</div><div class="v">${escapeHtml(p.trainer || '—')}</div></div>
+                <div class="kv-box"><div class="k">Max Seats</div><div class="v">${maxSeats}</div></div>
+                <div class="kv-box"><div class="k">Enrolled</div><div class="v highlight">${enrolled}</div></div>
+                <div class="kv-box"><div class="k">Completed</div><div class="v salary">${completed}</div></div>
+                <div class="kv-box"><div class="k">Progress</div><div class="v highlight">${progress}%</div></div>
+            </div>
+        </div>
+
+        <div class="drawer-sec">
+            <h4><i class="fas fa-align-left"></i> Description</h4>
+            <p style="font-size:13.5px;color:#475569;line-height:1.65;">${escapeHtml(p.description || 'No description provided.')}</p>
+        </div>
+
+        <div class="drawer-sec">
+            <h4><i class="fas fa-code"></i> Skills Covered (${skillsArr.length})</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                ${skillsArr.length ? skillsArr.map(s => `<span class="sk-tag sk-${s.weight||'important'}"><span class="dot"></span>${escapeHtml(s.name||s)} <span style="opacity:.6;font-size:9px;">${s.weight||''}</span></span>`).join('') : '<span style="font-size:12px;color:#94a3b8;">No skills listed</span>'}
+            </div>
+        </div>
+
+        <!-- ⚡ ENROLLED TRAINEES SECTION -->
+        <div class="drawer-sec">
+            <h4>
+                <span><i class="fas fa-users"></i> Enrolled Trainees</span>
+                <span class="count-pill ${pendingEnrollments.length>0?'alert':''}">${enrollments.length} total · ${pendingEnrollments.length} pending</span>
+            </h4>
+
+            ${enrollments.length === 0 ? `
+                <div style="padding:30px 20px;text-align:center;background:#f8fafc;border-radius:12px;border:1.5px dashed #e2e8f0;">
+                    <i class="fas fa-user-plus" style="font-size:36px;color:#c7d2fe;margin-bottom:10px;display:block;"></i>
+                    <div style="font-size:13.5px;font-weight:700;color:#475569;margin-bottom:5px;">No enrollments yet</div>
+                    <div style="font-size:12px;color:#94a3b8;">Trainees will appear here when they enroll from their Find Jobs page.</div>
+                </div>
+            ` : `
+                <div class="enrolled-list">
+                    ${enrollments.map(e => {
+                        const statusClass = e.status || 'pending';
+                        const statusLabel = statusClass.charAt(0).toUpperCase() + statusClass.slice(1);
+                        const initial = (e.traineeName || 'T').charAt(0).toUpperCase();
+                        const skills = Array.isArray(e.skills) ? e.skills.slice(0, 6) : [];
+                        const enrolledDate = e.enrolledAt && e.enrolledAt.toDate
+                            ? e.enrolledAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
+                            : 'Just now';
+
+                        return `
+                        <div class="enrolled-item ${statusClass}">
+                            <div class="enrolled-head">
+                                <div class="enrolled-avatar">${escapeHtml(initial)}</div>
+                                <div class="enrolled-info">
+                                    <div class="enrolled-name">${escapeHtml(e.traineeName || 'Trainee')}</div>
+                                    <div class="enrolled-meta">
+                                        ${e.traineeEmail ? `<span><i class="fas fa-envelope"></i> ${escapeHtml(e.traineeEmail)}</span>` : ''}
+                                        ${e.traineeMobile ? `<span><i class="fas fa-phone"></i> ${escapeHtml(e.traineeMobile)}</span>` : ''}
+                                        ${e.traineeCity ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(e.traineeCity)}</span>` : ''}
+                                    </div>
+                                    ${skills.length ? `<div class="enrolled-skills">${skills.map(s => `<span class="enrolled-skill">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+                                    <div style="font-size:10.5px;color:#94a3b8;margin-top:6px;">
+                                        <i class="fas fa-clock"></i> Enrolled ${enrolledDate}
+                                    </div>
+                                </div>
+                                <span class="enrolled-status ${statusClass}">${statusLabel}</span>
+                            </div>
+                            <div class="enrolled-actions">
+                                ${statusClass === 'pending' ? `
+                                    <button class="enrolled-btn approve" onclick="approveEnrollment('${escapeJs(e.id)}')">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button class="enrolled-btn reject" onclick="rejectEnrollment('${escapeJs(e.id)}')">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                ` : ''}
+                                ${statusClass === 'approved' ? `
+                                    <button class="enrolled-btn approve" disabled>
+                                        <i class="fas fa-check-circle"></i> Approved
+                                    </button>
+                                ` : ''}
+                                ${statusClass === 'rejected' ? `
+                                    <button class="enrolled-btn reject" disabled>
+                                        <i class="fas fa-times-circle"></i> Rejected
+                                    </button>
+                                ` : ''}
+                                <button class="enrolled-btn contact" onclick="contactTrainee('${escapeJs(e.traineeEmail||'')}','${escapeJs(e.traineeName||'')}')">
+                                    <i class="fas fa-envelope"></i> Contact
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `}
+        </div>
+
+        <div class="drawer-sec">
+            <h4><i class="fas fa-users"></i> Enrollment Progress</h4>
+            <div class="pc-progress">
+                <div class="pc-progress-head"><span>${enrolled} of ${maxSeats} seats filled</span><span>${Math.round((enrolled/maxSeats)*100)}%</span></div>
+                <div class="pc-progress-track"><div class="pc-progress-fill" style="width:${Math.min((enrolled/maxSeats)*100,100)}%"></div></div>
+            </div>
+            <div class="pc-progress" style="margin-top:10px;">
+                <div class="pc-progress-head"><span>${completed} of ${enrolled} trainees completed</span><span>${progress}%</span></div>
+                <div class="pc-progress-track"><div class="pc-progress-fill green" style="width:${progress}%"></div></div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <button class="pc-btn primary" style="flex:1;padding:12px;" onclick="editProgram('${escapeJs(p.id)}')">
+                <i class="fas fa-edit"></i> Edit Program
+            </button>
+            <button class="pc-btn ghost" style="flex:1;padding:12px;" onclick="exportEnrollments('${escapeJs(p.id)}')">
+                <i class="fas fa-download"></i> Export Enrollments
+            </button>
+        </div>
+    `;
+}
+
+function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('drawerOverlay').classList.remove('open');
+    _currentDrawerProgramId = null;
+}
+
+/* ============================================================
+   ENROLLMENT ACTIONS
+   ============================================================ */
+async function approveEnrollment(enrollmentId) {
+    try {
+        await db.collection('enrollments').doc(enrollmentId).update({
+            status: 'approved',
+            statusUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('✅ Enrollment approved', 'success');
+        // Listener auto-refreshes
+    } catch (e) {
+        console.error(e);
+        showToast('❌ Could not approve — check Firestore rules', 'error');
+    }
+}
+
+async function rejectEnrollment(enrollmentId) {
+    if (!confirm('Reject this enrollment? The trainee will be notified.')) return;
+    try {
+        await db.collection('enrollments').doc(enrollmentId).update({
+            status: 'rejected',
+            statusUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('Enrollment rejected', 'info');
+    } catch (e) {
+        console.error(e);
+        showToast('❌ Could not reject', 'error');
+    }
+}
+
+function contactTrainee(email, name) {
+    if (!email) { showToast('No email available', 'error'); return; }
+    window.location.href = `mailto:${email}?subject=Regarding your enrollment&body=Hi ${name},`;
+}
+
+function exportEnrollments(programId) {
+    const p = allPrograms.find(x => x.id === programId);
+    const enrollments = getEnrollmentsForProgram(programId);
+    if (!enrollments.length) { showToast('No enrollments to export', 'error'); return; }
+
+    let csv = 'Name,Email,Mobile,City,Status,Skills,Enrolled Date\n';
+    enrollments.forEach(e => {
+        const d = e.enrolledAt && e.enrolledAt.toDate ? e.enrolledAt.toDate().toISOString().split('T')[0] : '';
+        csv += `"${e.traineeName||''}","${e.traineeEmail||''}","${e.traineeMobile||''}","${e.traineeCity||''}","${e.status||'pending'}","${(e.skills||[]).join('; ')}","${d}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `enrollments-${(p?.name||'program').replace(/[^a-z0-9]/gi,'-')}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`📥 Exported ${enrollments.length} enrollments`, 'success');
+}
+
+/* ============================================================
+   MODAL (Create / Edit)
+   ============================================================ */
+function openCreateModal() {
+    editingProgramId = null;
+    document.getElementById('modalTitle').textContent = 'Create New Program';
+    document.getElementById('progName').value = '';
+    document.getElementById('progCategory').value = '';
+    document.getElementById('progLevel').value = 'Beginner';
+    document.getElementById('progDuration').value = '';
+    document.getElementById('progTrainer').value = '';
+    document.getElementById('progStartDate').value = '';
+    document.getElementById('progMaxSeats').value = '';
+    document.getElementById('progDescription').value = '';
+    document.getElementById('progStatus').value = 'draft';
+    currentSkills = [];
+    renderSkillPicker();
+    document.getElementById('programModal').classList.add('active');
+}
+
+function editProgram(id) {
+    const p = allPrograms.find(x => x.id === id);
+    if (!p) return;
+    if (p._isDemo) {
+        showToast('Sample programs cannot be edited — create a new one from scratch', 'info');
+        return;
+    }
+    editingProgramId = id;
+    document.getElementById('modalTitle').textContent = 'Edit Program';
+    document.getElementById('progName').value = p.name || '';
+    document.getElementById('progCategory').value = p.category || '';
+    document.getElementById('progLevel').value = p.level || 'Beginner';
+    document.getElementById('progDuration').value = p.duration || '';
+    document.getElementById('progTrainer').value = p.trainer || '';
+    document.getElementById('progStartDate').value = p.startDate || '';
+    document.getElementById('progMaxSeats').value = p.maxSeats || '';
+    document.getElementById('progDescription').value = p.description || '';
+    document.getElementById('progStatus').value = p.status || 'draft';
+    currentSkills = (p.skills || []).map(s => ({ name: s.name || s, weight: s.weight || 'important' }));
+    renderSkillPicker();
+    closeDrawer();
+    document.getElementById('programModal').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('programModal').classList.remove('active');
+    editingProgramId = null;
+}
+
+function renderSkillPicker() {
+    const picker = document.getElementById('skillPicker');
+    picker.querySelectorAll('.skill-chip').forEach(c => c.remove());
+    currentSkills.forEach((s, i) => {
+        const chip = document.createElement('div');
+        chip.className = `skill-chip ${s.weight}`;
+        chip.innerHTML = `<span class="weight-dot"></span>${escapeHtml(s.name)}<span class="remove" onclick="removeSkill(${i}); event.stopPropagation();">✕</span>`;
+        chip.onclick = (e) => { if (e.target.classList.contains('remove')) return; cycleWeight(i); };
+        picker.insertBefore(chip, picker.querySelector('.skill-input-mini'));
+    });
+}
+
+function addSkill(name) {
+    name = String(name || '').trim().toLowerCase();
+    if (!name) return;
+    if (currentSkills.some(s => s.name === name)) { showToast('Skill already added', 'error'); return; }
+    currentSkills.push({ name, weight: 'important' });
+    renderSkillPicker();
+}
+function removeSkill(i) { currentSkills.splice(i, 1); renderSkillPicker(); }
+function cycleWeight(i) {
+    const order = ['critical', 'important', 'nice'];
+    currentSkills[i].weight = order[(order.indexOf(currentSkills[i].weight) + 1) % 3];
+    renderSkillPicker();
+}
+document.getElementById('skillInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        addSkill(e.target.value.replace(',', ''));
+        e.target.value = '';
+    }
+});
+
+async function saveProgram() {
+    if (!_firebaseUser) { showToast('Not logged in', 'error'); return; }
+
+    const name = document.getElementById('progName').value.trim();
+    const category = document.getElementById('progCategory').value;
+    if (!name || !category) { showToast('Name and category are required', 'error'); return; }
+
+    const programData = {
+        name,
+        category,
+        level: document.getElementById('progLevel').value,
+        duration: Number(document.getElementById('progDuration').value) || 0,
+        trainer: document.getElementById('progTrainer').value.trim(),
+        startDate: document.getElementById('progStartDate').value,
+        maxSeats: Number(document.getElementById('progMaxSeats').value) || 0,
+        description: document.getElementById('progDescription').value.trim(),
+        status: document.getElementById('progStatus').value,
+        skills: currentSkills,
+        icon: '📚',
+        providerUid: _firebaseUser.uid,
+        providerName: _providerData?.orgName || '',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        if (editingProgramId) {
+            await db.collection('programs').doc(editingProgramId).update(programData);
+            showToast('Program updated', 'success');
+        } else {
+            programData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            programData.enrolled = 0;
+            programData.completed = 0;
+            await db.collection('programs').add(programData);
+            showToast('Program created', 'success');
+        }
+        closeModal();
+
+        const realPrograms = await loadPrograms();
+        allPrograms = realPrograms;
+        mergeWithDemo();
+        renderStats();
+        applyFilters();
+    } catch (e) {
+        console.error(e);
+        showToast('Could not save — check Firestore rules', 'error');
+    }
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function escapeHtml(str) {
+    if (str === undefined || str === null) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function escapeJs(str) { return String(str || '').replace(/'/g, "\\'"); }
+
+function showToast(msg, type = 'success') {
+    const stack = document.getElementById('toastStack');
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    const icon = type === 'error' ? 'fa-exclamation-circle' : type === 'info' ? 'fa-info-circle' : 'fa-check-circle';
+    t.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
+    stack.appendChild(t);
+    setTimeout(() => {
+        t.style.transition = '.35s';
+        t.style.transform = 'translateX(120%)';
+        t.style.opacity = '0';
+        setTimeout(() => t.remove(), 400);
+    }, 2800);
+}
+
+function showDemoBanner(count) {
+    if (count <= 0 || _demoBannerDismissed) return;
+    const banner = document.getElementById('demoBanner');
+    document.getElementById('demoCount').textContent = count;
+    banner.style.display = 'flex';
+}
+function hideDemoBanner() {
+    _demoBannerDismissed = true;
+    document.getElementById('demoBanner').style.display = 'none';
+}
+
+function updateNotifBadge() {
+    const pending = allEnrollments.filter(e => e.status === 'pending').length;
+    const nb = document.getElementById('notifBadge');
+    if (nb) nb.textContent = pending;
+}
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const next = (html.getAttribute('data-theme') || 'light') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+    const i = document.querySelector('.theme-toggle i');
+    if (i) i.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+function showNotifications() {
+    const pending = allEnrollments.filter(e => e.status === 'pending').length;
+    alert(`📬 Notifications\n\n• ${pending} pending enrollment${pending!==1?'s':''}\n• ${allEnrollments.length} total enrollments\n• ${allPrograms.filter(p=>!p._isDemo).length} real programs\n• ${allPrograms.filter(p=>p.status==='active').length} active programs`);
+}
+
+function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
+
+async function logout() {
+    if (!confirm('Are you sure you want to logout?')) return;
+    try { if (unsubscribeEnrollments) unsubscribeEnrollments(); await auth.signOut(); } catch (e) {}
+    try { localStorage.clear(); } catch (e) {}
+    window.location.href = '../auth/login.html?role=provider';
+}
+
+function updateDate() {
+    document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+    });
+}
+
+async function updateSidebar() {
+    _providerData = await getProviderData();
+    const initial = (_providerData.orgName || 'P').charAt(0).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent = _providerData.orgName;
+    document.getElementById('sidebarRole').textContent = 'Training Provider';
+    document.getElementById('headerAvatar').textContent = initial;
+    document.getElementById('headerName').textContent = _providerData.orgName;
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async function () {
+    try {
+        const saved = localStorage.getItem('skillintel-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        const i = document.querySelector('.theme-toggle i');
+        if (i) i.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    } catch (e) {}
+
+    updateDate();
+
+    try {
+        await requireAuth();
+        await updateSidebar();
+
+        allPrograms = await loadPrograms();
+        const added = mergeWithDemo();
+
+        renderStats();
+        applyFilters();
+
+        // ⚡ Start real-time enrollment listener
+        subscribeToEnrollments();
+
+        if (added > 0) showDemoBanner(added);
+
+        console.log(`✅ Training Programs loaded — Real: ${allPrograms.filter(p=>!p._isDemo).length}, Demo: ${added}`);
+    } catch (e) {
+        console.warn('Init error:', e);
+    }
+
+    document.getElementById('programModal').addEventListener('click', e => {
+        if (e.target === this) closeModal();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            closeModal();
+            closeDrawer();
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        const sb = document.getElementById('sidebar');
+        const tg = document.querySelector('.menu-toggle');
+        if (window.innerWidth <= 768 && sb && sb.classList.contains('open')) {
+            if (!sb.contains(e.target) && e.target !== tg && !tg.contains(e.target)) sb.classList.remove('open');
+        }
+    });
+});
+
+window.addEventListener('beforeunload', () => {
+    if (unsubscribeEnrollments) { try { unsubscribeEnrollments(); } catch(e){} }
+});
+</script>
+<script src="../js/script.js"></script>
+</body>
+</html>

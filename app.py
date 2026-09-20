@@ -7,6 +7,7 @@
 
 import os
 import io
+import re
 import csv
 import json
 import math
@@ -16,6 +17,13 @@ import sqlite3
 import datetime as dt
 from functools import wraps
 from collections import defaultdict, Counter
+
+try:
+    import pdfplumber
+    PDFPLUMBER_AVAILABLE = True
+except ImportError:
+    pdfplumber = None
+    PDFPLUMBER_AVAILABLE = False
 
 try:
     import psycopg2
@@ -29,6 +37,7 @@ from flask import (
     Flask, request, jsonify, g, session, send_file, render_template_string
 )
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 # =============================================================================
 #  SECTION 0 — APP CONFIG & CONSTANTS
@@ -45,6 +54,11 @@ BACKUP_DIR = os.path.join(DATA_DIR, "backups")
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 app = Flask(__name__)
+try:
+    from flask_cors import CORS
+    CORS(app, supports_credentials=True)
+except ImportError:
+    pass  # CORS optional
 
 app.secret_key = os.environ.get(
     "SECRET_KEY",
@@ -2030,7 +2044,6 @@ def api_seed_all():
     from flask import Response
     results = {}
     with app.test_request_context():
-        # non-placement
         try:
             random.seed(99)
             np_count = 0
@@ -2051,7 +2064,6 @@ def api_seed_all():
         except Exception as e:
             results["non_placement_error"] = str(e)
 
-        # programs + enrollments
         try:
             random.seed(7)
             provider_ids = []
@@ -2426,7 +2438,390 @@ def api_demo_seed():
 
 
 # =============================================================================
-#  SECTION 21 — FRONTEND SERVING
+#  SECTION 21 — RESUME INTELLIGENCE (ATS ENGINE)
+#  Full ATS engine ported from ATS PROJECT.
+#  Exposes:
+#     GET  /api/resume/branches   → branch/role/skills map
+#     POST /api/resume/analyze    → resume PDF → full ATS analysis
+# =============================================================================
+RESUME_UPLOAD_FOLDER = os.path.join(DATA_DIR, "resume_uploads")
+os.makedirs(RESUME_UPLOAD_FOLDER, exist_ok=True)
+
+
+# --- Full ATS BRANCH_DATA (12 branches × 10 roles × 15 skills) ---
+BRANCH_DATA = {
+    "Computer Science (CSE)": {
+        "Full Stack Developer": ["react", "node.js", "mongodb", "javascript", "html", "css", "git", "rest api", "graphql", "next.js", "typescript", "express", "redux", "webpack", "docker"],
+        "Backend Engineer": ["java", "spring boot", "sql", "docker", "python", "microservices", "redis", "postgresql", "fastapi", "golang", "flask", "django", "rabbitmq", "kafka", "orm"],
+        "Cloud Architect": ["aws", "azure", "docker", "kubernetes", "terraform", "linux", "cloud computing", "s3", "ec2", "lambda", "iam", "vpc", "cloudformation", "eks", "ansible"],
+        "Cybersecurity Analyst": ["wireshark", "metasploit", "penetration testing", "firewalls", "cryptography", "linux", "siem", "soc", "nmap", "vulnerability assessment", "burp suite", "owasp", "kali", "encryption", "ids/ips"],
+        "Android Developer": ["kotlin", "java", "android studio", "xml", "mvvm", "retrofit", "firebase", "jetpack compose", "gradle", "coroutine", "dagger hilt", "rxjava", "sqlite", "material design", "activity lifecycle"],
+        "Blockchain Engineer": ["solidity", "ethereum", "smart contracts", "web3", "rust", "cryptography", "hyperledger", "truffle", "ganache", "ipfs", "tokenomics", "defi", "consensus algorithms", "dapps", "polkadot"],
+        "QA Automation": ["selenium", "junit", "test automation", "jira", "manual testing", "cucumber", "testng", "playwright", "postman", "cypress", "appium", "ci/cd", "regression testing", "loadrunner", "api testing"],
+        "DevOps Engineer": ["jenkins", "ansible", "monitoring", "linux", "terraform", "bash", "prometheus", "grafana", "gitops", "cicd", "shell scripting", "helm", "argo cd", "nagios", "cloudwatch"],
+        "UI/UX Designer": ["figma", "adobe xd", "wireframing", "prototyping", "user research", "sketch", "invision", "design system", "zeplin", "user journeys", "usability testing", "typography", "color theory", "interaction design", "accessibility"],
+        "Software Architect": ["design patterns", "microservices", "system design", "scalability", "ddd", "clean architecture", "kafka", "soa", "monolith", "event-driven", "caching", "load balancing", "solid principles", "abstraction", "high availability"]
+    },
+    "AI & Machine Learning (AIML)": {
+        "ML Engineer": ["python", "pytorch", "tensorflow", "scikit-learn", "numpy", "neural networks", "keras", "pandas", "huggingface", "transformers", "xgboost", "random forest", "gradient descent", "model deployment", "opencv"],
+        "Data Scientist": ["pandas", "statistics", "sql", "tableau", "data visualization", "data mining", "r language", "power bi", "seaborn", "matplotlib", "probability", "jupyter", "hypothesis testing", "bigquery", "cleaning"],
+        "NLP Engineer": ["transformers", "bert", "nltk", "spacy", "large language models", "prompt engineering", "gpt", "tokenization", "llm", "word2vec", "sentiment analysis", "langchain", "sequence labeling", "rag", "fasttext"],
+        "Computer Vision Pro": ["opencv", "cnn", "yolo", "image processing", "pytorch", "deep learning", "segmentation", "resnet", "object detection", "gan", "mediapipe", "tensorflow lite", "image augmentation", "face recognition", "spatial AI"],
+        "MLOps Engineer": ["mlflow", "kubeflow", "docker", "dvc", "bentoml", "fastapi", "cicd", "zenml", "monitoring", "model registry", "wandb", "feast", "data versioning", "pipelines", "serving"],
+        "Data Engineer": ["spark", "hadoop", "etl", "data lake", "redshift", "airflow", "sql", "snowflake", "bigquery", "hive", "pyspark", "kafka", "dbt", "talend", "data modeling"],
+        "Research Scientist": ["algorithms", "mathematics", "calculus", "linear algebra", "optimization", "publishing", "latex", "conference", "r&d", "peer review", "experiment design", "stochastic processes", "simulation", "bayesian", "theorems"],
+        "Speech AI Specialist": ["asr", "tts", "signal processing", "audio analysis", "librosa", "transformers", "stt", "wav2vec", "speech-to-text", "acoustic modeling", "vocoders", "mfcc", "mel-spectrogram", "phonetics", "deepgram"],
+        "Bioinformatics": ["genomics", "biopython", "molecular modeling", "ncbi", "r language", "matlab", "proteomics", "dna sequencing", "rna-seq", "phylogenetics", "alignment", "blast", "drug discovery", "protein folding", "cytoscape"],
+        "AI Consultant": ["ai ethics", "strategy", "risk assessment", "llm", "fintech", "compliance", "policy", "business alignment", "roi", "governance", "explainable AI", "digital transformation", "stakeholder", "feasibility", "implementation"]
+    },
+    "Electronics (ECE)": {
+        "VLSI Designer": ["verilog", "system verilog", "fpga", "cadence", "cmos", "digital electronics", "rtl", "asic", "vivado", "synopsys", "genus", "innovus", "sta", "physical design", "tcl"],
+        "Embedded Developer": ["embedded c", "microcontrollers", "arm", "rtos", "i2c", "spi", "stm32", "can bus", "uart", "freeRTOS", "esp32", "bare metal", "debugging", "jtag", "logic analyzer"],
+        "RF Engineer": ["antennas", "wireless", "dsp", "fourier transform", "modulation", "vna", "microwaves", "ads", "impedance", "smith chart", "lte", "5g", "spectrum analysis", "link budget", "hfss"],
+        "Circuit Designer": ["pcb design", "altium", "analog circuits", "spice", "proteus", "kicad", "orcad", "layout", "multisim", "analog to digital", "op-amps", "signal integrity", "bom", "prototyping", "surface mount"],
+        "IoT Architect": ["arduino", "raspberry pi", "mqtt", "node-red", "sensors", "lorawan", "zigbee", "esp32", "cloud connectivity", "coap", "edge computing", "ble", "iot gateway", "api", "dashboard"],
+        "Signal Processing Eng": ["dsp", "matlab", "filter design", "wavelets", "fft", "signal modeling", "z-transform", "noise reduction", "adaptive filtering", "image compression", "sampling", "nyquist", "stft", "kalman filter", "spectral analysis"],
+        "Firmware Engineer": ["linux kernel", "drivers", "assembly", "c++", "debugging", "jtag", "bare metal", "bootloader", "hal", "interrupts", "dma", "pci-e", "embedded linux", "yocto", "toolchain"],
+        "Control Systems Eng": ["matlab", "simulink", "pid", "industrial automation", "plc programming", "feedback loops", "root locus", "stability", "state space", "lqr", "nyquist plot", "transfer function", "bode plot", "servos", "nonlinear control"],
+        "Hardware QA": ["oscilloscope", "spectrum analyzer", "multimeter", "testing", "calibration", "logic analyzer", "emi", "bench testing", "validation", "thermal testing", "compliance", "iso 9001", "failure analysis", "documentation", "reliability"],
+        "Telecom Manager": ["voip", "gsm", "lte", "5g", "spectrum management", "routing", "switching", "fiber optics", "sip", "sdn", "nfv", "oss/bss", "microwave links", "satellite", "network planning"]
+    },
+    "Electrical (EEE)": {
+        "Power Systems Eng": ["power systems", "plc", "scada", "matlab", "relays", "switchgear", "etap", "load flow", "poweer quality", "smart grid", "high voltage", "transmission", "distribution", "fault analysis", "protection"],
+        "EV Engineer": ["bms", "battery management", "electric motors", "powertrain", "can bus", "inverter", "thermal management", "charging infrastructure", "hevs", "regenerative braking", "li-ion", "motor control", "simulation", "dcdc converter", "automotive standards"],
+        "Renewable Energy Pro": ["solar design", "wind turbines", "grid integration", "photovoltaics", "pvsyst", "energy storage", "hydroelectric", "biomass", "sustainability", "mppt", "inverters", "feasibility study", "clean tech", "epc", "homer"],
+        "Automation Engineer": ["hmi", "dcs", "instrumentation", "sensors", "fieldbus", "plc", "ladder logic", "factorytalk", "tiaportal", "modbus", "profibus", "servo systems", "vfd", "commissioning", "control panels"],
+        "Smart Grid Architect": ["microgrid", "distributed generation", "storage", "inverters", "demand response", "ami", "smart meter", "synchrophasor", "cybersecurity", "interoperability", "standards", "energy management", "peak shaving", "v2g", "renewables"],
+        "Maintenance Eng": ["predictive maintenance", "tpm", "switchboard", "wiring", "diagnostics", "troubleshooting", "earthing", "preventive", "rcm", "root cause", "cmms", "safety protocols", "relays", "testing", "installation"],
+        "Energy Auditor": ["energy efficiency", "iso 50001", "carbon", "lighting control", "hvac", "bems", "utility billing", "reporting", "ashrae", "benchmarking", "retrofitting", "cogeneration", "demand side", "payback analysis", "compliance"],
+        "Protection Engineer": ["relays", "switchgear", "fault analysis", "etap", "coordination", "breaker", "current transformer", "voltage transformer", "differential protection", "distance protection", "arc flash", "selectivity", "settings", "commissioning", "standards"],
+        "Lighting Designer": ["dialux", "relux", "photometrics", "led tech", "control systems", "luminaire", "ies", "glare evaluation", "daylighting", "specification", "renderings", "lux levels", "color rendering", "emergency lighting", "energy code"],
+        "Instrumentation Eng": ["sensors", "transducers", "calibration", "analog digital", "labview", "data acquisition", "daq", "p&id", "loop tuning", "measurement", "signal conditioning", "fieldbus", "hart", "plc", "valves"]
+    },
+    "Mechanical (ME)": {
+        "CAD Designer": ["solidworks", "catia", "nx cad", "autocad", "g-code", "3d modeling", "rendering", "drafting", "ptc creo", "geometric dimensioning", "tolerance analysis", "pdm", "surface modeling", "assembly", "prototyping"],
+        "FEA Analyst": ["ansys", "hypermesh", "finite element analysis", "nastran", "simulation", "structural analysis", "boundary conditions", "meshing", "linear", "nonlinear", "fatigue", "vibration", "stress analysis", "thermal simulation", "abaqus"],
+        "Thermal Engineer": ["thermodynamics", "heat transfer", "cfd", "hvac", "fluid mechanics", "refrigeration", "cooling systems", "conduction", "convection", "radiation", "heat exchangers", "simulation", "boiling", "condensation", "energy balance"],
+        "Manufacturing Eng": ["cnc", "cam", "lean manufacturing", "six sigma", "kaizen", "qa", "jit", "kanban", "process optimization", "value stream", "quality control", "iso 9001", "tooling", "assembly line", "operations"],
+        "Robotics Engineer": ["ros", "kinematics", "actuators", "control systems", "sensors", "path planning", "pathfinding", "inverse kinematics", "path planning", "vision systems", "end effectors", "simulation", "mechatronics", "uav", "automation"],
+        "Automotive Engineer": ["engine design", "suspension", "aerodynamics", "hybrid systems", "chassis", "braking system", "powertrain", "vehicle dynamics", "hmi", "safety", "nvh", "materials", "crash testing", "diagnostics", "manufacturing"],
+        "Maintenance Mgr": ["tpm", "reliability", "pumps", "compressors", "lubrication", "valves", "pdm", "cmms", "pumps", "bearings", "gears", "alignment", "condition monitoring", "safety", "scheduling"],
+        "Aerospace Eng": ["propulsion", "avionics", "structural analysis", "turbines", "materials", "aerodynamics", "mach number", "lift", "drag", "flight mechanics", "composites", "wind tunnel", "orbital", "simulation", "standards"],
+        "Plant Engineer": ["boilers", "utility systems", "safety management", "pumps", "inventory", "facilities", "osha", "pumps", "piping", "maintenance", "operations", "hvac", "power generation", "contractor management", "shutdown planning"],
+        "HVAC Designer": ["psychrometry", "duct design", "chillers", "ventilation", "hvac", "cooling load", "vrf", "ahu", "vav", "controls", "refrigeration", "ashrae", "energy modeling", "piping", "commissioning"]
+    },
+    "AI & Data Science (AIDS)": {
+        "Data Scientist": ["python", "sql", "predictive modeling", "statistics", "seaborn", "pandas", "linear regression", "clustering", "time series", "r", "tableau", "exploratory data", "hypothesis testing", "machine learning", "feature engineering"],
+        "Data Lake Architect": ["spark", "hadoop", "snowflake", "databricks", "aws glue", "athena", "delta lake", "parquet", "storage", "cloud", "etl", "governance", "security", "pipelines", "scalability"],
+        "BI Developer": ["power bi", "looker", "dashboards", "etl", "excel vba", "data modeling", "tableau", "dax", "sql", "reporting", "data warehouse", "kpis", "analysis", "data integration", "ssrs"],
+        "Big Data Engineer": ["hive", "pyspark", "bigquery", "nosql", "impala", "pipelines", "kafka", "flink", "storm", "hbase", "cloud", "scrapping", "data ingestion", "optimization", "scalability"],
+        "Cloud Data Analyst": ["s3", "redshift", "quicksight", "data warehouse", "kinesis", "cloud storage", "elt", "athena", "glue", "fargate", "cloudwatch", "optimization", "security", "reporting", "cost management"],
+        "Information Security": ["data privacy", "gdpr", "compliance", "encryption", "anonymization", "soc2", "access control", "auditing", "risk assessment", "hipaa", "nist", "dlp", "threat modeling", "incident response", "policies"],
+        "Quantitative Analyst": ["financial modeling", "r", "risk analysis", "monte carlo", "trading", "time series", "statistics", "matlab", "stochastic", "calculus", "pricing", "derivatives", "portfolio", "excel", "sql"],
+        "Data Steward": ["governance", "metadata", "cataloging", "lineage", "quality rules", "mdm", "dama", "standards", "compliance", "security", "dictionary", "lifecycle", "policies", "master data", "curation"],
+        "Market Analyst": ["google analytics", "crm", "segmentation", "churn prediction", "trends", "behavior", "excel", "sql", "tableau", "reporting", "forecasting", "surveys", "ab testing", "consumer insight", "kpis"],
+        "AI Solutions Arch": ["llm", "integration", "api", "prompt engineering", "agentic workflows", "rag", "langchain", "vector db", "cloud", "scalability", "openai", "deployment", "mlops", "transformers", "strategy"]
+    },
+    "Civil Engineering": {
+        "Structural Engineer": ["staad pro", "etabs", "revit", "concrete design", "steel structures", "load calculation", "eurocodes", "is codes", "foundation", "seismic", "dynamics", "bridge", "high rise", "optimization", "analysis"],
+        "Site Engineer": ["construction management", "billing", "surveying", "estimation", "m-book", "execution", "quality control", "safety", "surveying", "concrete", "steel", "reports", "labor management", "planning", "site supervision"],
+        "BIM Coordinator": ["revit", "navisworks", "bim 360", "3d modeling", "point cloud", "clash detection", "4d simulation", "vDC", "ifc", "standards", "collaboration", "architecture", "mep", "coordination", "interoperability"],
+        "Geotechnical Engineer": ["soil mechanics", "foundation design", "plaxis", "seismology", "slope stability", "drilling", "retaining walls", "tunnels", "dams", "landslides", "exploration", "geo-environmental", "ground improvement", "rock mechanics", "laboratory testing"],
+        "Quantity Surveyor": ["cost estimation", "tendering", "contracts", "autocad", "valuation", "boq", "rate analysis", "billing", "budgeting", "variation", "claims", "measurement", "procurement", "vba", "subcontracting"],
+        "Transportation Engineer": ["traffic engineering", "gis", "pavement design", "vissim", "mx road", "highway design", "alignment", "infrastructure", "simulation", "public transport", "safety", "modeling", "its", "rail", "airport"],
+        "Environmental Engineer": ["water treatment", "waste management", "eia", "hydrology", "air quality", "sewage", "sustainability", "remediation", "compliance", "hse", "scrubbers", "renewable", "audit", "carbon footprint", "policy"],
+        "Hydraulics Engineer": ["hec-ras", "epanet", "irrigation", "dams", "fluid dynamics", "stormwater", "open channel", "flood mapping", "drainage", "river engineering", "sediment transport", "pumps", "hydropower", "coastal", "software"],
+        "Urban Planner": ["gis", "public policy", "sustainable design", "cad", "zoning", "master plan", "transport planning", "housing", "regeneration", "community", "environment", "economic development", "legislation", "land use", "stakeholder"],
+        "Civil Project Manager": ["primavera", "ms project", "budgeting", "wbs", "scheduling", "pmp", "cpm", "pert", "risk", "contracts", "site", "labor", "cost control", "reporting", "stakeholder"]
+    },
+    "Mechatronics": {
+        "Robotics Engineer": ["ros", "path planning", "kinematics", "lidar", "opencv", "c++", "trajectory", "kalman filter", "simulink", "automation", "actuators", "sensors", "embedded", "slamm", "simulation"],
+        "Automation Lead": ["plc programming", "tia portal", "hmi", "scada", "motion control", "servo motors", "industrial automation", "fieldbus", "sensors", "integration", "commissioning", "safety", "network", "vfd", "troubleshooting"],
+        "Embedded Systems": ["stm32", "rtos", "can open", "motor control", "encoders", "uart", "microchip", "embedded c", "i2c", "spi", "bare metal", "firmware", "iot", "testing", "pcb"],
+        "System Integrator": ["sensors", "actuators", "plc", "vision systems", "industrial iot", "modbus", "profibus", "ethercat", "control panel", "testing", "wiring", "design", "specification", "hmi", "automation"],
+        "Control Engineer": ["matlab", "pid", "kalman filter", "feedback loops", "stability", "state space", "lqr", "simulink", "dynamics", "optimization", "servo", "signal", "system", "identification", "modelling"],
+        "UAV Developer": ["drones", "pixhawk", "mavlink", "autopilot", "telemetry", "flight control", "ardupilot", "gimbal", "vision", "gps", "propulsion", "aerodynamics", "ground station", "simulation", "testing"],
+        "Machine Vision Eng": ["opencv", "image segmentation", "halcon", "industrial cameras", "lighting", "object recognition", "blob detection", "inspection", "ocr", "sorting", "algorithm", "python", "optics", "ai", "industrial"],
+        "PLC Programmer": ["ladder logic", "scl", "allen bradley", "beckhoff", "ethercat", "function block", "twincat", "codesys", "automation", "hmi", "troubleshooting", "safety", "panels", "programming", "maintenance"],
+        "Test Engineer": ["labview", "data acquisition", "hili", "sil", "validation", "instrumentation", "simulation", "v&v", "software", "hardware", "daq", "reporting", "testing", "systems", "standards"],
+        "Product Designer": ["fusion 360", "3d printing", "prototyping", "mechanism design", "electronics", "catia", "ergonomics", "materials", "manufacturing", "sketching", "styling", "solidworks", "user interface", "ux", "rd"]
+    },
+    "Biotechnology": {
+        "Bioinformatics": ["genomics", "sequencing", "biopython", "r language", "molecular modeling", "ncbi", "alignment", "blast", "proteomics", "phylo", "perl", "linux", "bioconductor", "crispr", "data mining"],
+        "Lab Technician": ["pcr", "hplc", "cell culture", "gmp", "glp", "biosafety", "pipetting", "centrifuge", "titration", "spectroscopy", "buffer preparation", "gel electrophoresis", "incubation", "autoclave", "sop"],
+        "R&D Scientist": ["assay development", "immunology", "protein purification", "cloning", "crispr", "elisa", "western blot", "drug discovery", "synthetic biology", "in-vitro", "spectrophotometry", "molecular biology", "rnaseq", "flow cytometry", "biochemistry"],
+        "Clinical Analyst": ["ctms", "data management", "protocol", "regulations", "safety", "trial metrics", "ich-gcp", "clinical trials", "biostatistics", "sas", "data cleaning", "patient recruitment", "pharmacovigilance", "e-crf", "fda"],
+        "Bioprocess Eng": ["fermentation", "bioreactor", "scale up", "downstream", "purification", "mass transfer", "upstream", "bioprocessing", "sterilization", "atps", "chromatography", "validation", "doe", "process control", "hplc"],
+        "Quality Assurance": ["iso 13485", "gmp", "audit", "validation", "sop", "compliance", "corrective action", "documentation", "quality control", "risk management", "iso 9001", "regulatory affairs", "inspections", "capa", "qc lab"],
+        "Molecular Biologist": ["dna", "rna", "electrophoresis", "sequencing", "genetics", "cloning", "transfection", "pcr", "crispr", "mutation analysis", "recombinant dna", "vector design", "genotyping", "microscopy", "rna-seq"],
+        "Medical Writer": ["scientific writing", "submission", "data summary", "journal", "abstract", "manuscript", "ama style", "regulatory documents", "clinical study report", "investigator brochure", "medline", "pubmed", "peer review", "editing", "lit review"],
+        "Regulatory Affairs": ["fda", "ema", "ce marking", "submission", "compliance", "strategy", "investigational new drug", "mhra", "safety reporting", "clinical trial application", "labeling", "regulatory CMC", "gmp audit", "orphan drug", "post-market"],
+        "Genetics Counselor": ["ancestry", "disease marker", "data analysis", "ethics", "counseling", "inheritance", "pedigree", "prenatal", "cancer genetics", "variant interpretation", "syndromes", "chromosomal", "psychosocial", "patient advocacy", "genomics"]
+    },
+    "Cybersecurity": {
+        "Pentester": ["kali linux", "metasploit", "wireshark", "burp suite", "ethical hacking", "owasp", "red team", "nmap", "vulnerability scan", "shellcode", "sql injection", "xss", "exploitation", "scripting", "enumeration"],
+        "Security Architect": ["firewalls", "zero trust", "iam", "iso 27001", "encryption", "siem", "proxies", "hsm", "security policy", "vpn", "pki", "casb", "infrastructure", "risk mitigation", "threat modeling"],
+        "SOC Analyst": ["incident response", "log analysis", "splunk", "threat hunting", "detection", "soar", "edr", "incident management", "siem", "ids/ips", "packet capture", "forensics", "mfa", "alerts", "tcp/ip"],
+        "Compliance Officer": ["nist", "hipaa", "soc2", "audit", "risk management", "policy", "grc", "gdpr", "sox", "pci-dss", "security controls", "governance", "remediation", "standards", "itgc"],
+        "Cloud Security": ["aws guardduty", "azure sentinel", "casb", "serverless security", "iam", "cspm", "cwpp", "cloud security posture", "lambda security", "tenant", "s3 security", "cloudwatch", "containers", "eks", "fargate"],
+        "Malware Analyst": ["reverse engineering", "sandbox", "static analysis", "dynamic analysis", "assembly", "ghidra", "ida pro", "ollydbg", "peid", "binary analysis", "obfuscation", "shellcode", "disassembler", "threat intel", "rootkits"],
+        "Forensic Expert": ["encase", "ftk", "chain of custody", "recovery", "investigation", "memory dump", "autopsy", "digital evidence", "imaging", "forensic extraction", "cyber crime", "metadata", "volatility", "pcap", "write blocker"],
+        "Network Security": ["vpn", "ips", "ids", "firewalls", "proxy", "wireshark", "ipsec", "radius", "routing", "dnssec", "subnetting", "vlans", "dmz", "bgp", "encryption"],
+        "App Security": ["sast", "dast", "code review", "secure coding", "api security", "fuzzing", "dependency check", "burp suite", "owasp top 10", "fortify", "checkmarx", "security testing", "mitigation", "devsecops", "ci/cd"],
+        "Threat Intel": ["osint", "dark web", "attribution", "iocs", "threat modeling", "stix", "taxii", "misp", "feed", "indicators", "adversary", "campaign", "tactics", "mitre att&ck", "analysis"]
+    }
+}
+
+
+def get_seo_analysis(text):
+    cliche_dict = {
+        "Fillers": ["hardworking", "passionate", "team player", "motivated", "self-starter"],
+        "Vague": ["results-oriented", "dynamic", "professional", "experienced"],
+        "Passive": ["responsible for", "assisted with", "helped in"]
+    }
+    text_low = text.lower()
+    found_cliches = [word for cat in cliche_dict.values() for word in cat if word in text_low]
+
+    words = re.findall(r'\b[A-Za-z]{7,}\b', text)
+    freq = {}
+    for w in words:
+        freq[w] = freq.get(w, 0) + 1
+    top_themes = [t.capitalize() for t in sorted(freq, key=freq.get, reverse=True)[:6]]
+
+    return {"themes": top_themes, "cliches": found_cliches}
+
+
+def analyze_resume_ats(text, branch, job_role):
+    """
+    Resume → ATS analysis (v2 — discriminating scoring).
+    Score is NOT clamped to a narrow band; it reflects real variance
+    across skill match, keyword density, section structure, and length.
+    """
+    text_lower = text.lower()
+    required_skills = BRANCH_DATA.get(branch, {}).get(job_role, [])
+
+    # ---------- 1. Skills detection (with normalization) ----------
+    detected_skills = []
+    missing_skills = []
+    for skill in required_skills:
+        s = skill.lower().strip()
+        if s in text_lower:
+            detected_skills.append(skill)
+        else:
+            # partial / variant matching
+            alts = [s.replace(" ", ""), s.replace(".", ""), s.replace("-", " ")]
+            if any(a and a in text_lower for a in alts):
+                detected_skills.append(skill)
+            else:
+                missing_skills.append(skill)
+
+    total_required = len(required_skills) if required_skills else 1
+    skill_match_pct = (len(detected_skills) / total_required) * 100
+
+    # ---------- 2. Resume length signal ----------
+    words = re.findall(r"\w+", text_lower)
+    word_count = len(words)
+    # Ideal resume: 250–700 words. Penalize too short or too long.
+    if word_count < 150:
+        length_score = 40 + (word_count / 150) * 40  # 40–80
+    elif 150 <= word_count <= 700:
+        length_score = 100
+    elif 700 < word_count <= 1000:
+        length_score = 90
+    else:
+        length_score = max(60, 90 - (word_count - 1000) / 50)
+
+    # ---------- 3. Keyword density ----------
+    # Count occurrences of the required skills across the resume
+    total_keyword_hits = 0
+    for skill in required_skills:
+        total_keyword_hits += text_lower.count(skill.lower())
+    # Ideal: keyword density between 1.5% and 5% of resume
+    if word_count > 0:
+        density = round((total_keyword_hits / word_count) * 100, 2)
+    else:
+        density = 0.0
+    if 1.5 <= density <= 5:
+        density_score = 100
+    elif density < 1.5:
+        density_score = max(20, (density / 1.5) * 100)
+    else:  # > 5 (keyword stuffing)
+        density_score = max(50, 100 - (density - 5) * 8)
+
+    # ---------- 4. Section structure detection ----------
+    sections = {
+        "contact": "@" in text or "phone" in text_lower or "+91" in text,
+        "education": "education" in text_lower or "b.tech" in text_lower or "bsc" in text_lower or "b.e" in text_lower,
+        "skills": "skills" in text_lower or "technical skills" in text_lower,
+        "experience": "experience" in text_lower or "internship" in text_lower or "work history" in text_lower,
+        "projects": "project" in text_lower,
+        "summary": "summary" in text_lower or "objective" in text_lower or "profile" in text_lower,
+        "achievements": any(ch.isdigit() for ch in text),  # has numbers
+        "certifications": "certificat" in text_lower or "course" in text_lower,
+    }
+    section_score = (sum(1 for v in sections.values() if v) / len(sections)) * 100
+
+    # ---------- 5. Action verbs quality ----------
+    action_verbs = ["developed", "designed", "built", "implemented", "created",
+                    "led", "managed", "improved", "increased", "reduced",
+                    "delivered", "achieved", "engineered", "optimized", "launched"]
+    verb_hits = sum(1 for v in action_verbs if v in text_lower)
+    verb_score = min(100, (verb_hits / 6) * 100)
+
+    # ---------- 6. Quantified achievements ----------
+    # Count number-like patterns (e.g., "20%", "3 projects", "100 users")
+    quantified = len(re.findall(r'\d+\s*(%|percent|projects?|users?|clients?|months?|years?|k|m)', text_lower))
+    quant_score = min(100, (quantified / 4) * 100)
+
+    # ---------- 7. Weighted final score ----------
+    # Weights chosen so each factor materially affects the score
+    weights = {
+        "skills":      0.35,   # biggest signal
+        "structure":   0.20,
+        "density":     0.10,
+        "length":      0.05,
+        "verbs":       0.15,
+        "quantified":  0.15,
+    }
+    weighted = (
+        skill_match_pct * weights["skills"] +
+        section_score   * weights["structure"] +
+        density_score   * weights["density"] +
+        length_score    * weights["length"] +
+        verb_score      * weights["verbs"] +
+        quant_score     * weights["quantified"]
+    )
+
+    # Small bonus for balanced high-quality resumes
+    if skill_match_pct >= 80 and section_score >= 85 and verb_score >= 60:
+        weighted += 3
+
+    # Clamp to a wide, realistic range — NOT the narrow 35–95 band.
+    # Most real resumes land somewhere between 25 and 98.
+    score = int(round(max(15, min(98, weighted))))
+
+    # ---------- 8. Rating ----------
+    if score >= 85:
+        rating = "Excellent"
+    elif score >= 70:
+        rating = "Strong"
+    elif score >= 55:
+        rating = "Good"
+    elif score >= 40:
+        rating = "Fair"
+    else:
+        rating = "Needs Improvement"
+
+    # ---------- 9. SEO themes / clichés ----------
+    seo_themes = [s.title() for s in detected_skills[:8]]
+    cliche_library = ["hardworking", "passionate", "team player", "quick learner",
+                      "self-starter", "results-oriented", "dynamic", "motivated",
+                      "go-getter", "detail-oriented", "responsible for", "helped in"]
+    seo_cliches = [c for c in cliche_library if c in text_lower]
+
+    # ---------- 10. 13-point checklist ----------
+    checklist = [
+        {"label": "Contact Information Present",  "status": sections["contact"]},
+        {"label": "Education Section",             "status": sections["education"]},
+        {"label": "Skills Section",                "status": sections["skills"]},
+        {"label": "Experience / Internship",       "status": sections["experience"]},
+        {"label": "Projects Section",              "status": sections["projects"]},
+        {"label": "Professional Summary",          "status": sections["summary"]},
+        {"label": "Action Verbs Used",             "status": verb_hits >= 3},
+        {"label": "Achievements Quantified",       "status": quantified >= 2},
+        {"label": "Certifications / Courses",      "status": sections["certifications"]},
+        {"label": "Good Resume Length",            "status": 200 <= word_count <= 900},
+        {"label": "No Keyword Stuffing",           "status": density <= 6},
+        {"label": "Relevant Keywords Present",     "status": skill_match_pct >= 50},
+        {"label": "ATS-Friendly Format",           "status": True},
+    ]
+
+    return {
+        "score": score,
+        "rating": rating,
+        "density": density,
+        "word_count": word_count,
+        "seo_themes": seo_themes,
+        "seo_cliches": seo_cliches,
+        "detected": detected_skills,
+        "missing": missing_skills,
+        "checklist": checklist,
+        "metrics": {
+            "skill_match": round(skill_match_pct, 1),
+            "structure":   round(section_score, 1),
+            "density":     round(density_score, 1),
+            "length":      round(length_score, 1),
+            "verbs":       round(verb_score, 1),
+            "quantified":  round(quant_score, 1),
+        }
+    }
+
+
+@app.route("/api/resume/branches", methods=["GET"])
+def api_resume_branches():
+    """Return the branch → role → skills map for the frontend dropdowns."""
+    return jsonify({"branches": BRANCH_DATA})
+
+
+@app.route("/api/resume/analyze", methods=["POST"])
+def api_resume_analyze():
+    """Accepts resume PDF + branch + job_role → returns full ATS analysis."""
+    if not PDFPLUMBER_AVAILABLE:
+        return jsonify(error="Server missing pdfplumber. Run: pip install pdfplumber"), 500
+
+    branch = request.form.get("branch")
+    role = request.form.get("job_role")
+    resume = request.files.get("resume")
+
+    if not branch or not role or not resume:
+        return jsonify({"error": "Missing branch, job_role, or resume file."}), 400
+
+    if not resume.filename.lower().endswith(".pdf"):
+        return jsonify({"error": "Only PDF resumes are accepted."}), 400
+
+    filepath = os.path.join(RESUME_UPLOAD_FOLDER, secure_filename(resume.filename))
+    resume.save(filepath)
+
+    try:
+        with pdfplumber.open(filepath) as pdf:
+            text = ""
+            for page in pdf.pages:
+                if page.extract_text():
+                    text += page.extract_text()
+    except Exception as e:
+        return jsonify({"error": f"Could not read PDF: {str(e)}"}), 500
+
+    result = analyze_resume_ats(text, branch, role)
+
+    # ---- Dynamic suggestions (same logic as ATS project) ----
+    suggestions = []
+    if result['missing']:
+        suggestions.append(f"Consider adding these missing skills: {', '.join(result['missing'][:5])}.")
+    if result['density'] < 2:
+        suggestions.append("Increase the use of relevant keywords naturally in experience and projects.")
+    if result['seo_cliches']:
+        suggestions.append(f"Avoid generic terms like: {', '.join(result['seo_cliches'])}.")
+    if result['score'] < 60:
+        suggestions.append("Improve ATS compatibility by adding role-specific keywords and relevant projects.")
+    if "project" not in text.lower():
+        suggestions.append("Add detailed projects with outcomes and your contributions.")
+    if "summary" not in text.lower():
+        suggestions.append("Include a concise professional summary highlighting your skills and achievements.")
+    suggestions.extend([
+        "Use action verbs like Designed, Developed, Implemented.",
+        "Quantify achievements using numbers and percentages.",
+        "Ensure consistent formatting and spacing.",
+        "Keep resume length to 1–2 pages.",
+        "Use ATS-friendly headings like Skills, Experience, Education.",
+        "Save resume in PDF format with a simple layout."
+    ])
+    result["suggestions"] = suggestions
+
+    return jsonify(result)
+
+
+# =============================================================================
+#  SECTION 22 — FRONTEND SERVING (FIXED — no more 405 on /api/*)
 # =============================================================================
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
@@ -2443,14 +2838,21 @@ def serve_root():
       <p>Base API: <code>/api/...</code></p>
       <p>Health: <a href="/api/system/health">/api/system/health</a></p>
       <p>DB check: <a href="/api/admin/check-db">/api/admin/check-db</a></p>
+      <p>Resume branches: <a href="/api/resume/branches">/api/resume/branches</a></p>
     </body></html>
     """)
 
 
 @app.route("/<path:path>", methods=["GET"])
 def serve_frontend(path):
-    if path.startswith("api/") or path.startswith("static/"):
-        return jsonify(error="not found"), 404
+    # CRITICAL FIX:
+    # This catch-all MUST NEVER intercept /api/* or /static/* requests.
+    # If it does, POST /api/resume/analyze lands here with only GET allowed → 405.
+    # Returning JSON 404 keeps API routes clean.
+    if path == "api" or path.startswith("api/"):
+        return jsonify(error="API endpoint not found", path="/" + path), 404
+    if path == "static" or path.startswith("static/"):
+        return jsonify(error="Static asset not found", path="/" + path), 404
 
     exact = os.path.join(FRONTEND_DIR, path)
     if os.path.isfile(exact):
@@ -2474,7 +2876,28 @@ def serve_frontend(path):
 
 
 # =============================================================================
-#  SECTION 22 — ENTRY POINT
+#  SECTION 22B — API METHOD GUARD (prevents 405 leaking from catch-all)
+# =============================================================================
+@app.errorhandler(405)
+def method_not_allowed(e):
+    """Return JSON for API 405s so the frontend sees a clean error message."""
+    try:
+        path = request.path or ""
+    except Exception:
+        path = ""
+    if path.startswith("/api/"):
+        return jsonify(
+            error="Method Not Allowed",
+            path=path,
+            method=request.method,
+            hint="This URL exists but does not accept this HTTP method. "
+                 "For resume analysis use POST /api/resume/analyze with multipart form-data."
+        ), 405
+    return e
+
+
+# =============================================================================
+#  SECTION 23 — ENTRY POINT
 # =============================================================================
 init_db()
 

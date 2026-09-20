@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Skill Planning Intelligence · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar { width: 280px; background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%); color: white; padding: 20px 14px; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; transition: transform 0.3s ease; scrollbar-width: thin; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px; }
+        .sidebar-brand .icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35); }
+        .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
+        .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+        .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.65); text-decoration: none; transition: all 0.2s; margin: 1px 0; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active { background: rgba(255,255,255,0.12); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .menu a i { width: 18px; text-align: center; font-size: 14px; }
+        .menu a .badge { margin-left: auto; background: #ef4444; color: white; font-size: 9px; font-weight: 700; padding: 1px 8px; border-radius: 20px; }
+        .sidebar-footer { padding: 16px 10px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 12px; }
+        .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.5); text-decoration: none; transition: 0.2s; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ===== MAIN ===== */
+        .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
+        .header { background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226,232,240,0.6); position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 8px; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-toggle { display: none; background: none; border: none; font-size: 20px; color: #0b1a33; cursor: pointer; }
+        .header-left .page-title h1 { font-size: 18px; color: #0b1a33; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .header-left .page-title h1 i { color: #7c3aed; }
+        .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right .date { font-size: 12px; color: #64748b; font-weight: 500; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; }
+        .header-right .notif { position: relative; font-size: 18px; color: #475569; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; width: 18px; height: 18px; font-size: 9px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .header-right .profile-btn { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 12px 4px 4px; border-radius: 30px; cursor: pointer; border: none; transition: 0.2s; }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+        .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
+
+        .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
+
+        /* ===== DATA SOURCE BANNER ===== */
+        .data-source-banner { background: linear-gradient(135deg, #065f46, #16a34a, #22c55e); color: white; padding: 12px 20px; border-radius: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(22,163,74,0.25); font-size: 12px; }
+        .data-source-banner .ds-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .data-source-banner .ds-content { flex: 1; }
+        .data-source-banner .ds-title { font-size: 13px; font-weight: 700; }
+        .data-source-banner .ds-sub { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+        .data-source-banner .ds-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+        .data-source-banner .ds-stat { text-align: center; background: rgba(255,255,255,0.12); padding: 4px 12px; border-radius: 8px; font-size: 10px; }
+        .data-source-banner .ds-stat strong { display: block; font-size: 15px; font-weight: 800; }
+
+        /* ===== WELCOME BANNER ===== */
+        .welcome-banner { background: linear-gradient(135deg, #7c3aed, #a855f7, #ec4899); color: white; padding: 24px 28px; border-radius: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; position: relative; overflow: hidden; }
+        .welcome-banner::before { content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,0.06); top: -120px; right: -60px; }
+        .welcome-banner h2 { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+        .welcome-banner p { font-size: 13px; opacity: 0.9; margin-top: 4px; position: relative; z-index: 1; max-width: 700px; }
+        .welcome-banner .banner-stats { display: flex; gap: 18px; flex-wrap: wrap; position: relative; z-index: 1; }
+        .welcome-banner .banner-stats div { text-align: center; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 10px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); }
+        .welcome-banner .banner-stats strong { font-size: 20px; display: block; }
+        .welcome-banner .banner-stats span { font-size: 10px; opacity: 0.8; }
+
+        /* ===== SECTIONS ===== */
+        .section-title { font-size: 16px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
+        .section-title i { color: #7c3aed; }
+        .section-title .badge-count { background: #ede9fe; padding: 1px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #7c3aed; margin-left: auto; }
+
+        /* ===== STATS ===== */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: white; border-radius: 14px; padding: 14px 16px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: all 0.3s; text-align: center; position: relative; overflow: hidden; }
+        .stat-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #7c3aed, #a855f7); transform: scaleX(0); transition: transform 0.3s; }
+        .stat-box:hover::before { transform: scaleX(1); }
+        .stat-box:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(124,58,237,0.12); }
+        .stat-box .stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 0 auto 6px; }
+        .stat-box .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-box .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-icon.rose { background: #fce7f3; color: #db2777; }
+        .stat-box .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-box .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
+        .stat-box .stat-icon.red { background: #fee2e2; color: #dc2626; }
+        .stat-box .stat-number { font-size: 22px; font-weight: 800; color: #0b1a33; }
+        .stat-box .stat-label { font-size: 11px; color: #64748b; }
+        .stat-box .stat-trend { font-size: 10px; font-weight: 600; padding: 1px 8px; border-radius: 20px; display: inline-block; margin-top: 2px; }
+        .stat-box .stat-trend.good { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-trend.warning { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-trend.danger { background: #fee2e2; color: #dc2626; }
+        .stat-box .stat-trend.neutral { background: #f1f5f9; color: #64748b; }
+
+        /* ===== PRIORITY MATRIX (Eisenhower) ===== */
+        .matrix-container { background: white; border-radius: 18px; padding: 22px; border: 1px solid #eef2f6; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .priority-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .priority-quadrant { border-radius: 14px; padding: 18px; min-height: 180px; transition: 0.3s; position: relative; overflow: hidden; }
+        .priority-quadrant:hover { transform: scale(1.02); box-shadow: 0 12px 30px rgba(0,0,0,0.1); }
+        .priority-quadrant.q1 { background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 2px solid #fca5a5; }
+        .priority-quadrant.q2 { background: linear-gradient(135deg, #fefce8, #fef3c7); border: 2px solid #fcd34d; }
+        .priority-quadrant.q3 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); border: 2px solid #93c5fd; }
+        .priority-quadrant.q4 { background: linear-gradient(135deg, #dcfce7, #bbf7d0); border: 2px solid #86efac; }
+        .priority-quadrant .pq-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .priority-quadrant .pq-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+        .priority-quadrant.q1 .pq-title { color: #dc2626; }
+        .priority-quadrant.q2 .pq-title { color: #d97706; }
+        .priority-quadrant.q3 .pq-title { color: #2563eb; }
+        .priority-quadrant.q4 .pq-title { color: #16a34a; }
+        .priority-quadrant .pq-icon { font-size: 22px; }
+        .priority-quadrant .pq-count { font-size: 32px; font-weight: 900; color: #0b1a33; line-height: 1; }
+        .priority-quadrant .pq-desc { font-size: 11px; color: #64748b; margin-top: 4px; margin-bottom: 12px; }
+        .priority-quadrant .pq-list { display: flex; flex-direction: column; gap: 6px; }
+        .priority-quadrant .pq-item { background: white; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; color: #0b1a33; display: flex; justify-content: space-between; align-items: center; }
+        .priority-quadrant .pq-item .pq-pct { font-size: 10px; font-weight: 800; }
+
+        /* ===== GROWTH FORECAST (SVG Line Chart) ===== */
+        .forecast-container { background: white; border-radius: 18px; padding: 22px; border: 1px solid #eef2f6; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .forecast-svg { width: 100%; height: 260px; overflow: visible; }
+        .forecast-legend { display: flex; gap: 20px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+        .forecast-legend .fl-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #475569; font-weight: 500; }
+        .forecast-legend .fl-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+        /* ===== SKILL GAP TREEMAP ===== */
+        .treemap-container { background: white; border-radius: 18px; padding: 22px; border: 1px solid #eef2f6; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .treemap { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 60px); gap: 6px; }
+        .treemap-cell { border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden; }
+        .treemap-cell:hover { transform: scale(1.05); z-index: 5; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .treemap-cell .tc-name { font-size: 11px; font-weight: 800; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .treemap-cell .tc-value { font-size: 14px; font-weight: 900; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+
+        /* ===== CAPACITY PLANNING GRID ===== */
+        .capacity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .capacity-card { background: white; border-radius: 16px; padding: 18px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.3s; position: relative; overflow: hidden; }
+        .capacity-card::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; }
+        .capacity-card.critical::before { background: #dc2626; }
+        .capacity-card.high::before { background: #d97706; }
+        .capacity-card.balanced::before { background: #16a34a; }
+        .capacity-card.oversupply::before { background: #2563eb; }
+        .capacity-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(124,58,237,0.1); }
+        .capacity-card .cc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .capacity-card .cc-sector { font-size: 14px; font-weight: 700; color: #0b1a33; }
+        .capacity-card .cc-status { font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; }
+        .capacity-card.critical .cc-status { background: #fee2e2; color: #dc2626; }
+        .capacity-card.high .cc-status { background: #fef3c7; color: #d97706; }
+        .capacity-card.balanced .cc-status { background: #dcfce7; color: #16a34a; }
+        .capacity-card.oversupply .cc-status { background: #dbeafe; color: #2563eb; }
+        .capacity-card .cc-bar-row { display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-bottom: 6px; }
+        .capacity-card .cc-bar-row strong { color: #0b1a33; font-weight: 800; }
+        .capacity-card .cc-bar { height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative; }
+        .capacity-card .cc-bar .fill { height: 100%; border-radius: 10px; transition: width 0.8s ease; }
+        .capacity-card .cc-footer { font-size: 10.5px; color: #64748b; display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px dashed #f1f5f9; }
+
+        /* ===== SCENARIO SIMULATOR ===== */
+        .simulator-container { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-radius: 18px; padding: 24px; border: 1px solid #c4b5fd; margin-bottom: 20px; }
+        .simulator-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+        .simulator-header h3 { font-size: 15px; color: #5b21b6; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .simulator-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .sim-control { background: white; border-radius: 12px; padding: 14px; }
+        .sim-control label { font-size: 11px; font-weight: 700; color: #5b21b6; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 8px; display: block; }
+        .sim-control input[type="range"] { width: 100%; accent-color: #7c3aed; }
+        .sim-control .sim-value { display: flex; justify-content: space-between; font-size: 12px; color: #475569; margin-top: 4px; }
+        .sim-control .sim-value strong { color: #7c3aed; font-size: 14px; font-weight: 800; }
+        .sim-result { background: white; border-radius: 12px; padding: 18px; grid-column: span 2; text-align: center; }
+        .sim-result .sr-label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
+        .sim-result .sr-value { font-size: 42px; font-weight: 900; color: #7c3aed; line-height: 1.1; margin: 6px 0; }
+        .sim-result .sr-desc { font-size: 12px; color: #475569; line-height: 1.5; }
+        @media (max-width: 768px) { .sim-result { grid-column: span 1; } }
+
+        /* ===== ROADMAP TIMELINE ===== */
+        .roadmap-container { background: white; border-radius: 18px; padding: 22px; border: 1px solid #eef2f6; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .roadmap { position: relative; padding: 10px 0; }
+        .roadmap::before { content: ''; position: absolute; top: 32px; left: 40px; right: 40px; height: 4px; background: linear-gradient(90deg, #7c3aed, #a855f7, #ec4899); border-radius: 10px; }
+        .roadmap-phases { display: flex; justify-content: space-between; position: relative; flex-wrap: wrap; gap: 10px; }
+        .roadmap-phase { flex: 1; min-width: 120px; text-align: center; position: relative; z-index: 1; }
+        .roadmap-phase .phase-circle { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 900; font-size: 14px; color: white; background: linear-gradient(135deg, #7c3aed, #a855f7); border: 4px solid white; box-shadow: 0 4px 16px rgba(124,58,237,0.35); }
+        .roadmap-phase .phase-title { font-size: 12px; font-weight: 700; color: #0b1a33; }
+        .roadmap-phase .phase-desc { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .roadmap-phase .phase-meta { font-size: 9px; color: #7c3aed; font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* ===== BUDGET ALLOCATION ===== */
+        .budget-container { background: white; border-radius: 18px; padding: 22px; border: 1px solid #eef2f6; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .budget-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: center; }
+        .budget-donut-wrap { display: flex; justify-content: center; }
+        .budget-donut { width: 200px; height: 200px; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; }
+        .budget-donut-center { width: 120px; height: 120px; border-radius: 50%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
+        .budget-donut-center .amt { font-size: 22px; font-weight: 900; color: #0b1a33; }
+        .budget-donut-center .lbl { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+        .budget-list { display: flex; flex-direction: column; gap: 10px; }
+        .budget-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f8fafc; border-radius: 10px; transition: 0.2s; }
+        .budget-item:hover { background: #f1f5f9; }
+        .budget-item .bi-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .budget-item .bi-label { flex: 1; font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .budget-item .bi-value { font-size: 12px; font-weight: 800; color: #0b1a33; }
+        .budget-item .bi-pct { font-size: 10px; color: #64748b; min-width: 40px; text-align: right; }
+        @media (max-width: 768px) { .budget-grid { grid-template-columns: 1fr; } }
+
+        /* ===== RISK ALERTS ===== */
+        .risk-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .risk-item { display: flex; align-items: flex-start; gap: 14px; padding: 14px 18px; background: white; border-radius: 14px; border: 1px solid #eef2f6; border-left: 5px solid #dc2626; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.2s; }
+        .risk-item:hover { transform: translateX(4px); box-shadow: 0 8px 20px rgba(220,38,38,0.1); }
+        .risk-item.high { border-left-color: #d97706; }
+        .risk-item.medium { border-left-color: #eab308; }
+        .risk-item.low { border-left-color: #16a34a; }
+        .risk-item .ri-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: #fee2e2; color: #dc2626; }
+        .risk-item.high .ri-icon { background: #fef3c7; color: #d97706; }
+        .risk-item.medium .ri-icon { background: #fefce8; color: #ca8a04; }
+        .risk-item.low .ri-icon { background: #dcfce7; color: #16a34a; }
+        .risk-item .ri-content { flex: 1; }
+        .risk-item .ri-title { font-size: 13px; font-weight: 800; color: #0b1a33; margin-bottom: 3px; }
+        .risk-item .ri-desc { font-size: 11.5px; color: #64748b; line-height: 1.5; }
+        .risk-item .ri-badge { font-size: 9px; font-weight: 800; padding: 3px 10px; border-radius: 10px; text-transform: uppercase; background: #fee2e2; color: #dc2626; align-self: flex-start; }
+        .risk-item.high .ri-badge { background: #fef3c7; color: #d97706; }
+        .risk-item.medium .ri-badge { background: #fefce8; color: #ca8a04; }
+        .risk-item.low .ri-badge { background: #dcfce7; color: #16a34a; }
+
+        /* ===== RECOMMENDATION CARDS ===== */
+        .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .rec-card { background: white; border-radius: 16px; padding: 18px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.3s; position: relative; }
+        .rec-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(124,58,237,0.12); }
+        .rec-card .rc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .rec-card .rc-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .rec-card .rc-priority { font-size: 9px; font-weight: 800; padding: 3px 10px; border-radius: 10px; text-transform: uppercase; }
+        .rec-card .rc-priority.p1 { background: #fee2e2; color: #dc2626; }
+        .rec-card .rc-priority.p2 { background: #fef3c7; color: #d97706; }
+        .rec-card .rc-priority.p3 { background: #dbeafe; color: #2563eb; }
+        .rec-card .rc-title { font-size: 14px; font-weight: 800; color: #0b1a33; margin-bottom: 6px; }
+        .rec-card .rc-desc { font-size: 11.5px; color: #64748b; line-height: 1.5; margin-bottom: 10px; }
+        .rec-card .rc-meta { display: flex; gap: 12px; padding-top: 10px; border-top: 1px dashed #f1f5f9; font-size: 10.5px; color: #64748b; flex-wrap: wrap; }
+        .rec-card .rc-meta span { display: flex; align-items: center; gap: 4px; }
+        .rec-card .rc-meta strong { color: #0b1a33; font-weight: 800; }
+
+        /* ===== CHART GRID ===== */
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+        .chart-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .chart-card .card-title { font-size: 13px; font-weight: 700; color: #0b1a33; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .chart-card .card-title i { color: #7c3aed; }
+
+        /* ===== BAR CHART ===== */
+        .bar-chart { display: flex; align-items: flex-end; justify-content: space-around; height: 200px; padding: 4px 0; gap: 10px; }
+        .bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+        .bar-group .bar { width: 100%; max-width: 44px; border-radius: 6px 6px 0 0; transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); min-height: 6px; position: relative; }
+        .bar-group .bar .bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: #0b1a33; white-space: nowrap; }
+        .bar-group .bar-label { font-size: 9.5px; color: #64748b; margin-top: 6px; text-align: center; font-weight: 600; }
+
+        /* ===== EMPTY ===== */
+        .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+        .empty-state i { font-size: 40px; display: block; margin-bottom: 10px; color: #c7d2fe; }
+
+        /* ===== TOAST ===== */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: white; padding: 14px 22px; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.15); border-left: 4px solid #7c3aed; max-width: 400px; z-index: 1000; font-size: 13px; color: #0b1a33; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) { .chart-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; } .menu-toggle { display: block; }
+            .header { padding: 10px 16px; } .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; } .container { padding: 12px 14px; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .welcome-banner { flex-direction: column; align-items: flex-start; }
+            .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
+            .priority-grid { grid-template-columns: 1fr; }
+            .treemap { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(8, 55px); }
+            .roadmap::before { display: none; }
+            .roadmap-phases { flex-direction: column; gap: 14px; }
+            .roadmap-phase { display: flex; align-items: center; gap: 14px; text-align: left; }
+            .roadmap-phase .phase-circle { margin: 0; flex-shrink: 0; }
+            .budget-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+            .treemap { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div><h2>SkillBridge</h2><p>Government Portal</p></div>
+    </div>
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">G</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Government</div>
+            <div class="role" id="sidebarRole">Admin</div>
+        </div>
+    </div>
+    <div class="menu-label">Analytics</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="government-analytics.html"><i class="fas fa-chart-line"></i> Government Analytics</a>
+        <a href="retention-analytics.html"><i class="fas fa-user-check"></i> Retention Analysis</a>
+        <a href="income.html"><i class="fas fa-rupee-sign"></i> Income/Livelihood</a>
+        <a href="training-to-job-relevance.html"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
+        <a href="non-placement-analysis.html"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
+        <a href="program-comparison.html"><i class="fas fa-landmark"></i> Program Comparison</a>
+        <a href="district-state-intelligence.html"><i class="fas fa-map-marked-alt"></i> District & State Intelligence</a>
+        <a href="skill-demand-supply.html"><i class="fas fa-scale-balanced"></i> Demand vs Supply</a>
+        <a href="skill-planning.html" class="active"><i class="fas fa-clipboard-list"></i> Skill Planning <span class="badge">New</span></a>
+        <a href="what-if-simulator.html"><i class="fas fa-flask"></i> What-If Simulator</a>
+        <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
+    </div>
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<div class="main-content">
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-clipboard-list"></i> Skill Planning Intelligence</h1>
+                <p>Strategic workforce planning · Priority matrix · Capacity forecasting · SIH26135</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><i class="fas fa-moon"></i></button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">G</div>
+                <span class="name" id="headerName">Government</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- ===== DATA SOURCE BANNER ===== -->
+        <div class="data-source-banner">
+            <div class="ds-icon">🎯</div>
+            <div class="ds-content">
+                <div class="ds-title" id="dsTitle">Loading strategic planning data…</div>
+                <div class="ds-sub" id="dsSub">Analysing demand, supply, capacity and gaps</div>
+            </div>
+            <div class="ds-stats">
+                <div class="ds-stat"><strong id="dsSkills">0</strong>Skills</div>
+                <div class="ds-stat"><strong id="dsSectors">0</strong>Sectors</div>
+                <div class="ds-stat"><strong id="dsTrainees">0</strong>Trainees</div>
+            </div>
+        </div>
+
+        <!-- ===== HERO BANNER ===== -->
+        <div class="welcome-banner">
+            <div>
+                <h2><i class="fas fa-chess"></i> Strategic Skill Planning Dashboard</h2>
+                <p>Data-driven decisions for trainers, policymakers, and skill development missions. Identify what to train, where to invest, and when to act.</p>
+            </div>
+            <div class="banner-stats">
+                <div><strong id="bannerPriority">0</strong><span>Priority Actions</span></div>
+                <div><strong id="bannerInvestment">₹0</strong><span>Recommended Budget</span></div>
+                <div><strong id="bannerTimeline">0m</strong><span>Planning Horizon</span></div>
+                <div><strong id="bannerImpact">0</strong><span>Projected Impact</span></div>
+            </div>
+        </div>
+
+        <!-- ===== TOP KPIs ===== -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-icon purple"><i class="fas fa-bullseye"></i></div>
+                <div class="stat-number" id="kpiSkillsTracked">0</div>
+                <div class="stat-label">Skills Tracked</div>
+                <span class="stat-trend neutral">–</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-number" id="kpiCriticalGaps">0</div>
+                <div class="stat-label">Critical Gaps</div>
+                <span class="stat-trend danger">● Urgent</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon orange"><i class="fas fa-arrow-trend-up"></i></div>
+                <div class="stat-number" id="kpiGrowthSkills">0</div>
+                <div class="stat-label">High-Growth Skills</div>
+                <span class="stat-trend warning">● Opportunity</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-number" id="kpiBalanced">0</div>
+                <div class="stat-label">Balanced Skills</div>
+                <span class="stat-trend good">● Healthy</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                <div class="stat-number" id="kpiTrainedPool">0</div>
+                <div class="stat-label">Trained Pool</div>
+                <span class="stat-trend neutral">–</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon teal"><i class="fas fa-rupee-sign"></i></div>
+                <div class="stat-number" id="kpiAvgCost">₹0</div>
+                <div class="stat-label">Avg Training Cost</div>
+                <span class="stat-trend neutral">–</span>
+            </div>
+        </div>
+
+        <!-- ===== PRIORITY MATRIX ===== -->
+        <div class="section-title">
+            <i class="fas fa-layer-group"></i> Strategic Priority Matrix
+            <span class="badge-count">Eisenhower-style quadrants</span>
+        </div>
+        <div class="matrix-container">
+            <div class="priority-grid">
+                <div class="priority-quadrant q1">
+                    <div class="pq-header">
+                        <div class="pq-title">🚨 Critical Shortages</div>
+                        <div class="pq-icon">🔥</div>
+                    </div>
+                    <div class="pq-count" id="pqCriticalCount">0</div>
+                    <div class="pq-desc">High demand · Low supply · Immediate action required</div>
+                    <div class="pq-list" id="pqCriticalList"></div>
+                </div>
+                <div class="priority-quadrant q2">
+                    <div class="pq-header">
+                        <div class="pq-title">⚠️ Growing Demand</div>
+                        <div class="pq-icon">📈</div>
+                    </div>
+                    <div class="pq-count" id="pqHighCount">0</div>
+                    <div class="pq-desc">Rising demand · Moderate supply · Scale up training</div>
+                    <div class="pq-list" id="pqHighList"></div>
+                </div>
+                <div class="priority-quadrant q3">
+                    <div class="pq-header">
+                        <div class="pq-title">📊 Watch List</div>
+                        <div class="pq-icon">👀</div>
+                    </div>
+                    <div class="pq-count" id="pqMediumCount">0</div>
+                    <div class="pq-desc">Moderate demand · Adequate supply · Monitor trends</div>
+                    <div class="pq-list" id="pqMediumList"></div>
+                </div>
+                <div class="priority-quadrant q4">
+                    <div class="pq-header">
+                        <div class="pq-title">✅ Balanced Skills</div>
+                        <div class="pq-icon">🎯</div>
+                    </div>
+                    <div class="pq-count" id="pqLowCount">0</div>
+                    <div class="pq-desc">Healthy balance · Sustainable · No urgent action</div>
+                    <div class="pq-list" id="pqLowList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== GROWTH FORECAST ===== -->
+        <div class="section-title">
+            <i class="fas fa-chart-line"></i> 12-Month Demand Forecast
+            <span class="badge-count">Projected growth by sector</span>
+        </div>
+        <div class="forecast-container">
+            <svg class="forecast-svg" id="forecastChart" viewBox="0 0 800 260" preserveAspectRatio="none"></svg>
+            <div class="forecast-legend" id="forecastLegend"></div>
+        </div>
+
+        <!-- ===== SKILL GAP TREEMAP ===== -->
+        <div class="section-title">
+            <i class="fas fa-th-large"></i> Skill Gap Treemap
+            <span class="badge-count">Size = gap magnitude</span>
+        </div>
+        <div class="treemap-container">
+            <div class="treemap" id="treemap"></div>
+        </div>
+
+        <!-- ===== CAPACITY PLANNING ===== -->
+        <div class="section-title">
+            <i class="fas fa-industry"></i> Sector-wise Capacity Planning
+            <span class="badge-count">Training capacity vs market demand</span>
+        </div>
+        <div class="capacity-grid" id="capacityGrid"></div>
+
+        <!-- ===== SCENARIO SIMULATOR ===== -->
+        <div class="section-title">
+            <i class="fas fa-flask"></i> What-If Scenario Simulator
+            <span class="badge-count">Adjust levers · See impact</span>
+        </div>
+        <div class="simulator-container">
+            <div class="simulator-header">
+                <h3><i class="fas fa-sliders-h"></i> Simulate Policy Impact</h3>
+                <button class="btn-filter" onclick="resetSimulator()" style="font-size:11px;height:32px;padding:6px 14px;">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+            <div class="simulator-grid">
+                <div class="sim-control">
+                    <label>📚 Training Capacity Increase</label>
+                    <input type="range" id="simCapacity" min="0" max="100" value="25" oninput="runSimulation()">
+                    <div class="sim-value"><span>Current</span><strong id="simCapacityVal">25%</strong></div>
+                </div>
+                <div class="sim-control">
+                    <label>💰 Budget Increase</label>
+                    <input type="range" id="simBudget" min="0" max="200" value="50" oninput="runSimulation()">
+                    <div class="sim-value"><span>Base</span><strong id="simBudgetVal">+50%</strong></div>
+                </div>
+                <div class="sim-control">
+                    <label>🎓 Placement Support</label>
+                    <input type="range" id="simPlacement" min="0" max="100" value="30" oninput="runSimulation()">
+                    <div class="sim-value"><span>Current</span><strong id="simPlacementVal">30%</strong></div>
+                </div>
+                <div class="sim-result">
+                    <div class="sr-label">Projected Employment Rate</div>
+                    <div class="sr-value" id="simResult">—</div>
+                    <div class="sr-desc" id="simResultDesc">Adjust the sliders to see projected impact on employment outcomes.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ROADMAP ===== -->
+        <div class="section-title">
+            <i class="fas fa-road"></i> Strategic Roadmap
+            <span class="badge-count">4-phase implementation plan</span>
+        </div>
+        <div class="roadmap-container">
+            <div class="roadmap">
+                <div class="roadmap-phases">
+                    <div class="roadmap-phase">
+                        <div class="phase-circle">1</div>
+                        <div class="phase-title">Assess</div>
+                        <div class="phase-desc">Identify critical gaps & priority skills</div>
+                        <div class="phase-meta">Month 0-2</div>
+                    </div>
+                    <div class="roadmap-phase">
+                        <div class="phase-circle">2</div>
+                        <div class="phase-title">Design</div>
+                        <div class="phase-desc">Curriculum aligned to employer demand</div>
+                        <div class="phase-meta">Month 2-4</div>
+                    </div>
+                    <div class="roadmap-phase">
+                        <div class="phase-circle">3</div>
+                        <div class="phase-title">Deploy</div>
+                        <div class="phase-desc">Launch training in high-priority regions</div>
+                        <div class="phase-meta">Month 4-9</div>
+                    </div>
+                    <div class="roadmap-phase">
+                        <div class="phase-circle">4</div>
+                        <div class="phase-title">Measure</div>
+                        <div class="phase-desc">Track employment, income, retention</div>
+                        <div class="phase-meta">Month 9-12</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== BUDGET ALLOCATION ===== -->
+        <div class="section-title">
+            <i class="fas fa-coins"></i> Recommended Budget Allocation
+            <span class="badge-count">Based on gap severity</span>
+        </div>
+        <div class="budget-container">
+            <div class="budget-grid">
+                <div class="budget-donut-wrap">
+                    <div class="budget-donut" id="budgetDonut">
+                        <div class="budget-donut-center">
+                            <div class="amt" id="budgetTotal">₹0</div>
+                            <div class="lbl">Total Budget</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="budget-list" id="budgetList"></div>
+            </div>
+        </div>
+
+        <!-- ===== RISK ALERTS ===== -->
+        <div class="section-title">
+            <i class="fas fa-shield-alt"></i> Risk Alerts
+            <span class="badge-count">Emerging workforce risks</span>
+        </div>
+        <div class="risk-list" id="riskList"></div>
+
+        <!-- ===== RECOMMENDATION CARDS ===== -->
+        <div class="section-title">
+            <i class="fas fa-lightbulb"></i> Actionable Recommendations
+            <span class="badge-count">Prioritised for immediate action</span>
+        </div>
+        <div class="rec-grid" id="recGrid"></div>
+
+        <!-- ===== SECTOR COMPARISON ===== -->
+        <div class="section-title">
+            <i class="fas fa-chart-bar"></i> Sector Performance Snapshot
+            <span class="badge-count">Training effectiveness by sector</span>
+        </div>
+        <div class="chart-grid">
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-briefcase"></i> Employment Rate by Sector</div>
+                <div class="bar-chart" id="sectorEmploymentChart"></div>
+            </div>
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-rupee-sign"></i> Avg Income by Sector</div>
+                <div class="bar-chart" id="sectorIncomeChart"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   FIREBASE CONFIG — same as all other govt pages
+   ============================================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+
+let db = null;
+try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+} catch (e) { console.warn('Firebase init failed:', e.message); }
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let allRecords = [];
+let skillPlanData = [];
+let sectorData = [];
+let stats = {};
+let _govtOfficer = null;
+
+/* ============================================================
+   SKILL DEMAND + COST DATABASE
+   (National demand model + avg training cost per skill)
+   ============================================================ */
+const SKILL_DEMAND_DB = [
+    { skill: 'JavaScript', sector: 'IT & Software', demand: 12500, cost: 22000 },
+    { skill: 'Python', sector: 'IT & Software', demand: 11800, cost: 25000 },
+    { skill: 'React', sector: 'IT & Software', demand: 9200, cost: 24000 },
+    { skill: 'Node.js', sector: 'IT & Software', demand: 7800, cost: 22000 },
+    { skill: 'SQL', sector: 'IT & Software', demand: 10500, cost: 15000 },
+    { skill: 'Java', sector: 'IT & Software', demand: 8900, cost: 23000 },
+    { skill: 'AWS', sector: 'IT & Software', demand: 7200, cost: 32000 },
+    { skill: 'Docker', sector: 'IT & Software', demand: 6500, cost: 28000 },
+    { skill: 'Kubernetes', sector: 'IT & Software', demand: 5400, cost: 35000 },
+    { skill: 'Machine Learning', sector: 'IT & Software', demand: 8100, cost: 45000 },
+    { skill: 'Data Science', sector: 'IT & Software', demand: 7600, cost: 42000 },
+    { skill: 'Digital Marketing', sector: 'IT & Software', demand: 6100, cost: 18000 },
+    { skill: 'Cybersecurity', sector: 'IT & Software', demand: 6900, cost: 38000 },
+    { skill: 'SolidWorks', sector: 'Manufacturing', demand: 4200, cost: 28000 },
+    { skill: 'AutoCAD', sector: 'Manufacturing', demand: 5800, cost: 16000 },
+    { skill: 'CNC Programming', sector: 'Manufacturing', demand: 3900, cost: 32000 },
+    { skill: 'Welding', sector: 'Manufacturing', demand: 7100, cost: 12000 },
+    { skill: 'Fitter', sector: 'Manufacturing', demand: 5900, cost: 11000 },
+    { skill: 'GD&T', sector: 'Manufacturing', demand: 2800, cost: 14000 },
+    { skill: 'PLC', sector: 'Electrical', demand: 4500, cost: 30000 },
+    { skill: 'SCADA', sector: 'Electrical', demand: 3200, cost: 35000 },
+    { skill: 'Electrical Wiring', sector: 'Electrical', demand: 6800, cost: 10000 },
+    { skill: 'Solar Installation', sector: 'Electrical', demand: 5200, cost: 14000 },
+    { skill: 'Nursing', sector: 'Healthcare', demand: 9800, cost: 35000 },
+    { skill: 'Patient Care', sector: 'Healthcare', demand: 7400, cost: 22000 },
+    { skill: 'Medical Lab Tech', sector: 'Healthcare', demand: 4600, cost: 40000 },
+    { skill: 'Pharmacy', sector: 'Healthcare', demand: 3800, cost: 38000 },
+    { skill: 'Construction Management', sector: 'Construction', demand: 5600, cost: 32000 },
+    { skill: 'Surveying', sector: 'Construction', demand: 3400, cost: 18000 },
+    { skill: 'Revit', sector: 'Construction', demand: 2900, cost: 26000 },
+    { skill: 'Staad Pro', sector: 'Construction', demand: 2400, cost: 28000 },
+    { skill: 'Automotive Repair', sector: 'Automotive', demand: 6200, cost: 16000 },
+    { skill: 'EV Technology', sector: 'Automotive', demand: 4800, cost: 42000 },
+    { skill: 'Organic Farming', sector: 'Agriculture', demand: 3600, cost: 8000 },
+    { skill: 'Agri Machinery', sector: 'Agriculture', demand: 2800, cost: 12000 },
+    { skill: 'Retail Operations', sector: 'Retail', demand: 5400, cost: 9000 },
+    { skill: 'Customer Service', sector: 'Retail', demand: 8200, cost: 10000 }
+];
+
+/* ============================================================
+   AUTH (non-blocking)
+   ============================================================ */
+function readGovtOfficer() {
+    _govtOfficer = {
+        name: localStorage.getItem('govtOfficerName') || 'Government Official',
+        accessLevel: localStorage.getItem('govtAccessLevel') || 'State',
+        department: localStorage.getItem('govtDepartment') || 'Skill Development',
+        email: localStorage.getItem('userEmail') || '',
+    };
+    return _govtOfficer;
+}
+
+/* ============================================================
+   LOAD TRAINEES FROM FIRESTORE
+   ============================================================ */
+async function loadTrainees() {
+    const records = [];
+    if (!db) return records;
+
+    try {
+        const snap = await db.collection('trainees').get();
+        snap.forEach(doc => {
+            const t = doc.data();
+            const emp = t.employment || {};
+
+            const skillSet = new Set();
+            const addSkills = (str) => {
+                if (!str) return;
+                String(str).split(/[,;|]/).forEach(s => {
+                    const v = s.trim().toLowerCase();
+                    if (v) skillSet.add(v);
+                });
+            };
+            addSkills(t.skillTrade);
+            addSkills(t.skills);
+            addSkills(t.trainingProgram);
+            addSkills(emp.currentSkills);
+            addSkills(emp.skillsUsed);
+            addSkills(emp.newSkills);
+
+            let status = 'unemployed';
+            let income = 0;
+            if (emp) {
+                const empType = (emp.status || emp.employmentType || '').toLowerCase();
+                if (empType.includes('self')) status = 'self-employed';
+                else if (empType.includes('intern')) status = 'internship';
+                else if (empType.includes('employ') || empType.includes('verified') || empType.includes('full')) status = 'employed';
+                income = Number(emp.currentIncome || emp.monthlyIncome) || 0;
+            }
+
+            records.push({
+                id: doc.id,
+                state: t.state || 'Unknown',
+                district: t.district || 'Unknown',
+                sector: t.sector || t.industry || 'General',
+                skills: Array.from(skillSet),
+                status: status,
+                employed: ['employed', 'self-employed', 'internship'].includes(status),
+                income: income,
+                trainingProgress: Number(t.trainingProgress) || 0,
+                certification: t.certificationStatus || 'Pending'
+            });
+        });
+    } catch (e) {
+        console.warn('Trainee load failed:', e.message);
+    }
+    return records;
+}
+
+/* ============================================================
+   COMPUTE SKILL SUPPLY
+   ============================================================ */
+function computeSkillSupply() {
+    const supplyMap = {};
+    allRecords.forEach(r => {
+        r.skills.forEach(s => {
+            const key = s.toLowerCase();
+            supplyMap[key] = (supplyMap[key] || 0) + 1;
+        });
+    });
+    return supplyMap;
+}
+
+/* ============================================================
+   BUILD SKILL PLANNING DATA
+   ============================================================ */
+function buildSkillPlanData() {
+    const supplyMap = computeSkillSupply();
+
+    skillPlanData = SKILL_DEMAND_DB.map(item => {
+        const key = item.skill.toLowerCase();
+        const supply = supplyMap[key] || 0;
+        const gap = Math.max(0, item.demand - supply);
+        const coverage = item.demand > 0 ? Math.round((supply / item.demand) * 100) : 0;
+        const surplus = Math.max(0, supply - item.demand);
+
+        // Priority classification
+        let priority, priorityScore;
+        if (coverage < 30) { priority = 'Critical'; priorityScore = 100; }
+        else if (coverage < 60) { priority = 'High'; priorityScore = 70; }
+        else if (coverage < 90) { priority = 'Medium'; priorityScore = 40; }
+        else { priority = 'Low'; priorityScore = 10; }
+
+        // Investment recommendation (in ₹)
+        const investmentNeeded = gap * item.cost;
+
+        return {
+            skill: item.skill,
+            sector: item.sector,
+            demand: item.demand,
+            supply,
+            gap,
+            surplus,
+            coverage,
+            priority,
+            priorityScore,
+            unitCost: item.cost,
+            investmentNeeded
+        };
+    });
+
+    return skillPlanData;
+}
+
+/* ============================================================
+   AGGREGATE BY SECTOR
+   ============================================================ */
+function aggregateSectors() {
+    const map = {};
+    skillPlanData.forEach(s => {
+        if (!map[s.sector]) {
+            map[s.sector] = {
+                sector: s.sector,
+                totalDemand: 0,
+                totalSupply: 0,
+                totalGap: 0,
+                totalInvestment: 0,
+                skills: []
+            };
+        }
+        const m = map[s.sector];
+        m.totalDemand += s.demand;
+        m.totalSupply += s.supply;
+        m.totalGap += s.gap;
+        m.totalInvestment += s.investmentNeeded;
+        m.skills.push(s.skill);
+    });
+
+    sectorData = Object.values(map).map(m => {
+        const coverage = m.totalDemand > 0 ? Math.round((m.totalSupply / m.totalDemand) * 100) : 0;
+        let status;
+        if (coverage < 30) status = 'critical';
+        else if (coverage < 60) status = 'high';
+        else if (coverage < 90) status = 'balanced';
+        else status = 'oversupply';
+        return { ...m, coverage, status };
+    }).sort((a, b) => b.totalGap - a.totalGap);
+
+    return sectorData;
+}
+
+/* ============================================================
+   STATS
+   ============================================================ */
+function computeStats() {
+    const critical = skillPlanData.filter(s => s.priority === 'Critical').length;
+    const high = skillPlanData.filter(s => s.priority === 'High').length;
+    const medium = skillPlanData.filter(s => s.priority === 'Medium').length;
+    const low = skillPlanData.filter(s => s.priority === 'Low').length;
+    const totalGap = skillPlanData.reduce((a, s) => a + s.gap, 0);
+    const totalInvestment = skillPlanData.reduce((a, s) => a + s.investmentNeeded, 0);
+    const avgCost = skillPlanData.length > 0
+        ? Math.round(skillPlanData.reduce((a, s) => a + s.unitCost, 0) / skillPlanData.length)
+        : 0;
+
+    stats = {
+        totalSkills: skillPlanData.length,
+        critical, high, medium, low,
+        totalGap,
+        totalInvestment,
+        avgCost,
+        trainedPool: allRecords.length,
+        priorityActions: critical + high,
+        highGrowthSkills: skillPlanData.filter(s => s.demand > 7000 && s.coverage < 60).length,
+        balancedSkills: low,
+        planningHorizon: 12,
+        projectedImpact: Math.round(totalGap * 0.65)
+    };
+    return stats;
+}
+
+/* ============================================================
+   RENDER ALL
+   ============================================================ */
+function renderAll() {
+    buildSkillPlanData();
+    aggregateSectors();
+    computeStats();
+
+    renderBanner();
+    renderKPIs();
+    renderPriorityMatrix();
+    renderForecastChart();
+    renderTreemap();
+    renderCapacityGrid();
+    renderBudget();
+    renderRiskAlerts();
+    renderRecommendations();
+    renderSectorCharts();
+    runSimulation();
+    updateSidebar();
+    updateNotificationBadge();
+}
+
+function renderBanner() {
+    document.getElementById('bannerPriority').textContent = stats.priorityActions;
+    document.getElementById('bannerInvestment').textContent = '₹' + formatIndianCurrency(stats.totalInvestment);
+    document.getElementById('bannerTimeline').textContent = stats.planningHorizon + 'm';
+    document.getElementById('bannerImpact').textContent = stats.projectedImpact.toLocaleString();
+    document.getElementById('dsTitle').textContent = 'Strategic planning data ready';
+    document.getElementById('dsSub').textContent = `${allRecords.length} trainees · ${SKILL_DEMAND_DB.length} skills · ${sectorData.length} sectors analysed`;
+    document.getElementById('dsSkills').textContent = SKILL_DEMAND_DB.length;
+    document.getElementById('dsSectors').textContent = sectorData.length;
+    document.getElementById('dsTrainees').textContent = allRecords.length;
+}
+
+function renderKPIs() {
+    document.getElementById('kpiSkillsTracked').textContent = stats.totalSkills;
+    document.getElementById('kpiCriticalGaps').textContent = stats.critical;
+    document.getElementById('kpiGrowthSkills').textContent = stats.highGrowthSkills;
+    document.getElementById('kpiBalanced').textContent = stats.balancedSkills;
+    document.getElementById('kpiTrainedPool').textContent = stats.trainedPool;
+    document.getElementById('kpiAvgCost').textContent = '₹' + formatIndianCurrency(stats.avgCost);
+}
+
+function renderPriorityMatrix() {
+    const critical = skillPlanData.filter(s => s.priority === 'Critical').sort((a, b) => b.gap - a.gap);
+    const high = skillPlanData.filter(s => s.priority === 'High').sort((a, b) => b.gap - a.gap);
+    const medium = skillPlanData.filter(s => s.priority === 'Medium');
+    const low = skillPlanData.filter(s => s.priority === 'Low');
+
+    document.getElementById('pqCriticalCount').textContent = critical.length;
+    document.getElementById('pqHighCount').textContent = high.length;
+    document.getElementById('pqMediumCount').textContent = medium.length;
+    document.getElementById('pqLowCount').textContent = low.length;
+
+    const renderList = (list, max = 4) => list.slice(0, max).map(s => `
+        <div class="pq-item">
+            <span>${escapeHtml(s.skill)}</span>
+            <span class="pq-pct" style="color:${s.coverage < 30 ? '#dc2626' : s.coverage < 60 ? '#d97706' : '#16a34a'};">${s.coverage}%</span>
+        </div>
+    `).join('') || '<div style="font-size:11px;color:#94a3b8;padding:4px;">None</div>';
+
+    document.getElementById('pqCriticalList').innerHTML = renderList(critical);
+    document.getElementById('pqHighList').innerHTML = renderList(high);
+    document.getElementById('pqMediumList').innerHTML = renderList(medium);
+    document.getElementById('pqLowList').innerHTML = renderList(low);
+}
+
+function renderForecastChart() {
+    const svg = document.getElementById('forecastChart');
+    const legend = document.getElementById('forecastLegend');
+
+    // Build forecast per sector
+    const topSectors = sectorData.slice(0, 5);
+    const months = ['M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'];
+    const colors = ['#7c3aed', '#2563eb', '#16a34a', '#d97706', '#dc2626'];
+
+    // Simulate growth curves per sector
+    const series = topSectors.map((s, i) => {
+        const baseGrowth = 3 + Math.random() * 5;
+        const data = months.map((_, m) => s.totalDemand * (1 + (baseGrowth * m) / 100));
+        return { name: s.sector, data, color: colors[i % colors.length] };
+    });
+
+    // SVG dimensions
+    const width = 800, height = 260, padding = 50;
+    const chartW = width - padding * 2;
+    const chartH = height - padding * 2;
+    const maxY = Math.max(...series.flatMap(s => s.data)) * 1.1;
+
+    let svgContent = '';
+
+    // Grid lines
+    for (let i = 0; i <= 4; i++) {
+        const y = padding + (chartH / 4) * i;
+        svgContent += `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" stroke="#f1f5f9" stroke-width="1"/>`;
+        const val = Math.round(maxY - (maxY / 4) * i);
+        svgContent += `<text x="${padding - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#94a3b8" font-family="Inter">${(val/1000).toFixed(0)}K</text>`;
+    }
+
+    // X axis labels
+    months.forEach((m, i) => {
+        const x = padding + (chartW / 11) * i;
+        svgContent += `<text x="${x}" y="${height - padding + 20}" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="Inter">${m}</text>`;
+    });
+
+    // Draw each series
+    series.forEach(s => {
+        const points = s.data.map((val, i) => {
+            const x = padding + (chartW / 11) * i;
+            const y = padding + chartH - (val / maxY) * chartH;
+            return `${x},${y}`;
+        }).join(' ');
+        svgContent += `<polyline points="${points}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+        // Dots at last point
+        const lastX = padding + chartW;
+        const lastY = padding + chartH - (s.data[11] / maxY) * chartH;
+        svgContent += `<circle cx="${lastX}" cy="${lastY}" r="4" fill="${s.color}"/>`;
+    });
+
+    svg.innerHTML = svgContent;
+
+    // Legend
+    legend.innerHTML = series.map(s => `
+        <div class="fl-item">
+            <div class="fl-dot" style="background:${s.color};"></div>
+            ${escapeHtml(s.name)}
+        </div>
+    `).join('');
+}
+
+function renderTreemap() {
+    const container = document.getElementById('treemap');
+    const topGaps = [...skillPlanData].sort((a, b) => b.gap - a.gap).slice(0, 12);
+    const maxGap = Math.max(...topGaps.map(s => s.gap), 1);
+
+    container.innerHTML = topGaps.map((s, i) => {
+        const intensity = s.gap / maxGap;
+        const color = s.coverage < 30 ? `rgba(220, 38, 38, ${0.5 + intensity * 0.5})` :
+                     s.coverage < 60 ? `rgba(217, 119, 6, ${0.5 + intensity * 0.5})` :
+                     s.coverage < 90 ? `rgba(37, 99, 235, ${0.5 + intensity * 0.5})` :
+                     `rgba(22, 163, 74, ${0.5 + intensity * 0.5})`;
+        // Grid size by gap ranking
+        let spanCols = 1, spanRows = 1;
+        if (i === 0) { spanCols = 3; spanRows = 2; }
+        else if (i === 1) { spanCols = 3; spanRows = 2; }
+        else if (i < 4) { spanCols = 2; spanRows = 1; }
+        else if (i < 8) { spanCols = 1; spanRows = 2; }
+        return `<div class="treemap-cell" style="background:${color}; grid-column:span ${spanCols}; grid-row:span ${spanRows};" title="${s.skill}: gap ${s.gap.toLocaleString()}">
+            <div class="tc-name">${escapeHtml(s.skill)}</div>
+            <div class="tc-value">${s.gap.toLocaleString()}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderCapacityGrid() {
+    const grid = document.getElementById('capacityGrid');
+    if (sectorData.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-industry"></i><p>No sector data</p></div>';
+        return;
+    }
+
+    grid.innerHTML = sectorData.map(s => {
+        const supplyPct = Math.min(s.coverage, 100);
+        const barColor = s.status === 'critical' ? '#dc2626' :
+                        s.status === 'high' ? '#d97706' :
+                        s.status === 'balanced' ? '#16a34a' : '#2563eb';
+        const statusLabel = s.status === 'critical' ? 'Critical' :
+                           s.status === 'high' ? 'High Priority' :
+                           s.status === 'balanced' ? 'Balanced' : 'Oversupply';
+        return `
+            <div class="capacity-card ${s.status}">
+                <div class="cc-header">
+                    <div class="cc-sector">${escapeHtml(s.sector)}</div>
+                    <div class="cc-status">${statusLabel}</div>
+                </div>
+                <div class="cc-bar-row">
+                    <span>Coverage</span>
+                    <strong style="color:${barColor};">${s.coverage}%</strong>
+                </div>
+                <div class="cc-bar">
+                    <div class="fill" style="width:${supplyPct}%; background:${barColor};"></div>
+                </div>
+                <div class="cc-footer">
+                    <span>📈 Demand: <strong>${s.totalDemand.toLocaleString()}</strong></span>
+                    <span>👥 Supply: <strong>${s.totalSupply.toLocaleString()}</strong></span>
+                </div>
+                <div class="cc-footer" style="margin-top:6px;">
+                    <span>💰 Gap Investment</span>
+                    <strong style="color:${barColor};">₹${formatIndianCurrency(s.totalInvestment)}</strong>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderBudget() {
+    const total = stats.totalInvestment;
+    const donut = document.getElementById('budgetDonut');
+    document.getElementById('budgetTotal').textContent = '₹' + formatIndianCurrency(total);
+
+    // Allocate budget by sector
+    const allocations = sectorData.map(s => ({
+        sector: s.sector,
+        amount: s.totalInvestment,
+        pct: total > 0 ? Math.round((s.totalInvestment / total) * 100) : 0
+    })).sort((a, b) => b.amount - a.amount);
+
+    const colors = ['#7c3aed', '#2563eb', '#16a34a', '#d97706', '#dc2626', '#0891b2', '#a855f7', '#ec4899'];
+
+    let gradient = '';
+    let angle = 0;
+    allocations.forEach((a, i) => {
+        const pct = (a.amount / total) * 100;
+        if (pct > 0) {
+            const deg = (pct / 100) * 360;
+            gradient += `${colors[i % colors.length]} ${angle}deg ${angle + deg}deg, `;
+            angle += deg;
+        }
+    });
+    gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
+    donut.style.background = `conic-gradient(${gradient})`;
+
+    document.getElementById('budgetList').innerHTML = allocations.map((a, i) => `
+        <div class="budget-item">
+            <div class="bi-dot" style="background:${colors[i % colors.length]};"></div>
+            <div class="bi-label">${escapeHtml(a.sector)}</div>
+            <div class="bi-value">₹${formatIndianCurrency(a.amount)}</div>
+            <div class="bi-pct">${a.pct}%</div>
+        </div>
+    `).join('');
+}
+
+function renderRiskAlerts() {
+    const container = document.getElementById('riskList');
+    const risks = [];
+
+    // Risk 1: Critical shortages
+    const critical = skillPlanData.filter(s => s.priority === 'Critical');
+    if (critical.length > 0) {
+        risks.push({
+            level: 'critical',
+            icon: '🚨',
+            title: `${critical.length} Critical Skill Shortage${critical.length > 1 ? 's' : ''}`,
+            desc: `${critical.slice(0, 3).map(s => s.skill).join(', ')} have less than 30% supply coverage. Immediate action required to prevent job-market shortfall.`,
+            badge: 'Critical'
+        });
+    }
+
+    // Risk 2: High investment needed
+    if (stats.totalInvestment > 100000000) {
+        risks.push({
+            level: 'high',
+            icon: '💰',
+            title: 'Significant Investment Required',
+            desc: `Bridging all skill gaps will require ₹${formatIndianCurrency(stats.totalInvestment)}. Consider phased investment and priority targeting.`,
+            badge: 'High'
+        });
+    }
+
+    // Risk 3: Sector concentration
+    if (sectorData.length > 0) {
+        const topSector = sectorData[0];
+        const concentration = topSector.totalGap / stats.totalGap;
+        if (concentration > 0.4) {
+            risks.push({
+                level: 'medium',
+                icon: '⚠️',
+                title: 'Sector Concentration Risk',
+                desc: `${topSector.sector} accounts for ${Math.round(concentration * 100)}% of total skill gap. Diversify training investments across sectors.`,
+                badge: 'Medium'
+            });
+        }
+    }
+
+    // Risk 4: Oversupply in some sectors
+    const oversupply = sectorData.filter(s => s.status === 'oversupply');
+    if (oversupply.length > 0) {
+        risks.push({
+            level: 'low',
+            icon: '📉',
+            title: `${oversupply.length} Sector${oversupply.length > 1 ? 's' : ''} with Oversupply`,
+            desc: `${oversupply.map(s => s.sector).join(', ')} have excess trained candidates. Redirect training resources to priority sectors.`,
+            badge: 'Low'
+        });
+    }
+
+    if (risks.length === 0) {
+        risks.push({
+            level: 'low',
+            icon: '✅',
+            title: 'No Critical Risks Detected',
+            desc: 'Current skill supply is well-balanced with demand across all sectors.',
+            badge: 'Low'
+        });
+    }
+
+    container.innerHTML = risks.map(r => `
+        <div class="risk-item ${r.level}">
+            <div class="ri-icon">${r.icon}</div>
+            <div class="ri-content">
+                <div class="ri-title">${r.title}</div>
+                <div class="ri-desc">${r.desc}</div>
+            </div>
+            <div class="ri-badge">${r.badge}</div>
+        </div>
+    `).join('');
+}
+
+function renderRecommendations() {
+    const container = document.getElementById('recGrid');
+    const recs = [];
+
+    // Recommendation 1: Priority skills
+    const critical = skillPlanData.filter(s => s.priority === 'Critical').slice(0, 3);
+    if (critical.length > 0) {
+        recs.push({
+            priority: 'p1',
+            icon: '🚨', bg: '#fee2e2', color: '#dc2626',
+            title: 'Launch Emergency Upskilling',
+            desc: `Immediate training programs for ${critical.map(s => s.skill).join(', ')} — largest gaps with highest market demand.`,
+            meta: [
+                { icon: '💰', label: 'Investment', value: '₹' + formatIndianCurrency(critical.reduce((a, s) => a + s.investmentNeeded, 0)) },
+                { icon: '👥', label: 'Target', value: critical.reduce((a, s) => a + s.gap, 0).toLocaleString() + ' trainees' }
+            ]
+        });
+    }
+
+    // Recommendation 2: High-growth sectors
+    const highGrowth = sectorData.filter(s => s.status === 'high' || s.status === 'critical')[0];
+    if (highGrowth) {
+        recs.push({
+            priority: 'p2',
+            icon: '📈', bg: '#fef3c7', color: '#d97706',
+            title: `Scale ${highGrowth.sector} Programs`,
+            desc: `${highGrowth.sector} has the largest untapped opportunity. Expand training capacity to meet ${highGrowth.totalDemand.toLocaleString()} job openings.`,
+            meta: [
+                { icon: '📊', label: 'Coverage', value: highGrowth.coverage + '%' },
+                { icon: '💰', label: 'Invest', value: '₹' + formatIndianCurrency(highGrowth.totalInvestment) }
+            ]
+        });
+    }
+
+    // Recommendation 3: Employer partnership
+    recs.push({
+        priority: 'p2',
+        icon: '🤝', bg: '#dbeafe', color: '#2563eb',
+        title: 'Strengthen Employer Partnerships',
+        desc: 'Align curriculum with real employer demand. Establish industry advisory boards for all priority sectors.',
+        meta: [
+            { icon: '🎯', label: 'Focus', value: sectorData.slice(0, 2).map(s => s.sector).join(', ') },
+            { icon: '📅', label: 'Timeline', value: '2-4 months' }
+        ]
+    });
+
+    // Recommendation 4: Regional targeting
+    recs.push({
+        priority: 'p3',
+        icon: '🗺️', bg: '#ecfdf5', color: '#16a34a',
+        title: 'Target Regional Disparities',
+        desc: 'Deploy additional training centers in districts with lowest employment rates. Use district intelligence dashboard for targeting.',
+        meta: [
+            { icon: '📍', label: 'Focus', value: 'Low-performing districts' },
+            { icon: '👥', label: 'Scope', value: 'All 28 states' }
+        ]
+    });
+
+    // Recommendation 5: Curriculum modernisation
+    const futureSkills = skillPlanData.filter(s =>
+        ['Machine Learning', 'Data Science', 'Kubernetes', 'EV Technology', 'Cybersecurity'].includes(s.skill)
+    );
+    if (futureSkills.length > 0) {
+        recs.push({
+            priority: 'p2',
+            icon: '🔮', bg: '#ede9fe', color: '#7c3aed',
+            title: 'Modernise Curriculum for Future Skills',
+            desc: `Add courses for emerging technologies: ${futureSkills.map(s => s.skill).join(', ')}. Align with Industry 4.0 demands.`,
+            meta: [
+                { icon: '📚', label: 'New Courses', value: futureSkills.length },
+                { icon: '📅', label: 'Rollout', value: '3-6 months' }
+            ]
+        });
+    }
+
+    // Recommendation 6: Monitor retention
+    recs.push({
+        priority: 'p3',
+        icon: '📊', bg: '#fef3c7', color: '#d97706',
+        title: 'Track Placement & Retention',
+        desc: 'Implement real-time tracking of employment, income, and 365-day retention. Use data to continuously improve training quality.',
+        meta: [
+            { icon: '🎯', label: 'Target', value: '75%+ retention' },
+            { icon: '📅', label: 'Review', value: 'Quarterly' }
+        ]
+    });
+
+    container.innerHTML = recs.map(r => `
+        <div class="rec-card">
+            <div class="rc-header">
+                <div class="rc-icon" style="background:${r.bg}; color:${r.color};">${r.icon}</div>
+                <div class="rc-priority ${r.priority}">${r.priority === 'p1' ? 'Priority 1' : r.priority === 'p2' ? 'Priority 2' : 'Priority 3'}</div>
+            </div>
+            <div class="rc-title">${r.title}</div>
+            <div class="rc-desc">${r.desc}</div>
+            <div class="rc-meta">
+                ${r.meta.map(m => `<span><i class="fas ${m.icon === '💰' ? 'fa-rupee-sign' : m.icon === '👥' ? 'fa-users' : m.icon === '📊' ? 'fa-chart-line' : m.icon === '🎯' ? 'fa-bullseye' : m.icon === '📅' ? 'fa-calendar' : m.icon === '📍' ? 'fa-map-pin' : m.icon === '📚' ? 'fa-book' : 'fa-info-circle'}"></i> ${m.label}: <strong>${m.value}</strong></span>`).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderSectorCharts() {
+    // Employment rate by sector (mock derived from supply/demand)
+    const empContainer = document.getElementById('sectorEmploymentChart');
+    const incContainer = document.getElementById('sectorIncomeChart');
+
+    const sorted = [...sectorData].sort((a, b) => b.coverage - a.coverage).slice(0, 6);
+
+    // Mock employment rate = coverage adjusted
+    const empData = sorted.map(s => ({
+        name: s.sector,
+        value: Math.min(100, Math.round(s.coverage * 0.85 + 15))
+    }));
+
+    // Mock avg income
+    const incData = sorted.map(s => ({
+        name: s.sector,
+        value: Math.round(15000 + s.coverage * 200 + Math.random() * 8000)
+    }));
+
+    const renderBarChart = (container, data, valueFormatter, colorFn) => {
+        const maxVal = Math.max(...data.map(d => d.value), 1);
+        container.innerHTML = data.map(d => {
+            const height = Math.max((d.value / maxVal) * 160, 12);
+            const color = colorFn(d.value);
+            return `
+                <div class="bar-group">
+                    <div class="bar" style="height:${height}px;background:${color};">
+                        <span class="bar-value">${valueFormatter(d.value)}</span>
+                    </div>
+                    <div class="bar-label">${escapeHtml(d.name.length > 12 ? d.name.substring(0, 12) + '…' : d.name)}</div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    renderBarChart(empContainer, empData, v => v + '%',
+        v => v >= 75 ? '#16a34a' : v >= 60 ? '#d97706' : '#dc2626');
+
+    renderBarChart(incContainer, incData, v => '₹' + (v / 1000).toFixed(0) + 'K',
+        v => v >= 25000 ? '#16a34a' : v >= 18000 ? '#2563eb' : '#d97706');
+}
+
+/* ============================================================
+   SCENARIO SIMULATOR
+   ============================================================ */
+function runSimulation() {
+    const capacity = parseInt(document.getElementById('simCapacity').value);
+    const budget = parseInt(document.getElementById('simBudget').value);
+    const placement = parseInt(document.getElementById('simPlacement').value);
+
+    document.getElementById('simCapacityVal').textContent = capacity + '%';
+    document.getElementById('simBudgetVal').textContent = '+' + budget + '%';
+    document.getElementById('simPlacementVal').textContent = placement + '%';
+
+    // Simple simulation model
+    const currentEmployment = allRecords.length > 0
+        ? Math.round((allRecords.filter(r => r.employed).length / allRecords.length) * 100)
+        : 50;
+
+    // Weighted impact calculation
+    const capacityImpact = capacity * 0.2;
+    const budgetImpact = budget * 0.1;
+    const placementImpact = placement * 0.25;
+
+    const projected = Math.min(98, Math.round(currentEmployment + capacityImpact + budgetImpact + placementImpact));
+
+    document.getElementById('simResult').textContent = projected + '%';
+    document.getElementById('simResultDesc').innerHTML = `Current baseline: <strong>${currentEmployment}%</strong>. With these investments, employment rate could improve by <strong style="color:#7c3aed;">+${projected - currentEmployment} percentage points</strong>.`;
+
+    // Colour the result
+    const resultEl = document.getElementById('simResult');
+    if (projected >= 80) resultEl.style.color = '#16a34a';
+    else if (projected >= 65) resultEl.style.color = '#7c3aed';
+    else if (projected >= 50) resultEl.style.color = '#d97706';
+    else resultEl.style.color = '#dc2626';
+}
+
+function resetSimulator() {
+    document.getElementById('simCapacity').value = 25;
+    document.getElementById('simBudget').value = 50;
+    document.getElementById('simPlacement').value = 30;
+    runSimulation();
+    showToast('🔄 Simulator reset to defaults');
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function formatIndianCurrency(num) {
+    if (num >= 10000000) return (num / 10000000).toFixed(2) + ' Cr';
+    if (num >= 100000) return (num / 100000).toFixed(2) + ' L';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toLocaleString();
+}
+
+function escapeHtml(s) {
+    if (s === undefined || s === null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function updateDate() {
+    document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+    });
+}
+
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<i class="fas fa-info-circle" style="color:#7c3aed;font-size:16px;"></i> ${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+function showNotifications() {
+    alert(`📬 Notifications\n\n• ${stats.priorityActions} priority actions\n• ${stats.critical} critical skill gaps\n• ₹${formatIndianCurrency(stats.totalInvestment)} recommended investment`);
+}
+
+function toggleProfileMenu() {
+    if (!_govtOfficer) return;
+    alert(`👤 ${_govtOfficer.name}\n\nEmail: ${_govtOfficer.email}\nDepartment: ${_govtOfficer.department}\nAccess Level: ${_govtOfficer.accessLevel}`);
+}
+
+function logout() {
+    if (!confirm('Are you sure you want to logout?')) return;
+    ['isLoggedIn', 'userRole', 'userId', 'userEmail', 'currentGovtOfficialId',
+     'govtOfficerName', 'govtAccessLevel', 'govtDepartment'].forEach(k => localStorage.removeItem(k));
+    window.location.href = '../auth/login.html?role=government';
+}
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const next = (html.getAttribute('data-theme') || 'light') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+    const icon = document.querySelector('.theme-toggle i');
+    if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+function updateSidebar() {
+    const name = _govtOfficer?.name || 'Government';
+    const role = _govtOfficer?.accessLevel ? `Admin · ${_govtOfficer.accessLevel}` : 'Admin';
+    const initial = name.charAt(0).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('sidebarRole').textContent = role;
+    document.getElementById('headerAvatar').textContent = initial;
+    document.getElementById('headerName').textContent = name;
+}
+
+function updateNotificationBadge() {
+    document.getElementById('notifBadge').textContent = stats.priorityActions || 0;
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const saved = localStorage.getItem('skillintel-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    } catch (e) {}
+
+    updateDate();
+    readGovtOfficer();
+
+    allRecords = await loadTrainees();
+    console.log('✅ Loaded', allRecords.length, 'trainees from Firestore');
+
+    renderAll();
+
+    document.addEventListener('click', function(e) {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.querySelector('.menu-toggle');
+        if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+            if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        }
+    });
+
+    console.log('🎯 Skill Planning Intelligence initialized');
+});
+</script>
+
+<script src="../js/script.js"></script>
+</body>
+</html>

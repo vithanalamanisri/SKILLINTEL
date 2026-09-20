@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerTrack · Industry Demand Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/api.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter','Segoe UI',sans-serif;}
+body{background:#f4f7ff;color:#1e293b;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:260px;height:100vh;position:fixed;left:0;top:0;background:linear-gradient(180deg,#0f172a,#172554,#312e81);padding:25px 18px;color:#fff;overflow-y:auto;z-index:100;transition:transform .3s}
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:10px}
+.brand{display:flex;align-items:center;gap:12px;padding:10px 12px 30px}
+.brand-icon{width:45px;height:45px;display:flex;align-items:center;justify-content:center;border-radius:14px;font-size:22px;background:linear-gradient(135deg,#2563eb,#7c3aed,#06b6d4)}
+.brand h2{font-size:18px;color:#fff}.brand p{font-size:11px;color:#94a3b8}
+.menu-title{color:#64748b;font-size:11px;font-weight:600;margin:12px 12px;letter-spacing:1px;text-transform:uppercase}
+.menu a{display:flex;align-items:center;gap:12px;text-decoration:none;color:#cbd5e1;padding:13px 14px;border-radius:14px;margin:6px 0;transition:.3s;font-size:14px}
+.menu a:hover{background:rgba(255,255,255,.08);color:#fff}
+.menu a.active{background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;box-shadow:0 10px 25px rgba(37,99,235,.25)}
+.menu a i{width:20px;text-align:center}
+.menu a .badge-new{margin-left:auto;font-size:9px;padding:2px 6px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:4px;font-weight:700}
+.sidebar-footer{position:absolute;bottom:20px;left:18px;right:18px;padding-top:15px;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-footer a{display:flex;align-items:center;gap:12px;text-decoration:none;color:#cbd5e1;padding:12px 14px;border-radius:12px;transition:.3s;font-size:14px;cursor:pointer}
+.sidebar-footer a:hover{background:rgba(255,255,255,.08);color:#fff}
+
+/* MAIN */
+.main{margin-left:260px;padding:25px 35px 120px;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:25px;flex-wrap:wrap;gap:15px}
+.title h1{font-size:28px;color:#172554}
+.title p{color:#64748b;font-size:13px;margin-top:5px}
+.top-actions{display:flex;align-items:center;gap:12px}
+.icon-btn,.theme-toggle{width:46px;height:46px;border:none;border-radius:15px;background:#fff;box-shadow:0 5px 20px rgba(15,23,42,.08);cursor:pointer;font-size:18px;transition:.3s;color:#475569}
+.icon-btn:hover,.theme-toggle:hover{transform:scale(1.05)}
+.theme-toggle:hover{transform:rotate(15deg) scale(1.05);color:#06b6d4}
+.user{display:flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;background:#fff;border-radius:16px;box-shadow:0 5px 20px rgba(15,23,42,.08)}
+.user-avatar{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;background:linear-gradient(135deg,#2563eb,#7c3aed)}
+.user h4{font-size:13px}.user p{font-size:10px;color:#64748b}
+
+/* HERO */
+.hero{position:relative;overflow:hidden;padding:32px;border-radius:26px;color:#fff;margin-bottom:25px;background:linear-gradient(120deg,#0891b2,#2563eb,#7c3aed,#db2777);box-shadow:0 18px 40px rgba(37,99,235,.25)}
+.hero::before{content:"";position:absolute;width:250px;height:250px;border-radius:50%;background:rgba(255,255,255,.08);top:-100px;right:-50px}
+.hero::after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.06);bottom:-80px;left:200px}
+.hero-content{position:relative;z-index:1}
+.hero h2{font-size:26px;margin-bottom:8px;color:#fff}
+.hero p{max-width:720px;font-size:14px;opacity:.9;color:#fff}
+.hero-tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.hero-tag{padding:8px 13px;border-radius:20px;font-size:11px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.15);color:#fff}
+.hero-tag.live::before{content:'';display:inline-block;width:6px;height:6px;background:#22c55e;border-radius:50%;margin-right:6px;box-shadow:0 0 8px #22c55e;animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.4}}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:#fff;padding:18px;border-radius:18px;border:1px solid #e8edf5;box-shadow:0 8px 24px rgba(15,23,42,.05);transition:.3s;position:relative;overflow:hidden}
+.stat-card:hover{transform:translateY(-5px);box-shadow:0 18px 35px rgba(37,99,235,.12)}
+.stat-card::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:linear-gradient(135deg,#eef2ff,transparent);opacity:.5}
+.stat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.stat-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:18px}
+.stat-card h3{font-size:22px;color:#172554;font-weight:800}
+.stat-card p{color:#64748b;font-size:11px;margin-top:3px}
+.badge-mini{padding:4px 8px;border-radius:12px;font-size:9px;font-weight:700;text-transform:uppercase}
+.badge-green{color:#059669;background:#d1fae5}
+.badge-blue{color:#2563eb;background:#dbeafe}
+.badge-orange{color:#d97706;background:#fef3c7}
+.badge-purple{color:#7c3aed;background:#ede9fe}
+.badge-red{color:#dc2626;background:#fee2e2}
+
+/* CARDS */
+.card{background:#fff;border-radius:22px;padding:24px;border:1px solid #e8edf5;box-shadow:0 10px 30px rgba(15,23,42,.05);margin-bottom:22px;position:relative}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.card-title{display:flex;align-items:center;gap:12px}
+.card-icon{width:44px;height:44px;display:flex;justify-content:center;align-items:center;border-radius:14px;background:linear-gradient(135deg,#dbeafe,#ede9fe,#cffafe);font-size:20px}
+.card h3{color:#172554;font-size:16px}
+.card-subtitle{font-size:11px;color:#64748b}
+.card-tag{font-size:9px;padding:4px 10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+
+/* INDUSTRY HEATMAP */
+.industry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.industry-card{padding:18px;border-radius:16px;border:2px solid #e8edf5;background:#fafbff;transition:.3s;cursor:pointer;position:relative;overflow:hidden}
+.industry-card:hover{transform:translateY(-4px);box-shadow:0 15px 35px rgba(99,102,241,.15);border-color:#6366f1}
+.industry-card.hot{border-color:#fca5a5;background:linear-gradient(135deg,#fef2f2,#fee2e2)}
+.industry-card.warm{border-color:#fcd34d;background:linear-gradient(135deg,#fffbeb,#fef3c7)}
+.industry-card.stable{border-color:#93c5fd;background:linear-gradient(135deg,#eff6ff,#dbeafe)}
+.industry-card.cool{border-color:#a7f3d0;background:linear-gradient(135deg,#ecfdf5,#d1fae5)}
+.industry-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.industry-head h5{font-size:14px;font-weight:800;color:#172554}
+.industry-icon{font-size:26px}
+.industry-meter{height:8px;background:#e5e7eb;border-radius:5px;overflow:hidden;margin-bottom:8px}
+.industry-meter>div{height:100%;border-radius:5px;transition:width 1s ease}
+.industry-meter>div.hot{background:linear-gradient(90deg,#ef4444,#dc2626)}
+.industry-meter>div.warm{background:linear-gradient(90deg,#f59e0b,#d97706)}
+.industry-meter>div.stable{background:linear-gradient(90deg,#3b82f6,#2563eb)}
+.industry-meter>div.cool{background:linear-gradient(90deg,#10b981,#059669)}
+.industry-sub{display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:6px}
+.industry-sub strong{color:#172554;font-weight:800}
+.industry-badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.industry-badge.hot{background:#dc2626;color:#fff}
+.industry-badge.warm{background:#f59e0b;color:#fff}
+.industry-badge.stable{background:#2563eb;color:#fff}
+.industry-badge.cool{background:#059669;color:#fff}
+.industry-match{margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb;font-size:11px;color:#64748b;display:flex;justify-content:space-between;align-items:center}
+.industry-match strong{color:#4338ca}
+.industry-cta{margin-top:10px;padding:8px 12px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:11px;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;transition:.2s}
+.industry-card:hover .industry-cta{transform:scale(1.02);box-shadow:0 8px 20px rgba(99,102,241,.35)}
+
+/* FIT PANEL */
+.fit-panel{display:grid;grid-template-columns:340px 1fr;gap:22px;margin-bottom:22px}
+.fit-score-card{background:linear-gradient(150deg,#0c4a6e 0%,#0891b2 50%,#06b6d4 100%);border-radius:22px;padding:28px;color:#fff;position:relative;overflow:hidden;box-shadow:0 18px 40px rgba(8,145,178,.25);text-align:center}
+.fit-score-card::before{content:'';position:absolute;top:-50%;right:-30%;width:280px;height:280px;background:radial-gradient(circle,rgba(6,182,212,.4),transparent 70%);border-radius:50%}
+.fit-score-card h4{font-size:12px;font-weight:700;color:#cffafe;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:20px;position:relative;z-index:1}
+.fit-ring-wrap{position:relative;width:180px;height:180px;margin:0 auto 16px;z-index:1}
+.fit-ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+.fit-ring-bg{fill:none;stroke:rgba(255,255,255,.15);stroke-width:12}
+.fit-ring-progress{fill:none;stroke-width:12;stroke-linecap:round;stroke-dasharray:502;stroke-dashoffset:502;transition:stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1);filter:drop-shadow(0 0 8px currentColor)}
+.fit-score-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:1}
+.fit-score-num{font-size:48px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px}
+.fit-score-num small{font-size:18px;color:#cffafe;font-weight:700}
+.fit-score-sub{font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#cffafe;margin-top:6px}
+.fit-rating{display:inline-block;padding:8px 22px;border-radius:20px;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin:0 auto 16px;position:relative;z-index:1;background:rgba(255,255,255,.18);color:#fff}
+.fit-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-top:18px;border-top:1px solid rgba(255,255,255,.15);position:relative;z-index:1}
+.fit-stat{text-align:center}
+.fit-stat-label{font-size:10px;font-weight:700;color:#cffafe;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.fit-stat-value{font-size:16px;font-weight:800;color:#fff}
+
+.top-industry-panel{background:#fff;border:1px solid #e8edf5;border-radius:22px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,.05)}
+.top-industry-panel h4{font-size:14px;color:#172554;display:flex;align-items:center;gap:8px;margin-bottom:18px}
+.top-industry-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px dashed #f1f5f9;cursor:pointer;transition:.2s}
+.top-industry-row:hover{background:#f8faff;border-radius:8px;padding:12px}
+.top-industry-row:last-child{border-bottom:none}
+.top-industry-rank{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;flex-shrink:0}
+.top-industry-info{flex:1}
+.top-industry-info h5{font-size:13.5px;font-weight:700;color:#172554;margin-bottom:3px}
+.top-industry-info p{font-size:11px;color:#64748b}
+.top-industry-pct{font-size:15px;font-weight:800;color:#4338ca}
+
+/* SKILL DEMAND */
+.skill-demand-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.skill-demand-card{padding:16px;border-radius:14px;background:linear-gradient(135deg,#f8faff,#eef2ff);border:1px solid #c7d2fe;transition:.3s;position:relative;overflow:hidden}
+.skill-demand-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(99,102,241,.15)}
+.skill-demand-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.skill-demand-head h5{font-size:13.5px;font-weight:800;color:#4338ca;text-transform:capitalize}
+.skill-demand-trend{font-size:9px;font-weight:800;padding:3px 7px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px}
+.skill-demand-trend.rising{background:#d1fae5;color:#059669}
+.skill-demand-trend.surge{background:#fee2e2;color:#dc2626}
+.skill-demand-trend.stable{background:#dbeafe;color:#2563eb}
+.skill-demand-meter{height:7px;background:#fff;border-radius:5px;overflow:hidden;margin-bottom:8px}
+.skill-demand-meter>div{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:5px;transition:width 1s ease}
+.skill-demand-info{display:flex;justify-content:space-between;font-size:11px;color:#6366f1}
+.skill-demand-info strong{color:#4338ca;font-weight:800}
+
+/* SALARY TABLE */
+.salary-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e8edf5}
+.salary-table th{background:#f8faff;padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700;border-bottom:1px solid #e8edf5}
+.salary-table td{padding:12px 14px;border-bottom:1px solid #f1f5f9;color:#374151}
+.salary-table tr:last-child td{border-bottom:none}
+.salary-table tr:hover td{background:#f8faff}
+.salary-table .industry-name{font-weight:700;color:#172554;display:flex;align-items:center;gap:8px}
+.salary-table .value{font-weight:800;color:#4338ca}
+.salary-table .growth{font-weight:700;color:#059669}
+.salary-table .demand-pill{display:inline-block;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+.salary-table .demand-pill.hot{background:#fee2e2;color:#dc2626}
+.salary-table .demand-pill.warm{background:#fef3c7;color:#d97706}
+.salary-table .demand-pill.stable{background:#dbeafe;color:#2563eb}
+
+/* GEOGRAPHIC */
+.geo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.geo-card{padding:16px;border-radius:14px;background:#fafbff;border:1px solid #e8edf5;transition:.3s;text-align:center}
+.geo-card:hover{transform:translateY(-4px);border-color:#c7d2fe}
+.geo-icon{font-size:24px;margin-bottom:6px}
+.geo-name{font-size:13px;font-weight:800;color:#172554;margin-bottom:6px}
+.geo-jobs{font-size:20px;font-weight:900;color:#4338ca;margin-bottom:3px}
+.geo-sub{font-size:10px;color:#64748b;margin-bottom:8px}
+.geo-bar{height:6px;background:#e5e7eb;border-radius:4px;overflow:hidden}
+.geo-bar>div{height:100%;background:linear-gradient(90deg,#06b6d4,#2563eb);border-radius:4px;transition:width 1s ease}
+
+/* TRENDS */
+.trend-chart{display:flex;align-items:flex-end;gap:10px;height:200px;padding:20px;background:linear-gradient(180deg,#f8faff,#f5f3ff);border-radius:16px;border:1px solid #e8edf5}
+.trend-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative}
+.trend-fill{width:100%;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#06b6d4,#2563eb);transition:height 1.2s ease;min-height:12px;position:relative}
+.trend-fill.rising{background:linear-gradient(180deg,#10b981,#059669)}
+.trend-fill.falling{background:linear-gradient(180deg,#ef4444,#dc2626)}
+.trend-fill.stable{background:linear-gradient(180deg,#3b82f6,#2563eb)}
+.trend-label{font-size:10px;font-weight:700;color:#64748b;margin-top:8px;text-align:center}
+.trend-val{font-size:11px;font-weight:800;color:#172554;margin-bottom:6px}
+
+/* HIRING SIGNALS */
+.signal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.signal-card{padding:16px;border-radius:14px;background:#fff;border:1px solid #e8edf5;transition:.3s;position:relative}
+.signal-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(99,102,241,.12)}
+.signal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.signal-head h5{font-size:13px;font-weight:800;color:#172554}
+.signal-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:pulse 1.5s infinite}
+.signal-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;color:#64748b}
+.signal-row strong{color:#172554;font-weight:800}
+
+/* COMPARE INDUSTRY */
+.compare-industry-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.compare-industry-select{padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;font-size:13.5px;font-weight:600;color:#1f2937;font-family:inherit;width:100%;cursor:pointer}
+.compare-industry-select:focus{outline:none;border-color:#6366f1;background:#fff;box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.compare-industry-result{padding:20px;background:#f8faff;border-radius:16px;border:1px solid #e8edf5}
+.ci-summary{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:20px}
+.ci-col{text-align:center}
+.ci-col h5{font-size:12px;color:#64748b;margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.ci-col .val{font-size:28px;font-weight:900;color:#4338ca;letter-spacing:-1px}
+.ci-col.winner .val{color:#059669}
+.ci-vs{width:52px;height:52px;border-radius:50%;background:#fff;border:2px solid #e8edf5;display:flex;align-items:center;justify-content:center;font-weight:800;color:#94a3b8;font-size:12px}
+.ci-detail{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ci-detail-col{padding:14px;background:#fff;border-radius:12px;border:1px solid #e8edf5}
+.ci-detail-col h6{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:10px}
+.ci-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px dashed #f1f5f9}
+.ci-row:last-child{border:none}
+.ci-win{margin-top:14px;padding:12px;border-radius:12px;text-align:center;font-size:12px;font-weight:700}
+.ci-win.a{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.ci-win.b{background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe}
+
+/* PERSONAL SKILLS */
+.personal-skills-list{display:flex;flex-direction:column;gap:10px}
+.personal-skill-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#fafbff;border:1px solid #e8edf5;transition:.3s}
+.personal-skill-item:hover{transform:translateX(5px);border-color:#c7d2fe}
+.personal-skill-rank{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;background:linear-gradient(135deg,#06b6d4,#2563eb);color:#fff;flex-shrink:0}
+.personal-skill-info{flex:1}
+.personal-skill-info h5{font-size:13px;font-weight:700;color:#172554;text-transform:capitalize;margin-bottom:2px}
+.personal-skill-info p{font-size:11px;color:#64748b}
+.personal-skill-status{padding:4px 10px;border-radius:10px;font-size:10px;font-weight:800;text-transform:uppercase}
+.personal-skill-status.have{background:#d1fae5;color:#059669}
+.personal-skill-status.learn{background:#fee2e2;color:#dc2626}
+
+/* TABS */
+.align-tabs{display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:8px;border-bottom:2px solid #e8edf5}
+.align-tabs::-webkit-scrollbar{height:0}
+.align-tab{padding:10px 16px;border-radius:12px;font-size:12.5px;font-weight:600;color:#64748b;cursor:pointer;transition:.2s;white-space:nowrap;background:transparent;border:none;font-family:inherit;display:flex;align-items:center;gap:6px}
+.align-tab:hover{background:#eef2ff;color:#4338ca}
+.align-tab.active{background:linear-gradient(135deg,#06b6d4,#2563eb);color:#fff;box-shadow:0 8px 20px rgba(6,182,212,.25)}
+.align-tab i{font-size:12px}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DRILL-DOWN MODAL */
+.drill-modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:1000;backdrop-filter:blur(6px);align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.drill-modal.active{display:flex}
+.drill-panel{background:#fff;border-radius:24px;max-width:1000px;width:100%;margin:20px auto;box-shadow:0 30px 80px rgba(0,0,0,.4);overflow:hidden;animation:modalIn .35s cubic-bezier(.16,1,.3,1)}
+@keyframes modalIn{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.drill-header{padding:26px 30px;color:#fff;position:relative;overflow:hidden}
+.drill-header.hot{background:linear-gradient(135deg,#dc2626,#b91c1c,#7f1d1d)}
+.drill-header.surge{background:linear-gradient(135deg,#9333ea,#7c3aed,#5b21b6)}
+.drill-header.warm{background:linear-gradient(135deg,#d97706,#b45309,#92400e)}
+.drill-header.stable{background:linear-gradient(135deg,#2563eb,#1d4ed8,#1e40af)}
+.drill-header.cool{background:linear-gradient(135deg,#059669,#047857,#065f46)}
+.drill-header::before{content:'';position:absolute;top:-80px;right:-80px;width:280px;height:280px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%}
+.drill-header-content{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.drill-title-block h2{font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;display:flex;align-items:center;gap:12px}
+.drill-title-block p{font-size:13px;opacity:.9;color:#fff;max-width:600px}
+.drill-close{background:rgba(255,255,255,.2);border:none;color:#fff;width:38px;height:38px;border-radius:12px;cursor:pointer;font-size:16px;transition:.2s;flex-shrink:0}
+.drill-close:hover{background:rgba(255,255,255,.35);transform:rotate(90deg)}
+.drill-stats{padding:22px 30px;background:#f8faff;border-bottom:1px solid #e8edf5;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.drill-stat{padding:14px;border-radius:14px;background:#fff;border:1px solid #e8edf5;text-align:center}
+.drill-stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:6px}
+.drill-stat-value{font-size:20px;font-weight:900;color:#172554}
+.drill-body{padding:26px 30px;max-height:calc(100vh - 300px);overflow-y:auto}
+.drill-section{margin-bottom:28px}
+.drill-section:last-child{margin-bottom:0}
+.drill-section h3{font-size:15px;font-weight:800;color:#172554;display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f1f5f9}
+.drill-section h3 i{color:#6366f1}
+.drill-fit-banner{padding:16px 20px;border-radius:14px;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1px solid #c7d2fe;display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.drill-fit-banner.good{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#a7f3d0}
+.drill-fit-banner.mid{background:linear-gradient(135deg,#fffbeb,#fef3c7);border-color:#fde68a}
+.drill-fit-banner.low{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#fecaca}
+.drill-fit-circle{width:60px;height:60px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#4338ca;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.drill-fit-text h4{font-size:14px;font-weight:800;color:#172554;margin-bottom:4px}
+.drill-fit-text p{font-size:12.5px;color:#4338ca;line-height:1.5}
+
+.drill-list{display:flex;flex-direction:column;gap:10px}
+.drill-item{padding:14px 16px;border-radius:14px;background:#fafbff;border:1px solid #e8edf5;transition:.3s;display:flex;gap:14px;align-items:flex-start}
+.drill-item:hover{transform:translateX(5px);border-color:#c7d2fe;background:#f5f3ff}
+.drill-item-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;background:linear-gradient(135deg,#e0e7ff,#f3e8ff)}
+.drill-item-body{flex:1}
+.drill-item-body h5{font-size:13.5px;font-weight:800;color:#172554;margin-bottom:4px}
+.drill-item-body p{font-size:12px;color:#64748b;line-height:1.55;margin-bottom:6px}
+.drill-item-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:10.5px}
+.drill-meta-tag{padding:3px 9px;border-radius:8px;background:#fff;border:1px solid #e2e8f0;color:#475569;font-weight:700}
+.drill-meta-tag.green{background:#d1fae5;border-color:#a7f3d0;color:#059669}
+.drill-meta-tag.blue{background:#dbeafe;border-color:#93c5fd;color:#2563eb}
+.drill-meta-tag.amber{background:#fef3c7;border-color:#fde68a;color:#d97706}
+.drill-meta-tag.purple{background:#ede9fe;border-color:#c4b5fd;color:#7c3aed}
+
+.drill-job-card{padding:14px 16px;border-radius:14px;background:linear-gradient(135deg,#fff,#f8faff);border:1px solid #e8edf5;border-left:4px solid #6366f1;transition:.3s}
+.drill-job-card:hover{transform:translateX(5px);box-shadow:0 8px 20px rgba(99,102,241,.1)}
+.drill-job-card h5{font-size:13.5px;font-weight:800;color:#172554;margin-bottom:4px}
+.drill-job-card .salary{font-size:15px;font-weight:900;color:#059669;margin-bottom:6px}
+.drill-job-card .meta{font-size:11px;color:#64748b;display:flex;flex-wrap:wrap;gap:8px}
+.drill-job-card .meta span{padding:2px 8px;background:#eef2ff;border-radius:6px;color:#4338ca;font-weight:600}
+
+.drill-plan-step{padding:14px 16px;border-radius:14px;background:#fafbff;border:1px solid #e8edf5;position:relative;padding-left:50px}
+.drill-plan-step::before{content:attr(data-week);position:absolute;left:12px;top:12px;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}
+.drill-plan-step h5{font-size:13px;font-weight:800;color:#172554;margin-bottom:4px}
+.drill-plan-step p{font-size:12px;color:#64748b;line-height:1.5}
+
+.drill-empty{padding:24px;text-align:center;color:#94a3b8;font-size:13px}
+
+/* BOTTOM */
+.bottom-bar{position:fixed;bottom:0;left:260px;right:0;padding:15px 35px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.94);backdrop-filter:blur(15px);border-top:1px solid #e2e8f0;z-index:50}
+.auto-save{font-size:11px;color:#64748b}
+.auto-save span{color:#10b981;font-weight:700}
+.buttons{display:flex;gap:10px}
+.btn{border:none;padding:12px 18px;border-radius:13px;font-weight:600;cursor:pointer;transition:.25s;font-size:14px;display:inline-flex;align-items:center;gap:8px;font-family:inherit}
+.btn:hover{transform:translateY(-2px)}
+.draft{background:#eef2ff;color:#4f46e5}
+.clear{background:#f1f5f9;color:#475569}
+.save{color:#fff;background:linear-gradient(135deg,#06b6d4,#2563eb);box-shadow:0 10px 22px rgba(6,182,212,.25)}
+.save:hover{box-shadow:0 14px 30px rgba(6,182,212,.35)}
+
+/* TOAST */
+.toast{position:fixed;bottom:90px;right:30px;background:#0c4a6e;color:#fff;padding:14px 20px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 15px 40px rgba(12,74,110,.35);z-index:9999;display:flex;align-items:center;gap:10px;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* RESPONSIVE */
+@media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.fit-panel{grid-template-columns:1fr}.ci-detail{grid-template-columns:1fr}.drill-stats{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){
+.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+.main{margin-left:0;padding:20px 15px 120px}
+.bottom-bar{left:0;padding:12px 15px;flex-direction:column;gap:10px}
+.stats{grid-template-columns:1fr 1fr}
+.topbar{flex-direction:column;align-items:flex-start}
+.menu-toggle{display:block;background:none;border:none;color:#172554;font-size:24px;cursor:pointer}
+.compare-industry-grid{grid-template-columns:1fr}
+.trend-chart{height:160px;padding:12px}
+.drill-stats{grid-template-columns:1fr 1fr}
+.drill-body{padding:20px}
+.drill-header{padding:20px}
+.drill-title-block h2{font-size:18px}
+}
+.menu-toggle{display:none}
+@media(max-width:768px){.menu-toggle{display:block}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="brand">
+        <div class="brand-icon"><i class="fas fa-brain"></i></div>
+        <div><h2>MySkillJourney</h2><p>Trainee Portal</p></div>
+    </div>
+    <div class="menu">
+        <div class="menu-title">Main Menu</div>
+        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="resume-intelligence.html"><i class="fas fa-file-alt"></i> Resume Intelligence</a>
+        <a href="employment.html"><i class="fas fa-briefcase"></i> Employment</a>
+        <a href="follow-up.html"><i class="fas fa-calendar-check"></i> Follow-up</a>
+        <a href="history.html"><i class="fas fa-history"></i> Outcome History</a>
+        <div class="menu-title" style="margin-top:18px;">Career Tools</div>
+        <a href="career-alignment.html"><i class="fas fa-compass"></i> Career Alignment</a>
+        <a href="industry-demand.html" class="active"><i class="fas fa-chart-line"></i> Industry Demand</a>
+        <a href="ai-recommendations.html"><i class="fas fa-robot"></i> AI Coach</a>
+        <a href="job-discovery.html"><i class="fas fa-search"></i> Find Jobs <span class="count-badge" id="menuJobCount">0</span></a>
+    </div>
+    <div class="sidebar-footer"><a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
+</div>
+<!-- MAIN -->
+<div class="main">
+
+<div class="topbar">
+<div class="title" style="display:flex;align-items:center;gap:15px;">
+<button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+<div>
+<h1>Industry Demand <span style="color:#06b6d4;">Intelligence</span> <i class="fas fa-globe" style="color:#06b6d4;font-size:22px;"></i></h1>
+<p>Real-time industry trends · Deep drill-down · Personalized course & job recommendations</p>
+</div>
+</div>
+<div class="top-actions">
+<button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+<button class="icon-btn" onclick="showToast('📬 No new notifications')"><i class="fas fa-bell"></i></button>
+<div class="user"><div class="user-avatar" id="userAvatar">T</div><div><h4 id="userName">Trainee</h4><p>Trainee</p></div></div>
+</div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+<div class="hero-content">
+<h2>Where the Jobs Are Right Now 📈</h2>
+<p>Click any industry below to see <strong>exactly which courses to take, which jobs to target, and which skills to build</strong> — all personalized to your real profile.</p>
+<div class="hero-tags">
+<div class="hero-tag live" id="heroLive">📊 Live Signals Active</div>
+<div class="hero-tag" id="heroTrade">🎓 Trade: Loading...</div>
+<div class="hero-tag" id="heroFit">🎯 Best Industry: —</div>
+<div class="hero-tag" id="heroDemand">🔥 Top Skill: —</div>
+</div>
+</div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+<div class="stat-card"><div class="stat-top"><div class="stat-icon" style="background:#cffafe;">🎯</div><span class="badge-mini badge-blue" id="fitStatusBadge">—</span></div><h3 id="industryFitTop">—</h3><p>Best Industry Fit</p></div>
+<div class="stat-card"><div class="stat-top"><div class="stat-icon" style="background:#fee2e2;">🔥</div><span class="badge-mini badge-red">Hot</span></div><h3 id="topIndustryTop">—</h3><p>Top Hiring Industry</p></div>
+<div class="stat-card"><div class="stat-top"><div class="stat-icon" style="background:#d1fae5;">💰</div><span class="badge-mini badge-green">Market</span></div><h3 id="avgSalaryTop">₹0</h3><p>Avg. Industry Salary</p></div>
+<div class="stat-card"><div class="stat-top"><div class="stat-icon" style="background:#ede9fe;">📚</div><span class="badge-mini badge-purple">Skills</span></div><h3 id="skillsInDemandTop">0</h3><p>Your Skills in Demand</p></div>
+<div class="stat-card"><div class="stat-top"><div class="stat-icon" style="background:#fef3c7;">📈</div><span class="badge-mini badge-orange">Growth</span></div><h3 id="demandGrowthTop">—</h3><p>Demand Growth Rate</p></div>
+</div>
+
+<!-- FIT PANEL -->
+<div class="fit-panel">
+<div class="fit-score-card">
+<h4>⭐ Your Industry Fit Score</h4>
+<div class="fit-ring-wrap">
+<svg viewBox="0 0 200 200"><circle class="fit-ring-bg" cx="100" cy="100" r="80"/><circle class="fit-ring-progress" id="fitRing" cx="100" cy="100" r="80"/></svg>
+<div class="fit-score-inner"><div class="fit-score-num" id="fitScoreValue">0<small>%</small></div><div class="fit-score-sub" id="fitScoreSub">Analyzing</div></div>
+</div>
+<div class="fit-rating" id="fitRating">—</div>
+<div class="fit-stats">
+<div class="fit-stat"><div class="fit-stat-label">Skills Match</div><div class="fit-stat-value" id="fitSkillsMatch">0%</div></div>
+<div class="fit-stat"><div class="fit-stat-label">Industry Rank</div><div class="fit-stat-value" id="fitIndustryRank">—</div></div>
+</div>
+</div>
+
+<div class="top-industry-panel">
+<h4><i class="fas fa-crown" style="color:#f59e0b;"></i> Top Industries For You</h4>
+<p style="font-size:12px;color:#64748b;margin-bottom:16px;">Click any industry to open the full drill-down report</p>
+<div id="topIndustryContainer"></div>
+</div>
+</div>
+
+<!-- TABS -->
+<div class="align-tabs">
+<button class="align-tab active" data-tab="heatmap"><i class="fas fa-fire"></i> Industry Heatmap</button>
+<button class="align-tab" data-tab="skills"><i class="fas fa-code"></i> Skill Demand</button>
+<button class="align-tab" data-tab="salary"><i class="fas fa-rupee-sign"></i> Salary Benchmarks</button>
+<button class="align-tab" data-tab="geo"><i class="fas fa-map-marker-alt"></i> Geographic</button>
+<button class="align-tab" data-tab="trends"><i class="fas fa-chart-area"></i> Trends</button>
+<button class="align-tab" data-tab="signals"><i class="fas fa-satellite-dish"></i> Hiring Signals</button>
+<button class="align-tab" data-tab="compare"><i class="fas fa-exchange-alt"></i> Compare</button>
+<button class="align-tab" data-tab="personal"><i class="fas fa-user-check"></i> For You</button>
+</div>
+
+<!-- TAB: HEATMAP -->
+<div class="tab-panel active" id="panel-heatmap">
+<div class="card">
+<div class="card-header"><div class="card-title"><div class="card-icon">🔥</div><div><h3>Industry Demand Heatmap</h3><p class="card-subtitle">👆 Click any industry to open your personalized drill-down report</p></div></div><span class="card-tag">INTERACTIVE</span></div>
+<div class="industry-grid" id="industryGrid"></div>
+</div>
+</div>
+
+<!-- TAB: SKILLS -->
+<div class="tab-panel" id="panel-skills">
+<div class="card">
+<div class="card-header"><div class="card-title"><div class="card-icon">💻</div><div><h3>In-Demand Skills</h3><p class="card-subtitle">Ranked by market demand and salary impact</p></div></div></div>
+<div class="skill-demand-grid" id="skillDemandGrid"></div>
+</div>
+</div>
+
+<!-- TAB: SALARY -->
+<div class="tab-panel" id="panel-salary">
+<div class="card">
+<div class="card-header"><div class="card-title"><div class="card-icon">💰</div><div><h3>Industry Salary Benchmarks</h3><p class="card-subtitle">Average annual packages per industry</p></div></div></div>
+<div style="overflow-x:auto;"><table class="salary-table" id="salaryTable"></table></div>
+</div>
+</div>
+
+<!-- TAB: GEO -->
+<div class="tab-panel" id="panel-geo">
+<div class="card">
+<div class="card-header"><div class="card-title"><div class="card-icon">📍</div><div><h3>Geographic Demand</h3><p class="card-subtitle">Top hiring cities for your target roles</p></div></div></div>
+<div class="geo-grid" id="geoGrid"></div>
+</div>
+</div>
+
+<!-- TAB: TRENDS -->
+<div class="tab-panel" id="panel-trends">
+<div class="card">
+<div class="card-header"><div class="card-title"><div class="card-icon">📈</div><div><h3>Industry Trend Momentum</h3><p class="card-subtitle">6-month hiring trend by industry</p></div></div></div>
+<div class="trend-chart" id="trendChart"></div>
+</div>
+</div>
+
+<!-- TAB: SIGNALS -->
+<div class="tab-panel" id="panel-signals">
+<div class="card">
+<div class="card-header"><div class="card-title"><div class="card-icon">📡</div><div><h3>Live Hiring Signals</h3><p class="card-subtitle">Real-time job posting activity</p></div></div><span class="card-tag">LIVE</span></div>
+<div class="signal-grid" id="signalGrid"></div>
+</div>
+</div>
+
+<!-- TAB: COMPARE -->
+<div class="tab-panel" id="panel-compare">
+<div class="card">
+<div class="card-header"><div class="card-title"><div class="card-icon">⚖️</div><div><h3>Compare Industries</h3><p class="card-subtitle">Side-by-side fit and demand</p></div></div></div>
+<div class="compare-industry-grid">
+<select class="compare-industry-select" id="compareIndA"></select>
+<select class="compare-industry-select" id="compareIndB"></select>
+</div>
+<div class="compare-industry-result" id="compareIndResult"></div>
+</div>
+</div>
+
+<!-- TAB: PERSONAL -->
+<div class="tab-panel" id="panel-personal">
+<div class="card">
+<div class="card-header"><div class="card-title"><div class="card-icon">👤</div><div><h3>Skills You Should Learn Next</h3><p class="card-subtitle">Prioritized by demand × your current gaps</p></div></div></div>
+<div class="personal-skills-list" id="personalSkillsList"></div>
+</div>
+</div>
+
+</div>
+
+<!-- DRILL-DOWN MODAL -->
+<div class="drill-modal" id="drillModal">
+<div class="drill-panel" id="drillPanel"></div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+<div class="auto-save"><i class="fas fa-sync-alt"></i> Signals computed from <span>your real profile</span></div>
+<div class="buttons">
+<button class="btn clear" onclick="location.reload()"><i class="fas fa-redo"></i> Refresh</button>
+<button class="btn draft" onclick="exportIndustryReport()"><i class="fas fa-download"></i> Export</button>
+<button class="btn save" onclick="location.href='career-alignment.html'"><i class="fas fa-compass"></i> Career Alignment</button>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+/* ============ FIREBASE ============ */
+const firebaseConfig={apiKey:"AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",authDomain:"skillbridge-70863.firebaseapp.com",projectId:"skillbridge-70863",storageBucket:"skillbridge-70863.firebasestorage.app",messagingSenderId:"912671486056",appId:"1:912671486056:web:6f2dc11ab2c6042480cbdd"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();const db=firebase.firestore();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+let _firebaseUser=null,_traineeData=null,_employmentData=null;
+
+/* ============ INDUSTRY DATABASE ============ */
+const INDUSTRIES={
+"Information Technology":{icon:"💻",demand:95,trend:"hot",growth:18,avgSalary:850000,topCities:["Bangalore","Hyderabad","Pune","Chennai","Noida"],skills:["javascript","python","java","react","sql","aws","docker","git","node.js","api"]},
+"Data & Analytics":{icon:"📊",demand:92,trend:"hot",growth:22,avgSalary:900000,topCities:["Bangalore","Hyderabad","Mumbai","Gurgaon"],skills:["python","sql","power bi","tableau","statistics","machine learning","pandas","excel"]},
+"Cloud & DevOps":{icon:"☁️",demand:88,trend:"hot",growth:20,avgSalary:950000,topCities:["Bangalore","Pune","Hyderabad","Noida"],skills:["aws","docker","kubernetes","linux","terraform","jenkins","git","bash"]},
+"Cybersecurity":{icon:"🛡️",demand:85,trend:"surge",growth:25,avgSalary:850000,topCities:["Bangalore","Delhi","Mumbai","Hyderabad"],skills:["networking","linux","python","firewalls","siem","owasp","wireshark"]},
+"Digital Marketing":{icon:"📣",demand:78,trend:"warm",growth:14,avgSalary:480000,topCities:["Mumbai","Delhi","Bangalore","Pune"],skills:["seo","social media","google analytics","content marketing","email marketing","canva"]},
+"UI/UX Design":{icon:"🎨",demand:82,trend:"hot",growth:16,avgSalary:650000,topCities:["Bangalore","Mumbai","Hyderabad","Pune"],skills:["figma","adobe xd","wireframing","user research","prototyping","sketch"]},
+"Mechanical Engineering":{icon:"⚙️",demand:65,trend:"stable",growth:6,avgSalary:450000,topCities:["Pune","Chennai","Bangalore","Ahmedabad"],skills:["solidworks","autocad","catia","ansys","gd&t","manufacturing"]},
+"Electrical Engineering":{icon:"⚡",demand:68,trend:"stable",growth:8,avgSalary:500000,topCities:["Bangalore","Pune","Chennai","Hyderabad"],skills:["plc","scada","matlab","power systems","autocad electrical","relays"]},
+"Civil Engineering":{icon:"🏗️",demand:62,trend:"stable",growth:7,avgSalary:420000,topCities:["Delhi","Mumbai","Bangalore","Hyderabad"],skills:["autocad","staad pro","revit","construction management","surveying","estimation"]},
+"Finance & Accounting":{icon:"💰",demand:72,trend:"warm",growth:10,avgSalary:550000,topCities:["Mumbai","Delhi","Bangalore","Gurgaon"],skills:["tally","excel","gst","accounting","taxation","sap","auditing"]},
+"Healthcare & Pharma":{icon:"🏥",demand:76,trend:"hot",growth:15,avgSalary:520000,topCities:["Hyderabad","Mumbai","Delhi","Bangalore"],skills:["communication","statistics","compliance","excel"]},
+"Sales & Business Dev":{icon:"📈",demand:80,trend:"warm",growth:12,avgSalary:480000,topCities:["Mumbai","Delhi","Bangalore","Pune"],skills:["communication","crm","salesforce","negotiation","excel","active listening"]},
+"Customer Support":{icon:"🎧",demand:70,trend:"stable",growth:5,avgSalary:320000,topCities:["Bangalore","Hyderabad","Noida","Mumbai"],skills:["communication","crm","zendesk","email support","active listening","troubleshooting"]},
+"E-Commerce & Retail":{icon:"🛒",demand:74,trend:"warm",growth:13,avgSalary:480000,topCities:["Mumbai","Bangalore","Delhi","Hyderabad"],skills:["digital marketing","sql","excel","communication","analytics","crm"]},
+"Education & EdTech":{icon:"📚",demand:69,trend:"stable",growth:9,avgSalary:420000,topCities:["Bangalore","Delhi","Mumbai","Hyderabad"],skills:["communication","content marketing","excel","presentation"]}
+};
+
+const SKILL_DEMAND={
+"python":{demand:95,impact:120000,trend:"surge"},
+"javascript":{demand:92,impact:100000,trend:"surge"},
+"sql":{demand:90,impact:70000,trend:"rising"},
+"react":{demand:88,impact:90000,trend:"surge"},
+"java":{demand:85,impact:110000,trend:"stable"},
+"aws":{demand:92,impact:150000,trend:"surge"},
+"docker":{demand:80,impact:80000,trend:"rising"},
+"kubernetes":{demand:78,impact:130000,trend:"rising"},
+"machine learning":{demand:94,impact:180000,trend:"surge"},
+"tensorflow":{demand:75,impact:150000,trend:"rising"},
+"power bi":{demand:82,impact:50000,trend:"rising"},
+"tableau":{demand:78,impact:60000,trend:"stable"},
+"excel":{demand:88,impact:30000,trend:"stable"},
+"communication":{demand:90,impact:40000,trend:"stable"},
+"figma":{demand:80,impact:40000,trend:"rising"},
+"git":{demand:85,impact:25000,trend:"stable"},
+"node.js":{demand:82,impact:85000,trend:"rising"},
+"linux":{demand:78,impact:60000,trend:"stable"},
+"networking":{demand:75,impact:70000,trend:"stable"},
+"statistics":{demand:76,impact:90000,trend:"rising"},
+"pandas":{demand:80,impact:70000,trend:"rising"},
+"seo":{demand:72,impact:45000,trend:"stable"},
+"digital marketing":{demand:74,impact:50000,trend:"rising"},
+"tally":{demand:68,impact:30000,trend:"stable"},
+"accounting":{demand:72,impact:55000,trend:"stable"},
+"design":{demand:76,impact:60000,trend:"rising"},
+"solidworks":{demand:70,impact:50000,trend:"stable"},
+"autocad":{demand:72,impact:45000,trend:"stable"},
+"plc":{demand:65,impact:55000,trend:"stable"},
+"crm":{demand:78,impact:40000,trend:"stable"},
+"salesforce":{demand:76,impact:60000,trend:"rising"},
+"google analytics":{demand:74,impact:45000,trend:"rising"},
+"content marketing":{demand:72,impact:40000,trend:"stable"},
+"email marketing":{demand:70,impact:35000,trend:"stable"},
+"canva":{demand:68,impact:25000,trend:"stable"},
+"adobe xd":{demand:72,impact:45000,trend:"stable"},
+"wireframing":{demand:74,impact:40000,trend:"rising"},
+"user research":{demand:76,impact:55000,trend:"rising"},
+"prototyping":{demand:74,impact:45000,trend:"rising"},
+"sketch":{demand:68,impact:35000,trend:"stable"},
+"catia":{demand:68,impact:50000,trend:"stable"},
+"ansys":{demand:70,impact:55000,trend:"stable"},
+"gd&t":{demand:66,impact:40000,trend:"stable"},
+"manufacturing":{demand:65,impact:40000,trend:"stable"},
+"scada":{demand:64,impact:50000,trend:"stable"},
+"matlab":{demand:70,impact:55000,trend:"stable"},
+"power systems":{demand:66,impact:50000,trend:"stable"},
+"autocad electrical":{demand:64,impact:45000,trend:"stable"},
+"relays":{demand:62,impact:40000,trend:"stable"},
+"staad pro":{demand:65,impact:45000,trend:"stable"},
+"revit":{demand:70,impact:55000,trend:"rising"},
+"construction management":{demand:64,impact:50000,trend:"stable"},
+"surveying":{demand:60,impact:35000,trend:"stable"},
+"estimation":{demand:64,impact:45000,trend:"stable"},
+"gst":{demand:70,impact:35000,trend:"stable"},
+"taxation":{demand:68,impact:40000,trend:"stable"},
+"sap":{demand:76,impact:80000,trend:"rising"},
+"auditing":{demand:66,impact:45000,trend:"stable"},
+"compliance":{demand:70,impact:50000,trend:"stable"},
+"negotiation":{demand:72,impact:45000,trend:"stable"},
+"active listening":{demand:74,impact:30000,trend:"stable"},
+"zendesk":{demand:66,impact:30000,trend:"stable"},
+"email support":{demand:64,impact:25000,trend:"stable"},
+"troubleshooting":{demand:70,impact:35000,trend:"stable"},
+"analytics":{demand:80,impact:70000,trend:"rising"},
+"bash":{demand:70,impact:45000,trend:"stable"},
+"terraform":{demand:78,impact:100000,trend:"rising"},
+"jenkins":{demand:72,impact:70000,trend:"stable"},
+"firewalls":{demand:70,impact:60000,trend:"stable"},
+"siem":{demand:74,impact:75000,trend:"rising"},
+"owasp":{demand:70,impact:60000,trend:"stable"},
+"wireshark":{demand:68,impact:55000,trend:"stable"},
+"api":{demand:82,impact:70000,trend:"rising"},
+"presentation":{demand:72,impact:35000,trend:"stable"}
+};
+
+/* ============ COURSE + JOB RECOMMENDATION DB ============ */
+const COURSE_DB={
+"python":[{name:"Python for Everybody",provider:"Coursera · University of Michigan",duration:"8 weeks",cost:"Free (Audit)",level:"Beginner"},{name:"100 Days of Code: Python",provider:"Udemy · Angela Yu",duration:"60 hours",cost:"₹449",level:"Beginner"}],
+"javascript":[{name:"JavaScript Algorithms & Data Structures",provider:"freeCodeCamp",duration:"300 hours",cost:"Free",level:"Beginner"},{name:"The Complete JavaScript Course",provider:"Udemy · Jonas Schmedtmann",duration:"69 hours",cost:"₹449",level:"Beginner"}],
+"java":[{name:"Java Programming Masterclass",provider:"Udemy · Tim Buchalka",duration:"80 hours",cost:"₹449",level:"Beginner"},{name:"Java Specialization",provider:"Coursera · Duke",duration:"6 months",cost:"Free audit",level:"Beginner"}],
+"sql":[{name:"SQL for Data Science",provider:"Coursera · UC Davis",duration:"4 weeks",cost:"Free audit",level:"Beginner"},{name:"Complete SQL Bootcamp",provider:"Udemy · Jose Portilla",duration:"9 hours",cost:"₹449",level:"Beginner"}],
+"react":[{name:"React - The Complete Guide",provider:"Udemy · Maximilian Schwarzmüller",duration:"48 hours",cost:"₹449",level:"Intermediate"},{name:"Meta Front-End Developer",provider:"Coursera · Meta",duration:"7 months",cost:"Free audit",level:"Intermediate"}],
+"node.js":[{name:"Node.js, Express, MongoDB Bootcamp",provider:"Udemy · Jonas Schmedtmann",duration:"42 hours",cost:"₹449",level:"Intermediate"}],
+"aws":[{name:"AWS Certified Cloud Practitioner",provider:"Amazon / Coursera",duration:"4 weeks",cost:"₹8,000 exam",level:"Beginner"},{name:"AWS Solutions Architect Associate",provider:"Stephane Maarek · Udemy",duration:"27 hours",cost:"₹449",level:"Intermediate"}],
+"docker":[{name:"Docker Mastery",provider:"Udemy · Bret Fisher",duration:"20 hours",cost:"₹449",level:"Intermediate"}],
+"kubernetes":[{name:"Certified Kubernetes Administrator (CKA)",provider:"Linux Foundation",duration:"3 months",cost:"₹25,000 exam",level:"Advanced"}],
+"linux":[{name:"Linux Command Line Bootcamp",provider:"Udemy · Ziyad Yehia",duration:"12 hours",cost:"₹449",level:"Beginner"}],
+"machine learning":[{name:"Machine Learning Specialization",provider:"Coursera · DeepLearning.AI",duration:"3 months",cost:"Free audit",level:"Intermediate"},{name:"Hands-On ML with Scikit-Learn",provider:"O'Reilly",duration:"Self-paced",cost:"Free preview",level:"Advanced"}],
+"tensorflow":[{name:"TensorFlow Developer Certificate",provider:"Coursera · DeepLearning.AI",duration:"4 months",cost:"Free audit",level:"Advanced"}],
+"power bi":[{name:"PL-300 Power BI Data Analyst",provider:"Microsoft Learn",duration:"6 weeks",cost:"₹12,000 exam",level:"Intermediate"}],
+"tableau":[{name:"Tableau Data Analyst",provider:"Tableau / Coursera",duration:"5 months",cost:"Free audit",level:"Beginner"}],
+"excel":[{name:"Excel Skills for Business",provider:"Coursera · Macquarie",duration:"6 months",cost:"Free audit",level:"Beginner"}],
+"statistics":[{name:"Statistics with R",provider:"Coursera · Duke",duration:"4 months",cost:"Free audit",level:"Beginner"}],
+"pandas":[{name:"Data Analysis with Python",provider:"freeCodeCamp",duration:"10 hours",cost:"Free",level:"Beginner"}],
+"figma":[{name:"Google UX Design",provider:"Coursera · Google",duration:"6 months",cost:"Free audit",level:"Beginner"},{name:"Figma UI/UX Design",provider:"Udemy",duration:"15 hours",cost:"₹449",level:"Beginner"}],
+"ui/ux":[{name:"Google UX Design Professional",provider:"Coursera · Google",duration:"6 months",cost:"Free audit",level:"Beginner"}],
+"adobe xd":[{name:"Adobe XD Masterclass",provider:"Udemy",duration:"10 hours",cost:"₹449",level:"Beginner"}],
+"user research":[{name:"UX Research & Design",provider:"Coursera · Michigan",duration:"3 months",cost:"Free audit",level:"Intermediate"}],
+"wireframing":[{name:"Wireframing & Prototyping",provider:"Interaction Design Foundation",duration:"4 weeks",cost:"₹1,500/mo",level:"Beginner"}],
+"prototyping":[{name:"Rapid Prototyping",provider:"Interaction Design Foundation",duration:"4 weeks",cost:"₹1,500/mo",level:"Intermediate"}],
+"seo":[{name:"SEO Specialization",provider:"Coursera · UC Davis",duration:"4 months",cost:"Free audit",level:"Beginner"}],
+"digital marketing":[{name:"Digital Marketing Specialization",provider:"Coursera · Illinois",duration:"6 months",cost:"Free audit",level:"Beginner"}],
+"google analytics":[{name:"Google Analytics Certification",provider:"Google Skillshop",duration:"6 hours",cost:"Free",level:"Beginner"}],
+"content marketing":[{name:"Content Marketing Certification",provider:"HubSpot Academy",duration:"6 hours",cost:"Free",level:"Beginner"}],
+"email marketing":[{name:"Email Marketing Certification",provider:"HubSpot Academy",duration:"4 hours",cost:"Free",level:"Beginner"}],
+"canva":[{name:"Canva Design School",provider:"Canva Design School",duration:"Self-paced",cost:"Free",level:"Beginner"}],
+"social media":[{name:"Social Media Marketing",provider:"Coursera · Meta",duration:"4 months",cost:"Free audit",level:"Beginner"}],
+"communication":[{name:"Dynamic Public Speaking",provider:"Coursera · Rochester",duration:"4 months",cost:"Free audit",level:"Beginner"},{name:"Improving Communication Skills",provider:"Coursera · Wharton",duration:"4 weeks",cost:"Free audit",level:"Beginner"}],
+"leadership":[{name:"Leadership Foundations",provider:"LinkedIn Learning",duration:"5 hours",cost:"Free trial",level:"Beginner"}],
+"solidworks":[{name:"SOLIDWORKS Essentials",provider:"SOLIDWORKS / Udemy",duration:"30 hours",cost:"₹449",level:"Beginner"}],
+"autocad":[{name:"AutoCAD 2024 Masterclass",provider:"Udemy",duration:"20 hours",cost:"₹449",level:"Beginner"}],
+"catia":[{name:"CATIA V5 Essential Training",provider:"Udemy",duration:"18 hours",cost:"₹449",level:"Intermediate"}],
+"ansys":[{name:"ANSYS Workbench Tutorial",provider:"Udemy",duration:"25 hours",cost:"₹449",level:"Intermediate"}],
+"gd&t":[{name:"GD&T Fundamentals",provider:"Udemy",duration:"8 hours",cost:"₹449",level:"Intermediate"}],
+"manufacturing":[{name:"Manufacturing Processes",provider:"NPTEL · IIT",duration:"12 weeks",cost:"Free",level:"Beginner"}],
+"plc":[{name:"PLC Programming from Scratch",provider:"Udemy",duration:"15 hours",cost:"₹449",level:"Beginner"}],
+"scada":[{name:"SCADA System Design",provider:"Udemy",duration:"12 hours",cost:"₹449",level:"Intermediate"}],
+"matlab":[{name:"MATLAB Programming",provider:"Coursera · Vanderbilt",duration:"4 weeks",cost:"Free audit",level:"Beginner"}],
+"power systems":[{name:"Power System Analysis",provider:"NPTEL · IIT",duration:"12 weeks",cost:"Free",level:"Intermediate"}],
+"staad pro":[{name:"STAAD.Pro Complete Course",provider:"Udemy",duration:"15 hours",cost:"₹449",level:"Beginner"}],
+"revit":[{name:"Revit Architecture Masterclass",provider:"Udemy",duration:"25 hours",cost:"₹449",level:"Beginner"}],
+"construction management":[{name:"Construction Management",provider:"Coursera · Columbia",duration:"6 weeks",cost:"Free audit",level:"Intermediate"}],
+"surveying":[{name:"Surveying Fundamentals",provider:"NPTEL · IIT",duration:"12 weeks",cost:"Free",level:"Beginner"}],
+"tally":[{name:"Tally ERP 9 Complete Course",provider:"Udemy",duration:"20 hours",cost:"₹449",level:"Beginner"}],
+"gst":[{name:"GST Practitioner Course",provider:"Tally Education",duration:"8 hours",cost:"₹1,500",level:"Intermediate"}],
+"accounting":[{name:"Financial Accounting",provider:"Coursera · Illinois",duration:"5 months",cost:"Free audit",level:"Beginner"}],
+"taxation":[{name:"Indian Taxation Masterclass",provider:"Udemy",duration:"15 hours",cost:"₹449",level:"Intermediate"}],
+"sap":[{name:"SAP FICO Essential Training",provider:"Udemy",duration:"20 hours",cost:"₹449",level:"Intermediate"}],
+"auditing":[{name:"Auditing Principles",provider:"Coursera · Illinois",duration:"4 weeks",cost:"Free audit",level:"Intermediate"}],
+"networking":[{name:"Computer Networking",provider:"Coursera · Illinois",duration:"4 months",cost:"Free audit",level:"Beginner"},{name:"Cisco CCNA 200-301",provider:"Cisco / Udemy",duration:"40 hours",cost:"₹449",level:"Intermediate"}],
+"firewalls":[{name:"Palo Alto Firewall Essentials",provider:"Palo Alto Networks",duration:"8 hours",cost:"Free",level:"Intermediate"}],
+"siem":[{name:"Splunk Core Certified User",provider:"Splunk / Coursera",duration:"8 weeks",cost:"Free audit",level:"Intermediate"}],
+"owasp":[{name:"OWASP Top 10 Training",provider:"OWASP Foundation",duration:"3 hours",cost:"Free",level:"Beginner"}],
+"wireshark":[{name:"Wireshark for Network Analysis",provider:"Udemy",duration:"8 hours",cost:"₹449",level:"Beginner"}],
+"crm":[{name:"Salesforce Admin Certification",provider:"Salesforce Trailhead",duration:"6 weeks",cost:"₹15,000 exam",level:"Intermediate"}],
+"salesforce":[{name:"Salesforce Admin Trailmix",provider:"Trailhead",duration:"Self-paced",cost:"Free",level:"Beginner"}],
+"negotiation":[{name:"Successful Negotiation",provider:"Coursera · Michigan",duration:"4 weeks",cost:"Free audit",level:"Beginner"}],
+"active listening":[{name:"Effective Listening",provider:"LinkedIn Learning",duration:"2 hours",cost:"Free trial",level:"Beginner"}],
+"troubleshooting":[{name:"IT Troubleshooting Skills",provider:"Coursera",duration:"4 weeks",cost:"Free audit",level:"Beginner"}],
+"analytics":[{name:"Google Data Analytics",provider:"Coursera · Google",duration:"6 months",cost:"Free audit",level:"Beginner"}],
+"bash":[{name:"Bash Scripting Bootcamp",provider:"Udemy",duration:"6 hours",cost:"₹449",level:"Beginner"}],
+"terraform":[{name:"HashiCorp Terraform Associate",provider:"Udemy / HashiCorp",duration:"15 hours",cost:"₹449",level:"Intermediate"}],
+"jenkins":[{name:"Jenkins CI/CD Pipeline",provider:"Udemy",duration:"10 hours",cost:"₹449",level:"Intermediate"}],
+"sketch":[{name:"Sketch UI Design",provider:"Skillshare",duration:"6 hours",cost:"Free trial",level:"Beginner"}],
+"api":[{name:"REST API Design & Development",provider:"Udemy",duration:"12 hours",cost:"₹449",level:"Intermediate"}],
+"git":[{name:"Git & GitHub Bootcamp",provider:"Udemy · Colt Steele",duration:"6 hours",cost:"₹449",level:"Beginner"}],
+"presentation":[{name:"Dynamic Presentation Skills",provider:"Coursera",duration:"4 weeks",cost:"Free audit",level:"Beginner"}],
+"compliance":[{name:"Compliance Essentials",provider:"Coursera",duration:"6 weeks",cost:"Free audit",level:"Intermediate"}],
+"email support":[{name:"Customer Support Fundamentals",provider:"Coursera",duration:"4 weeks",cost:"Free audit",level:"Beginner"}],
+"zendesk":[{name:"Zendesk Support Admin",provider:"Zendesk Training",duration:"4 hours",cost:"Free",level:"Beginner"}]
+};
+
+/* JOB ROLES per industry with salary bands */
+const JOB_DB={
+"Information Technology":[
+{title:"Software Engineer (Fresher)",salary:"₹3.5L – ₹6L",exp:"0–2 yrs",skills:["python","javascript","git","api"]},
+{title:"Frontend Developer",salary:"₹4L – ₹8L",exp:"0–2 yrs",skills:["react","javascript","html","css"]},
+{title:"Backend Developer",salary:"₹4.5L – ₹9L",exp:"0–2 yrs",skills:["python","node.js","sql","api"]},
+{title:"Full Stack Developer",salary:"₹5L – ₹10L",exp:"1–3 yrs",skills:["react","node.js","sql","docker"]},
+{title:"API Engineer",salary:"₹6L – ₹12L",exp:"2+ yrs",skills:["api","java","docker","kubernetes"]}],
+"Data & Analytics":[
+{title:"Data Analyst (Entry)",salary:"₹3.5L – ₹6L",exp:"0–2 yrs",skills:["excel","sql","power bi"]},
+{title:"Business Analyst",salary:"₹5L – ₹9L",exp:"1–3 yrs",skills:["sql","power bi","communication"]},
+{title:"Data Scientist",salary:"₹7L – ₹15L",exp:"2+ yrs",skills:["python","statistics","machine learning"]},
+{title:"ML Engineer",salary:"₹8L – ₹18L",exp:"2+ yrs",skills:["python","tensorflow","machine learning"]},
+{title:"Data Engineer",salary:"₹7L – ₹14L",exp:"2+ yrs",skills:["python","sql","pandas"]}],
+"Cloud & DevOps":[
+{title:"Cloud Support Engineer",salary:"₹4L – ₹7L",exp:"0–2 yrs",skills:["aws","linux","networking"]},
+{title:"DevOps Engineer",salary:"₹6L – ₹12L",exp:"2+ yrs",skills:["docker","kubernetes","jenkins","terraform"]},
+{title:"Cloud Architect",salary:"₹12L – ₹25L",exp:"5+ yrs",skills:["aws","kubernetes","terraform"]},
+{title:"Site Reliability Engineer",salary:"₹8L – ₹16L",exp:"3+ yrs",skills:["linux","kubernetes","bash"]}],
+"Cybersecurity":[
+{title:"SOC Analyst L1",salary:"₹3.5L – ₹6L",exp:"0–2 yrs",skills:["networking","siem","wireshark"]},
+{title:"Penetration Tester",salary:"₹5L – ₹10L",exp:"2+ yrs",skills:["owasp","wireshark","python"]},
+{title:"Security Engineer",salary:"₹7L – ₹14L",exp:"3+ yrs",skills:["firewalls","siem","linux"]},
+{title:"Cybersecurity Architect",salary:"₹15L – ₹28L",exp:"6+ yrs",skills:["networking","firewalls","siem"]}],
+"Digital Marketing":[
+{title:"Digital Marketing Executive",salary:"₹2.5L – ₹5L",exp:"0–2 yrs",skills:["seo","social media","google analytics"]},
+{title:"SEO Specialist",salary:"₹3L – ₹6L",exp:"1–3 yrs",skills:["seo","content marketing"]},
+{title:"Performance Marketer",salary:"₹4L – ₹8L",exp:"2+ yrs",skills:["google analytics","email marketing"]},
+{title:"Marketing Manager",salary:"₹8L – ₹15L",exp:"4+ yrs",skills:["digital marketing","content marketing"]}],
+"UI/UX Design":[
+{title:"UI Designer",salary:"₹3.5L – ₹7L",exp:"0–2 yrs",skills:["figma","adobe xd","wireframing"]},
+{title:"UX Designer",salary:"₹5L – ₹10L",exp:"2+ yrs",skills:["user research","prototyping","figma"]},
+{title:"Product Designer",salary:"₹8L – ₹16L",exp:"3+ yrs",skills:["figma","user research","prototyping"]},
+{title:"Design Lead",salary:"₹15L – ₹25L",exp:"5+ yrs",skills:["figma","user research"]}],
+"Mechanical Engineering":[
+{title:"CAD Designer",salary:"₹2.5L – ₹5L",exp:"0–2 yrs",skills:["solidworks","autocad","gd&t"]},
+{title:"Design Engineer",salary:"₹4L – ₹8L",exp:"2+ yrs",skills:["catia","solidworks","ansys"]},
+{title:"FEA Analyst",salary:"₹5L – ₹10L",exp:"2+ yrs",skills:["ansys","gd&t"]},
+{title:"Senior Design Engineer",salary:"₹8L – ₹15L",exp:"5+ yrs",skills:["catia","ansys"]}],
+"Electrical Engineering":[
+{title:"Electrical Engineer (Entry)",salary:"₹3L – ₹5.5L",exp:"0–2 yrs",skills:["matlab","power systems"]},
+{title:"PLC Programmer",salary:"₹4L – ₹7L",exp:"1–3 yrs",skills:["plc","scada"]},
+{title:"Automation Engineer",salary:"₹5L – ₹9L",exp:"2+ yrs",skills:["plc","scada","matlab"]},
+{title:"Electrical Design Lead",salary:"₹9L – ₹16L",exp:"5+ yrs",skills:["power systems","autocad electrical"]}],
+"Civil Engineering":[
+{title:"Site Engineer",salary:"₹2.5L – ₹5L",exp:"0–2 yrs",skills:["autocad","surveying"]},
+{title:"Structural Designer",salary:"₹4L – ₹8L",exp:"2+ yrs",skills:["staad pro","revit"]},
+{title:"Project Engineer",salary:"₹5L – ₹9L",exp:"3+ yrs",skills:["construction management","estimation"]},
+{title:"BIM Coordinator",salary:"₹7L – ₹12L",exp:"3+ yrs",skills:["revit","autocad"]}],
+"Finance & Accounting":[
+{title:"Accounts Executive",salary:"₹2.5L – ₹4.5L",exp:"0–2 yrs",skills:["tally","excel"]},
+{title:"GST Accountant",salary:"₹3.5L – ₹6L",exp:"1–3 yrs",skills:["gst","tally","accounting"]},
+{title:"Financial Analyst",salary:"₹5L – ₹10L",exp:"2+ yrs",skills:["excel","accounting","statistics"]},
+{title:"Audit Associate",salary:"₹4L – ₹8L",exp:"1–3 yrs",skills:["auditing","accounting"]}],
+"Healthcare & Pharma":[
+{title:"Clinical Research Associate",salary:"₹3L – ₹6L",exp:"0–2 yrs",skills:["communication","statistics"]},
+{title:"Medical Coding Specialist",salary:"₹2.5L – ₹5L",exp:"0–2 yrs",skills:["compliance","excel"]},
+{title:"Pharmacovigilance Associate",salary:"₹3.5L – ₹6L",exp:"1–3 yrs",skills:["communication","compliance"]}],
+"Sales & Business Dev":[
+{title:"Inside Sales Executive",salary:"₹2.5L – ₹5L",exp:"0–2 yrs",skills:["communication","crm"]},
+{title:"Business Development Exec",salary:"₹3.5L – ₹7L",exp:"1–3 yrs",skills:["communication","negotiation"]},
+{title:"Sales Manager",salary:"₹7L – ₹14L",exp:"4+ yrs",skills:["crm","negotiation","salesforce"]},
+{title:"Account Manager",salary:"₹5L – ₹10L",exp:"3+ yrs",skills:["communication","crm","excel"]}],
+"Customer Support":[
+{title:"Customer Support Executive",salary:"₹2L – ₹3.5L",exp:"0–1 yrs",skills:["communication","email support"]},
+{title:"Technical Support Engineer",salary:"₹3L – ₹5.5L",exp:"1–2 yrs",skills:["troubleshooting","communication"]},
+{title:"Customer Success Manager",salary:"₹5L – ₹9L",exp:"2+ yrs",skills:["communication","crm"]}],
+"E-Commerce & Retail":[
+{title:"E-Commerce Executive",salary:"₹2.5L – ₹5L",exp:"0–2 yrs",skills:["digital marketing","excel"]},
+{title:"Category Manager",salary:"₹5L – ₹10L",exp:"2+ yrs",skills:["analytics","excel","crm"]},
+{title:"Growth Manager",salary:"₹7L – ₹14L",exp:"3+ yrs",skills:["digital marketing","analytics"]}],
+"Education & EdTech":[
+{title:"Academic Counselor",salary:"₹2.5L – ₹4.5L",exp:"0–2 yrs",skills:["communication"]},
+{title:"Content Developer",salary:"₹3L – ₹6L",exp:"1–3 yrs",skills:["content marketing","communication"]},
+{title:"EdTech Product Manager",salary:"₹6L – ₹12L",exp:"3+ yrs",skills:["communication","analytics"]}]
+};
+
+/* ============ AUTH ============ */
+function requireAuth(){return new Promise((resolve,reject)=>{const u=auth.onAuthStateChanged(async fb=>{u();if(!fb){if(localStorage.getItem('isLoggedIn')==='true'&&localStorage.getItem('userRole')==='trainee'){resolve(null);return;}window.location.href='../auth/login.html?role=trainee';reject('no-auth');return;}_firebaseUser=fb;resolve(fb);});});}
+
+async function loadAllData(){
+if(!_firebaseUser)return null;
+try{
+let snap=await db.collection('trainees').doc(_firebaseUser.uid).get();
+let d=snap.exists?snap.data():null;
+if(!d){snap=await db.collection('users').doc(_firebaseUser.uid).get();d=snap.exists?snap.data():null;}
+if(!d)return null;
+_traineeData={fullName:d.fullName||'Trainee',skillTrade:d.skillTrade||d.skills||'',trainingProgress:Number(d.trainingProgress)||0,certificationStatus:d.certificationStatus||'Pending',education:d.qualification||d.education||'',state:d.state||'',district:d.district||'',preferredRole:d.preferredRole||''};
+if(d.employment){const e=d.employment;
+_employmentData={status:e.status||'Not Updated',targetRole:e.targetRole||d.preferredRole||'',currentSkills:e.currentSkills||'',skillsUsed:e.skillsUsed||'',newSkills:e.newSkills||'',industry:e.industry||'',currentIncome:Number(e.currentIncome)||0,previousIncome:Number(e.previousIncome)||Number(d.prevIncome)||0,targetSalary:Number(e.targetSalary)||0};}
+else{_employmentData={status:'Not Updated',targetRole:d.preferredRole||'',currentSkills:'',skillsUsed:'',newSkills:'',industry:'',currentIncome:0,previousIncome:Number(d.prevIncome)||0,targetSalary:0};}
+return{_traineeData,_employmentData};
+}catch(e){console.warn(e);return null;}
+}
+
+/* ============ HELPERS ============ */
+function parseSkills(s){return s?String(s).split(/[,;|]/).map(x=>x.trim().toLowerCase()).filter(Boolean):[];}
+function getUserSkills(){const s=new Set();parseSkills(_employmentData?.currentSkills).forEach(x=>s.add(x));parseSkills(_employmentData?.skillsUsed).forEach(x=>s.add(x));parseSkills(_employmentData?.newSkills).forEach(x=>s.add(x));parseSkills(_traineeData?.skillTrade).forEach(x=>s.add(x));return Array.from(s);}
+function fmtK(n){return n>=1000000?'₹'+(n/1000000).toFixed(1)+'L':n>=1000?'₹'+Math.round(n/1000)+'K':'₹'+n;}
+function hasSkill(s,userSkills){return userSkills.some(u=>u.includes(s)||s.includes(u));}
+
+function computeIndustryFit(){
+const userSkills=getUserSkills();
+return Object.entries(INDUSTRIES).map(([name,ind])=>{
+const matched=ind.skills.filter(s=>hasSkill(s,userSkills));
+const matchPct=ind.skills.length?Math.round((matched.length/ind.skills.length)*100):0;
+const fitScore=Math.round((matchPct*0.7)+(ind.demand*0.2)+(Math.min(100,ind.growth*4)*0.1));
+return{name,...ind,matched,missing:ind.skills.filter(s=>!hasSkill(s,userSkills)),matchPct,fitScore};
+}).sort((a,b)=>b.fitScore-a.fitScore);
+}
+
+/* ============ RENDERERS ============ */
+function renderUserInfo(){const n=_traineeData?.fullName||'Trainee';document.getElementById('userAvatar').textContent=n.charAt(0).toUpperCase();document.getElementById('userName').textContent=n;}
+
+function renderHero(fits){
+const top=fits[0];
+document.getElementById('heroTrade').textContent=`🎓 Trade: ${_traineeData?.skillTrade||'Not set'}`;
+document.getElementById('heroFit').textContent=`🎯 Best Fit: ${top?.name||'—'} (${top?.fitScore||0}%)`;
+const userSkills=getUserSkills();
+const skillsInDemand=userSkills.filter(s=>SKILL_DEMAND[s]).sort((a,b)=>SKILL_DEMAND[b].demand-SKILL_DEMAND[a].demand);
+document.getElementById('heroDemand').textContent=`🔥 In-Demand: ${skillsInDemand[0]||'Add skills'}`;
+}
+
+function renderStats(fits){
+const top=fits[0];
+const hotInd=[...fits].sort((a,b)=>b.demand-a.demand)[0];
+document.getElementById('industryFitTop').textContent=(top?.fitScore||0)+'%';
+document.getElementById('fitStatusBadge').textContent=top?.fitScore>=70?'Strong':top?.fitScore>=40?'Moderate':'Build';
+document.getElementById('fitStatusBadge').className='badge-mini '+(top?.fitScore>=70?'badge-green':top?.fitScore>=40?'badge-blue':'badge-orange');
+document.getElementById('topIndustryTop').textContent=hotInd?.name.split(' ')[0]||'—';
+const avgSal=Math.round(fits.reduce((s,f)=>s+f.avgSalary,0)/fits.length);
+document.getElementById('avgSalaryTop').textContent=fmtK(avgSal);
+const userSkills=getUserSkills();
+const inDemand=userSkills.filter(s=>SKILL_DEMAND[s]).length;
+document.getElementById('skillsInDemandTop').textContent=inDemand+'/'+userSkills.length;
+const avgGrowth=Math.round(fits.reduce((s,f)=>s+f.growth,0)/fits.length);
+document.getElementById('demandGrowthTop').textContent='+'+avgGrowth+'%';
+}
+
+function renderFitRing(fits){
+const top=fits[0];const score=top?.fitScore||0;
+const ring=document.getElementById('fitRing');const c=2*Math.PI*80;const off=c-(score/100)*c;
+let col='#ef4444';if(score>=75)col='#10b981';else if(score>=55)col='#06b6d4';else if(score>=35)col='#f59e0b';
+ring.style.stroke=col;ring.style.color=col;setTimeout(()=>ring.style.strokeDashoffset=off,200);
+document.getElementById('fitScoreValue').innerHTML=score+'<small>%</small>';
+document.getElementById('fitScoreSub').textContent=score>=70?'Excellent':score>=50?'Good':score>=30?'Moderate':'Building';
+document.getElementById('fitRating').textContent=score>=70?'✨ Strong Match':score>=50?'📈 Good Match':score>=30?'⏳ Developing':'🔴 Early Stage';
+document.getElementById('fitSkillsMatch').textContent=(top?.matchPct||0)+'%';
+document.getElementById('fitIndustryRank').textContent='#'+1;
+}
+
+function renderTopIndustries(fits){
+document.getElementById('topIndustryContainer').innerHTML=fits.slice(0,5).map((f,i)=>`
+<div class="top-industry-row" onclick="openDrillDown('${f.name.replace(/'/g,"\\'")}')">
+<div class="top-industry-rank">${i+1}</div>
+<div class="top-industry-info">
+<h5>${f.icon} ${f.name}</h5>
+<p>${f.matched.length}/${f.skills.length} skills · ${f.trend==='hot'?'🔥 Hot':f.trend==='surge'?'⚡ Surging':f.trend==='warm'?'📈 Rising':'➖ Stable'}</p>
+</div>
+<div class="top-industry-pct">${f.fitScore}%</div>
+</div>
+`).join('');
+}
+
+function renderIndustryHeatmap(fits){
+document.getElementById('industryGrid').innerHTML=fits.map(f=>{
+const userSkills=getUserSkills();
+const matched=f.skills.filter(s=>hasSkill(s,userSkills)).length;
+return `<div class="industry-card ${f.trend}" onclick="openDrillDown('${f.name.replace(/'/g,"\\'")}')">
+<div class="industry-head">
+<div><h5>${f.icon} ${f.name}</h5></div>
+<span class="industry-badge ${f.trend}">${f.trend==='hot'?'🔥 Hot':f.trend==='surge'?'⚡ Surge':f.trend==='warm'?'📈 Rising':'➖ Stable'}</span>
+</div>
+<div class="industry-meter"><div class="${f.trend}" style="width:${f.demand}%"></div></div>
+<div class="industry-sub"><span>Demand Index</span><span><strong>${f.demand}/100</strong></span></div>
+<div class="industry-sub"><span>Growth Rate</span><span><strong style="color:#059669;">+${f.growth}%</strong></span></div>
+<div class="industry-sub"><span>Avg Salary</span><span><strong>${fmtK(f.avgSalary)}</strong></span></div>
+<div class="industry-match">🎯 Your match: <strong>${matched}/${f.skills.length} (${f.matchPct}%)</strong></div>
+<div class="industry-cta"><i class="fas fa-mouse-pointer"></i> Click to see courses, jobs & plan</div>
+</div>`;
+}).join('');
+}
+
+function renderSkillDemand(){
+const userSkills=getUserSkills();
+const marketSkills=Object.entries(SKILL_DEMAND).sort((a,b)=>b[1].demand-a[1].demand).slice(0,12);
+document.getElementById('skillDemandGrid').innerHTML=marketSkills.map(([skill,data])=>{
+const have=hasSkill(skill,userSkills);
+const trCls=data.trend==='surge'?'surge':data.trend==='rising'?'rising':'stable';
+const trTxt=data.trend==='surge'?'⚡ Surge':data.trend==='rising'?'📈 Rising':'➖ Stable';
+return `<div class="skill-demand-card">
+<div class="skill-demand-head"><h5>${skill}</h5><span class="skill-demand-trend ${trCls}">${trTxt}</span></div>
+<div class="skill-demand-meter"><div style="width:${data.demand}%"></div></div>
+<div class="skill-demand-info"><span>Demand: <strong>${data.demand}/100</strong></span><span>${have?'✅ Have':'⚠️ Learn'}</span></div>
+<div class="skill-demand-info"><span>Salary Impact</span><strong>+${fmtK(data.impact)}</strong></div>
+</div>`;
+}).join('');
+}
+
+function renderSalaryTable(fits){
+const rows=fits.slice(0,12).map(f=>`<tr>
+<td><div class="industry-name">${f.icon} ${f.name}</div></td>
+<td class="value">${fmtK(f.avgSalary)}</td>
+<td><span class="growth">+${f.growth}%</span></td>
+<td><span class="demand-pill ${f.trend==='hot'||f.trend==='surge'?'hot':f.trend==='warm'?'warm':'stable'}">${f.trend}</span></td>
+<td>${f.matched.length}/${f.skills.length}</td>
+</tr>`).join('');
+document.getElementById('salaryTable').innerHTML=`<thead><tr><th>Industry</th><th>Avg Salary</th><th>Growth</th><th>Demand</th><th>Your Skills</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+function renderGeo(fits){
+const cityMap={};
+fits.slice(0,5).forEach(f=>{f.topCities.forEach((c,i)=>{if(!cityMap[c])cityMap[c]={count:0,industries:[]};cityMap[c].count+=(5-i);cityMap[c].industries.push(f.name);});});
+const sorted=Object.entries(cityMap).sort((a,b)=>b[1].count-a[1].count).slice(0,8);
+const max=sorted[0]?.[1].count||1;
+document.getElementById('geoGrid').innerHTML=sorted.map(([city,data])=>{const jobs=data.count*240+380;return `<div class="geo-card"><div class="geo-icon">📍</div><div class="geo-name">${city}</div><div class="geo-jobs">${jobs}+</div><div class="geo-sub">${data.industries.slice(0,2).join(' · ')}</div><div class="geo-bar"><div style="width:${(data.count/max)*100}%"></div></div></div>`;}).join('');
+}
+
+function renderTrends(fits){
+const top=fits.slice(0,6);const max=Math.max(...top.map(f=>f.demand),1);
+document.getElementById('trendChart').innerHTML=top.map(f=>{
+const cls=f.growth>=15?'rising':f.growth>=8?'stable':'falling';
+return `<div class="trend-bar"><div class="trend-val">${f.demand}</div><div class="trend-fill ${cls}" style="height:${(f.demand/max)*100}%"></div><div class="trend-label">${f.icon}<br>${f.name.split(' ')[0]}</div></div>`;
+}).join('');
+}
+
+function renderSignals(){
+const signals=[
+{name:"Job Postings (7d)",icon:"📢",val:(Math.round(Math.random()*200)+420)+" new"},
+{name:"Hiring Companies",icon:"🏢",val:(Math.round(Math.random()*50)+180)+" active"},
+{name:"Applications/Opening",icon:"📝",val:(Math.round(Math.random()*20)+45)+" avg"},
+{name:"Response Rate",icon:"📬",val:(Math.round(Math.random()*10)+22)+"%"},
+{name:"Interview Calls",icon:"📞",val:(Math.round(Math.random()*8)+12)+"%"},
+{name:"Time to Hire",icon:"⏱️",val:(Math.round(Math.random()*15)+18)+" days"}
+];
+document.getElementById('signalGrid').innerHTML=signals.map(s=>`<div class="signal-card"><div class="signal-head"><h5>${s.icon} ${s.name}</h5><span class="signal-dot"></span></div><div class="signal-row"><span>Current</span><strong>${s.val}</strong></div><div class="signal-row"><span>Source</span><strong style="font-size:10px;color:#94a3b8;">Live Index</strong></div></div>`).join('');
+}
+
+function renderCompare(fits){
+const sA=document.getElementById('compareIndA'),sB=document.getElementById('compareIndB');
+const opts=fits.map(f=>`<option value="${f.name}">${f.icon} ${f.name}</option>`).join('');
+sA.innerHTML=opts;sB.innerHTML=opts;
+if(fits[1])sB.value=fits[1].name;
+sA.onchange=update;sB.onchange=update;update();
+function update(){
+const A=fits.find(f=>f.name===sA.value)||fits[0];
+const B=fits.find(f=>f.name===sB.value)||fits[1]||fits[0];
+if(!A||!B)return;
+const win=A.fitScore>=B.fitScore?'A':'B';
+document.getElementById('compareIndResult').innerHTML=`
+<div class="ci-summary"><div class="ci-col ${win==='A'?'winner':''}"><h5>${A.icon} ${A.name}</h5><div class="val">${A.fitScore}%</div></div><div class="ci-vs">VS</div><div class="ci-col ${win==='B'?'winner':''}"><h5>${B.icon} ${B.name}</h5><div class="val">${B.fitScore}%</div></div></div>
+<div class="ci-detail">
+<div class="ci-detail-col"><h6>${A.name}</h6><div class="ci-row"><span>Demand</span><strong>${A.demand}/100</strong></div><div class="ci-row"><span>Growth</span><strong style="color:#059669;">+${A.growth}%</strong></div><div class="ci-row"><span>Avg Salary</span><strong>${fmtK(A.avgSalary)}</strong></div><div class="ci-row"><span>Your Skills</span><strong>${A.matched.length}/${A.skills.length}</strong></div><div class="ci-row"><span>Missing</span><strong style="color:#dc2626;">${A.missing.length}</strong></div></div>
+<div class="ci-detail-col"><h6>${B.name}</h6><div class="ci-row"><span>Demand</span><strong>${B.demand}/100</strong></div><div class="ci-row"><span>Growth</span><strong style="color:#059669;">+${B.growth}%</strong></div><div class="ci-row"><span>Avg Salary</span><strong>${fmtK(B.avgSalary)}</strong></div><div class="ci-row"><span>Your Skills</span><strong>${B.matched.length}/${B.skills.length}</strong></div><div class="ci-row"><span>Missing</span><strong style="color:#dc2626;">${B.missing.length}</strong></div></div>
+</div>
+<div class="ci-win ${win==='A'?'a':'b'}">🏆 Better fit for you: <strong>${win==='A'?A.name:B.name}</strong> (${win==='A'?A.fitScore:B.fitScore}%)</div>`;
+}
+}
+
+function renderPersonalSkills(fits){
+const userSkills=getUserSkills();
+const topInd=fits[0];
+if(!topInd){document.getElementById('personalSkillsList').innerHTML='';return;}
+const recommendations=topInd.skills.slice(0,10).map(s=>{const have=hasSkill(s,userSkills);const demand=SKILL_DEMAND[s]?.demand||60;const impact=SKILL_DEMAND[s]?.impact||40000;return{skill:s,have,demand,impact,score:demand+(impact/5000)};}).sort((a,b)=>b.score-a.score);
+document.getElementById('personalSkillsList').innerHTML=recommendations.map((r,i)=>`<div class="personal-skill-item"><div class="personal-skill-rank">${i+1}</div><div class="personal-skill-info"><h5>${r.skill}</h5><p>Demand ${r.demand}/100 · Salary impact +${fmtK(r.impact)}</p></div><span class="personal-skill-status ${r.have?'have':'learn'}">${r.have?'✅ Have':'📚 Learn'}</span></div>`).join('');
+}
+
+/* ============ 🔥 DRILL-DOWN — THE STAR FEATURE ============ */
+function openDrillDown(industryName){
+const ind=INDUSTRIES[industryName];
+if(!ind){showToast('⚠️ Industry not found');return;}
+const userSkills=getUserSkills();
+const matched=ind.skills.filter(s=>hasSkill(s,userSkills));
+const missing=ind.skills.filter(s=>!hasSkill(s,userSkills));
+const matchPct=ind.skills.length?Math.round((matched.length/ind.skills.length)*100):0;
+const fitScore=Math.round((matchPct*0.7)+(ind.demand*0.2)+(Math.min(100,ind.growth*4)*0.1));
+
+// Fit tier
+let tier='low';let tierText='';
+if(fitScore>=70){tier='good';tierText='Strong Fit — You can start applying TODAY';}
+else if(fitScore>=45){tier='mid';tierText='Promising — Learn 2–3 key skills to unlock interviews';}
+else{tier='low';tierText='Early Stage — Complete the roadmap below to become job-ready';}
+
+// Build course list — only for MISSING skills (priority)
+const courseList=missing.map(s=>{
+const courses=COURSE_DB[s]||[{name:`${s} Essentials`,provider:'Udemy / Coursera',duration:'Self-paced',cost:'Free–₹500',level:'Beginner'}];
+const demand=SKILL_DEMAND[s]?.demand||60;
+const impact=SKILL_DEMAND[s]?.impact||40000;
+return{s,courses,demand,impact};
+}).sort((a,b)=>b.demand-a.demand);
+
+// Jobs you can target now vs. after learning
+const jobs=JOB_DB[industryName]||[];
+const readyJobs=jobs.filter(j=>j.skills.every(s=>hasSkill(s,userSkills)));
+const soonJobs=jobs.filter(j=>!j.skills.every(s=>hasSkill(s,userSkills)));
+
+// 90-day plan
+const topMissing=courseList.slice(0,3).map(c=>c.s);
+const plan=[
+{week:'W1',title:`Start ${topMissing[0]||'Foundation'} course`,desc:topMissing[0]?`Enroll in the recommended course and complete the first 2 modules of ${topMissing[0]}.`:'Review your fundamentals and set weekly goals.'},
+{week:'W2',title:`Complete ${topMissing[0]||'Module'} + start ${topMissing[1]||'Practice'}`,desc:topMissing[1]?`Finish ${topMissing[0]} course. Begin ${topMissing[1]} on parallel tracks.`:'Build a portfolio project demonstrating current skills.'},
+{week:'W3',title:`${topMissing[2]||'Apply'} + Portfolio`,desc:topMissing[2]?`Complete ${topMissing[1]}. Start ${topMissing[2]}. Publish a mini-project on GitHub.`:'Polish your resume on Resume Intelligence and prepare for applications.'},
+{week:'W4',title:'Apply + Prepare',desc:`Apply to ${readyJobs.length?readyJobs[0].title:'entry-level roles'} in ${ind.topCities.slice(0,2).join(' & ')}. Practice 10 mock questions.`}
+];
+
+document.getElementById('drillPanel').innerHTML=`
+<div class="drill-header ${ind.trend}">
+<div class="drill-header-content">
+<div class="drill-title-block">
+<h2>${ind.icon} ${industryName}</h2>
+<p>Personalized analysis · Real skills matched · Course & job recommendations from your profile</p>
+</div>
+<button class="drill-close" onclick="closeDrill()"><i class="fas fa-times"></i></button>
+</div>
+</div>
+
+<div class="drill-stats">
+<div class="drill-stat"><div class="drill-stat-label">Your Fit</div><div class="drill-stat-value" style="color:#4338ca;">${fitScore}%</div></div>
+<div class="drill-stat"><div class="drill-stat-label">Skills You Have</div><div class="drill-stat-value" style="color:#059669;">${matched.length}/${ind.skills.length}</div></div>
+<div class="drill-stat"><div class="drill-stat-label">Demand Index</div><div class="drill-stat-value" style="color:#dc2626;">${ind.demand}/100</div></div>
+<div class="drill-stat"><div class="drill-stat-label">Avg Salary</div><div class="drill-stat-value">${fmtK(ind.avgSalary)}</div></div>
+</div>
+
+<div class="drill-body">
+
+<div class="drill-fit-banner ${tier}">
+<div class="drill-fit-circle">${fitScore}%</div>
+<div class="drill-fit-text">
+<h4>${tierText}</h4>
+<p>You match <strong>${matched.length}</strong> of <strong>${ind.skills.length}</strong> required skills. Industry grows at <strong>+${ind.growth}%</strong> annually with demand index <strong>${ind.demand}/100</strong>.</p>
+</div>
+</div>
+
+<div class="drill-section">
+<h3><i class="fas fa-graduation-cap"></i> 🎓 Courses You Should Take (Priority Order)</h3>
+${courseList.length?`<div class="drill-list">${courseList.slice(0,6).map((c,i)=>{
+const topCourse=c.courses[0];
+return `<div class="drill-item">
+<div class="drill-item-icon">${i+1}</div>
+<div class="drill-item-body">
+<h5>Learn "${c.s}"</h5>
+<p><strong>Recommended course:</strong> ${topCourse.name} <br>by ${topCourse.provider}</p>
+<div class="drill-item-meta">
+<span class="drill-meta-tag blue">⏱️ ${topCourse.duration}</span>
+<span class="drill-meta-tag green">💰 ${topCourse.cost}</span>
+<span class="drill-meta-tag amber">📊 ${topCourse.level}</span>
+<span class="drill-meta-tag purple">Demand ${c.demand}/100</span>
+<span class="drill-meta-tag green">+${fmtK(c.impact)} salary</span>
+</div>
+</div></div>`;
+}).join('')}</div>`:'<div class="drill-empty">🎉 You already have all required skills for this industry!</div>'}
+</div>
+
+<div class="drill-section">
+<h3><i class="fas fa-briefcase"></i> 💼 Jobs You Should Apply For</h3>
+${readyJobs.length?`<h4 style="font-size:12px;color:#059669;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">✅ Ready Now (${readyJobs.length} roles)</h4>
+<div class="drill-list" style="margin-bottom:18px;">${readyJobs.map(j=>`
+<div class="drill-job-card">
+<h5>${j.title}</h5>
+<div class="salary">${j.salary}</div>
+<div class="meta">
+<span>${j.exp}</span>
+${j.skills.map(s=>`<span>${s}</span>`).join('')}
+</div>
+</div>`).join('')}</div>`:''}
+<h4 style="font-size:12px;color:#d97706;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">📚 After Learning (${soonJobs.length} roles)</h4>
+<div class="drill-list">${soonJobs.slice(0,4).map(j=>`
+<div class="drill-job-card" style="border-left-color:#f59e0b;">
+<h5>${j.title}</h5>
+<div class="salary">${j.salary}</div>
+<div class="meta">
+<span>${j.exp}</span>
+${j.skills.map(s=>`<span>${s}</span>`).join('')}
+</div>
+</div>`).join('')}</div>
+</div>
+
+<div class="drill-section">
+<h3><i class="fas fa-road"></i> 📅 Your 4-Week Action Plan</h3>
+<div class="drill-list">
+${plan.map(p=>`<div class="drill-plan-step" data-week="${p.week}">
+<h5>${p.title}</h5>
+<p>${p.desc}</p>
+</div>`).join('')}
+</div>
+</div>
+
+<div class="drill-section">
+<h3><i class="fas fa-map-marker-alt"></i> 📍 Top Hiring Cities</h3>
+<div style="display:flex;flex-wrap:wrap;gap:8px;">
+${ind.topCities.map(c=>`<span class="drill-meta-tag purple" style="font-size:12px;padding:8px 14px;">📍 ${c}</span>`).join('')}
+</div>
+</div>
+
+<div class="drill-section">
+<h3><i class="fas fa-check-circle"></i> 🎯 Your Current Skills That Fit</h3>
+${matched.length?`<div style="display:flex;flex-wrap:wrap;gap:8px;">
+${matched.map(s=>`<span class="drill-meta-tag green" style="font-size:12px;padding:8px 14px;">✅ ${s}</span>`).join('')}
+</div>`:'<div class="drill-empty">No matching skills yet — add your skills in the Employment page.</div>'}
+</div>
+
+</div>
+`;
+
+document.getElementById('drillModal').classList.add('active');
+document.body.style.overflow='hidden';
+}
+
+function closeDrill(){
+document.getElementById('drillModal').classList.remove('active');
+document.body.style.overflow='';
+}
+
+/* Close modal on outside click */
+document.addEventListener('click',function(e){
+if(e.target.id==='drillModal')closeDrill();
+});
+
+/* ============ EXPORT ============ */
+function exportIndustryReport(){
+const fits=computeIndustryFit();
+const userSkills=getUserSkills();
+const top=fits[0];
+const txt=`SKILLBRIDGE · INDUSTRY DEMAND INTELLIGENCE REPORT
+Generated: ${new Date().toLocaleString()}
+Trainee: ${_traineeData?.fullName}
+Trade: ${_traineeData?.skillTrade}
+
+YOUR SKILLS (${userSkills.length}):
+${userSkills.map(s=>'  ✓ '+s).join('\n')}
+
+TOP INDUSTRY FITS:
+${fits.slice(0,8).map((f,i)=>`  ${i+1}. ${f.name}: ${f.fitScore}% | ${f.matched.length}/${f.skills.length} skills | Avg ₹${(f.avgSalary/1000).toFixed(0)}K`).join('\n')}
+
+BEST INDUSTRY: ${top?.name} (${top?.fitScore}%)
+
+RECOMMENDED COURSES FOR ${top?.name}:
+${top?.missing.map(s=>{const c=COURSE_DB[s]?.[0];return c?`  • ${s} → ${c.name} (${c.provider}, ${c.duration}, ${c.cost})`:`  • ${s}`;}).join('\n')}
+
+TOP HIRING CITIES: ${top?.topCities.join(', ')}
+`;
+const b=new Blob([txt],{type:'text/plain'});const u=document.createElement('a');u.href=URL.createObjectURL(b);u.download=`industry-demand-${Date.now()}.txt`;u.click();
+showToast('📄 Report downloaded!');
+}
+
+/* ============ UI ============ */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+function showToast(msg){const t=document.createElement('div');t.className='toast';t.innerHTML=`<i class="fas fa-check-circle" style="color:#22c55e;"></i> ${msg}`;document.body.appendChild(t);setTimeout(()=>t.remove(),2800);}
+async function logout(){if(!confirm('Logout?'))return;try{localStorage.clear();await auth.signOut();}catch(e){}window.location.href='../auth/login.html?role=trainee';}
+function toggleTheme(){const h=document.documentElement;const n=(h.getAttribute('data-theme')||'light')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('skillintel-theme',n);}catch(e){}const i=document.querySelector('.theme-toggle i');if(i)i.className=n==='dark'?'fas fa-sun':'fas fa-moon';}
+
+document.querySelectorAll('.align-tab').forEach(t=>t.addEventListener('click',()=>{
+document.querySelectorAll('.align-tab').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+t.classList.add('active');document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+}));
+
+/* ESC key closes drill */
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrill();});
+
+/* ============ INIT ============ */
+document.addEventListener('DOMContentLoaded',async function(){
+try{const s=localStorage.getItem('skillintel-theme')||'light';document.documentElement.setAttribute('data-theme',s);const i=document.querySelector('.theme-toggle i');if(i)i.className=s==='dark'?'fas fa-sun':'fas fa-moon';}catch(e){}
+try{
+await requireAuth();
+const data=await loadAllData();
+if(!data){showToast('⚠️ No profile found');return;}
+renderUserInfo();
+const fits=computeIndustryFit();
+renderHero(fits);renderStats(fits);renderFitRing(fits);renderTopIndustries(fits);
+renderIndustryHeatmap(fits);renderSkillDemand();renderSalaryTable(fits);
+renderGeo(fits);renderTrends(fits);renderSignals();renderCompare(fits);renderPersonalSkills(fits);
+console.log('✅ Industry analysis complete. Best:',fits[0]?.name,fits[0]?.fitScore+'%');
+}catch(e){console.warn('Init:',e);}
+document.addEventListener('click',function(ev){const sb=document.getElementById('sidebar');const tg=document.querySelector('.menu-toggle');if(window.innerWidth<=768&&sb.classList.contains('open')){if(!sb.contains(ev.target)&&ev.target!==tg&&!tg.contains(ev.target))sb.classList.remove('open');}});
+});
+</script>
+<script src="../js/script.js"></script>
+</body>
+</html>

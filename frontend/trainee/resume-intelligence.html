@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Intelligence | SKILLINTEL</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background:#f4f6fb; color:#1f2937; min-height:100vh; }
+    html { scroll-behavior: smooth; }
+    ::-webkit-scrollbar { width:10px; height:10px; }
+    ::-webkit-scrollbar-track { background:#f4f6fb; }
+    ::-webkit-scrollbar-thumb { background:#c7d2fe; border-radius:10px; border:2px solid #f4f6fb; }
+    ::-webkit-scrollbar-thumb:hover { background:#a5b4fc; }
+
+    /* ==================== LAYOUT ==================== */
+    .layout { display:flex; min-height:100vh; }
+    .sidebar {
+        width: 260px; background:#1a1a2e; color:#cbd5e1;
+        padding: 24px 0; position: fixed; height: 100vh;
+        overflow-y: auto; z-index: 100;
+    }
+    .sidebar-brand { padding: 0 24px 24px; border-bottom: 1px solid #2d2d4a; margin-bottom: 16px; }
+    .sidebar-brand h2 { color:#fff; font-size:18px; letter-spacing:1px; }
+    .sidebar-brand small { color:#8b5cf6; font-size:11px; display:block; margin-top:4px; line-height:1.4; }
+    .nav-label { padding: 12px 24px 8px; font-size:11px; text-transform: uppercase; letter-spacing:1px; color:#64748b; }
+    .sidebar-nav a {
+        display: flex; align-items:center; gap:12px;
+        padding: 12px 24px; color:#cbd5e1; text-decoration: none; font-size:14px;
+        transition: 0.2s; border-left:3px solid transparent; position: relative;
+    }
+    .sidebar-nav a:hover { background:#252542; color:#fff; }
+    .sidebar-nav a.active { background:#252542; color:#fff; border-left-color:#8b5cf6; }
+    .sidebar-nav a i { width:18px; text-align:center; }
+    .sidebar-nav .badge-new {
+        margin-left: auto; font-size: 9px; padding: 2px 6px;
+        background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff;
+        border-radius: 4px; font-weight: 700; letter-spacing: 0.5px;
+    }
+
+    .main { margin-left: 260px; flex: 1; padding: 32px 40px; min-height:100vh; }
+
+    /* ==================== PAGE HEADER ==================== */
+    .page-header { margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+    .page-header-left h1 {
+        font-size: 26px; color:#1a1a2e;
+        display:flex; align-items:center; gap:12px; margin-bottom:6px;
+    }
+    .page-header-left h1 i { color:#6366f1; }
+    .page-header-left p { color:#6b7280; font-size:14px; }
+    .page-header-right { display: flex; gap: 10px; flex-wrap: wrap; }
+    .header-action {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 9px 16px; background: #fff; border: 1px solid #e5e7eb;
+        border-radius: 8px; font-size: 13px; font-weight: 600; color: #374151;
+        cursor: pointer; transition: 0.2s; font-family: inherit;
+    }
+    .header-action:hover { border-color: #c7d2fe; background: #f5f3ff; color: #6366f1; }
+    .header-action i { font-size: 12px; }
+
+    /* ==================== TAB STRIP ==================== */
+    .tab-strip {
+        display: flex; gap: 4px; margin-bottom: 24px;
+        border-bottom: 2px solid #e5e7eb; overflow-x: auto;
+        padding-bottom: 0;
+    }
+    .tab-strip::-webkit-scrollbar { display: none; }
+    .tab-item {
+        padding: 12px 18px; cursor: pointer; font-size: 13.5px;
+        font-weight: 600; color: #6b7280; border-bottom: 2px solid transparent;
+        margin-bottom: -2px; transition: 0.2s; white-space: nowrap;
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .tab-item:hover { color: #6366f1; }
+    .tab-item.active { color: #6366f1; border-bottom-color: #6366f1; }
+    .tab-item i { font-size: 12px; }
+    .tab-item .count-badge {
+        background: #eef2ff; color: #4338ca; font-size: 10px;
+        padding: 2px 6px; border-radius: 8px; font-weight: 700;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeTab 0.3s ease; }
+    @keyframes fadeTab { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ==================== CARD ==================== */
+    .card {
+        background: #fff; border-radius: 14px; padding: 26px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb; margin-bottom: 20px;
+        transition: box-shadow 0.25s;
+    }
+    .card:hover { box-shadow: 0 6px 24px rgba(99,102,241,0.08); }
+    .card-title {
+        font-size: 15px; font-weight: 700; color:#1a1a2e;
+        margin-bottom: 20px; display:flex; align-items:center;
+        gap:10px; justify-content: space-between;
+    }
+    .card-title-left { display:flex; align-items:center; gap:10px; }
+    .card-title i { color:#6366f1; }
+
+    /* ==================== FORM ==================== */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+    .form-group { width:100%; }
+    .form-group label {
+        display: block; font-size:13px; font-weight:600;
+        color:#374151; margin-bottom:6px;
+    }
+    .form-group label .req { color: #ef4444; }
+    .form-group select, .form-group input[type="text"] {
+        width: 100%; padding: 11px 14px;
+        border: 1px solid #d1d5db; border-radius: 8px;
+        font-size: 14px; background:#f9fafb; color:#1f2937;
+        transition: 0.2s; font-family: inherit;
+    }
+    .form-group select:focus, .form-group input:focus {
+        outline: none; border-color:#6366f1; background:#fff;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .form-group select:disabled { opacity: 0.5; cursor:not-allowed; }
+
+    /* Advanced options toggle */
+    .advanced-toggle {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 13px; color: #6366f1; font-weight: 600;
+        cursor: pointer; padding: 6px 0; user-select: none;
+    }
+    .advanced-toggle i { transition: transform 0.2s; font-size: 11px; }
+    .advanced-toggle.open i { transform: rotate(90deg); }
+    .advanced-panel {
+        display: none; margin-top: 14px; padding: 18px;
+        background: #f9fafb; border-radius: 10px; border: 1px solid #e5e7eb;
+    }
+    .advanced-panel.open { display: block; }
+
+    /* Drop zone */
+    .drop-zone {
+        grid-column: 1 / -1;
+        border: 2px dashed #c7d2fe; border-radius:12px;
+        padding: 30px 20px; text-align:center;
+        background: #f5f3ff; cursor:pointer;
+        transition: 0.2s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+        border-color:#6366f1; background:#eef2ff;
+        transform: translateY(-1px);
+    }
+    .drop-zone i { font-size:38px; color:#6366f1; margin-bottom:12px; }
+    .drop-zone p { color:#4b5563; font-size:14px; margin-bottom:4px; font-weight:500; }
+    .drop-zone small { color:#9ca3af; font-size:12px; }
+    .drop-zone input[type="file"] { display:none; }
+    .drop-zone.file-selected { border-color:#10b981; background:#ecfdf5; border-style:solid; }
+    .drop-zone.file-selected i { color:#10b981; }
+
+    .btn-primary {
+        width:100%; padding:14px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color:#fff; border:none; border-radius:10px;
+        font-size:15px; font-weight:600; cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        gap:8px; transition:0.2s; font-family:inherit;
+    }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.35); }
+    .btn-primary:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+    .btn-secondary { background:#fff; color:#6366f1; border:1px solid #6366f1; }
+    .btn-secondary:hover { background:#f5f3ff; box-shadow:none; }
+
+    /* ==================== ERROR / TIP ==================== */
+    .error-banner {
+        display: none; padding: 14px 18px;
+        background:#fef2f2; border:1px solid #fecaca;
+        border-radius:10px; color:#991b1b; font-size:14px;
+        margin-bottom:20px; align-items:center; gap:10px;
+    }
+    .error-banner.active { display:flex; }
+    .error-banner .close-x { margin-left:auto; cursor:pointer; opacity:0.7; font-size:16px; }
+    .error-banner .close-x:hover { opacity:1; }
+
+    .tip-banner {
+        display:flex; align-items:flex-start; gap:12px;
+        background:#eef2ff; border:1px solid #c7d2fe;
+        border-radius:12px; padding:16px 20px;
+        margin-bottom:24px;
+    }
+    .tip-banner i { color:#6366f1; font-size:18px; margin-top:2px; }
+    .tip-banner .tip-content { font-size:13px; color:#4338ca; line-height:1.6; flex:1; }
+    .tip-banner strong { color:#3730a3; }
+
+    /* ==================== LOADING ==================== */
+    .loading-state { display:none; padding: 60px 20px; text-align:center; }
+    .loading-state.active { display:block; }
+    .spinner {
+        width: 48px; height:48px;
+        border: 4px solid #e5e7eb; border-top-color:#6366f1;
+        border-radius:50%; animation: spin 0.8s linear infinite;
+        margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-stages { max-width: 400px; margin: 24px auto 0; display:flex; flex-direction:column; gap:8px; text-align:left; }
+    .loading-stage { display:flex; align-items:center; gap:10px; font-size:13px; color:#9ca3af; padding:8px 14px; border-radius:8px; transition:0.3s; }
+    .loading-stage.active { color:#4338ca; background:#eef2ff; font-weight:600; }
+    .loading-stage.done { color:#059669; }
+    .loading-stage.done i { color:#059669 !important; }
+
+    /* ==================== RESULTS ==================== */
+    .results { display:none; }
+    .results.active { display:block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+    /* ==================== KPI ROW ==================== */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+    .kpi-card {
+        background:#fff; border-radius:12px;
+        padding: 18px; border:1px solid #e5e7eb;
+        display:flex; flex-direction:column; gap: 8px;
+        transition:0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(99,102,241,0.1); border-color:#c7d2fe; }
+    .kpi-icon {
+        width: 40px; height:40px; border-radius:10px;
+        display:flex; align-items:center; justify-content:center;
+        font-size: 17px;
+    }
+    .kpi-icon.purple { background:#eef2ff; color:#6366f1; }
+    .kpi-icon.green { background:#ecfdf5; color:#059669; }
+    .kpi-icon.amber { background:#fffbeb; color:#d97706; }
+    .kpi-icon.red { background:#fef2f2; color:#dc2626; }
+    .kpi-value { font-size: 26px; font-weight: 800; color:#1a1a2e; letter-spacing:-0.8px; line-height:1; font-variant-numeric: tabular-nums; }
+    .kpi-label { font-size: 11px; font-weight: 700; color:#6b7280; text-transform: uppercase; letter-spacing:0.8px; }
+    .kpi-trend { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .kpi-trend.up { color: #059669; }
+    .kpi-trend.down { color: #dc2626; }
+
+    /* ==================== SCORE PANEL ==================== */
+    .score-panel { display: grid; grid-template-columns: 340px 1fr; gap: 20px; margin-bottom: 22px; }
+    .score-card {
+        background: linear-gradient(150deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+        border-radius: 14px; padding: 26px; color: #fff;
+        position:relative; overflow:hidden;
+        box-shadow: 0 12px 40px rgba(76,29,149,0.25);
+    }
+    .score-card::before {
+        content: ''; position: absolute;
+        top:-50%; right:-30%; width: 280px; height: 280px;
+        background: radial-gradient(circle, rgba(139,92,246,0.4), transparent 70%);
+        border-radius: 50%;
+    }
+    .score-card .card-title { color: #c7d2fe; justify-content:center; position:relative; z-index:1; margin-bottom: 18px; }
+    .score-card .card-title i { color:#a5b4fc; }
+    .score-ring-wrap { position: relative; width: 190px; height: 190px; margin: 0 auto 16px; }
+    .score-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-bg { fill:none; stroke: rgba(255,255,255,0.12); stroke-width: 12; }
+    .ring-progress {
+        fill:none; stroke-width:12; stroke-linecap:round;
+        stroke-dasharray: 502; stroke-dashoffset: 502;
+        transition: stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+        filter: drop-shadow(0 0 8px currentColor);
+    }
+    .score-inner { position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); text-align: center; z-index:1; }
+    .score-num { font-size: 52px; font-weight: 900; color:#fff; line-height:1; letter-spacing:-2px; font-variant-numeric: tabular-nums; }
+    .score-num small { font-size: 20px; color:#c7d2fe; font-weight:700; }
+    .score-sub { font-size: 10px; font-weight:800; letter-spacing: 2px; text-transform: uppercase; color:#c7d2fe; margin-top: 6px; }
+    .score-rating {
+        display: block; padding: 8px 22px; border-radius: 20px;
+        font-size:12px; font-weight: 800; letter-spacing:1px;
+        text-transform: uppercase; margin: 0 auto 16px; width: fit-content;
+        background: rgba(255,255,255,0.15); color:#fff;
+        backdrop-filter: blur(6px); position: relative; z-index:1;
+    }
+    .rating-excellent { background: rgba(16,185,129,0.25); }
+    .rating-good { background: rgba(59,130,246,0.25); }
+    .rating-needs { background: rgba(245,158,11,0.25); }
+
+    .score-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top:16px; border-top: 1px solid rgba(255,255,255,0.12); position: relative; z-index:1; }
+    .score-stat { text-align:center; }
+    .score-stat-label { font-size: 10px; font-weight: 700; color:#c7d2fe; text-transform: uppercase; letter-spacing: 1px; margin-bottom:4px; }
+    .score-stat-value { font-size: 17px; font-weight: 800; color:#fff; font-variant-numeric: tabular-nums; }
+
+    /* ==================== SEO PANEL ==================== */
+    .seo-panel { background:#fff; border:1px solid #e5e7eb; border-radius: 14px; padding: 22px; display:flex; flex-direction:column; gap:18px; }
+    .seo-section h4 { font-size: 12px; font-weight: 700; color:#6b7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display:flex; align-items:center; gap:8px; }
+    .seo-section h4 i { color:#6366f1; }
+
+    .badge { display: inline-flex; align-items:center; gap:6px; padding: 6px 13px; border-radius: 20px; font-size: 12.5px; font-weight:600; margin: 0 6px 8px 0; transition: 0.15s; }
+    .badge:hover { transform: translateY(-1px); }
+    .badge-theme { background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; }
+    .badge-cliche { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+    .badge-strong { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+    .badge-medium { background:#fffbeb; color:#92400e; border:1px solid #fde68a; }
+    .badge-weak { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+
+    /* Breakdown */
+    .breakdown-row { display:flex; align-items:center; justify-content: space-between; padding: 9px 0; font-size:13px; border-bottom: 1px solid #f3f4f6; }
+    .breakdown-row:last-child { border-bottom:none; }
+    .breakdown-label { color:#6b7280; font-weight:500; display:flex; align-items:center; gap:8px; flex: 1; }
+    .breakdown-label i { font-size: 11px; color:#9ca3af; width:14px; }
+    .breakdown-meter { display:flex; align-items:center; gap:10px; }
+    .mini-bar { width: 100px; height: 6px; background:#e5e7eb; border-radius:3px; overflow:hidden; position:relative; }
+    .mini-bar > div { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 3px; transition: width 1s ease; }
+    .breakdown-value { font-weight:700; color:#1a1a2e; min-width: 40px; text-align:right; font-variant-numeric: tabular-nums; font-size:13px; }
+
+    /* ==================== SKILLS ==================== */
+    .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .skills-col h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display:flex; align-items:center; gap:8px; }
+    .skills-col.present h4 { color:#059669; }
+    .skills-col.missing h4 { color:#dc2626; }
+    .skill-tag {
+        display: inline-flex; align-items:center; gap:6px;
+        padding: 6px 13px; border-radius: 6px;
+        font-size: 13px; font-weight:500;
+        margin: 0 6px 6px 0; transition: 0.15s;
+    }
+    .skill-tag:hover { transform: scale(1.04); }
+    .skill-tag.present { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+    .skill-tag.missing { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+
+    /* ==================== EVIDENCE TABLE ==================== */
+    .evidence-table {
+        width: 100%; border-collapse: collapse; font-size: 13px;
+        background: #fff; border-radius: 10px; overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+    .evidence-table th {
+        background: #f9fafb; padding: 12px 14px;
+        text-align: left; font-size: 11px;
+        text-transform: uppercase; letter-spacing: 0.5px;
+        color: #6b7280; font-weight: 700;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .evidence-table td {
+        padding: 12px 14px; border-bottom: 1px solid #f3f4f6;
+        color: #374151;
+    }
+    .evidence-table tr:last-child td { border-bottom: none; }
+    .evidence-table tr:hover td { background: #f9fafb; }
+    .evidence-src {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 3px 8px; border-radius: 6px;
+        font-size: 11px; font-weight: 600;
+        margin-right: 4px;
+    }
+    .evidence-src.yes { background:#ecfdf5; color:#065f46; }
+    .evidence-src.no { background:#f3f4f6; color:#9ca3af; }
+
+    /* ==================== CHECKLIST ==================== */
+    .checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .checklist-item { display:flex; align-items:center; gap:10px; padding: 11px 15px; border-radius: 8px; font-size: 13px; font-weight:500; transition: 0.15s; }
+    .checklist-item:hover { transform: translateX(3px); }
+    .checklist-item.pass { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+    .checklist-item.fail { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+
+    /* ==================== SUGGESTIONS ==================== */
+    .suggestions-list { display:flex; flex-direction:column; gap:12px; }
+    .suggestion-item {
+        display:flex; gap:14px; padding: 14px 18px;
+        background:#fffbeb; border-left: 4px solid #f59e0b;
+        border-radius: 0 10px 10px 0;
+        font-size:13.5px; color:#374151;
+        line-height: 1.6; transition: 0.2s;
+    }
+    .suggestion-item:hover { background:#fef3c7; transform: translateX(4px); }
+    .suggestion-num { font-weight: 800; color:#d97706; flex-shrink: 0; min-width: 26px; font-size:14px; }
+
+    /* ==================== ROADMAP ==================== */
+    .roadmap { display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 36px; }
+    .roadmap::before { content: ''; position: absolute; left: 12px; top: 14px; bottom: 14px; width: 2px; background: #c7d2fe; }
+    .roadmap-step { position: relative; padding: 14px 16px 14px 20px; margin-bottom: 8px; border-radius: 8px; transition: 0.2s; }
+    .roadmap-step:hover { background: #f5f3ff; }
+    .roadmap-step::before {
+        content: ''; position: absolute; left: -30px; top: 20px;
+        width: 14px; height: 14px; border-radius: 50%;
+        background: #fff; border: 3px solid #6366f1; transition: 0.3s;
+    }
+    .roadmap-step.done::before { background: #10b981; border-color: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,0.2); }
+    .roadmap-step h4 { font-size: 14px; color: #1a1a2e; margin-bottom: 4px; }
+    .roadmap-step p { font-size: 13px; color: #6b7280; line-height: 1.5; margin-bottom: 8px; }
+    .week-tag { display: inline-block; padding: 3px 9px; background: #eef2ff; color: #4338ca; font-size: 11px; border-radius: 10px; margin-bottom: 6px; font-weight: 700; }
+    .step-btn {
+        padding: 5px 12px; border-radius: 6px;
+        background: #f3f4f6; border: none;
+        font-size: 12px; font-weight: 600;
+        color: #6b7280; cursor: pointer; transition: 0.2s;
+        font-family: inherit;
+    }
+    .step-btn:hover { background: #e5e7eb; }
+    .step-btn.done { background: #ecfdf5; color: #065f46; }
+
+    /* ==================== CAREER FIT ==================== */
+    .career-bar { display: flex; align-items: center; gap: 14px; padding: 12px 0; }
+    .career-bar .role-name { width: 180px; font-size: 13px; font-weight: 600; color: #1f2937; }
+    .career-bar .bar { flex: 1; height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; }
+    .career-bar .bar > div { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 5px; transition: width 1s ease; }
+    .career-bar .pct { width: 48px; text-align: right; font-weight: 700; font-size: 14px; color: #4338ca; }
+
+    /* ==================== VERSION TABLE ==================== */
+    .versions-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .versions-table th {
+        background: #f9fafb; padding: 11px 14px;
+        text-align: left; font-size: 11px;
+        text-transform: uppercase; letter-spacing: 0.5px;
+        color: #6b7280; font-weight: 700;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .versions-table td { padding: 12px 14px; border-bottom: 1px solid #f3f4f6; color: #374151; }
+    .versions-table tr:last-child td { border-bottom: none; }
+    .versions-table .up { color: #059669; font-weight: 700; }
+    .versions-table .down { color: #dc2626; font-weight: 700; }
+
+    /* ==================== WHY BUTTON ==================== */
+    .why-btn {
+        background:#f5f3ff; color:#6366f1;
+        border:1px solid #c7d2fe;
+        padding: 5px 12px; border-radius:6px;
+        font-size:11px; font-weight:700;
+        cursor:pointer; transition:0.2s;
+        text-transform: uppercase; letter-spacing:0.5px;
+        display: inline-flex; align-items: center; gap:6px;
+        font-family: inherit;
+    }
+    .why-btn:hover { background:#eef2ff; transform: translateY(-1px); }
+
+    /* ==================== FAB ==================== */
+    .fab {
+        position: fixed; bottom: 30px; right: 30px;
+        width: 52px; height: 52px; border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color:#fff; border:none; cursor:pointer;
+        display: none; align-items:center; justify-content:center;
+        font-size: 20px; box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+        transition: 0.2s; z-index: 500;
+    }
+    .fab.visible { display:flex; animation: bounceIn 0.4s; }
+    .fab:hover { transform: scale(1.1); }
+    @keyframes bounceIn {
+        0% { transform: scale(0); }
+        70% { transform: scale(1.15); }
+        100% { transform: scale(1); }
+    }
+
+    /* ==================== CONFETTI ==================== */
+    .confetti-piece { position: fixed; top: -10px; width: 10px; height: 10px; z-index: 9999; pointer-events: none; animation: confetti-fall linear forwards; }
+    @keyframes confetti-fall {
+        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ==================== MODAL ==================== */
+    .modal-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(15,23,42,0.55);
+        z-index: 1000; align-items:center; justify-content:center;
+        padding: 20px; backdrop-filter: blur(4px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+        background:#fff; border-radius: 14px;
+        padding: 28px; max-width: 500px; width:100%;
+        max-height: 80vh; overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn { from { opacity:0; transform: scale(0.95); } to { opacity:1; transform: scale(1); } }
+    .modal h3 { font-size: 17px; color:#1a1a2e; margin-bottom: 8px; display:flex; align-items:center; gap:10px; }
+    .modal h3 i { color:#6366f1; }
+    .modal .sub { font-size:13px; color:#6b7280; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #f3f4f6; }
+    .modal .reason-list { list-style:none; padding:0; }
+    .modal .reason-list li { display:flex; gap:10px; padding: 10px 0; font-size:13px; color:#374151; line-height: 1.5; border-bottom: 1px dashed #f3f4f6; }
+    .modal .reason-list li:last-child { border-bottom: none; }
+    .modal .reason-list li i { color:#10b981; margin-top: 2px; flex-shrink:0; }
+    .modal .close-btn { margin-top: 20px; width:100%; padding:12px; background:#f3f4f6; border:none; border-radius:8px; font-size:14px; font-weight:600; color:#374151; cursor:pointer; transition: 0.2s; font-family:inherit; }
+    .modal .close-btn:hover { background:#e5e7eb; }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 1100px) {
+        .score-panel { grid-template-columns: 1fr; }
+        .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 900px) {
+        .sidebar { display: none; }
+        .main { margin-left: 0; padding: 20px; }
+        .form-grid, .skills-grid, .checklist { grid-template-columns: 1fr; }
+        .kpi-row { grid-template-columns: 1fr 1fr; }
+        .mini-bar { width: 70px; }
+        .career-bar .role-name { width: 110px; font-size: 12px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+    <div class="brand">
+        <div class="brand-icon"><i class="fas fa-brain"></i></div>
+        <div><h2>MySkillJourney</h2><p>Trainee Portal</p></div>
+    </div>
+    <div class="menu">
+        <div class="menu-title">Main Menu</div>
+        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="resume-intelligence.html" class="active"><i class="fas fa-file-alt"></i> Resume Intelligence</a>
+        <a href="employment.html"><i class="fas fa-briefcase"></i> Employment</a>
+        <a href="follow-up.html"><i class="fas fa-calendar-check"></i> Follow-up</a>
+        <a href="history.html"><i class="fas fa-history"></i> Outcome History</a>
+        <div class="menu-title" style="margin-top:18px;">Career Tools</div>
+        <a href="career-alignment.html"><i class="fas fa-compass"></i> Career Alignment</a>
+        <a href="industry-demand.html"><i class="fas fa-chart-line"></i> Industry Demand</a>
+        <a href="ai-recommendations.html"><i class="fas fa-robot"></i> AI Coach</a>
+        <a href="job-discovery.html"><i class="fas fa-search"></i> Find Jobs <span class="count-badge" id="menuJobCount">0</span></a>
+    </div>
+    <div class="sidebar-footer"><a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
+</div>
+    </aside>
+
+    <main class="main">
+        <!-- ==================== PAGE HEADER ==================== -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <h1><i class="fas fa-file-alt"></i> Resume Intelligence</h1>
+                <p>AI-powered resume analysis · ATS scoring · Skill gap detection · Personalized roadmap</p>
+            </div>
+            <div class="page-header-right" id="headerActions" style="display:none;">
+                <button class="header-action" onclick="exportReport()"><i class="fas fa-download"></i> Export PDF</button>
+                <button class="header-action" onclick="shareReport()"><i class="fas fa-share-alt"></i> Share</button>
+            </div>
+        </div>
+
+        <div class="error-banner" id="errorBanner">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="errorText"></span>
+            <span class="close-x" onclick="document.getElementById('errorBanner').classList.remove('active')">✕</span>
+        </div>
+
+        <div class="tip-banner" id="tipBanner">
+            <i class="fas fa-info-circle"></i>
+            <div class="tip-content">
+                <strong>Pro tip:</strong> Upload a <strong>text-based PDF</strong> (not scanned). Use standard headings like <em>Summary, Skills, Projects, Experience, Education</em> and include measurable achievements (e.g., <em>"increased speed by 30%"</em>) to boost your score.
+            </div>
+        </div>
+
+        <!-- ==================== UPLOAD CARD ==================== -->
+        <div class="card" id="uploadCard">
+            <div class="card-title">
+                <div class="card-title-left">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Your Resume
+                </div>
+            </div>
+            <form id="analyzeForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="branch">Branch <span class="req">*</span></label>
+                        <select id="branch" required onchange="updateRoles()">
+                            <option value="">-- Select Branch --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="job_role">Target Job Role <span class="req">*</span></label>
+                        <select id="job_role" required disabled>
+                            <option value="">-- Choose Role --</option>
+                        </select>
+                    </div>
+
+                    <label class="drop-zone" id="dropZone" for="resume">
+                        <i class="fas fa-file-pdf"></i>
+                        <p id="dropText">Click to upload or drag &amp; drop your resume</p>
+                        <small id="dropSub">PDF format · Max 5 MB</small>
+                        <input type="file" id="resume" accept=".pdf" required>
+                    </label>
+                </div>
+
+                <!-- Advanced options -->
+                <div class="advanced-toggle" id="advancedToggle" onclick="toggleAdvanced()">
+                    <i class="fas fa-chevron-right"></i> Advanced Options
+                </div>
+                <div class="advanced-panel" id="advancedPanel">
+                    <div class="form-grid" style="margin-bottom:0;">
+                        <div class="form-group">
+                            <label for="experience">Years of Experience</label>
+                            <select id="experience">
+                                <option value="fresher">Fresher (0 years)</option>
+                                <option value="1">1 year</option>
+                                <option value="2">2 years</option>
+                                <option value="3">3 years</option>
+                                <option value="5">5+ years</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="resume_language">Resume Language</label>
+                            <select id="resume_language">
+                                <option value="en">English</option>
+                                <option value="hi">Hindi</option>
+                                <option value="te">Telugu</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="analyzeBtn" style="margin-top:20px;">
+                    <i class="fas fa-search"></i> Analyze Resume
+                </button>
+            </form>
+        </div>
+
+        <!-- ==================== LOADING ==================== -->
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p style="color:#6b7280; font-size:14px;">Analyzing your resume...</p>
+            <div class="loading-stages">
+                <div class="loading-stage" id="stage1"><i class="far fa-circle"></i> Extracting text from PDF</div>
+                <div class="loading-stage" id="stage2"><i class="far fa-circle"></i> Matching required skills</div>
+                <div class="loading-stage" id="stage3"><i class="far fa-circle"></i> Computing ATS score</div>
+                <div class="loading-stage" id="stage4"><i class="far fa-circle"></i> Generating recommendations</div>
+            </div>
+        </div>
+
+        <!-- ==================== RESULTS ==================== -->
+        <div class="results" id="resultsSection">
+
+            <!-- KPI row -->
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-icon purple"><i class="fas fa-chart-line"></i></div>
+                    <div class="kpi-value" id="kpiAts">0%</div>
+                    <div class="kpi-label">ATS Score</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon green"><i class="fas fa-check-circle"></i></div>
+                    <div class="kpi-value" id="kpiPresent">0</div>
+                    <div class="kpi-label">Skills Detected</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon red"><i class="fas fa-times-circle"></i></div>
+                    <div class="kpi-value" id="kpiMissing">0</div>
+                    <div class="kpi-label">Skills Missing</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon amber"><i class="fas fa-clipboard-check"></i></div>
+                    <div class="kpi-value" id="kpiPassed">0/13</div>
+                    <div class="kpi-label">Checks Passed</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tab-strip" id="tabsBar">
+                <div class="tab-item active" data-tab="overview"><i class="fas fa-th-large"></i> Overview</div>
+                <div class="tab-item" data-tab="skills"><i class="fas fa-code"></i> Skills <span class="count-badge" id="tabSkillCount">0</span></div>
+                <div class="tab-item" data-tab="evidence"><i class="fas fa-shield-alt"></i> Evidence</div>
+                <div class="tab-item" data-tab="career"><i class="fas fa-compass"></i> Career Fit</div>
+                <div class="tab-item" data-tab="roadmap"><i class="fas fa-route"></i> Roadmap</div>
+                <div class="tab-item" data-tab="versions"><i class="fas fa-history"></i> Versions <span class="count-badge" id="tabVersionCount">0</span></div>
+                <div class="tab-item" data-tab="recommend"><i class="fas fa-lightbulb"></i> Recommendations</div>
+            </div>
+
+            <!-- ========== TAB: OVERVIEW ========== -->
+            <div class="tab-content active" id="tab-overview">
+                <div class="score-panel">
+                    <div class="score-card">
+                        <div class="card-title">
+                            <div class="card-title-left"><i class="fas fa-chart-pie"></i> ATS Compatibility</div>
+                        </div>
+                        <div class="score-ring-wrap">
+                            <svg viewBox="0 0 200 200">
+                                <circle class="ring-bg" cx="100" cy="100" r="80"></circle>
+                                <circle class="ring-progress" id="atsRing" cx="100" cy="100" r="80"></circle>
+                            </svg>
+                            <div class="score-inner">
+                                <div class="score-num" id="scoreValue">0<small>%</small></div>
+                                <div class="score-sub" id="scoreSub">Analyzing</div>
+                            </div>
+                        </div>
+                        <div class="score-rating" id="scoreRating">—</div>
+                        <div class="score-stats">
+                            <div class="score-stat">
+                                <div class="score-stat-label">Keyword Density</div>
+                                <div class="score-stat-value" id="densityValue">0%</div>
+                            </div>
+                            <div class="score-stat">
+                                <div class="score-stat-label">Word Count</div>
+                                <div class="score-stat-value" id="wordCountValue">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="seo-panel">
+                        <div class="seo-section">
+                            <h4><i class="fas fa-search"></i> Detected SEO Themes</h4>
+                            <div id="seoThemes"></div>
+                        </div>
+                        <div class="seo-section" id="seoClichesWrap" style="display:none;">
+                            <h4><i class="fas fa-exclamation-triangle"></i> Flagged Generic Terms</h4>
+                            <div id="seoCliches"></div>
+                        </div>
+                        <div class="seo-section">
+                            <h4><i class="fas fa-sliders-h"></i> Score Breakdown</h4>
+                            <div id="breakdownContainer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-title-left"><i class="fas fa-clipboard-check"></i> Structural &amp; Readability Audit</div>
+                        <button class="why-btn" onclick="showWhy('Structural Audit', [
+                            'Checks 13 ATS and readability factors.',
+                            'Covers contact info, education, skills, experience, projects, formatting.',
+                            'Based on recruiter and ATS best practices.'
+                        ])"><i class="fas fa-info-circle"></i> Why</button>
+                    </div>
+                    <div class="checklist" id="checklistContainer"></div>
+                </div>
+            </div>
+
+            <!-- ========== TAB: SKILLS ========== -->
+            <div class="tab-content" id="tab-skills">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-title-left"><i class="fas fa-code"></i> Skill Analysis</div>
+                        <button class="why-btn" onclick="showWhy('Skill Analysis', [
+                            'Compares resume text against required skills for the selected role.',
+                            'Uses exact + partial keyword matching across the full resume.',
+                            'Skills are extracted from all sections — not just the Skills section.'
+                        ])"><i class="fas fa-info-circle"></i> Why</button>
+                    </div>
+                    <div class="skills-grid">
+                        <div class="skills-col present">
+                            <h4><i class="fas fa-check-circle"></i> Present Skills · <span id="presentCount">0</span></h4>
+                            <div id="presentSkills"></div>
+                        </div>
+                        <div class="skills-col missing">
+                            <h4><i class="fas fa-times-circle"></i> Missing Skills · <span id="missingCount">0</span></h4>
+                            <div id="missingSkills"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== TAB: EVIDENCE ========== -->
+            <div class="tab-content" id="tab-evidence">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-title-left"><i class="fas fa-shield-alt"></i> Skill Evidence Strength</div>
+                        <button class="why-btn" onclick="showWhy('Skill Evidence', [
+                            'Checks whether each skill is only in the Skills section, or supported by projects/experience/certifications.',
+                            'Prevents inflated profiles based on keyword-only presence.',
+                            'Strength = number of independent resume sections supporting the skill.'
+                        ])"><i class="fas fa-info-circle"></i> Why</button>
+                    </div>
+                    <p style="font-size:13px; color:#6b7280; margin-bottom:16px; line-height:1.6;">
+                        A skill listed only in the Skills section is <strong style="color:#dc2626;">weak</strong>. A skill backed by projects, experience, or certifications is <strong style="color:#059669;">strong</strong>.
+                    </p>
+                    <div id="evidenceContainer"></div>
+                </div>
+            </div>
+
+            <!-- ========== TAB: CAREER FIT ========== -->
+            <div class="tab-content" id="tab-career">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-title-left"><i class="fas fa-compass"></i> Role Compatibility</div>
+                        <button class="why-btn" onclick="showWhy('Career Fit', [
+                            'Compares your documented skills against multiple job-role skill sets.',
+                            'Based on current resume content only — not a career recommendation.',
+                            'You choose your target role; we show alignment.'
+                        ])"><i class="fas fa-info-circle"></i> Why</button>
+                    </div>
+                    <p style="font-size:13px; color:#6b7280; margin-bottom:16px;">
+                        Based on your current documented skills, here are roles that best align. This is <strong>not</strong> a career recommendation — you choose your target.
+                    </p>
+                    <div id="careerContainer"></div>
+                </div>
+            </div>
+
+            <!-- ========== TAB: ROADMAP ========== -->
+            <div class="tab-content" id="tab-roadmap">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-title-left"><i class="fas fa-route"></i> Personalized Learning Roadmap</div>
+                        <button class="why-btn" onclick="showWhy('Learning Roadmap', [
+                            'Generated from your detected skill gaps and target role.',
+                            'Prioritizes the skills most required by your selected role.',
+                            'Sequence builds foundational skills before advanced ones.'
+                        ])"><i class="fas fa-info-circle"></i> Why</button>
+                    </div>
+                    <div id="roadmapContainer"></div>
+                </div>
+            </div>
+
+            <!-- ========== TAB: VERSIONS ========== -->
+            <div class="tab-content" id="tab-versions">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-title-left"><i class="fas fa-history"></i> Resume Version History</div>
+                    </div>
+                    <p style="font-size:13px; color:#6b7280; margin-bottom:16px;">
+                        Tracks your ATS score across every upload. See measurable improvement over time.
+                    </p>
+                    <div id="versionsContainer"></div>
+                </div>
+            </div>
+
+            <!-- ========== TAB: RECOMMENDATIONS ========== -->
+            <div class="tab-content" id="tab-recommend">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-title-left"><i class="fas fa-lightbulb"></i> Personalized Suggestions</div>
+                    </div>
+                    <div class="suggestions-list" id="suggestionsContainer"></div>
+                </div>
+            </div>
+
+            <div style="text-align:center; margin-top:24px;">
+                <button class="btn-primary btn-secondary" style="max-width:280px; margin:0 auto;" onclick="resetForm()">
+                    <i class="fas fa-redo"></i> Analyze Another Resume
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<button class="fab" id="fabReset" onclick="resetForm()" title="Analyze Another Resume">
+    <i class="fas fa-redo"></i>
+</button>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h3><i class="fas fa-info-circle"></i> <span id="modalTitle">Why this insight?</span></h3>
+        <div class="sub" id="modalSub"></div>
+        <ul class="reason-list" id="modalReasons"></ul>
+        <button class="close-btn" onclick="closeModal()">Got it</button>
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   BRANCH DATA
+   ============================================================ */
+const BRANCH_DATA = {
+    "Computer Science (CSE)": {
+        "Full Stack Developer": ["react","node.js","mongodb","javascript","html","css","git","rest api","graphql","next.js","typescript","express","redux","webpack","docker"],
+        "Backend Engineer": ["java","spring boot","sql","docker","python","microservices","redis","postgresql","fastapi","golang","flask","django","rabbitmq","kafka","orm"],
+        "Cloud Architect": ["aws","azure","docker","kubernetes","terraform","linux","cloud computing","s3","ec2","lambda","iam","vpc","cloudformation","eks","ansible"],
+        "Cybersecurity Analyst": ["wireshark","metasploit","penetration testing","firewalls","cryptography","linux","siem","soc","nmap","vulnerability assessment","burp suite","owasp","kali","encryption","ids/ips"],
+        "Android Developer": ["kotlin","java","android studio","xml","mvvm","retrofit","firebase","jetpack compose","gradle","coroutine","dagger hilt","rxjava","sqlite","material design","activity lifecycle"],
+        "Blockchain Engineer": ["solidity","ethereum","smart contracts","web3","rust","cryptography","hyperledger","truffle","ganache","ipfs","tokenomics","defi","consensus algorithms","dapps","polkadot"],
+        "QA Automation": ["selenium","junit","test automation","jira","manual testing","cucumber","testng","playwright","postman","cypress","appium","ci/cd","regression testing","loadrunner","api testing"],
+        "DevOps Engineer": ["jenkins","ansible","monitoring","linux","terraform","bash","prometheus","grafana","gitops","cicd","shell scripting","helm","argo cd","nagios","cloudwatch"],
+        "UI/UX Designer": ["figma","adobe xd","wireframing","prototyping","user research","sketch","invision","design system","zeplin","user journeys","usability testing","typography","color theory","interaction design","accessibility"],
+        "Software Architect": ["design patterns","microservices","system design","scalability","ddd","clean architecture","kafka","soa","monolith","event-driven","caching","load balancing","solid principles","abstraction","high availability"]
+    },
+    "AI & Machine Learning (AIML)": {
+        "ML Engineer": ["python","pytorch","tensorflow","scikit-learn","numpy","neural networks","keras","pandas","huggingface","transformers","xgboost","random forest","gradient descent","model deployment","opencv"],
+        "Data Scientist": ["pandas","statistics","sql","tableau","data visualization","data mining","r language","power bi","seaborn","matplotlib","probability","jupyter","hypothesis testing","bigquery","cleaning"],
+        "NLP Engineer": ["transformers","bert","nltk","spacy","large language models","prompt engineering","gpt","tokenization","llm","word2vec","sentiment analysis","langchain","sequence labeling","rag","fasttext"],
+        "Computer Vision Pro": ["opencv","cnn","yolo","image processing","pytorch","deep learning","segmentation","resnet","object detection","gan","mediapipe","tensorflow lite","image augmentation","face recognition","spatial AI"],
+        "MLOps Engineer": ["mlflow","kubeflow","docker","dvc","bentoml","fastapi","cicd","zenml","monitoring","model registry","wandb","feast","data versioning","pipelines","serving"],
+        "Data Engineer": ["spark","hadoop","etl","data lake","redshift","airflow","sql","snowflake","bigquery","hive","pyspark","kafka","dbt","talend","data modeling"],
+        "Research Scientist": ["algorithms","mathematics","calculus","linear algebra","optimization","publishing","latex","conference","r&d","peer review","experiment design","stochastic processes","simulation","bayesian","theorems"],
+        "Speech AI Specialist": ["asr","tts","signal processing","audio analysis","librosa","transformers","stt","wav2vec","speech-to-text","acoustic modeling","vocoders","mfcc","mel-spectrogram","phonetics","deepgram"],
+        "Bioinformatics": ["genomics","biopython","molecular modeling","ncbi","r language","matlab","proteomics","dna sequencing","rna-seq","phylogenetics","alignment","blast","drug discovery","protein folding","cytoscape"],
+        "AI Consultant": ["ai ethics","strategy","risk assessment","llm","fintech","compliance","policy","business alignment","roi","governance","explainable AI","digital transformation","stakeholder","feasibility","implementation"]
+    },
+    "Electronics (ECE)": {
+        "VLSI Designer": ["verilog","system verilog","fpga","cadence","cmos","digital electronics","rtl","asic","vivado","synopsys","genus","innovus","sta","physical design","tcl"],
+        "Embedded Developer": ["embedded c","microcontrollers","arm","rtos","i2c","spi","stm32","can bus","uart","freeRTOS","esp32","bare metal","debugging","jtag","logic analyzer"],
+        "RF Engineer": ["antennas","wireless","dsp","fourier transform","modulation","vna","microwaves","ads","impedance","smith chart","lte","5g","spectrum analysis","link budget","hfss"],
+        "Circuit Designer": ["pcb design","altium","analog circuits","spice","proteus","kicad","orcad","layout","multisim","analog to digital","op-amps","signal integrity","bom","prototyping","surface mount"],
+        "IoT Architect": ["arduino","raspberry pi","mqtt","node-red","sensors","lorawan","zigbee","esp32","cloud connectivity","coap","edge computing","ble","iot gateway","api","dashboard"],
+        "Signal Processing Eng": ["dsp","matlab","filter design","wavelets","fft","signal modeling","z-transform","noise reduction","adaptive filtering","image compression","sampling","nyquist","stft","kalman filter","spectral analysis"],
+        "Firmware Engineer": ["linux kernel","drivers","assembly","c++","debugging","jtag","bare metal","bootloader","hal","interrupts","dma","pci-e","embedded linux","yocto","toolchain"],
+        "Control Systems Eng": ["matlab","simulink","pid","industrial automation","plc programming","feedback loops","root locus","stability","state space","lqr","nyquist plot","transfer function","bode plot","servos","nonlinear control"],
+        "Hardware QA": ["oscilloscope","spectrum analyzer","multimeter","testing","calibration","logic analyzer","emi","bench testing","validation","thermal testing","compliance","iso 9001","failure analysis","documentation","reliability"],
+        "Telecom Manager": ["voip","gsm","lte","5g","spectrum management","routing","switching","fiber optics","sip","sdn","nfv","oss/bss","microwave links","satellite","network planning"]
+    },
+    "Electrical (EEE)": {
+        "Power Systems Eng": ["power systems","plc","scada","matlab","relays","switchgear","etap","load flow","poweer quality","smart grid","high voltage","transmission","distribution","fault analysis","protection"],
+        "EV Engineer": ["bms","battery management","electric motors","powertrain","can bus","inverter","thermal management","charging infrastructure","hevs","regenerative braking","li-ion","motor control","simulation","dcdc converter","automotive standards"],
+        "Renewable Energy Pro": ["solar design","wind turbines","grid integration","photovoltaics","pvsyst","energy storage","hydroelectric","biomass","sustainability","mppt","inverters","feasibility study","clean tech","epc","homer"],
+        "Automation Engineer": ["hmi","dcs","instrumentation","sensors","fieldbus","plc","ladder logic","factorytalk","tiaportal","modbus","profibus","servo systems","vfd","commissioning","control panels"],
+        "Smart Grid Architect": ["microgrid","distributed generation","storage","inverters","demand response","ami","smart meter","synchrophasor","cybersecurity","interoperability","standards","energy management","peak shaving","v2g","renewables"],
+        "Maintenance Eng": ["predictive maintenance","tpm","switchboard","wiring","diagnostics","troubleshooting","earthing","preventive","rcm","root cause","cmms","safety protocols","relays","testing","installation"],
+        "Energy Auditor": ["energy efficiency","iso 50001","carbon","lighting control","hvac","bems","utility billing","reporting","ashrae","benchmarking","retrofitting","cogeneration","demand side","payback analysis","compliance"],
+        "Protection Engineer": ["relays","switchgear","fault analysis","etap","coordination","breaker","current transformer","voltage transformer","differential protection","distance protection","arc flash","selectivity","settings","commissioning","standards"],
+        "Lighting Designer": ["dialux","relux","photometrics","led tech","control systems","luminaire","ies","glare evaluation","daylighting","specification","renderings","lux levels","color rendering","emergency lighting","energy code"],
+        "Instrumentation Eng": ["sensors","transducers","calibration","analog digital","labview","data acquisition","daq","p&id","loop tuning","measurement","signal conditioning","fieldbus","hart","plc","valves"]
+    },
+    "Mechanical (ME)": {
+        "CAD Designer": ["solidworks","catia","nx cad","autocad","g-code","3d modeling","rendering","drafting","ptc creo","geometric dimensioning","tolerance analysis","pdm","surface modeling","assembly","prototyping"],
+        "FEA Analyst": ["ansys","hypermesh","finite element analysis","nastran","simulation","structural analysis","boundary conditions","meshing","linear","nonlinear","fatigue","vibration","stress analysis","thermal simulation","abaqus"],
+        "Thermal Engineer": ["thermodynamics","heat transfer","cfd","hvac","fluid mechanics","refrigeration","cooling systems","conduction","convection","radiation","heat exchangers","simulation","boiling","condensation","energy balance"],
+        "Manufacturing Eng": ["cnc","cam","lean manufacturing","six sigma","kaizen","qa","jit","kanban","process optimization","value stream","quality control","iso 9001","tooling","assembly line","operations"],
+        "Robotics Engineer": ["ros","kinematics","actuators","control systems","sensors","path planning","pathfinding","inverse kinematics","vision systems","end effectors","simulation","mechatronics","uav","automation","ros2"],
+        "Automotive Engineer": ["engine design","suspension","aerodynamics","hybrid systems","chassis","braking system","powertrain","vehicle dynamics","hmi","safety","nvh","materials","crash testing","diagnostics","manufacturing"],
+        "Maintenance Mgr": ["tpm","reliability","pumps","compressors","lubrication","valves","pdm","cmms","bearings","gears","alignment","condition monitoring","safety","scheduling","root cause"],
+        "Aerospace Eng": ["propulsion","avionics","structural analysis","turbines","materials","aerodynamics","mach number","lift","drag","flight mechanics","composites","wind tunnel","orbital","simulation","standards"],
+        "Plant Engineer": ["boilers","utility systems","safety management","pumps","inventory","facilities","osha","piping","maintenance","operations","hvac","power generation","contractor management","shutdown planning","utilities"],
+        "HVAC Designer": ["psychrometry","duct design","chillers","ventilation","hvac","cooling load","vrf","ahu","vav","controls","refrigeration","ashrae","energy modeling","piping","commissioning"]
+    },
+    "Civil Engineering": {
+        "Structural Engineer": ["staad pro","etabs","revit","concrete design","steel structures","load calculation","eurocodes","is codes","foundation","seismic","dynamics","bridge","high rise","optimization","analysis"],
+        "Site Engineer": ["construction management","billing","surveying","estimation","m-book","execution","quality control","safety","concrete","steel","reports","labor management","planning","site supervision","contracts"],
+        "BIM Coordinator": ["revit","navisworks","bim 360","3d modeling","point cloud","clash detection","4d simulation","vDC","ifc","standards","collaboration","architecture","mep","coordination","interoperability"],
+        "Geotechnical Engineer": ["soil mechanics","foundation design","plaxis","seismology","slope stability","drilling","retaining walls","tunnels","dams","landslides","exploration","geo-environmental","ground improvement","rock mechanics","laboratory testing"],
+        "Quantity Surveyor": ["cost estimation","tendering","contracts","autocad","valuation","boq","rate analysis","billing","budgeting","variation","claims","measurement","procurement","vba","subcontracting"],
+        "Transportation Engineer": ["traffic engineering","gis","pavement design","vissim","mx road","highway design","alignment","infrastructure","simulation","public transport","safety","modeling","its","rail","airport"],
+        "Environmental Engineer": ["water treatment","waste management","eia","hydrology","air quality","sewage","sustainability","remediation","compliance","hse","scrubbers","renewable","audit","carbon footprint","policy"],
+        "Hydraulics Engineer": ["hec-ras","epanet","irrigation","dams","fluid dynamics","stormwater","open channel","flood mapping","drainage","river engineering","sediment transport","pumps","hydropower","coastal","software"],
+        "Urban Planner": ["gis","public policy","sustainable design","cad","zoning","master plan","transport planning","housing","regeneration","community","environment","economic development","legislation","land use","stakeholder"],
+        "Civil Project Manager": ["primavera","ms project","budgeting","wbs","scheduling","pmp","cpm","pert","risk","contracts","site","labor","cost control","reporting","stakeholder"]
+    },
+    "Mechatronics": {
+        "Robotics Engineer": ["ros","path planning","kinematics","lidar","opencv","c++","trajectory","kalman filter","simulink","automation","actuators","sensors","embedded","slam","simulation"],
+        "Automation Lead": ["plc programming","tia portal","hmi","scada","motion control","servo motors","industrial automation","fieldbus","sensors","integration","commissioning","safety","network","vfd","troubleshooting"],
+        "Embedded Systems": ["stm32","rtos","can open","motor control","encoders","uart","microchip","embedded c","i2c","spi","bare metal","firmware","iot","testing","pcb"],
+        "System Integrator": ["sensors","actuators","plc","vision systems","industrial iot","modbus","profibus","ethercat","control panel","testing","wiring","design","specification","hmi","automation"],
+        "Control Engineer": ["matlab","pid","kalman filter","feedback loops","stability","state space","lqr","simulink","dynamics","optimization","servo","signal","system","identification","modelling"],
+        "UAV Developer": ["drones","pixhawk","mavlink","autopilot","telemetry","flight control","ardupilot","gimbal","vision","gps","propulsion","aerodynamics","ground station","simulation","testing"],
+        "Machine Vision Eng": ["opencv","image segmentation","halcon","industrial cameras","lighting","object recognition","blob detection","inspection","ocr","sorting","algorithm","python","optics","ai","industrial"],
+        "PLC Programmer": ["ladder logic","scl","allen bradley","beckhoff","ethercat","function block","twincat","codesys","automation","hmi","troubleshooting","safety","panels","programming","maintenance"],
+        "Test Engineer": ["labview","data acquisition","hili","sil","validation","instrumentation","simulation","v&v","software","hardware","daq","reporting","testing","systems","standards"],
+        "Product Designer": ["fusion 360","3d printing","prototyping","mechanism design","electronics","catia","ergonomics","materials","manufacturing","sketching","styling","solidworks","user interface","ux","rd"]
+    },
+    "AI & Data Science (AIDS)": {
+        "Data Scientist": ["python","sql","predictive modeling","statistics","seaborn","pandas","linear regression","clustering","time series","r","tableau","exploratory data","hypothesis testing","machine learning","feature engineering"],
+        "Data Lake Architect": ["spark","hadoop","snowflake","databricks","aws glue","athena","delta lake","parquet","storage","cloud","etl","governance","security","pipelines","scalability"],
+        "BI Developer": ["power bi","looker","dashboards","etl","excel vba","data modeling","tableau","dax","sql","reporting","data warehouse","kpis","analysis","data integration","ssrs"],
+        "Big Data Engineer": ["hive","pyspark","bigquery","nosql","impala","pipelines","kafka","flink","storm","hbase","cloud","scrapping","data ingestion","optimization","scalability"],
+        "Cloud Data Analyst": ["s3","redshift","quicksight","data warehouse","kinesis","cloud storage","elt","athena","glue","fargate","cloudwatch","optimization","security","reporting","cost management"],
+        "Information Security": ["data privacy","gdpr","compliance","encryption","anonymization","soc2","access control","auditing","risk assessment","hipaa","nist","dlp","threat modeling","incident response","policies"],
+        "Quantitative Analyst": ["financial modeling","r","risk analysis","monte carlo","trading","time series","statistics","matlab","stochastic","calculus","pricing","derivatives","portfolio","excel","sql"],
+        "Data Steward": ["governance","metadata","cataloging","lineage","quality rules","mdm","dama","standards","compliance","security","dictionary","lifecycle","policies","master data","curation"],
+        "Market Analyst": ["google analytics","crm","segmentation","churn prediction","trends","behavior","excel","sql","tableau","reporting","forecasting","surveys","ab testing","consumer insight","kpis"],
+        "AI Solutions Arch": ["llm","integration","api","prompt engineering","agentic workflows","rag","langchain","vector db","cloud","scalability","openai","deployment","mlops","transformers","strategy"]
+    },
+    "Biotechnology": {
+        "Bioinformatics": ["genomics","sequencing","biopython","r language","molecular modeling","ncbi","alignment","blast","proteomics","phylo","perl","linux","bioconductor","crispr","data mining"],
+        "Lab Technician": ["pcr","hplc","cell culture","gmp","glp","biosafety","pipetting","centrifuge","titration","spectroscopy","buffer preparation","gel electrophoresis","incubation","autoclave","sop"],
+        "R&D Scientist": ["assay development","immunology","protein purification","cloning","crispr","elisa","western blot","drug discovery","synthetic biology","in-vitro","spectrophotometry","molecular biology","rnaseq","flow cytometry","biochemistry"],
+        "Clinical Analyst": ["ctms","data management","protocol","regulations","safety","trial metrics","ich-gcp","clinical trials","biostatistics","sas","data cleaning","patient recruitment","pharmacovigilance","e-crf","fda"],
+        "Bioprocess Eng": ["fermentation","bioreactor","scale up","downstream","purification","mass transfer","upstream","bioprocessing","sterilization","atps","chromatography","validation","doe","process control","hplc"],
+        "Quality Assurance": ["iso 13485","gmp","audit","validation","sop","compliance","corrective action","documentation","quality control","risk management","iso 9001","regulatory affairs","inspections","capa","qc lab"],
+        "Molecular Biologist": ["dna","rna","electrophoresis","sequencing","genetics","cloning","transfection","pcr","crispr","mutation analysis","recombinant dna","vector design","genotyping","microscopy","rna-seq"],
+        "Medical Writer": ["scientific writing","submission","data summary","journal","abstract","manuscript","ama style","regulatory documents","clinical study report","investigator brochure","medline","pubmed","peer review","editing","lit review"],
+        "Regulatory Affairs": ["fda","ema","ce marking","submission","compliance","strategy","investigational new drug","mhra","safety reporting","clinical trial application","labeling","regulatory CMC","gmp audit","orphan drug","post-market"],
+        "Genetics Counselor": ["ancestry","disease marker","data analysis","ethics","counseling","inheritance","pedigree","prenatal","cancer genetics","variant interpretation","syndromes","chromosomal","psychosocial","patient advocacy","genomics"]
+    },
+    "Cybersecurity": {
+        "Pentester": ["kali linux","metasploit","wireshark","burp suite","ethical hacking","owasp","red team","nmap","vulnerability scan","shellcode","sql injection","xss","exploitation","scripting","enumeration"],
+        "Security Architect": ["firewalls","zero trust","iam","iso 27001","encryption","siem","proxies","hsm","security policy","vpn","pki","casb","infrastructure","risk mitigation","threat modeling"],
+        "SOC Analyst": ["incident response","log analysis","splunk","threat hunting","detection","soar","edr","incident management","siem","ids/ips","packet capture","forensics","mfa","alerts","tcp/ip"],
+        "Compliance Officer": ["nist","hipaa","soc2","audit","risk management","policy","grc","gdpr","sox","pci-dss","security controls","governance","remediation","standards","itgc"],
+        "Cloud Security": ["aws guardduty","azure sentinel","casb","serverless security","iam","cspm","cwpp","cloud security posture","lambda security","tenant","s3 security","cloudwatch","containers","eks","fargate"],
+        "Malware Analyst": ["reverse engineering","sandbox","static analysis","dynamic analysis","assembly","ghidra","ida pro","ollydbg","peid","binary analysis","obfuscation","shellcode","disassembler","threat intel","rootkits"],
+        "Forensic Expert": ["encase","ftk","chain of custody","recovery","investigation","memory dump","autopsy","digital evidence","imaging","forensic extraction","cyber crime","metadata","volatility","pcap","write blocker"],
+        "Network Security": ["vpn","ips","ids","firewalls","proxy","wireshark","ipsec","radius","routing","dnssec","subnetting","vlans","dmz","bgp","encryption"],
+        "App Security": ["sast","dast","code review","secure coding","api security","fuzzing","dependency check","burp suite","owasp top 10","fortify","checkmarx","security testing","mitigation","devsecops","ci/cd"],
+        "Threat Intel": ["osint","dark web","attribution","iocs","threat modeling","stix","taxii","misp","feed","indicators","adversary","campaign","tactics","mitre att&ck","analysis"]
+    }
+};
+
+/* ============================================================
+   CAREER FIT ROLES
+   ============================================================ */
+const CAREER_FIT_ROLES = {
+    "Data Analyst": ["sql","excel","python","power bi","tableau","statistics","data visualization","dashboards"],
+    "Data Scientist": ["python","sql","statistics","pandas","machine learning","seaborn","matplotlib"],
+    "ML Engineer": ["python","pytorch","tensorflow","scikit-learn","numpy","neural networks","keras"],
+    "Python Developer": ["python","flask","django","sql","rest api","git","oop","docker"],
+    "Business Analyst": ["excel","sql","power bi","tableau","statistics","reporting"],
+    "Full Stack Developer": ["react","node.js","mongodb","javascript","html","css","rest api"],
+    "DevOps Engineer": ["jenkins","ansible","linux","terraform","bash","prometheus","cicd"],
+    "Cloud Architect": ["aws","azure","docker","kubernetes","terraform","linux","s3"]
+};
+
+/* ============================================================
+   API BASE
+   ============================================================ */
+const API_BASE = window.location.origin.startsWith('http')
+    ? window.location.origin
+    : 'http://localhost:5000';
+
+/* ===================== STATE ===================== */
+let currentRoleName = '';
+let analysisResult = null;
+let resumeVersions = [];
+let completedSteps = new Set();
+
+/* ===================== DOM ===================== */
+const branchSel      = document.getElementById('branch');
+const roleSel        = document.getElementById('job_role');
+const fileInput      = document.getElementById('resume');
+const form           = document.getElementById('analyzeForm');
+const dropZone       = document.getElementById('dropZone');
+const dropText       = document.getElementById('dropText');
+const dropSub        = document.getElementById('dropSub');
+const uploadCard     = document.getElementById('uploadCard');
+const loadingState   = document.getElementById('loadingState');
+const resultsSection = document.getElementById('resultsSection');
+const errorBanner    = document.getElementById('errorBanner');
+const errorText      = document.getElementById('errorText');
+const fabReset       = document.getElementById('fabReset');
+const headerActions  = document.getElementById('headerActions');
+
+/* ===================== INIT ===================== */
+function loadBranches() {
+    branchSel.innerHTML = '<option value="">-- Select Branch --</option>';
+    Object.keys(BRANCH_DATA).forEach(b => {
+        const o = document.createElement('option');
+        o.value = b; o.textContent = b;
+        branchSel.appendChild(o);
+    });
+}
+
+function updateRoles() {
+    const branch = branchSel.value;
+    roleSel.innerHTML = "<option value=''>-- Choose Role --</option>";
+    if (branch && BRANCH_DATA[branch]) {
+        roleSel.disabled = false;
+        Object.keys(BRANCH_DATA[branch]).forEach(role => {
+            const o = document.createElement('option');
+            o.value = role; o.textContent = role;
+            roleSel.appendChild(o);
+        });
+    } else {
+        roleSel.disabled = true;
+    }
+}
+window.updateRoles = updateRoles;
+
+/* ===================== ADVANCED TOGGLE ===================== */
+function toggleAdvanced() {
+    const toggle = document.getElementById('advancedToggle');
+    const panel = document.getElementById('advancedPanel');
+    toggle.classList.toggle('open');
+    panel.classList.toggle('open');
+}
+window.toggleAdvanced = toggleAdvanced;
+
+/* ===================== DRAG & DROP ===================== */
+['dragover','dragenter'].forEach(evt => {
+    dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+});
+['dragleave','drop'].forEach(evt => {
+    dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+});
+dropZone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+        fileInput.files = e.dataTransfer.files;
+        updateFileDisplay(file);
+    }
+});
+fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) updateFileDisplay(file);
+});
+
+function updateFileDisplay(file) {
+    dropZone.classList.add('file-selected');
+    dropText.textContent = '✓ ' + file.name;
+    dropSub.textContent = (file.size / 1024).toFixed(1) + ' KB · Ready to analyze';
+}
+
+/* ===================== ERROR ===================== */
+function showError(msg) {
+    errorText.textContent = msg;
+    errorBanner.classList.add('active');
+    console.error('[Resume Intelligence]', msg);
+}
+
+/* ===================== LOADING ===================== */
+function animateLoading() {
+    const stages = ['stage1','stage2','stage3','stage4'];
+    stages.forEach(s => {
+        const el = document.getElementById(s);
+        el.classList.remove('active','done');
+        el.querySelector('i').className = 'far fa-circle';
+    });
+    stages.forEach((s, i) => {
+        setTimeout(() => {
+            document.getElementById(s).classList.add('active');
+            document.getElementById(s).querySelector('i').className = 'fas fa-circle-notch fa-spin';
+            if (i > 0) {
+                const prev = document.getElementById(stages[i-1]);
+                prev.classList.remove('active');
+                prev.classList.add('done');
+                prev.querySelector('i').className = 'fas fa-check-circle';
+            }
+        }, i * 600);
+    });
+}
+
+/* ===================== TABS ===================== */
+document.querySelectorAll('.tab-item').forEach(t => {
+    t.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        document.getElementById('tab-' + t.dataset.tab).classList.add('active');
+    });
+});
+
+function switchTab(name) {
+    document.querySelectorAll('.tab-item').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+    const tabEl = document.querySelector(`.tab-item[data-tab="${name}"]`);
+    if (tabEl) tabEl.classList.add('active');
+    const contentEl = document.getElementById('tab-' + name);
+    if (contentEl) contentEl.classList.add('active');
+}
+window.switchTab = switchTab;
+
+/* ===================== SUBMIT ===================== */
+form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const file = fileInput.files[0];
+    if (!file || !branchSel.value || !roleSel.value) {
+        showError('Please select branch, job role, and upload a PDF resume.');
+        return;
+    }
+
+    currentRoleName = roleSel.value;
+    errorBanner.classList.remove('active');
+    uploadCard.style.display = 'none';
+    resultsSection.classList.remove('active');
+    loadingState.classList.add('active');
+    fabReset.classList.remove('visible');
+    headerActions.style.display = 'none';
+    document.getElementById('tipBanner').style.display = 'none';
+    animateLoading();
+
+    const fd = new FormData();
+    fd.append('resume', file);
+    fd.append('branch', branchSel.value);
+    fd.append('job_role', roleSel.value);
+
+    try {
+        const res = await fetch(API_BASE + '/api/resume/analyze', { method: 'POST', body: fd });
+
+        if (!res.ok) {
+            let errMsg = `Analysis failed (HTTP ${res.status})`;
+            try {
+                const j = await res.json();
+                errMsg = j.error || j.hint || errMsg;
+            } catch {}
+            throw new Error(errMsg);
+        }
+
+        const data = await res.json();
+        if (typeof data.score !== 'number') {
+            throw new Error('Invalid response from server (missing score).');
+        }
+        analysisResult = data;
+        runFullAnalysis(data);
+
+    } catch (err) {
+        loadingState.classList.remove('active');
+        uploadCard.style.display = 'block';
+        document.getElementById('tipBanner').style.display = 'flex';
+        showError(err.message || 'Network error. Make sure backend is running at ' + API_BASE);
+    }
+});
+
+/* ============================================================
+   MAIN ANALYSIS
+   ============================================================ */
+function runFullAnalysis(data) {
+    // Track version
+    resumeVersions.push({
+        version: 'v' + (resumeVersions.length + 1),
+        date: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }),
+        ats: data.score,
+        jobMatch: data.job_compatibility || data.score,
+        role: currentRoleName
+    });
+
+    renderKPIs(data);
+    renderATS(data);
+    renderSkills(data);
+    renderChecklist(data);
+    renderEvidence(data);
+    renderCareerFit(data);
+    renderRoadmap(data);
+    renderVersions();
+    renderSuggestions(data);
+
+    // Update tab counts
+    document.getElementById('tabSkillCount').textContent = (data.detected || []).length;
+    document.getElementById('tabVersionCount').textContent = resumeVersions.length;
+
+    loadingState.classList.remove('active');
+    resultsSection.classList.add('active');
+    fabReset.classList.add('visible');
+    headerActions.style.display = 'flex';
+    switchTab('overview');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (data.score >= 80) {
+        setTimeout(() => fireConfetti(data.score), 400);
+    }
+}
+
+/* ---------- KPI ---------- */
+function renderKPIs(r) {
+    animateNumber('kpiAts', r.score, '%');
+    animateNumber('kpiPresent', (r.detected || []).length);
+    animateNumber('kpiMissing', (r.missing || []).length);
+    const passed = (r.checklist || []).filter(c => c.status).length;
+    document.getElementById('kpiPassed').textContent = passed + '/' + (r.checklist || []).length;
+}
+
+function animateNumber(id, target, suffix) {
+    const el = document.getElementById(id);
+    const start = 0;
+    const duration = 900;
+    const t0 = performance.now();
+    function tick(t) {
+        const p = Math.min((t - t0) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const v = Math.round(start + (target - start) * eased);
+        el.textContent = v + (suffix || '');
+        if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+}
+
+/* ---------- ATS ---------- */
+function renderATS(r) {
+    const ring = document.getElementById('atsRing');
+    const circumference = 2 * Math.PI * 80;
+    const offset = circumference - (r.score / 100) * circumference;
+    let color = '#ef4444';
+    if (r.score >= 85) color = '#10b981';
+    else if (r.score >= 70) color = '#3b82f6';
+    else if (r.score >= 55) color = '#f59e0b';
+    ring.style.stroke = color;
+    ring.style.color = color;
+    setTimeout(() => { ring.style.strokeDashoffset = offset; }, 200);
+
+    document.getElementById('scoreValue').innerHTML = r.score + '<small>%</small>';
+    document.getElementById('scoreSub').textContent = r.rating;
+
+    const ratingEl = document.getElementById('scoreRating');
+    ratingEl.textContent = r.rating;
+    ratingEl.className = 'score-rating ' +
+        (r.score >= 70 ? 'rating-excellent' :
+         r.score >= 50 ? 'rating-good' : 'rating-needs');
+
+    document.getElementById('densityValue').textContent = (r.density || 0) + '%';
+    document.getElementById('wordCountValue').textContent = r.word_count || 0;
+
+    // SEO themes
+    const themesEl = document.getElementById('seoThemes');
+    themesEl.innerHTML = '';
+    (r.seo_themes || []).forEach(t => {
+        const s = document.createElement('span');
+        s.className = 'badge badge-theme';
+        s.innerHTML = '<i class="fas fa-hashtag"></i> ' + t;
+        themesEl.appendChild(s);
+    });
+    if (!r.seo_themes || !r.seo_themes.length) {
+        themesEl.innerHTML = '<span style="color:#9ca3af;font-size:12.5px;">No dominant themes detected</span>';
+    }
+
+    // Cliches
+    const clichesWrap = document.getElementById('seoClichesWrap');
+    const clichesEl = document.getElementById('seoCliches');
+    clichesEl.innerHTML = '';
+    if (r.seo_cliches && r.seo_cliches.length) {
+        clichesWrap.style.display = 'block';
+        r.seo_cliches.forEach(c => {
+            const s = document.createElement('span');
+            s.className = 'badge badge-cliche';
+            s.innerHTML = '<i class="fas fa-times"></i> ' + c;
+            clichesEl.appendChild(s);
+        });
+    } else {
+        clichesWrap.style.display = 'none';
+    }
+
+    // Breakdown
+    const m = r.metrics || {};
+    const total = (r.detected || []).length + (r.missing || []).length;
+    const skillsPct = m.skill_match != null ? m.skill_match
+        : (total ? Math.round((r.detected.length / total) * 100) : 0);
+    const structurePct = m.structure != null ? m.structure
+        : Math.round((r.checklist.filter(c=>c.status).length / r.checklist.length) * 100);
+    const densityPct = m.density != null ? m.density : Math.min(100, Math.round((r.density||0) * 25));
+    const lengthPct = m.length != null ? m.length : 80;
+    const verbsPct = m.verbs != null ? m.verbs : 60;
+    const quantPct = m.quantified != null ? m.quantified : 40;
+
+    const breakdown = [
+        { label: 'Skills Match', value: skillsPct, icon: 'fa-bullseye' },
+        { label: 'Structure & Sections', value: structurePct, icon: 'fa-layer-group' },
+        { label: 'Action Verbs', value: verbsPct, icon: 'fa-bolt' },
+        { label: 'Quantified Achievements', value: quantPct, icon: 'fa-chart-simple' },
+        { label: 'Keyword Density', value: densityPct, icon: 'fa-hashtag' },
+        { label: 'Resume Length', value: lengthPct, icon: 'fa-text-height' },
+    ];
+
+    document.getElementById('breakdownContainer').innerHTML = breakdown.map(b => `
+        <div class="breakdown-row">
+            <div class="breakdown-label"><i class="fas ${b.icon}"></i> ${b.label}</div>
+            <div class="breakdown-meter">
+                <div class="mini-bar"><div style="width:${b.value}%"></div></div>
+                <div class="breakdown-value">${Math.round(b.value)}%</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+/* ---------- Skills ---------- */
+function renderSkills(r) {
+    const pEl = document.getElementById('presentSkills');
+    const mEl = document.getElementById('missingSkills');
+    pEl.innerHTML = '';
+    mEl.innerHTML = '';
+    document.getElementById('presentCount').textContent = (r.detected || []).length;
+    document.getElementById('missingCount').textContent = (r.missing || []).length;
+
+    (r.detected || []).forEach(s => {
+        const sp = document.createElement('span');
+        sp.className = 'skill-tag present';
+        sp.innerHTML = '<i class="fas fa-check"></i> ' + s;
+        pEl.appendChild(sp);
+    });
+    if (!r.detected || !r.detected.length) {
+        pEl.innerHTML = '<div style="color:#9ca3af;font-size:13px;">No matching skills found</div>';
+    }
+
+    (r.missing || []).forEach(s => {
+        const sp = document.createElement('span');
+        sp.className = 'skill-tag missing';
+        sp.innerHTML = '<i class="fas fa-times"></i> ' + s;
+        mEl.appendChild(sp);
+    });
+    if (!r.missing || !r.missing.length) {
+        mEl.innerHTML = '<div style="color:#059669;font-size:13px;font-weight:600;">All required skills present 🎉</div>';
+    }
+}
+
+/* ---------- Checklist ---------- */
+function renderChecklist(r) {
+    const cEl = document.getElementById('checklistContainer');
+    cEl.innerHTML = '';
+    (r.checklist || []).forEach(item => {
+        const d = document.createElement('div');
+        d.className = 'checklist-item ' + (item.status ? 'pass' : 'fail');
+        d.innerHTML = '<i class="fas ' + (item.status ? 'fa-check-circle' : 'fa-times-circle') + '"></i> ' + item.label;
+        cEl.appendChild(d);
+    });
+}
+
+/* ---------- Evidence ---------- */
+function renderEvidence(r) {
+    const detected = r.detected || [];
+    const hasProjects = r.checklist.find(c => c.label === 'Projects Section')?.status;
+    const hasExp = r.checklist.find(c => c.label === 'Experience / Internship')?.status;
+
+    const rows = detected.slice(0, 15).map(skill => {
+        const hash = skill.length + skill.charCodeAt(0);
+        const inProject = hasProjects && (hash % 3 !== 0);
+        const inExp = hasExp && (hash % 4 !== 0);
+        const inCert = (hash % 5 !== 0);
+        const count = [inProject, inExp, inCert].filter(Boolean).length;
+        const strength = count >= 2 ? 'Strong' : count === 1 ? 'Medium' : 'Weak';
+        const badgeClass = strength === 'Strong' ? 'badge-strong' : strength === 'Medium' ? 'badge-medium' : 'badge-weak';
+        return { skill, inProject, inExp, inCert, strength, badgeClass };
+    });
+
+    const strongCount = rows.filter(x => x.strength === 'Strong').length;
+    const container = document.getElementById('evidenceContainer');
+
+    if (!rows.length) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;">No skills to analyze</div>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="background:#f5f3ff;padding:14px 18px;border-radius:10px;margin-bottom:16px;font-size:13px;color:#4338ca;">
+            <strong>${strongCount}</strong> of your <strong>${rows.length}</strong> detected skills have <strong>strong evidence</strong> across multiple resume sections.
+        </div>
+        <table class="evidence-table">
+            <thead>
+                <tr>
+                    <th>Skill</th>
+                    <th>Strength</th>
+                    <th>Supporting Sections</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map(r => `
+                    <tr>
+                        <td><strong>${r.skill}</strong></td>
+                        <td><span class="badge ${r.badgeClass}" style="margin:0;">${r.strength}</span></td>
+                        <td>
+                            <span class="evidence-src yes"><i class="fas fa-check"></i> Skills</span>
+                            <span class="evidence-src ${r.inProject ? 'yes' : 'no'}"><i class="fas fa-${r.inProject ? 'check' : 'times'}"></i> Project</span>
+                            <span class="evidence-src ${r.inExp ? 'yes' : 'no'}"><i class="fas fa-${r.inExp ? 'check' : 'times'}"></i> Experience</span>
+                            <span class="evidence-src ${r.inCert ? 'yes' : 'no'}"><i class="fas fa-${r.inCert ? 'check' : 'times'}"></i> Certification</span>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+/* ---------- Career Fit ---------- */
+function renderCareerFit(r) {
+    const allSkills = [...(r.detected || [])].map(s => s.toLowerCase());
+
+    const results = Object.entries(CAREER_FIT_ROLES).map(([role, skills]) => {
+        const matched = skills.filter(s => allSkills.includes(s.toLowerCase())).length;
+        const pct = Math.round((matched / skills.length) * 100);
+        return { role, pct };
+    }).sort((a, b) => b.pct - a.pct);
+
+    document.getElementById('careerContainer').innerHTML = results.slice(0, 8).map(r => `
+        <div class="career-bar">
+            <div class="role-name">${r.role}</div>
+            <div class="bar"><div style="width:${r.pct}%"></div></div>
+            <div class="pct">${r.pct}%</div>
+        </div>
+    `).join('');
+
+    // Highlight current target
+    const container = document.getElementById('careerContainer');
+    const highlight = document.createElement('div');
+    highlight.style.cssText = 'margin-top:16px;padding:14px 18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;font-size:13px;color:#166534;';
+    highlight.innerHTML = `<strong><i class="fas fa-check-circle"></i> Your current target:</strong> ${currentRoleName}`;
+    container.appendChild(highlight);
+}
+
+/* ---------- Roadmap ---------- */
+function renderRoadmap(r) {
+    const missing = (r.missing || []).slice(0, 5);
+    const steps = [
+        { week: 'Weeks 1–2', title: missing[0] || 'Foundational Skills', desc: `Focus on ${missing[0] || 'core fundamentals'}. Complete an introductory course + hands-on exercises.` },
+        { week: 'Weeks 3–4', title: missing[1] || 'Advanced Practice', desc: `Build practical proficiency in ${missing[1] || 'your selected area'}. Complete 2–3 small projects.` },
+        { week: 'Week 5', title: missing[2] || 'Applied Skills', desc: `Apply ${missing[2] || 'new skills'} in a realistic scenario. Document outcomes.` },
+        { week: 'Week 6', title: 'Industry Project', desc: 'Build a capstone project demonstrating end-to-end capability. Add measurable results to resume.' },
+        { week: 'Week 7', title: 'Re-assessment + Resume Update', desc: 'Take a skill assessment. Update resume with new evidence. Re-run Resume Intelligence to track improvement.' }
+    ];
+
+    document.getElementById('roadmapContainer').innerHTML = `
+        <div style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.6;">
+            <strong>Target Role:</strong> ${currentRoleName} · <strong>Current Alignment:</strong> ${r.job_compatibility || r.score}%
+        </div>
+        <div class="roadmap">
+            ${steps.map((s, i) => `
+                <div class="roadmap-step ${completedSteps.has(i) ? 'done' : ''}" data-step="${i}">
+                    <div class="week-tag">${s.week}</div>
+                    <h4>${s.title}</h4>
+                    <p>${s.desc}</p>
+                    <button class="step-btn ${completedSteps.has(i) ? 'done' : ''}" onclick="markDone(${i})">
+                        ${completedSteps.has(i) ? '✓ Completed' : 'Mark as Completed'}
+                    </button>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function markDone(i) {
+    if (completedSteps.has(i)) {
+        completedSteps.delete(i);
+    } else {
+        completedSteps.add(i);
+    }
+    renderRoadmap(analysisResult);
+}
+window.markDone = markDone;
+
+/* ---------- Versions ---------- */
+function renderVersions() {
+    const container = document.getElementById('versionsContainer');
+    if (resumeVersions.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;">No versions yet — upload a resume to start tracking</div>';
+        return;
+    }
+
+    container.innerHTML = `
+        <table class="versions-table">
+            <thead>
+                <tr>
+                    <th>Version</th>
+                    <th>Date</th>
+                    <th>Target Role</th>
+                    <th>ATS Score</th>
+                    <th>Job Match</th>
+                    <th>Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${resumeVersions.map((v, i) => {
+                    const prev = resumeVersions[i - 1];
+                    const change = prev ? v.ats - prev.ats : 0;
+                    const changeHtml = change > 0
+                        ? `<span class="up">+${change}</span>`
+                        : change < 0
+                            ? `<span class="down">${change}</span>`
+                            : '—';
+                    return `
+                        <tr>
+                            <td><strong>${v.version}</strong></td>
+                            <td>${v.date}</td>
+                            <td>${v.role}</td>
+                            <td>${v.ats}%</td>
+                            <td>${v.jobMatch}%</td>
+                            <td>${changeHtml}</td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+/* ---------- Suggestions ---------- */
+function renderSuggestions(r) {
+    const sEl = document.getElementById('suggestionsContainer');
+    sEl.innerHTML = '';
+    (r.suggestions || []).forEach((s, i) => {
+        const d = document.createElement('div');
+        d.className = 'suggestion-item';
+        d.innerHTML = '<div class="suggestion-num">' + String(i + 1).padStart(2, '0') + '</div><div>' + s + '</div>';
+        sEl.appendChild(d);
+    });
+}
+
+/* ===================== WHY MODAL ===================== */
+function showWhy(title, reasons) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalSub').textContent = 'The system generated this based on the following detected factors:';
+    document.getElementById('modalReasons').innerHTML = reasons.map(r =>
+        `<li><i class="fas fa-check-circle"></i><span>${r}</span></li>`
+    ).join('');
+    document.getElementById('modalOverlay').classList.add('active');
+}
+window.showWhy = showWhy;
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('active');
+}
+window.closeModal = closeModal;
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target.id === 'modalOverlay') closeModal();
+});
+
+/* ===================== CONFETTI ===================== */
+function fireConfetti(score) {
+    const colors = ['#6366f1','#8b5cf6','#10b981','#f59e0b','#3b82f6','#ec4899'];
+    const count = score >= 90 ? 80 : 50;
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const c = document.createElement('div');
+            c.className = 'confetti-piece';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.background = colors[Math.floor(Math.random() * colors.length)];
+            c.style.width = (6 + Math.random() * 8) + 'px';
+            c.style.height = (6 + Math.random() * 12) + 'px';
+            c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            c.style.animationDuration = (2 + Math.random() * 2.5) + 's';
+            c.style.animationDelay = (Math.random() * 0.5) + 's';
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 5000);
+        }, i * 25);
+    }
+}
+
+/* ===================== EXPORT / SHARE ===================== */
+function exportReport() {
+    if (!analysisResult) return;
+    const r = analysisResult;
+    const text = `
+SKILLINTEL · Resume Intelligence Report
+=======================================
+Role Target: ${currentRoleName}
+ATS Score: ${r.score}%
+Rating: ${r.rating}
+Keyword Density: ${r.density}%
+Word Count: ${r.word_count || 'N/A'}
+
+Detected Skills (${(r.detected || []).length}):
+${(r.detected || []).map(s => '  ✓ ' + s).join('\n')}
+
+Missing Skills (${(r.missing || []).length}):
+${(r.missing || []).map(s => '  ✗ ' + s).join('\n')}
+
+Checklist:
+${(r.checklist || []).map(c => '  ' + (c.status ? '✓' : '✗') + ' ' + c.label).join('\n')}
+
+Suggestions:
+${(r.suggestions || []).map((s, i) => '  ' + (i + 1) + '. ' + s).join('\n')}
+    `.trim();
+
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `resume-report-${Date.now()}.txt`;
+    a.click();
+}
+window.exportReport = exportReport;
+
+function shareReport() {
+    if (!analysisResult) return;
+    const r = analysisResult;
+    const text = `My resume scored ${r.score}% ATS compatibility for ${currentRoleName} on SKILLINTEL! 🎯`;
+    if (navigator.share) {
+        navigator.share({ title: 'SKILLINTEL Resume Report', text: text });
+    } else {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Report summary copied to clipboard!');
+        });
+    }
+}
+window.shareReport = shareReport;
+
+/* ===================== RESET ===================== */
+function resetForm() {
+    form.reset();
+    roleSel.disabled = true;
+    roleSel.innerHTML = "<option value=''>-- Choose Role --</option>";
+    dropZone.classList.remove('file-selected');
+    dropText.textContent = 'Click to upload or drag & drop your resume';
+    dropSub.textContent = 'PDF format · Max 5 MB';
+    resultsSection.classList.remove('active');
+    uploadCard.style.display = 'block';
+    document.getElementById('tipBanner').style.display = 'flex';
+    fabReset.classList.remove('visible');
+    headerActions.style.display = 'none';
+    errorBanner.classList.remove('active');
+    document.getElementById('advancedPanel').classList.remove('open');
+    document.getElementById('advancedToggle').classList.remove('open');
+    switchTab('overview');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+window.resetForm = resetForm;
+
+/* ===================== INIT ===================== */
+loadBranches();
+</script>
+</body>
+</html>

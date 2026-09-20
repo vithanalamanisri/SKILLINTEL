@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerTrack · AI Career Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/api.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:#f6f7fb;color:#0f172a;min-height:100vh;font-size:14px;line-height:1.5;}
+
+/* ==================== SIDEBAR ==================== */
+.sidebar{width:260px;height:100vh;position:fixed;left:0;top:0;background:linear-gradient(180deg,#0f172a,#172554,#312e81);padding:25px 18px;color:#fff;overflow-y:auto;z-index:100;transition:transform .3s}
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:10px}
+.brand{display:flex;align-items:center;gap:12px;padding:10px 12px 30px}
+.brand-icon{width:45px;height:45px;display:flex;align-items:center;justify-content:center;border-radius:14px;font-size:22px;background:linear-gradient(135deg,#2563eb,#7c3aed,#06b6d4)}
+.brand h2{font-size:18px;color:#fff}.brand p{font-size:11px;color:#94a3b8}
+.menu-title{color:#64748b;font-size:11px;font-weight:600;margin:12px 12px;letter-spacing:1px;text-transform:uppercase}
+.menu a{display:flex;align-items:center;gap:12px;text-decoration:none;color:#cbd5e1;padding:13px 14px;border-radius:14px;margin:6px 0;transition:.3s;font-size:14px}
+.menu a:hover{background:rgba(255,255,255,.08);color:#fff}
+.menu a.active{background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;box-shadow:0 10px 25px rgba(37,99,235,.25)}
+.menu a i{width:20px;text-align:center}
+.menu a .badge-new{margin-left:auto;font-size:9px;padding:2px 6px;background:linear-gradient(135deg,#f59e0b,#ec4899);color:#fff;border-radius:4px;font-weight:700}
+.sidebar-footer{position:absolute;bottom:20px;left:18px;right:18px;padding-top:15px;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-footer a{display:flex;align-items:center;gap:12px;text-decoration:none;color:#cbd5e1;padding:12px 14px;border-radius:12px;transition:.3s;font-size:14px;cursor:pointer}
+.sidebar-footer a:hover{background:rgba(255,255,255,.08);color:#fff}
+
+/* ==================== MAIN ==================== */
+.main{margin-left:260px;min-height:100vh;padding:28px 32px 100px}
+
+/* TOPBAR */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.page-title{display:flex;align-items:center;gap:14px}
+.page-title-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#db2777);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;box-shadow:0 8px 20px rgba(124,58,237,.25)}
+.page-title-text h1{font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;line-height:1.2}
+.page-title-text p{font-size:12.5px;color:#64748b;margin-top:3px;font-weight:500}
+.top-actions{display:flex;align-items:center;gap:10px}
+.icon-btn,.theme-toggle{width:42px;height:42px;border:none;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.06);cursor:pointer;font-size:16px;transition:.2s;color:#475569;display:flex;align-items:center;justify-content:center}
+.icon-btn:hover,.theme-toggle:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,23,42,.1)}
+.user{display:flex;align-items:center;gap:10px;padding:5px 14px 5px 5px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(15,23,42,.06)}
+.user-avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;background:linear-gradient(135deg,#7c3aed,#db2777)}
+.user h4{font-size:12.5px;font-weight:700;color:#0f172a}
+.user p{font-size:10px;color:#94a3b8;font-weight:500}
+
+/* ==================== HERO ==================== */
+.hero{position:relative;overflow:hidden;border-radius:20px;padding:28px 32px;margin-bottom:24px;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 40%,#6d28d9 100%);color:#fff;box-shadow:0 12px 32px rgba(49,46,129,.25)}
+.hero::before{content:"";position:absolute;top:-100px;right:-80px;width:340px;height:340px;background:radial-gradient(circle,rgba(236,72,153,.25),transparent 65%);border-radius:50%;pointer-events:none}
+.hero::after{content:"";position:absolute;bottom:-60px;left:30%;width:220px;height:220px;background:radial-gradient(circle,rgba(139,92,246,.3),transparent 65%);border-radius:50%;pointer-events:none}
+.hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center}
+.hero-left{display:flex;gap:20px;align-items:flex-start}
+.hero-avatar{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#f59e0b,#ec4899);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;box-shadow:0 10px 24px rgba(236,72,153,.35)}
+.hero-text h2{font-size:22px;font-weight:800;letter-spacing:-0.4px;line-height:1.3;margin-bottom:8px}
+.hero-text p{font-size:13.5px;color:#c7d2fe;line-height:1.6;max-width:620px}
+.hero-stats{display:flex;gap:10px;flex-shrink:0}
+.stat-pill{padding:14px 20px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(10px);text-align:center;min-width:96px}
+.stat-pill .val{font-size:22px;font-weight:900;letter-spacing:-1px;line-height:1;color:#fff}
+.stat-pill .lbl{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:#c7d2fe;margin-top:6px;font-weight:700}
+
+/* ==================== SUMMARY ROW ==================== */
+.summary-row{display:grid;grid-template-columns:1.2fr 2.4fr;gap:20px;margin-bottom:24px}
+
+/* HEALTH CARD */
+.health-card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 2px 12px rgba(15,23,42,.04);border:1px solid #eef2ff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.health-ring{position:relative;width:130px;height:130px;margin-bottom:14px}
+.health-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.health-ring-bg{fill:none;stroke:#eef2ff;stroke-width:11}
+.health-ring-fill{fill:none;stroke-width:11;stroke-linecap:round;stroke-dasharray:326;stroke-dashoffset:326;transition:stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1)}
+.health-ring-val{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.health-ring-val .num{font-size:32px;font-weight:900;color:#0f172a;letter-spacing:-1.5px;line-height:1}
+.health-ring-val .unit{font-size:14px;color:#94a3b8;font-weight:700;margin-left:1px}
+.health-ring-val .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-top:3px}
+.health-status{font-size:13px;font-weight:800;color:#0f172a;margin-bottom:4px}
+.health-desc{font-size:11.5px;color:#64748b;line-height:1.5;max-width:220px}
+
+/* NEXT ACTION CARD */
+.next-card{background:linear-gradient(135deg,#4338ca 0%,#6d28d9 60%,#7c3aed 100%);border-radius:20px;padding:28px 30px;color:#fff;position:relative;overflow:hidden;box-shadow:0 12px 32px rgba(67,56,202,.25);display:flex;flex-direction:column;justify-content:center}
+.next-card::before{content:"";position:absolute;top:-80px;right:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(236,72,153,.35),transparent 65%);border-radius:50%;pointer-events:none}
+.next-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.2);font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:16px;width:fit-content;position:relative;z-index:1}
+.next-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.5}}
+.next-title{font-size:20px;font-weight:900;letter-spacing:-0.4px;line-height:1.3;margin-bottom:10px;position:relative;z-index:1;max-width:640px}
+.next-desc{font-size:13px;color:#e0e7ff;line-height:1.6;margin-bottom:20px;position:relative;z-index:1;max-width:640px}
+.next-btn{display:inline-flex;align-items:center;gap:10px;padding:12px 24px;border-radius:12px;background:#fff;color:#4338ca;font-weight:800;font-size:13px;border:none;cursor:pointer;transition:.2s;width:fit-content;position:relative;z-index:1;font-family:inherit;box-shadow:0 6px 16px rgba(0,0,0,.15)}
+.next-btn:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(0,0,0,.25)}
+
+/* ==================== PRIORITY TILES ==================== */
+.priority-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.priority-tile{background:#fff;border-radius:18px;padding:20px;border:1px solid #eef2ff;box-shadow:0 2px 12px rgba(15,23,42,.04);cursor:pointer;transition:.25s;position:relative;overflow:hidden}
+.priority-tile:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(15,23,42,.08)}
+.priority-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.priority-tile.critical::before{background:linear-gradient(90deg,#dc2626,#ef4444)}
+.priority-tile.high::before{background:linear-gradient(90deg,#d97706,#f59e0b)}
+.priority-tile.medium::before{background:linear-gradient(90deg,#2563eb,#3b82f6)}
+.priority-tile.low::before{background:linear-gradient(90deg,#059669,#10b981)}
+.priority-tile-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.priority-tile-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px}
+.priority-tile.critical .priority-tile-icon{background:#fee2e2}
+.priority-tile.high .priority-tile-icon{background:#fef3c7}
+.priority-tile.medium .priority-tile-icon{background:#dbeafe}
+.priority-tile.low .priority-tile-icon{background:#d1fae5}
+.priority-tile-val{font-size:32px;font-weight:900;letter-spacing:-2px;line-height:1;color:#0f172a}
+.priority-tile-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-top:8px}
+.priority-tile.critical .priority-tile-val{color:#dc2626}
+.priority-tile.high .priority-tile-val{color:#d97706}
+.priority-tile.medium .priority-tile-val{color:#2563eb}
+.priority-tile.low .priority-tile-val{color:#059669}
+
+/* ==================== WORKSPACE ==================== */
+.workspace{display:grid;grid-template-columns:240px 1fr;gap:24px;align-items:start}
+
+/* FILTER SIDEBAR */
+.filter-side{position:sticky;top:24px;background:#fff;border-radius:20px;padding:12px;border:1px solid #eef2ff;box-shadow:0 2px 12px rgba(15,23,42,.04)}
+.filter-side-title{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;padding:12px 14px 8px}
+.filter-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;font-size:13px;font-weight:600;color:#475569;cursor:pointer;transition:.18s;margin-bottom:2px;user-select:none}
+.filter-item:hover{background:#f8fafc;color:#0f172a}
+.filter-item.active{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;box-shadow:0 6px 16px rgba(124,58,237,.25)}
+.filter-item i{width:18px;text-align:center;font-size:13px;flex-shrink:0}
+.filter-item .label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filter-item .count{font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;background:#f1f5f9;color:#64748b;min-width:24px;text-align:center}
+.filter-item.active .count{background:rgba(255,255,255,.22);color:#fff}
+.filter-item.crit .count{background:#fee2e2;color:#dc2626}
+.filter-item.active.crit .count{background:rgba(255,255,255,.22);color:#fff}
+
+/* ==================== FEED ==================== */
+.feed{min-width:0}
+.feed-panel{display:none}
+.feed-panel.active{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.feed-header{background:#fff;border-radius:16px;padding:16px 20px;margin-bottom:16px;border:1px solid #eef2ff;box-shadow:0 2px 8px rgba(15,23,42,.03);display:flex;justify-content:space-between;align-items:center}
+.feed-header-left{display:flex;align-items:center;gap:12px}
+.feed-header-icon{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#ede9fe,#fce7f3);display:flex;align-items:center;justify-content:center;font-size:16px}
+.feed-header-text h3{font-size:14px;font-weight:800;color:#0f172a;letter-spacing:-0.2px}
+.feed-header-text p{font-size:11.5px;color:#94a3b8;margin-top:2px;font-weight:500}
+.feed-header-pill{padding:6px 14px;border-radius:10px;background:#f8fafc;border:1px solid #eef2ff;font-size:11px;font-weight:800;color:#4338ca;text-transform:uppercase;letter-spacing:0.8px}
+
+/* RECOMMENDATION CARDS */
+.rec-list{display:flex;flex-direction:column;gap:14px}
+.rec{background:#fff;border-radius:16px;border:1px solid #eef2ff;box-shadow:0 2px 8px rgba(15,23,42,.03);transition:.22s;overflow:hidden;position:relative;display:grid;grid-template-columns:56px 1fr;gap:0}
+.rec:hover{border-color:#ddd6fe;box-shadow:0 10px 24px rgba(124,58,237,.08)}
+.rec-side{padding:22px 0;display:flex;flex-direction:column;align-items:center;position:relative;background:linear-gradient(180deg,#fafbff,#f5f3ff);border-right:1px solid #eef2ff}
+.rec-side-icon{width:32px;height:32px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.rec-side-line{flex:1;width:2px;background:#eef2ff;margin-top:8px}
+.rec.critical .rec-side-line{background:linear-gradient(180deg,#fecaca,transparent)}
+.rec.high .rec-side-line{background:linear-gradient(180deg,#fde68a,transparent)}
+.rec.medium .rec-side-line{background:linear-gradient(180deg,#bfdbfe,transparent)}
+.rec.low .rec-side-line{background:linear-gradient(180deg,#a7f3d0,transparent)}
+.rec.info .rec-side-line{background:linear-gradient(180deg,#ddd6fe,transparent)}
+
+.rec-main{padding:20px 24px}
+.rec-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:10px}
+.rec-top h3{font-size:15px;font-weight:800;color:#0f172a;line-height:1.35;letter-spacing:-0.2px;flex:1;min-width:0}
+.rec-pill{padding:5px 12px;border-radius:9px;font-size:10px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.rec-pill.critical{background:#fee2e2;color:#dc2626}
+.rec-pill.high{background:#fef3c7;color:#d97706}
+.rec-pill.medium{background:#dbeafe;color:#2563eb}
+.rec-pill.low{background:#d1fae5;color:#059669}
+.rec-pill.info{background:#ede9fe;color:#7c3aed}
+
+.rec-body{font-size:13.5px;color:#475569;line-height:1.65;margin-bottom:14px}
+.rec-body strong{color:#0f172a;font-weight:700}
+
+.rec-why{background:#f8fafc;border-radius:11px;padding:11px 14px;border-left:3px solid #a78bfa;font-size:12.5px;color:#475569;line-height:1.55;margin-bottom:16px}
+.rec-why strong{color:#4338ca;font-weight:800;font-size:12px;letter-spacing:0.2px}
+
+.rec-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.rec-tag{padding:4px 10px;border-radius:7px;font-size:10.5px;font-weight:700;letter-spacing:0.2px}
+.rec-tag.src{background:linear-gradient(135deg,#ede9fe,#fce7f3);color:#6d28d9}
+.rec-tag.cat{background:#f1f5f9;color:#475569}
+
+.rec-actions{display:flex;flex-wrap:wrap;gap:8px}
+.act-btn{padding:9px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:.18s;font-family:inherit;border:none;display:inline-flex;align-items:center;gap:6px;text-decoration:none;letter-spacing:0.2px}
+.act-btn.primary{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;box-shadow:0 4px 12px rgba(124,58,237,.25)}
+.act-btn.primary:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(124,58,237,.35)}
+.act-btn.secondary{background:#f1f5f9;color:#475569}
+.act-btn.secondary:hover{background:#e2e8f0;color:#0f172a}
+.act-btn.ghost{background:#fff;color:#7c3aed;border:1.5px solid #ddd6fe}
+.act-btn.ghost:hover{background:#f5f3ff}
+
+/* EMPTY */
+.empty{background:#fff;border-radius:18px;padding:64px 32px;text-align:center;border:1px solid #eef2ff}
+.empty-emoji{font-size:48px;margin-bottom:14px;display:inline-block;animation:gentle 3s ease-in-out infinite}
+@keyframes gentle{50%{transform:translateY(-6px)}}
+.empty h3{font-size:16px;font-weight:800;color:#0f172a;margin-bottom:6px}
+.empty p{font-size:13px;color:#64748b;max-width:400px;margin:0 auto;line-height:1.6}
+
+/* BOTTOM BAR */
+.bottom-bar{position:fixed;bottom:0;left:260px;right:0;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border-top:1px solid #eef2ff;z-index:50}
+.bar-left{display:flex;align-items:center;gap:10px;font-size:12px;color:#64748b;font-weight:600}
+.bar-left .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:pulse 1.5s infinite}
+.bar-right{display:flex;gap:8px}
+.btn{padding:10px 18px;border-radius:11px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.18s;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:7px;letter-spacing:0.2px}
+.btn:hover{transform:translateY(-1px)}
+.btn-ghost{background:#f1f5f9;color:#475569}
+.btn-ghost:hover{background:#e2e8f0}
+.btn-soft{background:#ede9fe;color:#6d28d9}
+.btn-soft:hover{background:#ddd6fe}
+.btn-grad{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.3)}
+.btn-grad:hover{box-shadow:0 8px 22px rgba(124,58,237,.4)}
+
+/* TOAST */
+.toast{position:fixed;bottom:90px;right:32px;background:#0f172a;color:#fff;padding:14px 22px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 20px 40px rgba(15,23,42,.4);z-index:9999;display:flex;align-items:center;gap:10px;animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+.workspace{grid-template-columns:1fr}
+.filter-side{position:static;display:flex;overflow-x:auto;gap:4px;padding:10px;margin-bottom:16px}
+.filter-side-title{display:none}
+.filter-item{flex-shrink:0;margin-bottom:0}
+.summary-row{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+.sidebar{transform:translateX(-100%)}
+.sidebar.open{transform:translateX(0)}
+.main{margin-left:0;padding:20px 16px 100px}
+.bottom-bar{left:0;padding:12px 16px}
+.menu-toggle{display:block;background:none;border:none;color:#0f172a;font-size:22px;cursor:pointer}
+.priority-row{grid-template-columns:1fr 1fr}
+.hero-inner{grid-template-columns:1fr}
+.hero-stats{flex-wrap:wrap}
+.stat-pill{flex:1;min-width:80px}
+.rec{grid-template-columns:1fr}
+.rec-side{display:none}
+.page-title-text h1{font-size:18px}
+}
+.menu-toggle{display:none}
+@media(max-width:768px){.menu-toggle{display:block}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="brand">
+        <div class="brand-icon"><i class="fas fa-brain"></i></div>
+        <div><h2>MySkillJourney</h2><p>Trainee Portal</p></div>
+    </div>
+    <div class="menu">
+        <div class="menu-title">Main Menu</div>
+        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="resume-intelligence.html"><i class="fas fa-file-alt"></i> Resume Intelligence</a>
+        <a href="employment.html"><i class="fas fa-briefcase"></i> Employment</a>
+        <a href="follow-up.html"><i class="fas fa-calendar-check"></i> Follow-up</a>
+        <a href="history.html"><i class="fas fa-history"></i> Outcome History</a>
+        <div class="menu-title" style="margin-top:18px;">Career Tools</div>
+        <a href="career-alignment.html"><i class="fas fa-compass"></i> Career Alignment</a>
+        <a href="industry-demand.html"><i class="fas fa-chart-line"></i> Industry Demand</a>
+        <a href="ai-recommendations.html" class="active"><i class="fas fa-robot"></i> AI Coach</a>
+        <a href="job-discovery.html"><i class="fas fa-search"></i> Find Jobs <span class="count-badge" id="menuJobCount">0</span></a>
+    </div>
+    <div class="sidebar-footer"><a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- TOPBAR -->
+<div class="topbar">
+<div class="page-title">
+<button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+<div class="page-title-icon"><i class="fas fa-robot"></i></div>
+<div class="page-title-text">
+<h1>AI Career Coach</h1>
+<p>Personalized recommendations from your real profile data</p>
+</div>
+</div>
+<div class="top-actions">
+<button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+<button class="icon-btn" onclick="showToast('📬 No new notifications')"><i class="fas fa-bell"></i></button>
+<div class="user"><div class="user-avatar" id="userAvatar">T</div><div><h4 id="userName">Trainee</h4><p>Active</p></div></div>
+</div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+<div class="hero-inner">
+<div class="hero-left">
+<div class="hero-avatar"><i class="fas fa-wand-magic-sparkles"></i></div>
+<div class="hero-text">
+<h2 id="heroTitle">Analyzing your profile…</h2>
+<p id="heroSubtitle">Reading data from Resume, Employment, Follow-up, History, Career Alignment and Industry Demand to build your action plan.</p>
+</div>
+</div>
+<div class="hero-stats">
+<div class="stat-pill"><div class="val" id="heroTotal">—</div><div class="lbl">Actions</div></div>
+<div class="stat-pill"><div class="val" id="heroCrit">—</div><div class="lbl">Critical</div></div>
+<div class="stat-pill"><div class="val" id="heroHealth">—</div><div class="lbl">Health</div></div>
+</div>
+</div>
+</div>
+
+<!-- SUMMARY ROW -->
+<div class="summary-row">
+
+<!-- HEALTH -->
+<div class="health-card">
+<div class="health-ring">
+<svg viewBox="0 0 120 120">
+<circle class="health-ring-bg" cx="60" cy="60" r="52"></circle>
+<circle class="health-ring-fill" id="healthRing" cx="60" cy="60" r="52"></circle>
+</svg>
+<div class="health-ring-val">
+<div class="num" id="healthNum">0<span class="unit">%</span></div>
+<div class="lbl">Health</div>
+</div>
+</div>
+<div class="health-status" id="healthStatus">Analyzing…</div>
+<div class="health-desc" id="healthDesc">Based on 6 career factors</div>
+</div>
+
+<!-- NEXT ACTION -->
+<div class="next-card">
+<div class="next-badge">Next Best Action</div>
+<div class="next-title" id="nextTitle">Analyzing…</div>
+<div class="next-desc" id="nextDesc">Running AI engine on your profile…</div>
+<button class="next-btn" onclick="jumpToNextAction()">
+<span id="nextBtnLabel">Take Action</span>
+<i class="fas fa-arrow-right"></i>
+</button>
+</div>
+
+</div>
+
+<!-- PRIORITY TILES -->
+<div class="priority-row">
+<div class="priority-tile critical" data-jump="critical">
+<div class="priority-tile-head">
+<div class="priority-tile-icon">🚨</div>
+</div>
+<div class="priority-tile-val" id="tileCrit">0</div>
+<div class="priority-tile-label">Critical</div>
+</div>
+<div class="priority-tile high" data-jump="all">
+<div class="priority-tile-head">
+<div class="priority-tile-icon">⚡</div>
+</div>
+<div class="priority-tile-val" id="tileHigh">0</div>
+<div class="priority-tile-label">High Priority</div>
+</div>
+<div class="priority-tile medium" data-jump="all">
+<div class="priority-tile-head">
+<div class="priority-tile-icon">📋</div>
+</div>
+<div class="priority-tile-val" id="tileMed">0</div>
+<div class="priority-tile-label">Recommended</div>
+</div>
+<div class="priority-tile low" data-jump="all">
+<div class="priority-tile-head">
+<div class="priority-tile-icon">✨</div>
+</div>
+<div class="priority-tile-val" id="tileLow">0</div>
+<div class="priority-tile-label">Opportunity</div>
+</div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+<!-- FILTER SIDEBAR -->
+<div class="filter-side">
+<div class="filter-side-title">Filters</div>
+<div class="filter-item active" data-tab="all"><i class="fas fa-layer-group"></i><span class="label">All Recommendations</span><span class="count" id="cAll">0</span></div>
+<div class="filter-item crit" data-tab="critical"><i class="fas fa-exclamation-triangle"></i><span class="label">Critical</span><span class="count" id="cCrit">0</span></div>
+<div class="filter-item" data-tab="skills"><i class="fas fa-code"></i><span class="label">Skills</span><span class="count" id="cSkills">0</span></div>
+<div class="filter-item" data-tab="resume"><i class="fas fa-file-alt"></i><span class="label">Resume</span><span class="count" id="cResume">0</span></div>
+<div class="filter-item" data-tab="employment"><i class="fas fa-briefcase"></i><span class="label">Employment</span><span class="count" id="cEmploy">0</span></div>
+<div class="filter-item" data-tab="career"><i class="fas fa-compass"></i><span class="label">Career</span><span class="count" id="cCareer">0</span></div>
+<div class="filter-item" data-tab="learning"><i class="fas fa-graduation-cap"></i><span class="label">Learning</span><span class="count" id="cLearn">0</span></div>
+</div>
+
+<!-- FEED -->
+<div class="feed">
+
+<div class="feed-panel active" id="feed-all">
+<div class="feed-header">
+<div class="feed-header-left">
+<div class="feed-header-icon">📋</div>
+<div class="feed-header-text">
+<h3>All Recommendations</h3>
+<p>Ranked by impact and urgency</p>
+</div>
+</div>
+<span class="feed-header-pill" id="hdrAll">0 actions</span>
+</div>
+<div class="rec-list" id="list-all"></div>
+</div>
+
+<div class="feed-panel" id="feed-critical">
+<div class="feed-header">
+<div class="feed-header-left">
+<div class="feed-header-icon">🚨</div>
+<div class="feed-header-text">
+<h3>Critical Actions</h3>
+<p>Fix immediately for maximum impact</p>
+</div>
+</div>
+<span class="feed-header-pill" id="hdrCrit">0 actions</span>
+</div>
+<div class="rec-list" id="list-critical"></div>
+</div>
+
+<div class="feed-panel" id="feed-skills">
+<div class="feed-header">
+<div class="feed-header-left">
+<div class="feed-header-icon">💻</div>
+<div class="feed-header-text">
+<h3>Skill Recommendations</h3>
+<p>Skills to learn for your target industry</p>
+</div>
+</div>
+<span class="feed-header-pill" id="hdrSkills">0 actions</span>
+</div>
+<div class="rec-list" id="list-skills"></div>
+</div>
+
+<div class="feed-panel" id="feed-resume">
+<div class="feed-header">
+<div class="feed-header-left">
+<div class="feed-header-icon">📄</div>
+<div class="feed-header-text">
+<h3>Resume Improvements</h3>
+<p>Boost your ATS score and profile</p>
+</div>
+</div>
+<span class="feed-header-pill" id="hdrResume">0 actions</span>
+</div>
+<div class="rec-list" id="list-resume"></div>
+</div>
+
+<div class="feed-panel" id="feed-employment">
+<div class="feed-header">
+<div class="feed-header-left">
+<div class="feed-header-icon">💼</div>
+<div class="feed-header-text">
+<h3>Employment Actions</h3>
+<p>Job search, applications and follow-ups</p>
+</div>
+</div>
+<span class="feed-header-pill" id="hdrEmploy">0 actions</span>
+</div>
+<div class="rec-list" id="list-employment"></div>
+</div>
+
+<div class="feed-panel" id="feed-career">
+<div class="feed-header">
+<div class="feed-header-left">
+<div class="feed-header-icon">🧭</div>
+<div class="feed-header-text">
+<h3>Career Growth</h3>
+<p>Long-term trajectory and opportunities</p>
+</div>
+</div>
+<span class="feed-header-pill" id="hdrCareer">0 actions</span>
+</div>
+<div class="rec-list" id="list-career"></div>
+</div>
+
+<div class="feed-panel" id="feed-learning">
+<div class="feed-header">
+<div class="feed-header-left">
+<div class="feed-header-icon">🎓</div>
+<div class="feed-header-text">
+<h3>Learning Plan</h3>
+<p>Courses and certifications matched to you</p>
+</div>
+</div>
+<span class="feed-header-pill" id="hdrLearn">0 actions</span>
+</div>
+<div class="rec-list" id="list-learning"></div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+<div class="bar-left"><span class="dot"></span> AI engine running on <strong style="color:#0f172a;">live Firestore data</strong></div>
+<div class="bar-right">
+<button class="btn btn-ghost" onclick="refreshAI()"><i class="fas fa-redo"></i> Refresh</button>
+<button class="btn btn-soft" onclick="exportAIReport()"><i class="fas fa-download"></i> Export</button>
+<button class="btn btn-grad" onclick="location.href='career-alignment.html'"><i class="fas fa-compass"></i> Alignment</button>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+/* ============ FIREBASE ============ */
+const firebaseConfig={apiKey:"AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",authDomain:"skillbridge-70863.firebaseapp.com",projectId:"skillbridge-70863",storageBucket:"skillbridge-70863.firebasestorage.app",messagingSenderId:"912671486056",appId:"1:912671486056:web:6f2dc11ab2c6042480cbdd"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();const db=firebase.firestore();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+let _firebaseUser=null,_traineeData=null,_employmentData=null,_followupData=null;
+
+/* ============ DB ============ */
+const INDUSTRIES={
+"Information Technology":{skills:["javascript","python","java","react","sql","aws","docker","git","node.js","api"],demand:95,growth:18,topCities:["Bangalore","Hyderabad","Pune"]},
+"Data & Analytics":{skills:["python","sql","power bi","tableau","statistics","machine learning","pandas","excel"],demand:92,growth:22,topCities:["Bangalore","Hyderabad","Mumbai"]},
+"Cloud & DevOps":{skills:["aws","docker","kubernetes","linux","terraform","jenkins","git","bash"],demand:88,growth:20,topCities:["Bangalore","Pune","Hyderabad"]},
+"Cybersecurity":{skills:["networking","linux","python","firewalls","siem","owasp","wireshark"],demand:85,growth:25,topCities:["Bangalore","Delhi","Mumbai"]},
+"Digital Marketing":{skills:["seo","social media","google analytics","content marketing","email marketing","canva"],demand:78,growth:14,topCities:["Mumbai","Delhi","Bangalore"]},
+"UI/UX Design":{skills:["figma","adobe xd","wireframing","user research","prototyping","sketch"],demand:82,growth:16,topCities:["Bangalore","Mumbai","Hyderabad"]},
+"Mechanical Engineering":{skills:["solidworks","autocad","catia","ansys","gd&t","manufacturing"],demand:65,growth:6,topCities:["Pune","Chennai","Bangalore"]},
+"Electrical Engineering":{skills:["plc","scada","matlab","power systems","autocad electrical","relays"],demand:68,growth:8,topCities:["Bangalore","Pune","Chennai"]},
+"Civil Engineering":{skills:["autocad","staad pro","revit","construction management","surveying","estimation"],demand:62,growth:7,topCities:["Delhi","Mumbai","Bangalore"]},
+"Finance & Accounting":{skills:["tally","excel","gst","accounting","taxation","sap","auditing"],demand:72,growth:10,topCities:["Mumbai","Delhi","Bangalore"]},
+"Healthcare & Pharma":{skills:["communication","statistics","compliance","excel"],demand:76,growth:15,topCities:["Hyderabad","Mumbai","Delhi"]},
+"Sales & Business Dev":{skills:["communication","crm","salesforce","negotiation","excel","active listening"],demand:80,growth:12,topCities:["Mumbai","Delhi","Bangalore"]},
+"Customer Support":{skills:["communication","crm","zendesk","email support","active listening","troubleshooting"],demand:70,growth:5,topCities:["Bangalore","Hyderabad","Noida"]},
+"E-Commerce & Retail":{skills:["digital marketing","sql","excel","communication","analytics","crm"],demand:74,growth:13,topCities:["Mumbai","Bangalore","Delhi"]},
+"Education & EdTech":{skills:["communication","content marketing","excel","presentation"],demand:69,growth:9,topCities:["Bangalore","Delhi","Mumbai"]}
+};
+const SKILL_DEMAND={"python":{demand:95,impact:120000},"javascript":{demand:92,impact:100000},"sql":{demand:90,impact:70000},"react":{demand:88,impact:90000},"java":{demand:85,impact:110000},"aws":{demand:92,impact:150000},"docker":{demand:80,impact:80000},"kubernetes":{demand:78,impact:130000},"machine learning":{demand:94,impact:180000},"power bi":{demand:82,impact:50000},"tableau":{demand:78,impact:60000},"excel":{demand:88,impact:30000},"communication":{demand:90,impact:40000},"figma":{demand:80,impact:40000},"git":{demand:85,impact:25000},"node.js":{demand:82,impact:85000},"linux":{demand:78,impact:60000},"networking":{demand:75,impact:70000},"statistics":{demand:76,impact:90000},"pandas":{demand:80,impact:70000},"seo":{demand:72,impact:45000},"digital marketing":{demand:74,impact:50000},"tally":{demand:68,impact:30000},"accounting":{demand:72,impact:55000},"solidworks":{demand:70,impact:50000},"autocad":{demand:72,impact:45000},"plc":{demand:65,impact:55000},"crm":{demand:78,impact:40000},"salesforce":{demand:76,impact:60000}};
+const COURSE_DB={"python":{name:"Python for Everybody",provider:"Coursera · UMich",duration:"8 weeks",cost:"Free"},"javascript":{name:"JavaScript Algorithms & DS",provider:"freeCodeCamp",duration:"300h",cost:"Free"},"java":{name:"Java Masterclass",provider:"Udemy",duration:"80h",cost:"₹449"},"sql":{name:"SQL for Data Science",provider:"Coursera · UC Davis",duration:"4 weeks",cost:"Free"},"react":{name:"React Complete Guide",provider:"Udemy",duration:"48h",cost:"₹449"},"node.js":{name:"Node.js Bootcamp",provider:"Udemy",duration:"42h",cost:"₹449"},"aws":{name:"AWS Cloud Practitioner",provider:"Amazon",duration:"4 weeks",cost:"₹8,000 exam"},"docker":{name:"Docker Mastery",provider:"Udemy",duration:"20h",cost:"₹449"},"kubernetes":{name:"CKA Certification",provider:"Linux Foundation",duration:"3 months",cost:"₹25,000"},"linux":{name:"Linux Command Line",provider:"Udemy",duration:"12h",cost:"₹449"},"machine learning":{name:"ML Specialization",provider:"Coursera · DeepLearning.AI",duration:"3 months",cost:"Free"},"power bi":{name:"PL-300 Power BI",provider:"Microsoft",duration:"6 weeks",cost:"₹12,000"},"tableau":{name:"Tableau Data Analyst",provider:"Coursera",duration:"5 months",cost:"Free"},"excel":{name:"Excel Skills for Business",provider:"Coursera · Macquarie",duration:"6 months",cost:"Free"},"statistics":{name:"Statistics with R",provider:"Coursera · Duke",duration:"4 months",cost:"Free"},"pandas":{name:"Data Analysis with Python",provider:"freeCodeCamp",duration:"10h",cost:"Free"},"figma":{name:"Google UX Design",provider:"Coursera · Google",duration:"6 months",cost:"Free"},"seo":{name:"SEO Specialization",provider:"Coursera · UC Davis",duration:"4 months",cost:"Free"},"digital marketing":{name:"Digital Marketing",provider:"Coursera · Illinois",duration:"6 months",cost:"Free"},"tally":{name:"Tally ERP 9",provider:"Udemy",duration:"20h",cost:"₹449"},"gst":{name:"GST Practitioner",provider:"Tally Education",duration:"8h",cost:"₹1,500"},"communication":{name:"Dynamic Public Speaking",provider:"Coursera · Rochester",duration:"4 months",cost:"Free"},"networking":{name:"Computer Networking",provider:"Coursera · Illinois",duration:"4 months",cost:"Free"},"solidworks":{name:"SOLIDWORKS Essentials",provider:"Udemy",duration:"30h",cost:"₹449"},"autocad":{name:"AutoCAD 2024 Masterclass",provider:"Udemy",duration:"20h",cost:"₹449"},"plc":{name:"PLC Programming",provider:"Udemy",duration:"15h",cost:"₹449"},"crm":{name:"Salesforce Admin",provider:"Trailhead",duration:"6 weeks",cost:"Free"},"salesforce":{name:"Salesforce Trailhead",provider:"Trailhead",duration:"Self-paced",cost:"Free"}};
+const TRADE_ROLE_MAP={"web development":["Information Technology","UI/UX Design"],"data science":["Data & Analytics","Information Technology"],"cloud computing":["Cloud & DevOps","Information Technology"],"cyber security":["Cybersecurity","Cloud & DevOps"],"android":["Information Technology"],"digital marketing":["Digital Marketing","E-Commerce & Retail"],"electrical":["Electrical Engineering"],"mechanical":["Mechanical Engineering"],"civil":["Civil Engineering"],"accounting":["Finance & Accounting"],"default":["Information Technology","Data & Analytics","Digital Marketing"]};
+
+/* ============ AUTH + LOAD ============ */
+function requireAuth(){return new Promise((resolve,reject)=>{const u=auth.onAuthStateChanged(async fb=>{u();if(!fb){if(localStorage.getItem('isLoggedIn')==='true'&&localStorage.getItem('userRole')==='trainee'){resolve(null);return;}window.location.href='../auth/login.html?role=trainee';reject('no-auth');return;}_firebaseUser=fb;resolve(fb);});});}
+
+async function loadAllData(){
+if(!_firebaseUser)return null;
+try{
+let snap=await db.collection('trainees').doc(_firebaseUser.uid).get();
+let d=snap.exists?snap.data():null;
+if(!d){snap=await db.collection('users').doc(_firebaseUser.uid).get();d=snap.exists?snap.data():null;}
+if(!d)return null;
+_traineeData={fullName:d.fullName||'Trainee',skillTrade:d.skillTrade||d.skills||'',trainingProgress:Number(d.trainingProgress)||0,certificationStatus:d.certificationStatus||'Pending',careerGoal:d.careerGoal||'',preferredRole:d.preferredRole||'',prevIncome:Number(d.prevIncome)||0,state:d.state||'',profileCompletion:Number(d.profileCompletion)||0};
+if(d.employment){const e=d.employment;
+_employmentData={status:e.status||'Not Updated',companyName:e.companyName||'',jobRole:e.jobRole||'',currentIncome:Number(e.currentIncome)||0,previousIncome:Number(e.previousIncome)||Number(d.prevIncome)||0,currentSkills:e.currentSkills||'',skillsUsed:e.skillsUsed||'',newSkills:e.newSkills||'',skillsImprovement:e.skillsImprovement||'',targetRole:e.targetRole||'',targetSalary:Number(e.targetSalary)||0,mainChallenge:e.mainChallenge||'',supportRequired:e.supportRequired||'',internshipStatus:e.internshipStatus||'',internshipOrg:e.internshipOrg||''};}
+else{_employmentData={status:'Not Updated',companyName:'',jobRole:'',currentIncome:0,previousIncome:Number(d.prevIncome)||0,currentSkills:'',targetRole:d.preferredRole||'',targetSalary:0,skillsImprovement:'',mainChallenge:''};}
+_followupData=d.followup||d.followups||{status:'Pending'};
+return{_traineeData,_employmentData,_followupData};
+}catch(e){console.warn(e);return null;}
+}
+
+/* ============ HELPERS ============ */
+function parseSkills(s){return s?String(s).split(/[,;|]/).map(x=>x.trim().toLowerCase()).filter(Boolean):[];}
+function getUserSkills(){const s=new Set();parseSkills(_employmentData?.currentSkills).forEach(x=>s.add(x));parseSkills(_employmentData?.skillsUsed).forEach(x=>s.add(x));parseSkills(_employmentData?.newSkills).forEach(x=>s.add(x));parseSkills(_traineeData?.skillTrade).forEach(x=>s.add(x));return Array.from(s);}
+function hasSkill(s,arr){return arr.some(u=>u.includes(s)||s.includes(u));}
+function fmtK(n){return n>=1000000?'₹'+(n/1000000).toFixed(1)+'L':n>=1000?'₹'+Math.round(n/1000)+'K':'₹'+n;}
+
+function getBestIndustry(){
+const userSkills=getUserSkills();const trade=(_traineeData?.skillTrade||'').toLowerCase();
+let best=null,bestScore=0;
+Object.entries(INDUSTRIES).forEach(([name,ind])=>{
+const matched=ind.skills.filter(s=>hasSkill(s,userSkills));
+const matchPct=ind.skills.length?Math.round((matched.length/ind.skills.length)*100):0;
+let fitScore=Math.round((matchPct*0.7)+(ind.demand*0.2)+(Math.min(100,ind.growth*4)*0.1));
+Object.entries(TRADE_ROLE_MAP).forEach(([key,arr])=>{if(trade.includes(key)&&arr.includes(name))fitScore+=10;});
+fitScore=Math.min(100,fitScore);
+if(fitScore>bestScore){bestScore=fitScore;best={name,...ind,matched,missing:ind.skills.filter(s=>!hasSkill(s,userSkills)),matchPct,fitScore};}
+});
+return best;
+}
+
+/* ============ AI ENGINE ============ */
+function generateRecommendations(){
+const recs=[];const t=_traineeData||{};const e=_employmentData||{};const f=_followupData||{};
+const userSkills=getUserSkills();const bestInd=getBestIndustry();
+
+if((t.trainingProgress||0)<100){
+const remain=100-(t.trainingProgress||0);
+recs.push({id:'training_complete',category:'employment',priority:remain>50?'critical':'high',icon:'🎓',title:`Complete training — ${remain}% remaining`,desc:`You're at <strong>${t.trainingProgress||0}%</strong>. Finishing training is the single biggest factor for job readiness.`,why:`Training progress directly affects ATS score, alignment, and industry fit.`,actions:[{label:'Continue Training',link:'follow-up.html',type:'primary',icon:'fa-play'},{label:'Update Progress',link:'follow-up.html',type:'secondary',icon:'fa-edit'}]});
+}else{
+recs.push({id:'training_done',category:'employment',priority:'low',icon:'✅',title:'Training complete — leverage it',desc:`Congrats! Highlight project work and hands-on experience in interviews.`,why:`Trainees with completed training get 2.4× more interview calls.`,actions:[{label:'Update Resume',link:'resume-intelligence.html',type:'primary',icon:'fa-file-alt'}]});
+}
+if(t.certificationStatus!=='Certified'){
+recs.push({id:'certification',category:'employment',priority:'critical',icon:'📜',title:`Get certified — currently ${t.certificationStatus||'Pending'}`,desc:`Certified candidates earn <strong>20–30% more</strong> and get more interview calls.`,why:`Certification is a trust signal — missing one can filter you out.`,actions:[{label:'Follow Up',link:'follow-up.html',type:'primary',icon:'fa-award'},{label:'View Courses',link:'career-alignment.html',type:'secondary',icon:'fa-graduation-cap'}]});
+}else{
+recs.push({id:'certification_done',category:'employment',priority:'low',icon:'🏆',title:'Certified — add cert ID to profile',desc:`Ensure certificate ID, issuing body, and date are on your resume and LinkedIn.`,why:`Verifiable certification boosts credibility during HR screening.`,actions:[{label:'Update Resume',link:'resume-intelligence.html',type:'primary',icon:'fa-file-alt'}]});
+}
+if(bestInd&&bestInd.missing.length>0){
+bestInd.missing.slice(0,3).forEach((skill,i)=>{
+const demand=SKILL_DEMAND[skill]?.demand||60;const impact=SKILL_DEMAND[skill]?.impact||40000;const course=COURSE_DB[skill];
+const priority=i===0&&demand>=85?'critical':i<2?'high':'medium';
+recs.push({id:`skill_${skill}`,category:'skills',priority,icon:'💻',title:`Learn ${skill} — ${demand}/100 demand`,desc:`<strong>${skill}</strong> is missing for <strong>${bestInd.name}</strong>. Adds <strong>+${fmtK(impact)}</strong> to expected salary.${course?`<br><br>📚 <strong>Recommended:</strong> ${course.name} by ${course.provider} (${course.duration}, ${course.cost}).`:''}`,why:`This skill appears in ${Math.round(demand/10)} out of 10 job postings in your target industry.`,actions:[course?{label:`Open Course`,link:'#',type:'primary',icon:'fa-play',external:true}:null,{label:'View in Industry',link:'industry-demand.html',type:'secondary',icon:'fa-chart-line'}].filter(Boolean)});
+});
+}
+if((t.profileCompletion||0)<80){
+recs.push({id:'resume_ats',category:'resume',priority:'high',icon:'📄',title:`Improve resume — profile at ${t.profileCompletion||0}%`,desc:`An optimized resume can <strong>double</strong> your interview call rate.`,why:`75% of resumes are filtered by ATS before a human sees them.`,actions:[{label:'Analyze Resume',link:'resume-intelligence.html',type:'primary',icon:'fa-search'},{label:'Update Profile',link:'employment.html',type:'secondary',icon:'fa-edit'}]});
+}
+if(userSkills.length<5){
+recs.push({id:'add_skills',category:'resume',priority:'critical',icon:'⚙️',title:`Add more skills — only ${userSkills.length} listed`,desc:`Add at least <strong>5–8</strong> skills to unlock accurate recommendations.`,why:`Skills are the #1 data source for all recommendation engines.`,actions:[{label:'Add Skills',link:'employment.html',type:'primary',icon:'fa-plus'}]});
+}
+const status=e.status||'Not Updated';
+if(status==='Unemployed'||status==='Looking for Job'){
+recs.push({id:'job_search',category:'employment',priority:'critical',icon:'🔍',title:'Job search strategy for your profile',desc:`Apply to <strong>5+ roles/week</strong>, target top cities, improve resume first.`,why:`Active seekers applying to 5+ roles/week get 3× more callbacks.`,actions:[{label:'See Recommendations',link:'industry-demand.html',type:'primary',icon:'fa-briefcase'},{label:'Improve Resume',link:'resume-intelligence.html',type:'secondary',icon:'fa-file-alt'}]});
+}else if(status==='Employed'||status==='Self-Employed'){
+recs.push({id:'career_growth',category:'career',priority:'medium',icon:'📈',title:`Growth plan while at ${e.companyName||'current job'}`,desc:`Focus on upskilling for your next role — target <strong>25–40% salary jump</strong>.`,why:`Continuous learners get promoted 30% faster.`,actions:[{label:'View Alignment',link:'career-alignment.html',type:'primary',icon:'fa-compass'},{label:'In-Demand Skills',link:'industry-demand.html',type:'secondary',icon:'fa-chart-line'}]});
+}
+const curr=e.currentIncome||0;const tgt=e.targetSalary||0;const prev=e.previousIncome||t.prevIncome||0;
+if(curr>0&&tgt>curr){
+const gap=tgt-curr;
+recs.push({id:'income_gap',category:'career',priority:gap>20000?'high':'medium',icon:'💰',title:`Close ₹${gap.toLocaleString()} income gap`,desc:`Currently <strong>${fmtK(curr)}</strong>, target <strong>${fmtK(tgt)}</strong> — gap <strong>${fmtK(gap)}</strong>.`,why:`Trainees who upskill within 12 months see 20%+ income growth.`,actions:[{label:'Salary Ladder',link:'career-alignment.html',type:'primary',icon:'fa-chart-bar'}]});
+}
+if(curr>0&&prev>0&&curr>prev){
+const growth=Math.round(((curr-prev)/prev)*100);
+recs.push({id:'income_growth',category:'career',priority:'low',icon:'🎉',title:`Income grew ${growth}% — keep momentum`,desc:`Excellent! Document what you did and repeat.`,why:`Sustained income growth predicts long-term career success.`,actions:[{label:'View History',link:'history.html',type:'primary',icon:'fa-history'}]});
+}
+if(t.careerGoal){
+recs.push({id:'career_goal',category:'career',priority:'info',icon:'🎯',title:`Your goal: "${t.careerGoal}"`,desc:`Break into <strong>3-month milestones</strong>. Review monthly.`,why:`Written goals with milestones are 42% more likely to be achieved.`,actions:[{label:'Set Milestones',link:'career-alignment.html',type:'primary',icon:'fa-flag'}]});
+}
+if(e.mainChallenge){
+const actions={'Low Salary':{l:'View Salary Benchmarks',link:'industry-demand.html'},'Skill Gap':{l:'See Skill Roadmap',link:'career-alignment.html'},'Long Distance':{l:'Explore Remote Roles',link:'industry-demand.html'},'Work Pressure':{l:'Improve Readiness',link:'career-alignment.html'},'Communication Problem':{l:'Take Comm Course',link:'career-alignment.html'},'No Career Growth':{l:'View Career Plan',link:'career-alignment.html'}};
+const a=actions[e.mainChallenge]||{l:'View Career Tools',link:'career-alignment.html'};
+recs.push({id:'challenge',category:'career',priority:'high',icon:'⚠️',title:`You flagged: "${e.mainChallenge}"`,desc:`This is a real blocker. ${e.supportRequired?'You need: <strong>'+e.supportRequired+'</strong>. ':''}Targeted action:`,why:`Acknowledging challenges is the first step. Each one has a specific tool.`,actions:[{label:a.l,link:a.link,type:'primary',icon:'fa-arrow-right'}]});
+}
+if(e.skillsImprovement){
+const imp=parseSkills(e.skillsImprovement);
+if(imp.length){
+const s=imp[0];const course=COURSE_DB[s];
+recs.push({id:'improve_skill',category:'skills',priority:'high',icon:'📈',title:`Strengthen "${s}"`,desc:`You noted <strong>${s}</strong> needs improvement. 1 hour daily for 2 weeks.${course?` Recommended: <strong>${course.name}</strong>.`:''}`,why:`Self-identified weaknesses addressed within 30 days become top strengths.`,actions:[course?{label:'Start Course',link:'#',type:'primary',icon:'fa-play',external:true}:null,{label:'View Roadmap',link:'career-alignment.html',type:'secondary',icon:'fa-route'}].filter(Boolean)});
+}
+}
+if(e.internshipStatus==='Ongoing'){
+recs.push({id:'internship',category:'employment',priority:'medium',icon:'🎓',title:'Convert internship to full-time',desc:`At <strong>${e.internshipOrg||'internship'}</strong>. Aim to convert by exceeding expectations.`,why:`Interns who convert earn ₹1.5–2L more and skip the job search.`,actions:[{label:'Update Progress',link:'employment.html',type:'primary',icon:'fa-edit'}]});
+}
+if(f.status!=='Completed'){
+recs.push({id:'followup',category:'employment',priority:'medium',icon:'📅',title:'Complete your pending follow-up',desc:`Follow-up is <strong>${f.status||'pending'}</strong>. Keeps you active in the training system.`,why:`Trainees completing all follow-ups are 2× more likely to be re-engaged.`,actions:[{label:'Complete Follow-up',link:'follow-up.html',type:'primary',icon:'fa-check'}]});
+}
+if(bestInd&&bestInd.fitScore>=65){
+recs.push({id:'opportunity',category:'career',priority:'info',icon:'🚀',title:`Strong fit for ${bestInd.name}`,desc:`Fit score <strong>${bestInd.fitScore}%</strong>. You match <strong>${bestInd.matched.length}/${bestInd.skills.length}</strong> skills.`,why:`Acting while your fit is high maximizes interview success.`,actions:[{label:'Full Analysis',link:'industry-demand.html',type:'primary',icon:'fa-bullseye'},{label:'Update Resume',link:'resume-intelligence.html',type:'secondary',icon:'fa-file-alt'}]});
+}
+if(userSkills.length>=5&&(t.trainingProgress||0)>=50){
+recs.push({id:'linkedin',category:'career',priority:'info',icon:'💼',title:'Build LinkedIn presence',desc:`You have ${userSkills.length} skills and real training. Recruiters search LinkedIn daily.`,why:`75% of recruiters check LinkedIn before calling.`,actions:[{label:'LinkedIn Tips',link:'resume-intelligence.html',type:'primary',icon:'fa-linkedin'}]});
+}
+if(status==='Not Updated'&&(t.trainingProgress||0)>=80){
+recs.push({id:'first_job',category:'employment',priority:'critical',icon:'🎯',title:'Ready for first job — update status',desc:`You're <strong>${t.trainingProgress}%</strong> trained but status not updated.`,why:`Accurate status determines every recommendation.`,actions:[{label:'Update Employment',link:'employment.html',type:'primary',icon:'fa-edit'}]});
+}
+const po={critical:0,high:1,medium:2,low:3,info:4};
+recs.sort((a,b)=>po[a.priority]-po[b.priority]);
+return recs;
+}
+
+function computeHealth(){
+const t=_traineeData||{};const e=_employmentData||{};const bestInd=getBestIndustry();
+let h=0;
+if((t.trainingProgress||0)>=100)h+=20;
+if(t.certificationStatus==='Certified')h+=20;
+if(getUserSkills().length>=5)h+=15;
+if(e.status==='Employed'||e.status==='Self-Employed')h+=20;
+if((e.currentIncome||0)>0)h+=10;
+if(bestInd&&bestInd.fitScore>=60)h+=15;
+return Math.min(100,h);
+}
+
+/* ============ RENDER ============ */
+function renderUserInfo(){const n=_traineeData?.fullName||'Trainee';document.getElementById('userAvatar').textContent=n.charAt(0).toUpperCase();document.getElementById('userName').textContent=n.split(' ')[0];}
+
+function renderHero(recs){
+const t=_traineeData||{};
+document.getElementById('heroTitle').textContent=`Hi ${t.fullName?.split(' ')[0]||'there'} — your action plan is ready`;
+document.getElementById('heroSubtitle').textContent=`I analyzed data from 7 pages and found ${recs.length} personalized recommendations. ${recs.filter(r=>r.priority==='critical').length} need immediate attention.`;
+document.getElementById('heroTotal').textContent=recs.length;
+document.getElementById('heroCrit').textContent=recs.filter(r=>r.priority==='critical').length;
+document.getElementById('heroHealth').textContent=computeHealth()+'%';
+}
+
+function renderHealth(){
+const h=computeHealth();
+const ring=document.getElementById('healthRing');
+const circ=2*Math.PI*52;const off=circ-(h/100)*circ;
+let col='#ef4444';if(h>=80)col='#10b981';else if(h>=60)col='#3b82f6';else if(h>=40)col='#f59e0b';
+ring.style.stroke=col;
+setTimeout(()=>{ring.style.strokeDashoffset=off;},300);
+document.getElementById('healthNum').innerHTML=h+'<span class="unit">%</span>';
+document.getElementById('healthStatus').textContent=h>=80?'Excellent':h>=60?'Good Standing':h>=40?'Moderate':'Needs Attention';
+document.getElementById('healthDesc').textContent=h>=60?'You\'re on a strong career track. Keep the momentum going.':h>=40?'You\'re making progress. Focus on the critical items below.':'Several key items need attention. Start with critical actions.';
+}
+
+function renderPriorityTiles(recs){
+document.getElementById('tileCrit').textContent=recs.filter(r=>r.priority==='critical').length;
+document.getElementById('tileHigh').textContent=recs.filter(r=>r.priority==='high').length;
+document.getElementById('tileMed').textContent=recs.filter(r=>r.priority==='medium').length;
+document.getElementById('tileLow').textContent=recs.filter(r=>r.priority==='low'||r.priority==='info').length;
+}
+
+function renderNextAction(recs){
+const next=recs[0];
+if(!next)return;
+document.getElementById('nextTitle').textContent=next.title;
+document.getElementById('nextDesc').textContent=next.desc.replace(/<[^>]*>/g,'').slice(0,190)+'…';
+const primary=next.actions.find(a=>a.type==='primary')||next.actions[0];
+if(primary)document.getElementById('nextBtnLabel').textContent=primary.label;
+}
+
+function recHTML(r){
+const labels={critical:'🚨 Critical',high:'⚡ High',medium:'📋 Recommended',low:'✨ Opportunity',info:'ℹ️ Info'};
+const cats={skills:'Skills',resume:'Resume',employment:'Employment',career:'Career'};
+return `<div class="rec ${r.priority}">
+<div class="rec-side">
+<div class="rec-side-icon">${r.icon}</div>
+<div class="rec-side-line"></div>
+</div>
+<div class="rec-main">
+<div class="rec-top">
+<h3>${r.title}</h3>
+<span class="rec-pill ${r.priority}">${labels[r.priority]||r.priority}</span>
+</div>
+<div class="rec-body">${r.desc}</div>
+${r.why?`<div class="rec-why"><strong>WHY THIS MATTERS · </strong>${r.why}</div>`:''}
+<div class="rec-tags">
+<span class="rec-tag src"><i class="fas fa-robot"></i> AI Engine</span>
+<span class="rec-tag cat">${cats[r.category]||r.category}</span>
+</div>
+<div class="rec-actions">
+${r.actions.map(a=>a.external
+?`<button class="act-btn ${a.type}" onclick="showToast('🔗 Opening ${a.label}...')"><i class="fas ${a.icon}"></i> ${a.label}</button>`
+:`<a href="${a.link}" class="act-btn ${a.type}"><i class="fas ${a.icon}"></i> ${a.label}</a>`
+).join('')}
+</div>
+</div>
+</div>`;
+}
+
+function emptyHTML(title,desc,emoji){
+return `<div class="empty"><div class="empty-emoji">${emoji}</div><h3>${title}</h3><p>${desc}</p></div>`;
+}
+
+function renderFeed(recs){
+document.getElementById('list-all').innerHTML=recs.length?recs.map(recHTML).join(''):emptyHTML('All caught up!','No recommendations right now — check back after updating your profile.','🎉');
+const crit=recs.filter(r=>r.priority==='critical');
+document.getElementById('list-critical').innerHTML=crit.length?crit.map(recHTML).join(''):emptyHTML('No critical issues!','Great job — nothing urgent. Focus on high-priority items.','✅');
+document.getElementById('list-skills').innerHTML=renderFilter(recs,'skills');
+document.getElementById('list-resume').innerHTML=renderFilter(recs,'resume');
+document.getElementById('list-employment').innerHTML=renderFilter(recs,'employment');
+document.getElementById('list-career').innerHTML=renderFilter(recs,'career');
+const learning=recs.filter(r=>(r.category==='skills'||r.category==='career')&&(r.desc.includes('course')||r.desc.includes('Recommended')||r.desc.includes('Course')));
+document.getElementById('list-learning').innerHTML=learning.length?learning.map(recHTML).join(''):emptyHTML('No learning recommendations','Add skills or set a target role to unlock personalized course suggestions.','🎓');
+}
+
+function renderFilter(recs,cat){
+const filtered=recs.filter(r=>r.category===cat);
+if(!filtered.length){
+const msgs={
+skills:['No skill gaps','You have all required skills for your top industry.','🎯'],
+resume:['Resume looks great!','No improvements needed right now.','✨'],
+employment:['Employment up to date','All good! Keep updating as your situation changes.','✅'],
+career:['Career on track!','Explore long-term goals in Career Alignment.','🚀']
+};
+const m=msgs[cat]||['Nothing here','All caught up.','✅'];
+return emptyHTML(m[0],m[1],m[2]);
+}
+return filtered.map(recHTML).join('');
+}
+
+function renderCounts(recs){
+document.getElementById('cAll').textContent=recs.length;
+document.getElementById('cCrit').textContent=recs.filter(r=>r.priority==='critical').length;
+document.getElementById('cSkills').textContent=recs.filter(r=>r.category==='skills').length;
+document.getElementById('cResume').textContent=recs.filter(r=>r.category==='resume').length;
+document.getElementById('cEmploy').textContent=recs.filter(r=>r.category==='employment').length;
+document.getElementById('cCareer').textContent=recs.filter(r=>r.category==='career').length;
+const learn=recs.filter(r=>(r.category==='skills'||r.category==='career')&&(r.desc.includes('course')||r.desc.includes('Recommended')));
+document.getElementById('cLearn').textContent=learn.length;
+document.getElementById('hdrAll').textContent=recs.length+' actions';
+document.getElementById('hdrCrit').textContent=recs.filter(r=>r.priority==='critical').length+' actions';
+document.getElementById('hdrSkills').textContent=recs.filter(r=>r.category==='skills').length+' actions';
+document.getElementById('hdrResume').textContent=recs.filter(r=>r.category==='resume').length+' actions';
+document.getElementById('hdrEmploy').textContent=recs.filter(r=>r.category==='employment').length+' actions';
+document.getElementById('hdrCareer').textContent=recs.filter(r=>r.category==='career').length+' actions';
+document.getElementById('hdrLearn').textContent=learn.length+' actions';
+}
+
+/* ============ INTERACTIONS ============ */
+document.querySelectorAll('.filter-item').forEach(item=>{
+item.addEventListener('click',()=>{
+document.querySelectorAll('.filter-item').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.feed-panel').forEach(x=>x.classList.remove('active'));
+item.classList.add('active');
+document.getElementById('feed-'+item.dataset.tab).classList.add('active');
+});
+});
+
+document.querySelectorAll('.priority-tile').forEach(tile=>{
+tile.addEventListener('click',()=>{
+const target=document.querySelector(`.filter-item[data-tab="${tile.dataset.jump}"]`);
+if(target)target.click();
+});
+});
+
+function jumpToNextAction(){
+const recs=generateRecommendations();
+if(!recs.length)return;
+const next=recs[0];
+const primary=next.actions.find(a=>a.type==='primary')||next.actions[0];
+if(primary&&primary.link&&primary.link!=='#'){window.location.href=primary.link;}
+else{showToast('✅ Action triggered: '+next.title);}
+}
+
+/* ============ EXPORT ============ */
+function exportAIReport(){
+const recs=generateRecommendations();
+const t=_traineeData||{};
+const txt=`SKILLBRIDGE · AI CAREER COACH REPORT
+Generated: ${new Date().toLocaleString()}
+Trainee: ${t.fullName} | Trade: ${t.skillTrade} | Training: ${t.trainingProgress}%
+
+CAREER HEALTH: ${computeHealth()}%
+TOTAL RECOMMENDATIONS: ${recs.length}
+
+${recs.map((r,i)=>`[${i+1}] [${r.priority.toUpperCase()}] ${r.title}
+${r.desc.replace(/<[^>]*>/g,'')}
+Why: ${(r.why||'').replace(/<[^>]*>/g,'')}
+Action: ${r.actions.map(a=>a.label).join(' / ')}
+`).join('\n---\n')}
+`;
+const b=new Blob([txt],{type:'text/plain'});const u=document.createElement('a');u.href=URL.createObjectURL(b);u.download=`ai-coach-${Date.now()}.txt`;u.click();
+showToast('📄 AI plan exported!');
+}
+
+function refreshAI(){location.reload();}
+
+/* ============ UI ============ */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+function showToast(msg){const t=document.createElement('div');t.className='toast';t.innerHTML=`<i class="fas fa-robot" style="color:#a78bfa;"></i> ${msg}`;document.body.appendChild(t);setTimeout(()=>t.remove(),2800);}
+async function logout(){if(!confirm('Logout?'))return;try{localStorage.clear();await auth.signOut();}catch(e){}window.location.href='../auth/login.html?role=trainee';}
+function toggleTheme(){const h=document.documentElement;const n=(h.getAttribute('data-theme')||'light')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('skillintel-theme',n);}catch(e){}const i=document.querySelector('.theme-toggle i');if(i)i.className=n==='dark'?'fas fa-sun':'fas fa-moon';}
+
+/* ============ INIT ============ */
+document.addEventListener('DOMContentLoaded',async function(){
+try{const s=localStorage.getItem('skillintel-theme')||'light';document.documentElement.setAttribute('data-theme',s);const i=document.querySelector('.theme-toggle i');if(i)i.className=s==='dark'?'fas fa-sun':'fas fa-moon';}catch(e){}
+try{
+await requireAuth();
+const data=await loadAllData();
+if(!data){showToast('⚠️ No profile found');return;}
+renderUserInfo();
+const recs=generateRecommendations();
+renderHero(recs);
+renderHealth();
+renderPriorityTiles(recs);
+renderNextAction(recs);
+renderFeed(recs);
+renderCounts(recs);
+console.log('✅ AI Coach ready with',recs.length,'recommendations');
+}catch(e){console.warn('Init:',e);}
+document.addEventListener('click',function(ev){const sb=document.getElementById('sidebar');const tg=document.querySelector('.menu-toggle');if(window.innerWidth<=768&&sb.classList.contains('open')){if(!sb.contains(ev.target)&&ev.target!==tg&&!tg.contains(ev.target))sb.classList.remove('open');}});
+});
+</script>
+<script src="../js/script.js"></script>
+</body>
+</html>

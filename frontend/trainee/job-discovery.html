@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerTrack · Find Jobs & Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif;}
+html,body{background:#f4f7ff !important;color:#1e293b !important;}
+body{min-height:100vh;display:flex;}
+
+/* ============ SIDEBAR ============ */
+.sidebar{width:260px;height:100vh;position:fixed;left:0;top:0;background:linear-gradient(180deg,#0f172a,#172554,#312e81);padding:25px 18px;color:#fff;overflow-y:auto;z-index:100;transition:transform .3s}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:10px}
+.brand{display:flex;align-items:center;gap:12px;padding:10px 12px 30px}
+.brand-icon{width:45px;height:45px;display:flex;align-items:center;justify-content:center;border-radius:14px;font-size:22px;background:linear-gradient(135deg,#2563eb,#7c3aed,#06b6d4);color:#fff}
+.brand h2{font-size:18px;color:#fff}
+.brand p{font-size:11px;color:#94a3b8}
+.menu-title{color:#64748b;font-size:11px;font-weight:600;margin:12px 12px;letter-spacing:1px;text-transform:uppercase}
+.menu a{display:flex;align-items:center;gap:12px;text-decoration:none;color:#cbd5e1;padding:13px 14px;border-radius:14px;margin:6px 0;transition:.3s;font-size:14px}
+.menu a:hover{background:rgba(255,255,255,.08);color:#fff}
+.menu a.active{background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;box-shadow:0 10px 25px rgba(37,99,235,.25)}
+.menu a i{width:20px;text-align:center;color:inherit}
+.menu a .count-badge{margin-left:auto;font-size:10px;padding:2px 8px;background:#22c55e;color:#fff;border-radius:10px;font-weight:800}
+.sidebar-footer{position:absolute;bottom:20px;left:18px;right:18px;padding-top:15px;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-footer a{display:flex;align-items:center;gap:12px;text-decoration:none;color:#cbd5e1;padding:12px 14px;border-radius:12px;transition:.3s;font-size:14px;cursor:pointer}
+.sidebar-footer a:hover{background:rgba(255,255,255,.08);color:#fff}
+
+/* ============ MAIN ============ */
+.main{margin-left:260px;padding:25px 32px 100px;min-height:100vh;flex:1;background:#f4f7ff;width:calc(100% - 260px);min-width:0}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.title h1{font-size:26px;color:#172554;font-weight:800}
+.title p{color:#64748b;font-size:13px;margin-top:4px}
+.top-actions{display:flex;gap:10px;align-items:center}
+.icon-btn,.theme-toggle{width:44px;height:44px;border:none;border-radius:14px;background:#fff;box-shadow:0 5px 20px rgba(15,23,42,.08);cursor:pointer;font-size:17px;color:#475569;transition:.2s;display:flex;align-items:center;justify-content:center;position:relative}
+.icon-btn:hover,.theme-toggle:hover{transform:scale(1.05)}
+.icon-btn .bell-badge{position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:800;min-width:20px;height:20px;padding:0 5px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:2px solid #f4f7ff}
+.live-badge{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:20px;background:#dcfce7;color:#059669;font-size:11.5px;font-weight:800}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.4}}
+
+/* ============ HERO ============ */
+.hero{position:relative;overflow:hidden;padding:28px 32px;border-radius:22px;margin-bottom:22px;background:linear-gradient(120deg,#172554,#2563eb,#7c3aed);color:#fff;box-shadow:0 15px 35px rgba(37,99,235,.25)}
+.hero::before{content:'';position:absolute;width:280px;height:280px;background:rgba(255,255,255,.08);border-radius:50%;top:-100px;right:-60px;pointer-events:none}
+.hero-inner{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.hero h2{font-size:24px;font-weight:900;margin-bottom:6px;color:#fff}
+.hero p{font-size:13.5px;color:#e0e7ff;max-width:620px;line-height:1.6}
+.hero p strong{color:#fff}
+.hero-stats{display:flex;gap:12px;flex-wrap:wrap}
+.hero-stat{padding:12px 18px;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);border-radius:14px;text-align:center;min-width:90px}
+.hero-stat-val{font-size:22px;font-weight:900;color:#fff}
+.hero-stat-label{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:#c7d2fe;margin-top:4px;font-weight:700}
+
+/* ============ TABS ============ */
+.tabs{display:flex;gap:6px;background:white;padding:6px;border-radius:14px;border:1px solid #eef2f6;margin-bottom:20px;overflow-x:auto;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.tabs::-webkit-scrollbar{height:0}
+.tab{padding:11px 20px;border-radius:10px;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:8px;border:none;background:transparent;font-family:inherit}
+.tab:hover{background:#f8fafc;color:#0b1a33}
+.tab.active{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;box-shadow:0 6px 16px -4px rgba(37,99,235,.4)}
+.tab i{font-size:13px}
+.tab .count{margin-left:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800;background:#f1f5f9;color:#475569}
+.tab.active .count{background:rgba(255,255,255,.25);color:white}
+.tab .count.alert{background:#ef4444;color:white;animation:pulse 2s infinite}
+
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============ FILTERS ============ */
+.filters{background:#fff;border-radius:18px;padding:18px 22px;margin-bottom:20px;border:1px solid #eef2ff;box-shadow:0 3px 15px rgba(15,23,42,.04);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:14px;align-items:end}
+.filter-group{display:flex;flex-direction:column;gap:5px}
+.filter-group label{font-size:11.5px;font-weight:700;color:#475569;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.5px}
+.filter-group label i{color:#2563eb;font-size:11px}
+.filter-group input,.filter-group select{padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:500;color:#0b1a33;background:#f8fafc;outline:none;transition:.2s;font-family:inherit;width:100%}
+.filter-group input:focus,.filter-group select:focus{border-color:#2563eb;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.filter-group input::placeholder{color:#94a3b8}
+
+/* ============ RESULTS META ============ */
+.results-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.results-meta .count{font-size:13px;color:#64748b;font-weight:600}
+.results-meta .count strong{color:#172554;font-weight:800}
+.sort-pills{display:flex;gap:6px;flex-wrap:wrap}
+.sort-pill{padding:7px 14px;border-radius:10px;background:#fff;border:1px solid #e2e8f0;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;transition:.2s;font-family:inherit}
+.sort-pill:hover{border-color:#c7d2fe;color:#4338ca}
+.sort-pill.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(99,102,241,.3)}
+
+/* ============ JOB GRID ============ */
+.job-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:18px}
+@media(max-width:1300px){.job-grid{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}}
+.job-card{background:#fff;border-radius:18px;padding:22px;border:1px solid #eef2ff;box-shadow:0 3px 15px rgba(15,23,42,.04);transition:.28s;position:relative;overflow:hidden;display:flex;flex-direction:column;color:#1e293b}
+.job-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#2563eb,#7c3aed)}
+.job-card.match-high::before{background:linear-gradient(90deg,#10b981,#059669)}
+.job-card.match-mid::before{background:linear-gradient(90deg,#f59e0b,#d97706)}
+.job-card.match-low::before{background:linear-gradient(90deg,#dc2626,#b91c1c)}
+.job-card:hover{transform:translateY(-5px);box-shadow:0 18px 40px rgba(37,99,235,.15);border-color:#c7d2fe}
+.job-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:12px}
+.job-head-left{flex:1;min-width:0}
+.job-head h3{font-size:16px;font-weight:800;color:#172554;margin-bottom:5px;line-height:1.3;word-break:break-word}
+.job-company{font-size:12.5px;color:#64748b;display:flex;align-items:center;gap:6px;font-weight:600}
+.job-company i{color:#2563eb;font-size:11px}
+.match-ring{position:relative;width:64px;height:64px;flex-shrink:0}
+.match-ring svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.match-ring-bg{fill:none;stroke:#e5e7eb;stroke-width:6}
+.match-ring-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.16,1,.3,1)}
+.match-ring-val{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:15px;font-weight:900;color:#172554}
+.job-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;font-size:12px}
+.job-meta span{display:flex;align-items:center;gap:5px;padding:4px 10px;background:#f8fafc;border-radius:8px;font-weight:600;border:1px solid #eef2ff;color:#64748b}
+.job-meta i{color:#2563eb;font-size:11px}
+.skill-match-panel{background:linear-gradient(135deg,#f8faff,#f5f3ff);border-radius:12px;padding:14px;margin-bottom:14px;border:1px solid #eef2ff}
+.skill-match-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#4338ca;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.skill-match-title .badge{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:800;white-space:nowrap}
+.skill-match-title .badge.good{background:#dcfce7;color:#059669}
+.skill-match-title .badge.partial{background:#fef3c7;color:#d97706}
+.skill-match-title .badge.poor{background:#fee2e2;color:#dc2626}
+.skill-chips-group{margin-bottom:8px}
+.skill-chips-group:last-child{margin-bottom:0}
+.skill-chips-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.skill-chips-label.matched{color:#059669}
+.skill-chips-label.missing{color:#dc2626}
+.skill-chips{display:flex;flex-wrap:wrap;gap:5px}
+.skill-chip{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px}
+.skill-chip.matched{background:#d1fae5;color:#059669;border:1px solid #a7f3d0}
+.skill-chip.missing{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
+.job-salary{font-size:16px;font-weight:900;color:#059669;margin-bottom:14px;display:flex;align-items:center;gap:8px;margin-top:auto}
+.job-salary span{font-size:11px;color:#94a3b8;font-weight:600}
+.job-actions{display:flex;gap:8px;padding-top:14px;border-top:1px solid #f1f5f9}
+.btn-apply{flex:1;padding:12px 16px;border-radius:11px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border:none;font-size:13px;font-weight:800;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit;box-shadow:0 6px 16px rgba(37,99,235,.25)}
+.btn-apply:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(37,99,235,.35)}
+.btn-apply.applied{background:linear-gradient(135deg,#10b981,#059669);pointer-events:none}
+.btn-save{padding:12px 14px;border-radius:11px;background:#f1f5f9;color:#64748b;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit}
+.btn-save:hover{background:#e2e8f0;color:#0b1a33}
+.btn-save.saved{background:#fef3c7;color:#d97706}
+
+/* ============ TRAINING PROGRAM CARDS ============ */
+.training-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:18px}
+@media(max-width:1300px){.training-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}}
+.training-card{background:#fff;border-radius:18px;padding:0;border:1px solid #eef2ff;box-shadow:0 3px 15px rgba(15,23,42,.04);transition:.28s;position:relative;overflow:hidden;display:flex;flex-direction:column;color:#1e293b}
+.training-card:hover{transform:translateY(-5px);box-shadow:0 18px 40px rgba(37,99,235,.15);border-color:#c7d2fe}
+.training-card.enrolled{border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+.training-card.enrolled::after{content:'✓ ENROLLED';position:absolute;top:14px;right:14px;background:#dcfce7;color:#059669;font-size:9.5px;font-weight:900;padding:4px 10px;border-radius:8px;letter-spacing:.5px;z-index:2}
+.tc-banner{height:100px;background:linear-gradient(135deg,#2563eb,#7c3aed);position:relative;display:flex;align-items:center;padding:0 22px;color:white;overflow:hidden}
+.tc-banner::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.08);top:-80px;right:-40px}
+.tc-icon{width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:26px;position:relative;z-index:1;flex-shrink:0;color:white}
+.tc-title-wrap{position:relative;z-index:1;margin-left:14px;min-width:0}
+.tc-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.85;color:white}
+.tc-title{font-size:15px;font-weight:800;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:white}
+.tc-body{padding:18px 22px 20px;flex:1;display:flex;flex-direction:column}
+.tc-desc{font-size:13px;color:#475569;line-height:1.55;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:40px}
+.tc-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.tc-meta-item{background:#f8fafc;border-radius:10px;padding:9px 12px;border:1px solid #f1f5f9}
+.tc-meta-item .k{font-size:9.5px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.tc-meta-item .v{font-size:13px;font-weight:800;color:#0b1a33;margin-top:3px;display:flex;align-items:center;gap:5px}
+.tc-meta-item .v i{color:#2563eb;font-size:11px}
+.tc-meta-item .v.green{color:#059669}
+.tc-skills-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:8px}
+.tc-skills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;min-height:26px}
+.tc-progress{margin-bottom:14px}
+.tc-progress-head{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;color:#64748b;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.tc-progress-track{width:100%;height:7px;background:#e2e8f0;border-radius:10px;overflow:hidden}
+.tc-progress-fill{height:100%;background:linear-gradient(90deg,#2563eb,#7c3aed);border-radius:10px;transition:width .8s ease}
+.tc-footer{display:flex;gap:7px;padding-top:14px;border-top:1px solid #f1f5f9;margin-top:auto}
+.tc-btn{flex:1;padding:11px;border-radius:10px;border:none;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.tc-btn.primary{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white}
+.tc-btn.primary:hover{box-shadow:0 8px 18px rgba(37,99,235,.3);transform:translateY(-1px)}
+.tc-btn.enrolled{background:linear-gradient(135deg,#10b981,#059669);color:white;cursor:default;pointer-events:none}
+.tc-btn.ghost{background:#f1f5f9;color:#475569;flex:0 0 44px;padding:11px 0}
+.tc-btn.ghost:hover{background:#e2e8f0}
+.tc-btn.ghost.on{background:#fef3c7;color:#d97706}
+
+/* ============ APPLICATION/MYAPPS ============ */
+.apps-list{display:flex;flex-direction:column;gap:16px}
+.my-app-card{background:white;border-radius:16px;border:1px solid #eef2f6;padding:22px 24px;position:relative;overflow:hidden;box-shadow:0 4px 15px rgba(15,23,42,.05)}
+.my-app-card .app-stripe{position:absolute;left:0;top:0;bottom:0;width:4px}
+.my-app-card .new-badge{position:absolute;top:14px;right:14px;color:white;font-size:10px;font-weight:800;padding:4px 10px;border-radius:12px;text-transform:uppercase;letter-spacing:.5px;animation:pulse 2s infinite}
+.my-app-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.my-app-head-left{flex:1;min-width:200px}
+.my-app-head-left h3{font-size:17px;font-weight:800;color:#0b1a33;margin-bottom:5px}
+.my-app-head-left .meta{font-size:12.5px;color:#64748b;display:flex;flex-wrap:wrap;gap:12px}
+.my-app-head-left .meta span{display:flex;align-items:center;gap:5px}
+.my-app-head-left .meta i{color:#2563eb}
+.app-status-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:14px;font-size:13px;font-weight:800;border-width:1.5px;border-style:solid}
+.app-status-pill .emoji{font-size:18px;line-height:1}
+
+.progress-box{background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:14px}
+.progress-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.progress-head .lbl{font-size:10.5px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.5px}
+.progress-head .pct{font-size:11px;font-weight:800}
+.progress-bar{display:flex;gap:4px;margin-bottom:12px}
+.progress-bar-seg{flex:1;height:6px;border-radius:4px;background:#e2e8f0;transition:all .3s}
+.progress-labels{display:flex;justify-content:space-between;font-size:9.5px;color:#94a3b8;font-weight:700;text-transform:uppercase}
+.progress-labels span.active{color:inherit}
+
+.status-banner{padding:12px 16px;border-radius:10px;margin-bottom:12px;font-size:13px;line-height:1.55;font-weight:500}
+.status-banner.interview{background:#fef3c7;border-left:3px solid #d97706;color:#92400e}
+.status-banner.offered{background:#cffafe;border-left:3px solid #0891b2;color:#0e7490}
+.status-banner.hired{background:#dcfce7;border-left:3px solid #059669;color:#065f46}
+.status-banner.rejected{background:#fef2f2;border-left:3px solid #dc2626;color:#991b1b}
+.status-banner.shortlisted{background:#ede9fe;border-left:3px solid #7c3aed;color:#5b21b6}
+
+.app-foot{display:flex;justify-content:space-between;font-size:11.5px;color:#94a3b8;padding-top:12px;border-top:1px dashed #e2e8f0;flex-wrap:wrap;gap:8px}
+.app-foot span{display:flex;align-items:center;gap:5px}
+.app-foot strong{color:#4338ca}
+
+/* ============ NOTIFICATIONS LIST ============ */
+.notif-list{display:flex;flex-direction:column;gap:12px}
+.notif-item{background:white;border-radius:14px;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;box-shadow:0 3px 12px rgba(15,23,42,.04);border-left:4px solid #2563eb}
+.notif-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.notif-body{flex:1;min-width:0}
+.notif-body h4{font-weight:800;font-size:13.5px;margin-bottom:4px}
+.notif-body p{font-size:13px;color:#475569;line-height:1.55}
+.notif-time{font-size:11px;color:#94a3b8;margin-top:6px;font-weight:600}
+
+/* ============ EMPTY / LOADING ============ */
+.empty{padding:60px 30px;text-align:center;background:#fff;border-radius:20px;border:2px dashed #e2e8f0;grid-column:1/-1}
+.empty i{font-size:52px;color:#c7d2fe;margin-bottom:14px;display:block}
+.empty h3{font-size:18px;color:#172554;margin-bottom:8px;font-weight:800}
+.empty p{font-size:13.5px;color:#64748b;max-width:420px;margin:0 auto}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;grid-column:1/-1}
+.spinner{width:44px;height:44px;border:4px solid #e0e7ff;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ============ MODAL ============ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(6px);z-index:200;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:22px;max-width:800px;width:100%;margin:20px auto;box-shadow:0 40px 100px -20px rgba(0,0,0,.4);animation:modalIn .3s cubic-bezier(.34,1.56,.64,1);overflow:hidden;color:#1e293b}
+@keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1e3a8a,#2563eb,#7c3aed);color:#fff;gap:14px}
+.modal-header h3{font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px;color:#fff}
+.modal-header h3 span{color:#fff}
+.modal-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:16px;transition:.2s;flex-shrink:0}
+.modal-close:hover{background:rgba(255,255,255,.28);transform:rotate(90deg)}
+.modal-body{padding:24px 28px;max-height:calc(100vh - 220px);overflow-y:auto}
+.modal-footer{padding:18px 28px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:10px;background:#fafbff}
+
+/* ============ FORM ============ */
+.app-form-section{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #f1f5f9}
+.app-form-section:last-child{border:none;margin-bottom:0;padding-bottom:0}
+.app-form-section h4{font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#4338ca;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.app-form-section h4 i{color:#7c3aed}
+.app-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.app-form-grid .full{grid-column:1/-1}
+.app-field{display:flex;flex-direction:column;gap:5px}
+.app-field label{font-size:12px;font-weight:700;color:#334155;display:flex;align-items:center;gap:6px}
+.app-field label i{color:#2563eb;font-size:11px}
+.app-field label .req{color:#ef4444}
+.app-field input,.app-field textarea,.app-field select{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;background:#f8fafc;font-size:13.5px;font-weight:500;color:#0b1a33;outline:none;transition:.2s;font-family:inherit}
+.app-field input:focus,.app-field textarea:focus,.app-field select:focus{border-color:#7c3aed;background:#fff;box-shadow:0 0 0 3px rgba(124,58,237,.08)}
+.app-field input::placeholder,.app-field textarea::placeholder{color:#94a3b8;font-weight:400}
+.app-field textarea{resize:vertical;min-height:90px;line-height:1.55}
+.app-field .helper{font-size:11px;color:#94a3b8;margin-top:2px}
+.app-match-preview{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #a7f3d0;border-radius:12px;padding:16px;margin-bottom:20px;display:flex;gap:14px;align-items:center}
+.app-match-circle{width:60px;height:60px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#059669;flex-shrink:0;box-shadow:0 4px 12px rgba(5,150,105,.15)}
+.app-match-text h4{font-size:14px;font-weight:800;color:#065f46;margin-bottom:4px}
+.app-match-text p{font-size:12px;color:#059669;line-height:1.5}
+.preview-section{margin-bottom:20px}
+.preview-section h3{font-size:13px;font-weight:800;color:#0b1a33;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.preview-section h3 i{color:#2563eb;font-size:12px}
+.preview-section p{font-size:13.5px;color:#475569;line-height:1.7}
+.preview-section ul{list-style:none;padding-left:0}
+.preview-section li{font-size:13.5px;color:#475569;padding:5px 0 5px 22px;position:relative;line-height:1.6}
+.preview-section li::before{content:'▸';position:absolute;left:6px;color:#2563eb;font-weight:800}
+
+/* ============ TOAST ============ */
+.toast{position:fixed;bottom:30px;right:30px;background:white;padding:16px 22px;border-radius:14px;box-shadow:0 15px 45px rgba(0,0,0,.18);max-width:420px;z-index:9999;font-size:13.5px;color:#0b1a33;display:flex;align-items:flex-start;gap:12px;font-weight:500;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast.success{border-left:5px solid #16a34a}
+.toast.error{border-left:5px solid #dc2626}
+.toast.info{border-left:5px solid #2563eb}
+
+.menu-toggle{display:none;background:none;border:none;font-size:22px;color:#172554;cursor:pointer}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:1100px){.filters{grid-template-columns:1fr 1fr}.job-grid{grid-template-columns:1fr}.training-grid{grid-template-columns:1fr}}
+@media(max-width:768px){
+.sidebar{transform:translateX(-100%)}
+.sidebar.open{transform:translateX(0)}
+.main{margin-left:0;padding:20px 16px 100px;width:100%}
+.filters{grid-template-columns:1fr}
+.hero{padding:22px}
+.hero h2{font-size:19px}
+.app-form-grid{grid-template-columns:1fr}
+.menu-toggle{display:block}
+.modal{margin:10px;max-width:calc(100vw - 20px)}
+.my-app-head{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ SIDEBAR ============ -->
+<div class="sidebar" id="sidebar">
+    <div class="brand">
+        <div class="brand-icon"><i class="fas fa-brain"></i></div>
+        <div><h2>MySkillJourney</h2><p>Trainee Portal</p></div>
+    </div>
+    <div class="menu">
+        <div class="menu-title">Main Menu</div>
+        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="resume-intelligence.html"><i class="fas fa-file-alt"></i> Resume Intelligence</a>
+        <a href="employment.html"><i class="fas fa-briefcase"></i> Employment</a>
+        <a href="follow-up.html"><i class="fas fa-calendar-check"></i> Follow-up</a>
+        <a href="history.html"><i class="fas fa-history"></i> Outcome History</a>
+        <div class="menu-title" style="margin-top:18px;">Career Tools</div>
+        <a href="career-alignment.html"><i class="fas fa-compass"></i> Career Alignment</a>
+        <a href="industry-demand.html"><i class="fas fa-chart-line"></i> Industry Demand</a>
+        <a href="ai-recommendations.html"><i class="fas fa-robot"></i> AI Coach</a>
+        <a href="job-discovery.html" class="active"><i class="fas fa-search"></i> Find Jobs <span class="count-badge" id="menuJobCount">0</span></a>
+    </div>
+    <div class="sidebar-footer"><a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
+</div>
+
+<!-- ============ MAIN ============ -->
+<div class="main">
+
+<div class="topbar">
+<div class="title" style="display:flex;align-items:center;gap:14px">
+<button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+<div>
+<h1>Find Jobs & Training <i class="fas fa-rocket" style="color:#2563eb;font-size:22px"></i></h1>
+<p>Live jobs and training programs from verified providers · Auto-matched to your skills</p>
+</div>
+</div>
+<div class="top-actions">
+<span class="live-badge"><span class="live-dot"></span> LIVE</span>
+<button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+<button class="icon-btn" onclick="switchTab('notifications')">
+<i class="fas fa-bell"></i>
+<span class="bell-badge" id="bellBadge" style="display:none">0</span>
+</button>
+</div>
+</div>
+
+<div class="hero">
+<div class="hero-inner">
+<div>
+<h2>Opportunities Curated For You 🎯</h2>
+<p>Browse <strong>live jobs</strong> and <strong>training programs</strong> from verified providers. Jobs are matched against your real skills. Enroll in programs to upskill and get noticed.</p>
+</div>
+<div class="hero-stats">
+<div class="hero-stat"><div class="hero-stat-val" id="totalJobs">0</div><div class="hero-stat-label">Open Jobs</div></div>
+<div class="hero-stat"><div class="hero-stat-val" id="totalProgramsHero">0</div><div class="hero-stat-label">Programs</div></div>
+<div class="hero-stat"><div class="hero-stat-val" id="enrolledCountHero">0</div><div class="hero-stat-label">Enrolled</div></div>
+</div>
+</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+<button class="tab active" data-tab="feed"><i class="fas fa-search"></i> Job Feed <span class="count" id="feedCount">0</span></button>
+<button class="tab" data-tab="training"><i class="fas fa-graduation-cap"></i> Training Programs <span class="count" id="trainingCount">0</span></button>
+<button class="tab" data-tab="myapps"><i class="fas fa-paper-plane"></i> My Applications <span class="count" id="myAppsCount">0</span></button>
+<button class="tab" data-tab="notifications"><i class="fas fa-bell"></i> Updates <span class="count" id="notifCount" style="display:none">0</span></button>
+</div>
+
+<!-- TAB: JOB FEED -->
+<div class="tab-panel active" id="panel-feed">
+
+<div class="filters">
+<div class="filter-group">
+<label><i class="fas fa-search"></i> Search</label>
+<input type="text" id="searchInput" placeholder="Job title, company, skill..." oninput="applyFilters()">
+</div>
+<div class="filter-group">
+<label><i class="fas fa-briefcase"></i> Type</label>
+<select id="typeFilter" onchange="applyFilters()">
+<option value="">All Types</option>
+<option>Full Time</option><option>Part Time</option><option>Contract</option>
+<option>Internship</option><option>Apprenticeship</option><option>Freelance</option>
+</select>
+</div>
+<div class="filter-group">
+<label><i class="fas fa-map-marker-alt"></i> Location</label>
+<select id="locationFilter" onchange="applyFilters()"><option value="">All Locations</option></select>
+</div>
+<div class="filter-group">
+<label><i class="fas fa-sort"></i> Sort By</label>
+<select id="sortFilter" onchange="applyFilters()">
+<option value="match">Best Match</option>
+<option value="newest">Newest First</option>
+<option value="salary">Highest Salary</option>
+</select>
+</div>
+</div>
+
+<div class="results-meta">
+<div class="count">Showing <strong id="shownCount">0</strong> of <strong id="totalCount">0</strong> jobs</div>
+<div class="sort-pills">
+<button class="sort-pill active" data-filter="all" onclick="quickFilter('all',this)">All</button>
+<button class="sort-pill" data-filter="strong" onclick="quickFilter('strong',this)">🎯 Strong Match</button>
+<button class="sort-pill" data-filter="applied" onclick="quickFilter('applied',this)">✅ Applied</button>
+<button class="sort-pill" data-filter="saved" onclick="quickFilter('saved',this)">⭐ Saved</button>
+</div>
+</div>
+
+<div class="job-grid" id="jobGrid">
+<div class="loading"><div class="spinner"></div><p style="color:#64748b;font-size:14px">Loading live jobs…</p></div>
+</div>
+
+</div>
+
+<!-- TAB: TRAINING PROGRAMS -->
+<div class="tab-panel" id="panel-training">
+
+<div class="filters">
+<div class="filter-group">
+<label><i class="fas fa-search"></i> Search Programs</label>
+<input type="text" id="trainingSearchInput" placeholder="Program name, category, trainer, skill..." oninput="applyTrainingFilters()">
+</div>
+<div class="filter-group">
+<label><i class="fas fa-layer-group"></i> Category</label>
+<select id="trainingCategoryFilter" onchange="applyTrainingFilters()">
+<option value="">All Categories</option>
+</select>
+</div>
+<div class="filter-group">
+<label><i class="fas fa-signal"></i> Level</label>
+<select id="trainingLevelFilter" onchange="applyTrainingFilters()">
+<option value="">All Levels</option>
+<option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+</select>
+</div>
+<div class="filter-group">
+<label><i class="fas fa-sort"></i> Sort By</label>
+<select id="trainingSortFilter" onchange="applyTrainingFilters()">
+<option value="newest">Newest First</option>
+<option value="name">Name (A–Z)</option>
+<option value="seats">Most Seats Available</option>
+<option value="short">Shortest Duration</option>
+</select>
+</div>
+</div>
+
+<div class="results-meta">
+<div class="count">Showing <strong id="trainingShown">0</strong> of <strong id="trainingTotal">0</strong> programs</div>
+<div class="sort-pills">
+<button class="sort-pill active" data-tfilter="all" onclick="quickTrainingFilter('all',this)">All</button>
+<button class="sort-pill" data-tfilter="enrolled" onclick="quickTrainingFilter('enrolled',this)">✅ Enrolled</button>
+<button class="sort-pill" data-tfilter="available" onclick="quickTrainingFilter('available',this)">🟢 Available Now</button>
+</div>
+</div>
+
+<div class="training-grid" id="trainingGrid">
+<div class="loading"><div class="spinner"></div><p style="color:#64748b;font-size:14px">Loading training programs…</p></div>
+</div>
+
+</div>
+
+<!-- TAB: MY APPLICATIONS -->
+<div class="tab-panel" id="panel-myapps">
+<div class="apps-list" id="myAppsList">
+<div class="loading"><div class="spinner"></div><p style="color:#64748b;font-size:14px">Loading your applications…</p></div>
+</div>
+</div>
+
+<!-- TAB: NOTIFICATIONS -->
+<div class="tab-panel" id="panel-notifications">
+<div class="notif-list" id="notifList">
+<div class="loading"><div class="spinner"></div><p style="color:#64748b;font-size:14px">Loading updates…</p></div>
+</div>
+</div>
+
+</div>
+
+<!-- ============ MODAL: JOB DETAIL ============ -->
+<div class="modal-overlay" id="jobModal">
+<div class="modal">
+<div class="modal-header">
+<h3><i class="fas fa-briefcase"></i> <span id="modalTitle">Job Details</span></h3>
+<button class="modal-close" onclick="closeModal('jobModal')"><i class="fas fa-times"></i></button>
+</div>
+<div class="modal-body" id="modalBody"></div>
+<div class="modal-footer" id="modalFooter"></div>
+</div>
+</div>
+
+<!-- ============ MODAL: APPLICATION FORM ============ -->
+<div class="modal-overlay" id="applyModal">
+<div class="modal">
+<div class="modal-header">
+<h3><i class="fas fa-paper-plane"></i> Apply for <span id="applyJobTitle">this Job</span></h3>
+<button class="modal-close" onclick="closeModal('applyModal')"><i class="fas fa-times"></i></button>
+</div>
+<div class="modal-body">
+<form id="applicationForm" onsubmit="return false;">
+
+<div class="app-match-preview">
+<div class="app-match-circle" id="applyMatchCircle">0%</div>
+<div class="app-match-text">
+<h4>Your Match: <span id="applyMatchText">0%</span></h4>
+<p id="applyMatchDesc">Loading match details…</p>
+</div>
+</div>
+
+<div class="app-form-section">
+<h4><i class="fas fa-user"></i> Your Details</h4>
+<div class="app-form-grid">
+<div class="app-field">
+<label>Full Name <span class="req">*</span></label>
+<input type="text" id="applyName" required>
+</div>
+<div class="app-field">
+<label>Email <span class="req">*</span></label>
+<input type="email" id="applyEmail" required>
+</div>
+<div class="app-field">
+<label>Mobile Number <span class="req">*</span></label>
+<input type="tel" id="applyMobile" placeholder="+91 98765 43210" required>
+</div>
+<div class="app-field">
+<label>Current City</label>
+<input type="text" id="applyCity" placeholder="e.g. Bangalore">
+</div>
+</div>
+</div>
+
+<div class="app-form-section">
+<h4><i class="fas fa-briefcase"></i> Professional Details</h4>
+<div class="app-form-grid">
+<div class="app-field">
+<label>Total Experience</label>
+<select id="applyExperience">
+<option value="Fresher">Fresher (0 years)</option>
+<option value="0-1 years">0-1 years</option>
+<option value="1-2 years">1-2 years</option>
+<option value="2-5 years">2-5 years</option>
+<option value="5+ years">5+ years</option>
+</select>
+</div>
+<div class="app-field">
+<label>Current / Last Salary (₹/month)</label>
+<input type="number" id="applyCurrentSalary" placeholder="e.g. 25000" min="0">
+</div>
+<div class="app-field">
+<label>Expected Salary (₹/month) <span class="req">*</span></label>
+<input type="number" id="applyExpectedSalary" placeholder="e.g. 35000" min="0" required>
+</div>
+<div class="app-field">
+<label>Available From <span class="req">*</span></label>
+<input type="date" id="applyAvailability" required>
+</div>
+<div class="app-field full">
+<label>Highest Qualification</label>
+<input type="text" id="applyQualification" placeholder="e.g. B.Tech Computer Science">
+</div>
+</div>
+</div>
+
+<div class="app-form-section">
+<h4><i class="fas fa-code"></i> Your Skills (pre-filled, edit if needed)</h4>
+<div class="app-field full">
+<label>Skills (comma-separated)</label>
+<textarea id="applySkills" placeholder="python, sql, excel"></textarea>
+<div class="helper">These will be compared to the job's required skills</div>
+</div>
+</div>
+
+<div class="app-form-section">
+<h4><i class="fas fa-comment-dots"></i> Why Are You a Good Fit?</h4>
+<div class="app-field full">
+<label>Cover Letter / Message <span class="req">*</span></label>
+<textarea id="applyCoverLetter" placeholder="Tell the employer why you're the right person for this role..." required></textarea>
+<div class="helper">Minimum 50 characters. Be specific and authentic.</div>
+</div>
+</div>
+
+<div class="app-form-section">
+<h4><i class="fas fa-link"></i> Additional Info</h4>
+<div class="app-form-grid">
+<div class="app-field">
+<label>Portfolio / LinkedIn / GitHub</label>
+<input type="url" id="applyPortfolio" placeholder="https://...">
+</div>
+<div class="app-field">
+<label>Resume Link (Google Drive, etc.)</label>
+<input type="url" id="applyResumeLink" placeholder="https://...">
+</div>
+</div>
+</div>
+
+</form>
+</div>
+<div class="modal-footer">
+<button onclick="closeModal('applyModal')" style="padding:11px 22px;border-radius:10px;background:#f1f5f9;color:#475569;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+Cancel
+</button>
+<button onclick="submitApplication()" id="submitAppBtn" style="padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border:none;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;box-shadow:0 6px 16px rgba(37,99,235,.3)">
+<i class="fas fa-paper-plane"></i> Submit Application
+</button>
+</div>
+</div>
+</div>
+
+<!-- ============ MODAL: PROGRAM DETAIL ============ -->
+<div class="modal-overlay" id="programModal">
+<div class="modal">
+<div class="modal-header">
+<h3><i class="fas fa-graduation-cap"></i> <span id="programModalTitle">Program Details</span></h3>
+<button class="modal-close" onclick="closeModal('programModal')"><i class="fas fa-times"></i></button>
+</div>
+<div class="modal-body" id="programModalBody"></div>
+<div class="modal-footer" id="programModalFooter"></div>
+</div>
+</div>
+
+<script>
+/* ============================================================ */
+/* FIREBASE                                                     */
+/* ============================================================ */
+const firebaseConfig={
+apiKey:"AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+authDomain:"skillbridge-70863.firebaseapp.com",
+projectId:"skillbridge-70863",
+storageBucket:"skillbridge-70863.firebasestorage.app",
+messagingSenderId:"912671486056",
+appId:"1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+
+/* ============================================================ */
+/* STATE                                                        */
+/* ============================================================ */
+let _firebaseUser=null;
+let _traineeData={fullName:'Trainee',skills:[],email:'',mobile:''};
+let allJobs=[];
+let filteredJobs=[];
+let allPrograms=[];
+let filteredPrograms=[];
+let myApplications=[];
+let mySavedJobs=[];
+let myEnrollments=[];
+let quickFilterMode='all';
+let quickTrainingMode='all';
+let unsubscribeJobs=null;
+let unsubscribeApps=null;
+let unsubscribePrograms=null;
+let unsubscribeEnrollments=null;
+let currentApplyJob=null;
+let _initDone=false;
+
+/* ============================================================ */
+/* AUTH                                                         */
+/* ============================================================ */
+function getLoginUrl(){
+return '../auth/login.html?role=trainee';
+}
+
+function resolveAuth(){
+return new Promise(resolve=>{
+let settled=false;
+const finish=user=>{if(settled)return;settled=true;resolve(user);};
+
+const safetyTimer=setTimeout(()=>{
+if(!settled){
+console.warn('⚠️ Auth timeout — proceeding');
+finish(auth.currentUser||null);
+}
+},4000);
+
+const unsub=auth.onAuthStateChanged(fbUser=>{
+clearTimeout(safetyTimer);
+try{unsub();}catch(e){}
+
+if(fbUser){
+_firebaseUser=fbUser;
+finish(fbUser);
+return;
+}
+
+const isLoggedIn=localStorage.getItem('isLoggedIn')==='true';
+const role=localStorage.getItem('userRole');
+
+if(isLoggedIn&&(role==='trainee'||!role)){
+setTimeout(()=>{
+if(auth.currentUser){
+_firebaseUser=auth.currentUser;
+finish(auth.currentUser);
+}else{
+window.location.replace(getLoginUrl());
+finish(null);
+}
+},1000);
+}else{
+window.location.replace(getLoginUrl());
+finish(null);
+}
+});
+});
+}
+
+/* ============================================================ */
+/* LOAD TRAINEE                                                 */
+/* ============================================================ */
+async function loadTrainee(){
+if(!_firebaseUser)return;
+try{
+let snap=await db.collection('trainees').doc(_firebaseUser.uid).get();
+let d=snap.exists?snap.data():null;
+if(!d){snap=await db.collection('users').doc(_firebaseUser.uid).get();d=snap.exists?snap.data():null;}
+if(!d)d={};
+
+const skills=new Set();
+const addSkills=str=>{
+if(!str)return;
+String(str).toLowerCase().split(/[,;|]/).forEach(s=>{const t=s.trim();if(t)skills.add(t);});
+};
+addSkills(d.skillTrade);
+if(d.skills&&Array.isArray(d.skills))d.skills.forEach(s=>{const t=String(s).toLowerCase().trim();if(t)skills.add(t);});
+if(d.employment){addSkills(d.employment.currentSkills);addSkills(d.employment.skillsUsed);addSkills(d.employment.newSkills);}
+
+_traineeData={
+fullName:d.fullName||'Trainee',
+email:d.email||_firebaseUser.email||'',
+mobile:d.mobile||'',
+city:d.district||d.city||d.state||'',
+qualification:d.qualification||d.education||'',
+skills:[...skills],
+skillTrade:d.skillTrade||'',
+state:d.state||'',
+district:d.district||''
+};
+}catch(e){console.warn('loadTrainee:',e);}
+}
+
+/* ============================================================ */
+/* SUBSCRIBE JOBS                                               */
+/* ============================================================ */
+function subscribeToJobs(){
+if(unsubscribeJobs){try{unsubscribeJobs();}catch(e){}unsubscribeJobs=null;}
+try{
+unsubscribeJobs=db.collection('jobs')
+.where('status','==','active')
+.onSnapshot(snap=>{
+const jobs=[];
+snap.forEach(d=>jobs.push({id:d.id,...d.data()}));
+jobs.sort((a,b)=>{
+const ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+const tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+return tb-ta;
+});
+const prevCount=allJobs.length;
+allJobs=jobs;
+filteredJobs=[...jobs];
+if(prevCount>0&&jobs.length>prevCount)showToast(`🆕 ${jobs.length-prevCount} new job(s) published!`,'info');
+applyFilters();
+populateLocationFilter();
+renderHero();
+},err=>{console.error('Jobs listener:',err);loadJobsOnce();});
+}catch(e){console.error(e);loadJobsOnce();}
+}
+
+async function loadJobsOnce(){
+try{
+const snap=await db.collection('jobs').where('status','==','active').get();
+const jobs=[];
+snap.forEach(d=>jobs.push({id:d.id,...d.data()}));
+allJobs=jobs;filteredJobs=[...jobs];
+applyFilters();populateLocationFilter();renderHero();
+}catch(e){
+const grid=document.getElementById('jobGrid');
+if(grid)grid.innerHTML=`<div class="empty"><i class="fas fa-exclamation-triangle"></i><h3>Could not load jobs</h3><p>Please refresh the page.</p></div>`;
+}
+}
+
+/* ============================================================ */
+/* SUBSCRIBE PROGRAMS                                           */
+/* ============================================================ */
+function subscribeToPrograms(){
+if(unsubscribePrograms){try{unsubscribePrograms();}catch(e){}unsubscribePrograms=null;}
+try{
+unsubscribePrograms=db.collection('programs')
+.onSnapshot(snap=>{
+const programs=[];
+snap.forEach(d=>programs.push({id:d.id,...d.data()}));
+programs.sort((a,b)=>{
+const ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+const tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+return tb-ta;
+});
+allPrograms=programs.length?programs:getSamplePrograms();
+filteredPrograms=[...allPrograms];
+populateTrainingCategoryFilter();
+applyTrainingFilters();
+renderHero();
+},err=>{
+console.warn('Programs listener:',err);
+allPrograms=getSamplePrograms();
+filteredPrograms=[...allPrograms];
+populateTrainingCategoryFilter();
+applyTrainingFilters();
+renderHero();
+});
+}catch(e){
+allPrograms=getSamplePrograms();
+filteredPrograms=[...allPrograms];
+populateTrainingCategoryFilter();
+applyTrainingFilters();
+}
+}
+
+/* ============================================================ */
+/* SUBSCRIBE MY APPLICATIONS                                    */
+/* ============================================================ */
+function subscribeToMyApplications(){
+if(!_firebaseUser)return;
+if(unsubscribeApps){try{unsubscribeApps();}catch(e){}unsubscribeApps=null;}
+try{
+unsubscribeApps=db.collection('applications')
+.where('traineeUid','==',_firebaseUser.uid)
+.onSnapshot(snap=>{
+myApplications=[];
+snap.forEach(d=>myApplications.push({id:d.id,...d.data()}));
+
+myApplications.sort((a,b)=>{
+const ta=a.statusUpdatedAt&&a.statusUpdatedAt.toDate?a.statusUpdatedAt.toDate().getTime():(a.appliedAt&&a.appliedAt.toDate?a.appliedAt.toDate().getTime():0);
+const tb=b.statusUpdatedAt&&b.statusUpdatedAt.toDate?b.statusUpdatedAt.toDate().getTime():(b.appliedAt&&b.appliedAt.toDate?b.appliedAt.toDate().getTime():0);
+return tb-ta;
+});
+
+renderMyApplications();
+renderNotifications();
+updateNotifBadge();
+renderHero();
+applyFilters();
+},err=>console.warn('Apps listener:',err));
+}catch(e){console.warn(e);}
+}
+
+/* ============================================================ */
+/* SUBSCRIBE MY ENROLLMENTS                                     */
+/* ============================================================ */
+function subscribeToMyEnrollments(){
+if(!_firebaseUser)return;
+if(unsubscribeEnrollments){try{unsubscribeEnrollments();}catch(e){}unsubscribeEnrollments=null;}
+try{
+unsubscribeEnrollments=db.collection('enrollments')
+.where('traineeUid','==',_firebaseUser.uid)
+.onSnapshot(snap=>{
+myEnrollments=[];
+snap.forEach(d=>myEnrollments.push({id:d.id,...d.data()}));
+renderTraining();
+renderHero();
+},err=>console.warn('Enrollments listener:',err));
+}catch(e){console.warn(e);}
+}
+
+/* ============================================================ */
+/* SAMPLE PROGRAMS (Fallback)                                   */
+/* ============================================================ */
+function getSamplePrograms(){
+return [
+{id:'sp-1',name:'Full Stack Web Development',category:'IT & Software',level:'Intermediate',duration:16,trainer:'Mr. Rajesh Kumar',startDate:'2026-10-01',maxSeats:30,enrolled:28,status:'active',icon:'💻',providerName:'Skill India Centre',description:'Master modern web development with React, Node.js, MongoDB and REST APIs.',skills:[{name:'javascript',weight:'critical'},{name:'react',weight:'critical'},{name:'node.js',weight:'important'},{name:'mongodb',weight:'important'}],_isDemo:true},
+{id:'sp-2',name:'Data Analytics Bootcamp',category:'Data & AI',level:'Intermediate',duration:12,trainer:'Ms. Divya Krishnan',startDate:'2026-10-05',maxSeats:30,enrolled:25,status:'active',icon:'📊',providerName:'Analytics Academy',description:'Master SQL, Power BI, Tableau and statistics for real-world data.',skills:[{name:'sql',weight:'critical'},{name:'power bi',weight:'critical'},{name:'tableau',weight:'important'},{name:'statistics',weight:'important'}],_isDemo:true},
+{id:'sp-3',name:'Python for Beginners',category:'IT & Software',level:'Beginner',duration:8,trainer:'Ms. Priya Nair',startDate:'2026-10-15',maxSeats:40,enrolled:20,status:'active',icon:'🐍',providerName:'Code Academy',description:'Learn Python from scratch — syntax, OOP, and real projects.',skills:[{name:'python',weight:'critical'},{name:'oop',weight:'important'},{name:'debugging',weight:'nice'}],_isDemo:true},
+{id:'sp-4',name:'Cloud Computing with AWS',category:'Cloud & Cyber',level:'Beginner',duration:10,trainer:'Mr. Mohit Saxena',startDate:'2026-10-12',maxSeats:35,enrolled:20,status:'active',icon:'☁️',providerName:'Cloud Academy',description:'AWS fundamentals, EC2, S3, IAM, VPC and CCP exam prep.',skills:[{name:'aws',weight:'critical'},{name:'networking',weight:'important'},{name:'linux',weight:'important'}],_isDemo:true},
+{id:'sp-5',name:'UI/UX Design Masterclass',category:'Design',level:'Intermediate',duration:12,trainer:'Ms. Sneha Iyer',startDate:'2026-10-03',maxSeats:30,enrolled:18,status:'active',icon:'🎨',providerName:'Design School',description:'Figma, prototyping, user research and design systems.',skills:[{name:'figma',weight:'critical'},{name:'wireframing',weight:'important'},{name:'user research',weight:'critical'}],_isDemo:true},
+{id:'sp-6',name:'Digital Marketing Certification',category:'Business',level:'Beginner',duration:10,trainer:'Mr. Karan Mehta',startDate:'2026-10-08',maxSeats:40,enrolled:22,status:'active',icon:'📣',providerName:'Digital Marketing Institute',description:'SEO, SEM, social media, email marketing, and analytics.',skills:[{name:'seo',weight:'critical'},{name:'google analytics',weight:'critical'},{name:'social media',weight:'important'}],_isDemo:true},
+{id:'sp-7',name:'Machine Learning Engineering',category:'Data & AI',level:'Advanced',duration:24,trainer:'Dr. Sameer Khan',startDate:'2026-11-20',maxSeats:20,enrolled:15,status:'upcoming',icon:'🤖',providerName:'ML Institute',description:'Production ML with TensorFlow, PyTorch, MLOps and deployment.',skills:[{name:'python',weight:'critical'},{name:'tensorflow',weight:'critical'},{name:'pytorch',weight:'important'}],_isDemo:true},
+{id:'sp-8',name:'Cybersecurity Fundamentals',category:'Cloud & Cyber',level:'Intermediate',duration:12,trainer:'Mr. Ravi Deshmukh',startDate:'2026-10-18',maxSeats:25,enrolled:10,status:'active',icon:'🛡️',providerName:'Cyber Academy',description:'Network security, ethical hacking, and incident response.',skills:[{name:'networking',weight:'critical'},{name:'linux',weight:'important'},{name:'wireshark',weight:'important'}],_isDemo:true},
+{id:'sp-9',name:'Android App Development',category:'IT & Software',level:'Intermediate',duration:14,trainer:'Ms. Neha Gupta',startDate:'2026-10-20',maxSeats:30,enrolled:15,status:'active',icon:'📱',providerName:'Mobile Academy',description:'Native Android apps using Kotlin, Compose and Firebase.',skills:[{name:'kotlin',weight:'critical'},{name:'android studio',weight:'critical'},{name:'firebase',weight:'important'}],_isDemo:true},
+{id:'sp-10',name:'Electrical Engineering Fundamentals',category:'Engineering',level:'Beginner',duration:12,trainer:'Mr. Vikram Singh',startDate:'2026-10-22',maxSeats:30,enrolled:12,status:'active',icon:'⚡',providerName:'Skill India Centre',description:'Power systems, circuit design, PLC and SCADA basics.',skills:[{name:'plc',weight:'critical'},{name:'scada',weight:'important'},{name:'circuit design',weight:'important'}],_isDemo:true},
+{id:'sp-11',name:'Accounting with Tally & GST',category:'Business',level:'Intermediate',duration:8,trainer:'Ms. Meera Patel',startDate:'2026-10-01',maxSeats:30,enrolled:24,status:'active',icon:'💰',providerName:'Finance Academy',description:'Tally ERP, GST filing, bookkeeping and financial reporting.',skills:[{name:'tally',weight:'critical'},{name:'gst',weight:'critical'},{name:'accounting',weight:'important'}],_isDemo:true},
+{id:'sp-12',name:'Customer Service Excellence',category:'Business',level:'Beginner',duration:6,trainer:'Ms. Tanvi Shah',startDate:'2026-10-05',maxSeats:40,enrolled:18,status:'active',icon:'🎧',providerName:'Service Academy',description:'Communication, CRM tools, customer handling and retention.',skills:[{name:'communication',weight:'critical'},{name:'crm',weight:'important'},{name:'active listening',weight:'important'}],_isDemo:true}
+];
+}
+
+/* ============================================================ */
+/* STATUS CONFIG                                                */
+/* ============================================================ */
+function statusConfig(status){
+const map={
+'applied':{icon:'📤',color:'#2563eb',title:'Application Submitted',label:'Applied'},
+'shortlisted':{icon:'⭐',color:'#7c3aed',title:'You\'ve been Shortlisted!',label:'Shortlisted'},
+'interview':{icon:'🎤',color:'#d97706',title:'Interview Stage',label:'Interview'},
+'offered':{icon:'📄',color:'#0891b2',title:'Offer Received!',label:'Offered'},
+'hired':{icon:'🎉',color:'#059669',title:'You\'re Hired!',label:'Hired'},
+'rejected':{icon:'❌',color:'#dc2626',title:'Application Not Selected',label:'Not Selected'}
+};
+return map[status]||map.applied;
+}
+
+/* ============================================================ */
+/* MATCH SCORING                                                */
+/* ============================================================ */
+function calcMatch(job){
+if(!_traineeData.skills||!_traineeData.skills.length)return 0;
+const req=job.skills||[];
+if(!req.length)return 0;
+let m=0,t=0;
+req.forEach(s=>{
+const w=s.weight==='critical'?3:s.weight==='important'?2:1;
+t+=w;
+const name=(s.name||s).toLowerCase();
+if(_traineeData.skills.some(us=>us.includes(name)||name.includes(us)))m+=w;
+});
+return t?Math.round((m/t)*100):0;
+}
+function skillMatched(name){
+const n=String(name).toLowerCase();
+return _traineeData.skills.some(s=>s.includes(n)||n.includes(s));
+}
+function getMatchedSkills(job){return (job.skills||[]).filter(s=>skillMatched(s.name||s));}
+function getMissingSkills(job){return (job.skills||[]).filter(s=>!skillMatched(s.name||s));}
+
+/* ============================================================ */
+/* HERO                                                         */
+/* ============================================================ */
+function renderHero(){
+const mj=document.getElementById('menuJobCount');if(mj)mj.textContent=allJobs.length;
+const tj=document.getElementById('totalJobs');if(tj)tj.textContent=allJobs.length;
+const tp=document.getElementById('totalProgramsHero');if(tp)tp.textContent=allPrograms.length;
+const ec=document.getElementById('enrolledCountHero');if(ec)ec.textContent=myEnrollments.length;
+const tc=document.getElementById('totalCount');if(tc)tc.textContent=allJobs.length;
+const fc=document.getElementById('feedCount');if(fc)fc.textContent=allJobs.length;
+const tfc=document.getElementById('trainingCount');if(tfc)tfc.textContent=allPrograms.length;
+const mac=document.getElementById('myAppsCount');if(mac)mac.textContent=myApplications.length;
+}
+
+function populateLocationFilter(){
+const sel=document.getElementById('locationFilter');
+if(!sel)return;
+const locs=new Set();
+allJobs.forEach(j=>(j.locations||[]).forEach(l=>locs.add(l)));
+const cur=sel.value;
+sel.innerHTML='<option value="">All Locations</option>';
+Array.from(locs).sort().forEach(l=>{const o=document.createElement('option');o.value=l;o.textContent=l;sel.appendChild(o);});
+if(cur)sel.value=cur;
+}
+
+function populateTrainingCategoryFilter(){
+const sel=document.getElementById('trainingCategoryFilter');
+if(!sel)return;
+const cats=new Set();
+allPrograms.forEach(p=>{if(p.category)cats.add(p.category);});
+const cur=sel.value;
+sel.innerHTML='<option value="">All Categories</option>';
+Array.from(cats).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+if(cur)sel.value=cur;
+}
+
+/* ============================================================ */
+/* JOB FILTERS                                                  */
+/* ============================================================ */
+function applyFilters(){
+const searchEl=document.getElementById('searchInput');
+const typeEl=document.getElementById('typeFilter');
+const locEl=document.getElementById('locationFilter');
+const sortEl=document.getElementById('sortFilter');
+const s=(searchEl?.value||'').toLowerCase();
+const t=typeEl?.value||'';
+const l=locEl?.value||'';
+const sort=sortEl?.value||'match';
+
+filteredJobs=allJobs.filter(j=>{
+const title=(j.title||'').toLowerCase();
+const org=(j.employerOrg||'').toLowerCase();
+const dept=(j.department||'').toLowerCase();
+const skills=(j.skills||[]).map(sk=>(sk.name||sk).toLowerCase());
+const matchS=!s||title.includes(s)||org.includes(s)||dept.includes(s)||skills.some(k=>k.includes(s));
+const matchT=!t||j.type===t;
+const matchL=!l||(j.locations||[]).includes(l);
+let matchQ=true;
+if(quickFilterMode==='strong')matchQ=calcMatch(j)>=70;
+else if(quickFilterMode==='applied')matchQ=myApplications.some(a=>a.jobId===j.id);
+else if(quickFilterMode==='saved')matchQ=mySavedJobs.some(sv=>sv.jobId===j.id);
+return matchS&&matchT&&matchL&&matchQ;
+});
+
+filteredJobs.sort((a,b)=>{
+if(sort==='match')return calcMatch(b)-calcMatch(a);
+if(sort==='salary')return (b.salaryMax||0)-(a.salaryMax||0);
+if(sort==='newest'){
+const ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+const tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+return tb-ta;
+}
+return 0;
+});
+renderJobs();
+}
+
+function quickFilter(mode,el){
+quickFilterMode=mode;
+document.querySelectorAll('.sort-pill[data-filter]').forEach(p=>p.classList.remove('active'));
+if(el)el.classList.add('active');
+applyFilters();
+}
+
+/* ============================================================ */
+/* TRAINING FILTERS                                             */
+/* ============================================================ */
+function applyTrainingFilters(){
+const searchEl=document.getElementById('trainingSearchInput');
+const catEl=document.getElementById('trainingCategoryFilter');
+const lvlEl=document.getElementById('trainingLevelFilter');
+const sortEl=document.getElementById('trainingSortFilter');
+
+const s=(searchEl?.value||'').toLowerCase();
+const c=catEl?.value||'';
+const lvl=lvlEl?.value||'';
+const sort=sortEl?.value||'newest';
+
+filteredPrograms=allPrograms.filter(p=>{
+const name=(p.name||'').toLowerCase();
+const trainer=(p.trainer||'').toLowerCase();
+const prov=(p.providerName||p.orgName||'').toLowerCase();
+const skills=(p.skills||[]).map(sk=>(sk.name||sk).toLowerCase());
+const matchS=!s||name.includes(s)||trainer.includes(s)||prov.includes(s)||skills.some(k=>k.includes(s));
+const matchC=!c||p.category===c;
+const matchL=!lvl||p.level===lvl;
+
+let matchQ=true;
+if(quickTrainingMode==='enrolled')matchQ=isEnrolled(p.id);
+else if(quickTrainingMode==='available'){
+const enrolled=Number(p.enrolled)||0;
+const max=Number(p.maxSeats)||0;
+matchQ=(max-enrolled)>0&&!isEnrolled(p.id);
+}
+
+return matchS&&matchC&&matchL&&matchQ;
+});
+
+filteredPrograms.sort((a,b)=>{
+if(sort==='name')return (a.name||'').localeCompare(b.name||'');
+if(sort==='seats'){
+const ra=(Number(a.maxSeats)||0)-(Number(a.enrolled)||0);
+const rb=(Number(b.maxSeats)||0)-(Number(b.enrolled)||0);
+return rb-ra;
+}
+if(sort==='short')return (a.duration||0)-(b.duration||0);
+const ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+const tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+return tb-ta;
+});
+
+renderTraining();
+}
+
+function quickTrainingFilter(mode,el){
+quickTrainingMode=mode;
+document.querySelectorAll('.sort-pill[data-tfilter]').forEach(p=>p.classList.remove('active'));
+if(el)el.classList.add('active');
+applyTrainingFilters();
+}
+
+/* ============================================================ */
+/* RENDER JOBS                                                  */
+/* ============================================================ */
+function renderJobs(){
+const grid=document.getElementById('jobGrid');
+if(!grid)return;
+if(!filteredJobs.length){
+grid.innerHTML=`<div class="empty"><i class="fas fa-briefcase"></i><h3>No jobs match your filters</h3><p>Try clearing filters or check back soon.</p></div>`;
+const sc=document.getElementById('shownCount');if(sc)sc.textContent='0';
+return;
+}
+const sc=document.getElementById('shownCount');if(sc)sc.textContent=filteredJobs.length;
+grid.innerHTML=filteredJobs.map(j=>renderJobCard(j)).join('');
+}
+
+function renderJobCard(j){
+const match=calcMatch(j);
+const cardCls=match>=70?'match-high':match>=40?'match-mid':'match-low';
+const applied=myApplications.some(a=>a.jobId===j.id);
+const saved=mySavedJobs.some(s=>s.jobId===j.id);
+const matchedSkills=getMatchedSkills(j);
+const missingSkills=getMissingSkills(j);
+const salary=(j.salaryMin&&j.salaryMax)?`₹${Number(j.salaryMin).toLocaleString()}–₹${Number(j.salaryMax).toLocaleString()}`:'Not disclosed';
+const locs=(j.locations||[]).join(', ')||'Remote';
+const circ=2*Math.PI*28;
+const offset=circ-(match/100)*circ;
+const ringColor=match>=70?'#059669':match>=40?'#d97706':'#dc2626';
+const badgeCls=match>=70?'good':match>=40?'partial':'poor';
+const badgeTxt=match>=70?'Excellent Match':match>=40?'Partial Match':'Low Match';
+
+return `
+<div class="job-card ${cardCls}">
+<div class="job-head">
+<div class="job-head-left">
+<h3>${escapeHtml(j.title||'Untitled')}</h3>
+<div class="job-company"><i class="fas fa-building"></i> ${escapeHtml(j.employerOrg||'Company')}</div>
+</div>
+<div class="match-ring">
+<svg viewBox="0 0 64 64">
+<circle class="match-ring-bg" cx="32" cy="32" r="28"></circle>
+<circle class="match-ring-fill" cx="32" cy="32" r="28" style="stroke:${ringColor};stroke-dasharray:${circ};stroke-dashoffset:${offset}"></circle>
+</svg>
+<div class="match-ring-val" style="color:${ringColor}">${match}%</div>
+</div>
+</div>
+<div class="job-meta">
+<span><i class="fas fa-clock"></i> ${escapeHtml(j.type||'Full Time')}</span>
+<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(locs)}</span>
+<span><i class="fas fa-user-clock"></i> ${j.expMin||0}–${j.expMax||0} yrs</span>
+</div>
+<div class="skill-match-panel">
+<div class="skill-match-title"><span>Skill Match</span><span class="badge ${badgeCls}">${badgeTxt}</span></div>
+${matchedSkills.length?`<div class="skill-chips-group"><div class="skill-chips-label matched"><i class="fas fa-check-circle"></i> You Have (${matchedSkills.length})</div><div class="skill-chips">${matchedSkills.map(s=>`<span class="skill-chip matched">✓ ${escapeHtml(s.name||s)}</span>`).join('')}</div></div>`:''}
+${missingSkills.length?`<div class="skill-chips-group"><div class="skill-chips-label missing"><i class="fas fa-times-circle"></i> Need to Learn (${missingSkills.length})</div><div class="skill-chips">${missingSkills.map(s=>`<span class="skill-chip missing">✕ ${escapeHtml(s.name||s)}</span>`).join('')}</div></div>`:''}
+</div>
+<div class="job-salary"><i class="fas fa-rupee-sign"></i> ${salary} <span>/ month</span></div>
+<div class="job-actions">
+<button class="btn-apply ${applied?'applied':''}" onclick="openJobModal('${escapeJs(j.id)}')">
+${applied?'<i class="fas fa-check"></i> Applied':'<i class="fas fa-paper-plane"></i> View & Apply'}
+</button>
+<button class="btn-save ${saved?'saved':''}" onclick="toggleSave('${escapeJs(j.id)}',this)"><i class="fas fa-bookmark"></i></button>
+</div>
+</div>`;
+}
+
+/* ============================================================ */
+/* RENDER TRAINING                                              */
+/* ============================================================ */
+function renderTraining(){
+const grid=document.getElementById('trainingGrid');
+if(!grid)return;
+const sc=document.getElementById('trainingShown');
+const tc=document.getElementById('trainingTotal');
+if(sc)sc.textContent=filteredPrograms.length;
+if(tc)tc.textContent=allPrograms.length;
+
+if(!filteredPrograms.length){
+grid.innerHTML=`<div class="empty"><i class="fas fa-graduation-cap"></i><h3>No training programs match your filters</h3><p>Try adjusting your filters or search terms.</p></div>`;
+return;
+}
+
+grid.innerHTML=filteredPrograms.map(p=>{
+const enrolled=isEnrolled(p.id);
+const seats=Number(p.maxSeats)||0;
+const enrolledCount=Number(p.enrolled)||0;
+const seatsLeft=Math.max(seats-enrolledCount,0);
+const seatsPct=seats?Math.min((enrolledCount/seats)*100,100):0;
+const statusLabel=(p.status||'active').charAt(0).toUpperCase()+(p.status||'active').slice(1);
+const isDemo=p._isDemo;
+
+return `
+<div class="training-card ${enrolled?'enrolled':''}">
+<div class="tc-banner">
+<div class="tc-icon">${p.icon||'📚'}</div>
+<div class="tc-title-wrap">
+<div class="tc-cat">${escapeHtml(p.category||'General')} · ${escapeHtml(p.level||'')}</div>
+<div class="tc-title">${escapeHtml(p.name||'Untitled Program')}</div>
+</div>
+</div>
+<div class="tc-body">
+<div class="tc-desc">${escapeHtml(p.description||'No description provided.')}</div>
+<div class="tc-meta">
+<div class="tc-meta-item">
+<div class="k">Provider</div>
+<div class="v" style="font-size:11.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.providerName||p.orgName||'Verified Provider')}</div>
+</div>
+<div class="tc-meta-item">
+<div class="k">Duration</div>
+<div class="v"><i class="fas fa-clock"></i> ${p.duration||'—'} wks</div>
+</div>
+<div class="tc-meta-item">
+<div class="k">Trainer</div>
+<div class="v" style="font-size:11.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.trainer||'—')}</div>
+</div>
+<div class="tc-meta-item">
+<div class="k">Start Date</div>
+<div class="v"><i class="fas fa-calendar"></i> ${escapeHtml(p.startDate||'—')}</div>
+</div>
+</div>
+<div class="tc-skills-label">Skills You'll Learn (${(p.skills||[]).length})</div>
+<div class="tc-skills">
+${(p.skills||[]).slice(0,4).map(s=>`<span class="skill-chip" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe">${escapeHtml(s.name||s)}</span>`).join('')}
+${(p.skills||[]).length>4?`<span class="skill-chip" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0">+${(p.skills||[]).length-4}</span>`:''}
+</div>
+<div class="tc-progress">
+<div class="tc-progress-head">
+<span>Seats Filled</span>
+<span style="color:${seatsLeft<=5?'#d97706':'#059669'}">${enrolledCount}/${seats} · ${seatsLeft} left</span>
+</div>
+<div class="tc-progress-track"><div class="tc-progress-fill" style="width:${seatsPct}%"></div></div>
+</div>
+<div class="tc-footer">
+${enrolled
+?`<button class="tc-btn enrolled"><i class="fas fa-check-circle"></i> Enrolled</button>`
+:seatsLeft<=0
+?`<button class="tc-btn ghost" style="flex:1;background:#fef3c7;color:#92400e;cursor:not-allowed;flex:auto"><i class="fas fa-ban"></i> Seats Full</button>`
+:`<button class="tc-btn primary" onclick="openEnrollModal('${escapeJs(p.id)}')"><i class="fas fa-user-plus"></i> Enroll Now</button>`
+}
+<button class="tc-btn ghost" onclick="openProgramModal('${escapeJs(p.id)}')" title="View details"><i class="fas fa-info-circle"></i></button>
+</div>
+</div>
+</div>`;
+}).join('');
+}
+
+function isEnrolled(programId){
+return myEnrollments.some(e=>e.programId===programId);
+}
+
+/* ============================================================ */
+/* OPEN JOB MODAL                                               */
+/* ============================================================ */
+function openJobModal(jobId){
+const j=allJobs.find(x=>x.id===jobId);
+if(!j)return;
+const match=calcMatch(j);
+const matchedSkills=getMatchedSkills(j);
+const missingSkills=getMissingSkills(j);
+const applied=myApplications.some(a=>a.jobId===j.id);
+const salary=(j.salaryMin&&j.salaryMax)?`₹${Number(j.salaryMin).toLocaleString()}–₹${Number(j.salaryMax).toLocaleString()}`:'Not disclosed';
+const circ=2*Math.PI*35;
+const offset=circ-(match/100)*circ;
+const ringColor=match>=70?'#059669':match>=40?'#d97706':'#dc2626';
+
+document.getElementById('modalTitle').textContent=j.title||'Job Details';
+document.getElementById('modalBody').innerHTML=`
+<div style="background:linear-gradient(135deg,#f0f9ff,#f5f3ff);border-radius:14px;padding:20px;margin-bottom:20px;border:1px solid #c7d2fe">
+<div style="display:flex;gap:16px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+<div style="position:relative;width:80px;height:80px;flex-shrink:0">
+<svg viewBox="0 0 80 80" style="width:100%;height:100%;transform:rotate(-90deg)">
+<circle cx="40" cy="40" r="35" fill="none" stroke="#e5e7eb" stroke-width="7"></circle>
+<circle cx="40" cy="40" r="35" fill="none" stroke="${ringColor}" stroke-width="7" stroke-linecap="round" style="stroke-dasharray:${circ};stroke-dashoffset:${offset}"></circle>
+</svg>
+<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;font-weight:900;color:${ringColor}">${match}%</div>
+</div>
+<div style="flex:1;min-width:200px">
+<h4 style="font-size:16px;font-weight:900;color:#4338ca;margin-bottom:4px">${match>=70?'✨ Excellent Match':match>=40?'📈 Partial Match':'⏳ Build Your Skills'}</h4>
+<p style="font-size:12.5px;color:#4338ca;line-height:1.5">You match <strong>${matchedSkills.length}</strong> of <strong>${(j.skills||[]).length}</strong> required skills.</p>
+</div>
+</div>
+${matchedSkills.length?`<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#059669;margin-bottom:6px"><i class="fas fa-check-circle"></i> Skills You Have</div><div style="display:flex;flex-wrap:wrap;gap:5px">${matchedSkills.map(s=>`<span style="padding:5px 10px;border-radius:8px;background:#d1fae5;color:#059669;border:1px solid #a7f3d0;font-size:11px;font-weight:700">✓ ${escapeHtml(s.name||s)}</span>`).join('')}</div></div>`:''}
+${missingSkills.length?`<div><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#dc2626;margin-bottom:6px"><i class="fas fa-times-circle"></i> Skills to Learn</div><div style="display:flex;flex-wrap:wrap;gap:5px">${missingSkills.map(s=>`<span style="padding:5px 10px;border-radius:8px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:11px;font-weight:700">✕ ${escapeHtml(s.name||s)}</span>`).join('')}</div></div>`:''}
+</div>
+<div class="preview-section">
+<h3><i class="fas fa-info-circle"></i> Job Overview</h3>
+<p style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#64748b;margin-top:6px">
+<span><i class="fas fa-building"></i> ${escapeHtml(j.employerOrg||'Company')}</span>
+<span><i class="fas fa-layer-group"></i> ${escapeHtml(j.department||'')}</span>
+<span><i class="fas fa-clock"></i> ${escapeHtml(j.type||'')}</span>
+<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml((j.locations||[]).join(', ')||'Remote')}</span>
+</p>
+<p style="margin-top:10px"><strong style="color:#059669;font-size:15px"><i class="fas fa-rupee-sign"></i> ${salary}</strong> <span style="font-size:12px;color:#64748b">/ month</span></p>
+</div>
+${j.about?`<div class="preview-section"><h3><i class="fas fa-align-left"></i> About the Role</h3><p>${escapeHtml(j.about).replace(/\n/g,'<br>')}</p></div>`:''}
+${j.responsibilities?`<div class="preview-section"><h3><i class="fas fa-tasks"></i> Responsibilities</h3><ul>${j.responsibilities.split('\n').filter(Boolean).map(l=>`<li>${escapeHtml(l.replace(/^[•\-]\s*/,''))}</li>`).join('')}</ul></div>`:''}
+${j.requirements?`<div class="preview-section"><h3><i class="fas fa-user-check"></i> Requirements</h3><ul>${j.requirements.split('\n').filter(Boolean).map(l=>`<li>${escapeHtml(l.replace(/^[•\-]\s*/,''))}</li>`).join('')}</ul></div>`:''}
+`;
+
+document.getElementById('modalFooter').innerHTML=`
+<button onclick="closeModal('jobModal')" style="padding:11px 22px;border-radius:10px;background:#f1f5f9;color:#475569;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Close</button>
+${applied
+?`<button disabled style="padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;font-size:13px;font-weight:800;cursor:not-allowed;display:flex;align-items:center;gap:8px;font-family:inherit"><i class="fas fa-check"></i> Already Applied</button>`
+:`<button onclick="openApplyModal('${escapeJs(jobId)}')" style="padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border:none;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;box-shadow:0 6px 16px rgba(37,99,235,.3)"><i class="fas fa-paper-plane"></i> Apply Now</button>`
+}
+`;
+
+document.getElementById('jobModal').classList.add('active');
+}
+
+/* ============================================================ */
+/* OPEN PROGRAM MODAL                                           */
+/* ============================================================ */
+function openProgramModal(programId){
+const p=allPrograms.find(x=>x.id===programId);
+if(!p)return;
+const enrolled=isEnrolled(p.id);
+const seats=Number(p.maxSeats)||0;
+const enrolledCount=Number(p.enrolled)||0;
+const seatsLeft=Math.max(seats-enrolledCount,0);
+const seatsPct=seats?Math.min((enrolledCount/seats)*100,100):0;
+
+document.getElementById('programModalTitle').textContent=p.name||'Program Details';
+document.getElementById('programModalBody').innerHTML=`
+<div style="background:linear-gradient(135deg,#f0f9ff,#f5f3ff);border-radius:14px;padding:20px;margin-bottom:20px;border:1px solid #c7d2fe;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+<div style="width:70px;height:70px;border-radius:18px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:32px;color:white;flex-shrink:0">${p.icon||'📚'}</div>
+<div style="flex:1;min-width:200px">
+<h4 style="font-size:16px;font-weight:900;color:#4338ca;margin-bottom:6px">${escapeHtml(p.category||'General')} · ${escapeHtml(p.level||'')}</h4>
+<p style="font-size:13px;color:#4338ca;line-height:1.55">${escapeHtml(p.description||'')}</p>
+</div>
+</div>
+<div class="preview-section">
+<h3><i class="fas fa-info-circle"></i> Program Details</h3>
+<p style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#64748b;margin-top:6px">
+<span><i class="fas fa-building"></i> ${escapeHtml(p.providerName||p.orgName||'Verified Provider')}</span>
+<span><i class="fas fa-user-tie"></i> ${escapeHtml(p.trainer||'—')}</span>
+<span><i class="fas fa-clock"></i> ${p.duration||'—'} weeks</span>
+<span><i class="fas fa-calendar"></i> Starts ${escapeHtml(p.startDate||'—')}</span>
+</p>
+<p style="margin-top:10px"><strong style="color:#059669;font-size:15px"><i class="fas fa-users"></i> ${enrolledCount}/${seats} seats filled (${seatsLeft} left)</strong></p>
+<div class="tc-progress-track" style="margin-top:8px"><div class="tc-progress-fill" style="width:${seatsPct}%"></div></div>
+</div>
+<div class="preview-section">
+<h3><i class="fas fa-code"></i> Skills You'll Learn</h3>
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+${(p.skills||[]).map(s=>`<span style="padding:5px 12px;border-radius:8px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-size:11.5px;font-weight:700">${escapeHtml(s.name||s)} <span style="opacity:.6;font-size:9px">${s.weight||''}</span></span>`).join('')||'<span style="color:#94a3b8;font-size:12px">No skills listed</span>'}
+</div>
+</div>
+${enrolled?`<div style="padding:14px 18px;border-radius:12px;background:#dcfce7;color:#065f46;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px"><i class="fas fa-check-circle" style="font-size:20px"></i> You are enrolled in this program. Track your progress in "My Applications" section.</div>`:''}
+`;
+
+document.getElementById('programModalFooter').innerHTML=`
+<button onclick="closeModal('programModal')" style="padding:11px 22px;border-radius:10px;background:#f1f5f9;color:#475569;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Close</button>
+${enrolled
+?`<button disabled style="padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;font-size:13px;font-weight:800;cursor:not-allowed;display:flex;align-items:center;gap:8px;font-family:inherit"><i class="fas fa-check"></i> Already Enrolled</button>`
+:seatsLeft<=0
+?`<button disabled style="padding:11px 24px;border-radius:10px;background:#fef3c7;color:#92400e;border:none;font-size:13px;font-weight:800;cursor:not-allowed;display:flex;align-items:center;gap:8px;font-family:inherit"><i class="fas fa-ban"></i> Seats Full</button>`
+:`<button onclick="openEnrollModal('${escapeJs(programId)}')" style="padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border:none;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;box-shadow:0 6px 16px rgba(37,99,235,.3)"><i class="fas fa-user-plus"></i> Enroll Now</button>`
+}
+`;
+
+document.getElementById('programModal').classList.add('active');
+}
+
+/* ============================================================ */
+/* ENROLL MODAL                                                 */
+/* ============================================================ */
+function openEnrollModal(programId){
+const p=allPrograms.find(x=>x.id===programId);
+if(!p)return;
+if(isEnrolled(p.id)){showToast('Already enrolled','info');return;}
+if(!_firebaseUser){showToast('Please log in','error');return;}
+
+closeModal('programModal');
+
+const confirmed=confirm(`Enroll in "${p.name}"?\n\nProvider: ${p.providerName||p.orgName||'Verified Provider'}\nDuration: ${p.duration} weeks\nStarts: ${p.startDate}\n\nYour enrollment request will be sent to the provider.`);
+
+if(!confirmed)return;
+
+enrollInProgram(p);
+}
+
+async function enrollInProgram(program){
+const btn=document.activeElement;
+try{
+// Check for duplicate
+const existing=await db.collection('enrollments')
+.where('traineeUid','==',_firebaseUser.uid)
+.where('programId','==',program.id)
+.limit(1).get();
+
+if(!existing.empty){
+showToast('⚠️ You already enrolled in this program','info');
+return;
+}
+
+await db.collection('enrollments').add({
+programId:program.id,
+programName:program.name||'',
+programCategory:program.category||'',
+programDuration:program.duration||0,
+programStartDate:program.startDate||'',
+providerUid:program.providerUid||'',
+providerName:program.providerName||program.orgName||'',
+traineeUid:_firebaseUser.uid,
+traineeName:_traineeData.fullName||'',
+traineeEmail:_traineeData.email||'',
+traineeMobile:_traineeData.mobile||'',
+traineeCity:_traineeData.city||'',
+skills:_traineeData.skills||[],
+status:'pending',
+progress:0,
+enrolledAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+
+// Increment enrollment count on program
+try{
+await db.collection('programs').doc(program.id).update({
+enrolled:firebase.firestore.FieldValue.increment(1)
+});
+}catch(e){console.warn('Could not increment enrolled count:',e);}
+
+showToast(`✅ Enrollment request sent! Provider will confirm soon.`,'success');
+
+// Local optimistic update
+myEnrollments.push({
+programId:program.id,
+programName:program.name,
+status:'pending'
+});
+renderTraining();
+renderHero();
+
+}catch(e){
+console.error('Enroll failed:',e);
+showToast('❌ Could not enroll. Try again.','error');
+}
+}
+
+/* ============================================================ */
+/* OPEN APPLY MODAL                                             */
+/* ============================================================ */
+function openApplyModal(jobId){
+const j=allJobs.find(x=>x.id===jobId);
+if(!j)return;
+if(myApplications.some(a=>a.jobId===jobId)){showToast('✅ Already applied','info');return;}
+currentApplyJob=j;
+
+const match=calcMatch(j);
+const matchedSkills=getMatchedSkills(j);
+const missingSkills=getMissingSkills(j);
+const matchColor=match>=70?'#059669':match>=40?'#d97706':'#dc2626';
+
+document.getElementById('applyJobTitle').textContent=j.title||'this Job';
+document.getElementById('applyMatchCircle').textContent=match+'%';
+document.getElementById('applyMatchCircle').style.color=matchColor;
+document.getElementById('applyMatchText').textContent=match+'%';
+document.getElementById('applyMatchText').style.color=matchColor;
+document.getElementById('applyMatchDesc').innerHTML=`You match <strong>${matchedSkills.length}</strong> of <strong>${(j.skills||[]).length}</strong> required skills.${missingSkills.length?` Missing: ${missingSkills.slice(0,3).map(s=>s.name||s).join(', ')}${missingSkills.length>3?' +more':''}`:''}`;
+
+document.getElementById('applyName').value=_traineeData.fullName||'';
+document.getElementById('applyEmail').value=_traineeData.email||'';
+document.getElementById('applyMobile').value=_traineeData.mobile||'';
+document.getElementById('applyCity').value=_traineeData.city||_traineeData.district||'';
+document.getElementById('applyQualification').value=_traineeData.qualification||'';
+document.getElementById('applySkills').value=(_traineeData.skills||[]).join(', ');
+document.getElementById('applyAvailability').value=new Date().toISOString().split('T')[0];
+document.getElementById('applyCoverLetter').value='';
+document.getElementById('applyPortfolio').value='';
+document.getElementById('applyResumeLink').value='';
+document.getElementById('applyCurrentSalary').value='';
+document.getElementById('applyExpectedSalary').value=j.salaryMin||'';
+document.getElementById('applyExperience').value='Fresher';
+
+closeModal('jobModal');
+document.getElementById('applyModal').classList.add('active');
+}
+
+async function submitApplication(){
+if(!currentApplyJob){showToast('❌ No job selected','error');return;}
+if(!_firebaseUser){showToast('❌ Please log in','error');return;}
+
+const name=document.getElementById('applyName').value.trim();
+const email=document.getElementById('applyEmail').value.trim();
+const mobile=document.getElementById('applyMobile').value.trim();
+const expected=Number(document.getElementById('applyExpectedSalary').value)||0;
+const availability=document.getElementById('applyAvailability').value;
+const cover=document.getElementById('applyCoverLetter').value.trim();
+
+if(!name){showToast('⚠️ Enter your name','error');return;}
+if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('⚠️ Enter a valid email','error');return;}
+if(!mobile){showToast('⚠️ Enter your mobile number','error');return;}
+if(!expected||expected<1000){showToast('⚠️ Enter a valid expected salary','error');return;}
+if(!availability){showToast('⚠️ Select availability date','error');return;}
+if(cover.length<50){showToast('⚠️ Cover letter must be at least 50 characters','error');return;}
+
+const j=currentApplyJob;
+const matchedSkills=getMatchedSkills(j).map(s=>s.name||s);
+const missingSkills=getMissingSkills(j).map(s=>s.name||s);
+const skillsArr=document.getElementById('applySkills').value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+
+const btn=document.getElementById('submitAppBtn');
+btn.disabled=true;
+btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+try{
+await db.collection('applications').add({
+jobId:j.id,
+jobTitle:j.title||'',
+employerUid:j.employerUid||'',
+employerOrg:j.employerOrg||'',
+traineeUid:_firebaseUser.uid,
+traineeName:name,
+traineeEmail:email,
+traineeMobile:mobile,
+traineeCity:document.getElementById('applyCity').value.trim(),
+traineeQualification:document.getElementById('applyQualification').value.trim(),
+skills:skillsArr,
+experience:document.getElementById('applyExperience').value,
+currentSalary:Number(document.getElementById('applyCurrentSalary').value)||0,
+expectedSalary:expected,
+availability:availability,
+coverLetter:cover,
+portfolio:document.getElementById('applyPortfolio').value.trim(),
+resumeLink:document.getElementById('applyResumeLink').value.trim(),
+matchScore:calcMatch(j),
+matchedSkills:matchedSkills,
+missingSkills:missingSkills,
+status:'applied',
+appliedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+
+try{
+await db.collection('jobs').doc(j.id).update({applications:firebase.firestore.FieldValue.increment(1)});
+}catch(e){}
+
+showToast('✅ Application submitted! Employer will contact you soon.','success');
+closeModal('applyModal');
+currentApplyJob=null;
+}catch(e){
+console.error('Submit failed:',e);
+showToast('❌ Could not submit. Try again.','error');
+}finally{
+btn.disabled=false;
+btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit Application';
+}
+}
+
+/* ============================================================ */
+/* MY APPLICATIONS RENDER                                       */
+/* ============================================================ */
+function renderMyApplications(){
+const c=document.getElementById('myAppsList');
+if(!c)return;
+if(!myApplications.length){
+c.innerHTML=`<div class="empty"><i class="fas fa-paper-plane"></i><h3>No applications yet</h3><p>Apply to jobs from the feed. Your application status will appear here as employers review them.</p></div>`;
+return;
+}
+
+c.innerHTML=myApplications.map(a=>{
+const status=(a.status||'applied').toLowerCase();
+const cfg=statusConfig(status);
+const appliedDate=a.appliedAt&&a.appliedAt.toDate?a.appliedAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—';
+const updatedDate=a.statusUpdatedAt&&a.statusUpdatedAt.toDate?a.statusUpdatedAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):null;
+const isNew=a.status!=='applied'&&a.statusUpdatedAt&&a.statusUpdatedAt.toDate&&(Date.now()-a.statusUpdatedAt.toDate().getTime()<86400000*3);
+
+const steps=['applied','shortlisted','interview','offered','hired'];
+const currentIdx=status==='rejected'?0:steps.indexOf(status);
+const progressPct=status==='rejected'?0:Math.round(((currentIdx+1)/5)*100);
+
+let bannerHTML='';
+if(status==='shortlisted')bannerHTML=`<div class="status-banner shortlisted"><strong>⭐ What's next:</strong> Great news! The employer has shortlisted you. They'll contact you soon for the next round.</div>`;
+else if(status==='interview')bannerHTML=`<div class="status-banner interview"><strong>🎤 What's next:</strong> The employer will contact you to schedule your interview. Keep your phone reachable.</div>`;
+else if(status==='offered')bannerHTML=`<div class="status-banner offered"><strong>📄 You've received an offer!</strong> Review the terms and respond promptly.</div>`;
+else if(status==='hired')bannerHTML=`<div class="status-banner hired"><strong>🎉 Congratulations!</strong> You've been hired. Update your Employment page.</div>`;
+else if(status==='rejected')bannerHTML=`<div class="status-banner rejected"><strong>Don't be discouraged!</strong> Check your AI Coach page for skill recommendations.</div>`;
+
+return `
+<div class="my-app-card">
+<div class="app-stripe" style="background:${cfg.color}"></div>
+${isNew?`<span class="new-badge" style="background:${cfg.color}">NEW UPDATE</span>`:''}
+<div class="my-app-head">
+<div class="my-app-head-left">
+<h3>${escapeHtml(a.jobTitle||'Job')}</h3>
+<div class="meta">
+<span><i class="fas fa-building"></i> ${escapeHtml(a.employerOrg||'')}</span>
+<span><i class="fas fa-calendar"></i> Applied ${appliedDate}</span>
+</div>
+</div>
+<div style="text-align:right">
+<div class="app-status-pill" style="background:${cfg.color}15;color:${cfg.color};border-color:${cfg.color}40">
+<span class="emoji">${cfg.icon}</span> ${cfg.label}
+</div>
+${updatedDate?`<div style="font-size:11px;color:#94a3b8;margin-top:6px;font-weight:600">Updated ${updatedDate}</div>`:''}
+</div>
+</div>
+<div class="progress-box">
+<div class="progress-head">
+<div class="lbl">Application Progress</div>
+<div class="pct" style="color:${cfg.color}">${progressPct}%</div>
+</div>
+<div class="progress-bar">
+${steps.map((s,i)=>{
+const stepCfg=statusConfig(s);
+const done=i<=currentIdx;
+return `<div class="progress-bar-seg" style="background:${done?stepCfg.color:'#e2e8f0'}"></div>`;
+}).join('')}
+</div>
+<div class="progress-labels">
+${steps.map((s,i)=>{
+const stepCfg=statusConfig(s);
+const done=i<=currentIdx;
+return `<span style="${done?'color:'+stepCfg.color:''}">${stepCfg.label}</span>`;
+}).join('')}
+</div>
+</div>
+${bannerHTML}
+<div class="app-foot">
+<span><i class="fas fa-briefcase"></i> Match: <strong>${a.matchScore||0}%</strong></span>
+<span><i class="fas fa-user-clock"></i> ${escapeHtml(a.experience||'Fresher')}</span>
+<span><i class="fas fa-rupee-sign"></i> Expected ₹${(a.expectedSalary||0).toLocaleString()}</span>
+</div>
+</div>`;
+}).join('');
+}
+
+/* ============================================================ */
+/* NOTIFICATIONS                                                */
+/* ============================================================ */
+function renderNotifications(){
+const c=document.getElementById('notifList');
+if(!c)return;
+
+const notifs=[];
+myApplications.forEach(a=>{
+const status=(a.status||'applied').toLowerCase();
+if(status==='applied')return;
+const cfg=statusConfig(status);
+const when=a.statusUpdatedAt&&a.statusUpdatedAt.toDate?a.statusUpdatedAt.toDate():null;
+notifs.push({
+icon:cfg.icon,
+color:cfg.color,
+title:cfg.title,
+message:`Your application to "${a.jobTitle}" at ${a.employerOrg} is now ${cfg.label}.`,
+time:when
+});
+});
+
+notifs.sort((a,b)=>{const ta=a.time?a.time.getTime():0;const tb=b.time?b.time.getTime():0;return tb-ta;});
+
+if(!notifs.length){
+c.innerHTML=`<div class="empty"><i class="fas fa-bell-slash"></i><h3>No updates yet</h3><p>When employers review your applications, updates will appear here.</p></div>`;
+return;
+}
+
+c.innerHTML=notifs.map(n=>{
+const timeStr=n.time?formatRelative(n.time):'';
+return `<div class="notif-item" style="border-left-color:${n.color}">
+<div class="notif-icon" style="background:${n.color}15">${n.icon}</div>
+<div class="notif-body">
+<h4 style="color:${n.color}">${n.title}</h4>
+<p>${escapeHtml(n.message)}</p>
+${timeStr?`<div class="notif-time">${timeStr}</div>`:''}
+</div>
+</div>`;
+}).join('');
+}
+
+function updateNotifBadge(){
+const badge=document.getElementById('notifCount');
+const bellBadge=document.getElementById('bellBadge');
+if(!badge)return;
+const recent=myApplications.filter(a=>{
+if(a.status==='applied')return false;
+if(!a.statusUpdatedAt||!a.statusUpdatedAt.toDate)return false;
+return (Date.now()-a.statusUpdatedAt.toDate().getTime())<7*86400000;
+}).length;
+if(recent>0){
+badge.textContent=recent;
+badge.style.display='';
+badge.className='count alert';
+if(bellBadge){bellBadge.textContent=recent;bellBadge.style.display='flex';}
+}else{
+badge.style.display='none';
+if(bellBadge)bellBadge.style.display='none';
+}
+}
+
+function formatRelative(date){
+const now=Date.now();const diff=now-date.getTime();
+const mins=Math.floor(diff/60000);
+if(mins<1)return 'Just now';
+if(mins<60)return `${mins} min${mins>1?'s':''} ago`;
+const hrs=Math.floor(mins/60);
+if(hrs<24)return `${hrs} hr${hrs>1?'s':''} ago`;
+const days=Math.floor(hrs/24);
+if(days<7)return `${days} day${days>1?'s':''} ago`;
+return date.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+
+/* ============================================================ */
+/* SAVE JOB                                                     */
+/* ============================================================ */
+async function toggleSave(jobId,btn){
+if(!_firebaseUser){showToast('Please log in','error');return;}
+const exists=mySavedJobs.find(s=>s.jobId===jobId);
+try{
+if(exists){
+await db.collection('saved_jobs').doc(exists.id).delete();
+mySavedJobs=mySavedJobs.filter(s=>s.jobId!==jobId);
+showToast('Removed from saved','info');
+}else{
+const ref=await db.collection('saved_jobs').add({
+jobId:jobId,
+traineeUid:_firebaseUser.uid,
+savedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+mySavedJobs.push({id:ref.id,jobId:jobId});
+showToast('⭐ Saved!','success');
+}
+renderJobs();
+}catch(e){showToast('❌ Failed','error');}
+}
+
+/* ============================================================ */
+/* TABS                                                         */
+/* ============================================================ */
+function switchTab(name){
+document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+const tab=document.querySelector(`.tab[data-tab="${name}"]`);
+const panel=document.getElementById('panel-'+name);
+if(tab)tab.classList.add('active');
+if(panel)panel.classList.add('active');
+if(name==='myapps')renderMyApplications();
+if(name==='notifications')renderNotifications();
+if(name==='training')renderTraining();
+}
+document.querySelectorAll('.tab').forEach(t=>{
+t.addEventListener('click',()=>switchTab(t.dataset.tab));
+});
+
+/* ============================================================ */
+/* HELPERS                                                      */
+/* ============================================================ */
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('active');}
+function toggleSidebar(){const sb=document.getElementById('sidebar');if(sb)sb.classList.toggle('open');}
+
+function showToast(msg,type='success'){
+const t=document.createElement('div');
+t.className='toast '+type;
+const icon=type==='error'?'fa-exclamation-circle':type==='info'?'fa-info-circle':'fa-check-circle';
+const color=type==='error'?'#dc2626':type==='info'?'#2563eb':'#16a34a';
+t.innerHTML=`<i class="fas ${icon}" style="color:${color};font-size:18px;flex-shrink:0"></i> <div>${msg}</div>`;
+document.body.appendChild(t);
+setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},4000);
+}
+
+async function logout(){
+if(!confirm('Logout?'))return;
+try{
+if(unsubscribeJobs)unsubscribeJobs();
+if(unsubscribeApps)unsubscribeApps();
+if(unsubscribePrograms)unsubscribePrograms();
+if(unsubscribeEnrollments)unsubscribeEnrollments();
+await auth.signOut();
+}catch(e){}
+try{localStorage.clear();}catch(e){}
+window.location.replace(getLoginUrl());
+}
+
+function toggleTheme(){
+const html=document.documentElement;
+const next=(html.getAttribute('data-theme')||'light')==='dark'?'light':'dark';
+html.setAttribute('data-theme',next);
+try{localStorage.setItem('skillintel-theme',next);}catch(e){}
+const i=document.querySelector('.theme-toggle i');
+if(i)i.className=next==='dark'?'fas fa-sun':'fas fa-moon';
+}
+
+function escapeHtml(str){
+if(str===undefined||str===null)return '';
+return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function escapeJs(str){return String(str||'').replace(/'/g,"\\'");}
+
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');});
+});
+document.addEventListener('keydown',e=>{
+if(e.key==='Escape')document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));
+});
+
+/* ============================================================ */
+/* INIT                                                         */
+/* ============================================================ */
+document.addEventListener('DOMContentLoaded',async function(){
+if(_initDone)return;
+_initDone=true;
+
+try{
+const saved=localStorage.getItem('skillintel-theme')||'light';
+document.documentElement.setAttribute('data-theme',saved);
+const i=document.querySelector('.theme-toggle i');
+if(i)i.className=saved==='dark'?'fas fa-sun':'fas fa-moon';
+}catch(e){}
+
+const user=await resolveAuth();
+if(!user)return;
+
+await loadTrainee();
+await loadMyDataOnce();
+
+renderHero();
+subscribeToJobs();
+subscribeToPrograms();
+subscribeToMyApplications();
+subscribeToMyEnrollments();
+
+console.log('✅ Job Discovery + Training ready');
+
+document.addEventListener('click',function(e){
+const sb=document.getElementById('sidebar');
+const tg=document.querySelector('.menu-toggle');
+if(!sb||window.innerWidth>768)return;
+if(!sb.classList.contains('open'))return;
+if(!sb.contains(e.target)&&e.target!==tg&&!tg.contains(e.target))sb.classList.remove('open');
+});
+});
+
+async function loadMyDataOnce(){
+if(!_firebaseUser)return;
+try{
+const snap=await db.collection('saved_jobs').where('traineeUid','==',_firebaseUser.uid).get();
+mySavedJobs=[];
+snap.forEach(d=>mySavedJobs.push({id:d.id,...d.data()}));
+}catch(e){console.warn('loadSaved:',e);}
+try{
+const snap=await db.collection('enrollments').where('traineeUid','==',_firebaseUser.uid).get();
+myEnrollments=[];
+snap.forEach(d=>myEnrollments.push({id:d.id,...d.data()}));
+renderTraining();
+renderHero();
+}catch(e){console.warn('loadEnrollments:',e);}
+}
+
+window.addEventListener('beforeunload',()=>{
+if(unsubscribeJobs){try{unsubscribeJobs();}catch(e){}}
+if(unsubscribeApps){try{unsubscribeApps();}catch(e){}}
+if(unsubscribePrograms){try{unsubscribePrograms();}catch(e){}}
+if(unsubscribeEnrollments){try{unsubscribeEnrollments();}catch(e){}}
+});
+</script>
+</body>
+</html>

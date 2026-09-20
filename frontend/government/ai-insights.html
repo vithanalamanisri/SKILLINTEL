@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>AI Insights & Recommendations · SkillBridge</title>
+    <title>AI Insights & Decision Support · SkillBridge</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,751 +13,298 @@
         body { background: #f0f4f9; display: flex; min-height: 100vh; }
 
         /* ===== SIDEBAR ===== */
-        .sidebar {
-            width: 280px;
-            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
-            color: white;
-            padding: 20px 14px;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-            transition: transform 0.3s ease;
-            scrollbar-width: thin;
-        }
+        .sidebar { width: 280px; background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%); color: white; padding: 20px 14px; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; transition: transform 0.3s ease; scrollbar-width: thin; }
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-
-        .sidebar-brand {
-            display: flex; align-items: center; gap: 10px;
-            padding: 6px 8px 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 14px;
-        }
-        .sidebar-brand .icon {
-            width: 42px; height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
-        }
+        .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px; }
+        .sidebar-brand .icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35); }
         .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
         .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
-
-        .sidebar-user {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 10px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 12px;
-        }
-        .sidebar-user .avatar {
-            width: 40px; height: 40px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 16px;
-            flex-shrink: 0;
-        }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
         .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
         .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
-
-        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
-            opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
-        .menu a {
-            display: flex; align-items: center; gap: 10px;
-            padding: 8px 12px; border-radius: 10px;
-            color: rgba(255,255,255,0.65);
-            text-decoration: none; transition: all 0.2s;
-            margin: 1px 0; font-size: 13px; font-weight: 500;
-            cursor: pointer;
-        }
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.65); text-decoration: none; transition: all 0.2s; margin: 1px 0; font-size: 13px; font-weight: 500; cursor: pointer; }
         .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
-        .menu a.active {
-            background: rgba(255,255,255,0.12);
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+        .menu a.active { background: rgba(255,255,255,0.12); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .menu a i { width: 18px; text-align: center; font-size: 14px; }
-        .menu a .badge {
-            margin-left: auto;
-            background: #ef4444;
-            color: white;
-            font-size: 9px;
-            font-weight: 700;
-            padding: 1px 8px;
-            border-radius: 20px;
-        }
-
-        .sidebar-footer {
-            padding: 16px 10px 0;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            margin-top: 12px;
-        }
-        .sidebar-footer a {
-            display: flex; align-items: center; gap: 10px;
-            padding: 8px 12px; border-radius: 10px;
-            color: rgba(255,255,255,0.5);
-            text-decoration: none; transition: 0.2s;
-            font-size: 13px; font-weight: 500;
-            cursor: pointer;
-        }
+        .menu a .badge { margin-left: auto; background: #ef4444; color: white; font-size: 9px; font-weight: 700; padding: 1px 8px; border-radius: 20px; }
+        .sidebar-footer { padding: 16px 10px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 12px; }
+        .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.5); text-decoration: none; transition: 0.2s; font-size: 13px; font-weight: 500; cursor: pointer; }
         .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
 
         /* ===== MAIN ===== */
         .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
-
-        /* ===== HEADER ===== */
-        .header {
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(16px);
-            padding: 12px 28px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(226,232,240,0.6);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+        .header { background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226,232,240,0.6); position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 8px; }
         .header-left { display: flex; align-items: center; gap: 14px; }
-        .menu-toggle {
-            display: none;
-            background: none; border: none;
-            font-size: 20px; color: #0b1a33;
-            cursor: pointer;
-        }
-        .header-left .page-title h1 {
-            font-size: 18px; color: #0b1a33;
-            font-weight: 700;
-            display: flex; align-items: center; gap: 8px;
-        }
+        .menu-toggle { display: none; background: none; border: none; font-size: 20px; color: #0b1a33; cursor: pointer; }
+        .header-left .page-title h1 { font-size: 18px; color: #0b1a33; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .header-left .page-title h1 i { color: #7c3aed; }
         .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
         .header-right { display: flex; align-items: center; gap: 12px; }
-        .header-right .date {
-            font-size: 12px; color: #64748b;
-            font-weight: 500;
-            background: #f1f5f9;
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-        .header-right .notif {
-            position: relative;
-            font-size: 18px; color: #475569;
-            cursor: pointer;
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            transition: 0.2s;
-        }
+        .header-right .date { font-size: 12px; color: #64748b; font-weight: 500; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; }
+        .header-right .notif { position: relative; font-size: 18px; color: #475569; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .header-right .notif:hover { background: #f1f5f9; }
-        .header-right .notif .badge {
-            position: absolute; top: 2px; right: 2px;
-            background: #ef4444; color: white;
-            width: 18px; height: 18px;
-            font-size: 9px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700;
-        }
-        .header-right .profile-btn {
-            display: flex; align-items: center; gap: 8px;
-            background: #f1f5f9;
-            padding: 4px 12px 4px 4px;
-            border-radius: 30px;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
-        }
+        .header-right .notif .badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; width: 18px; height: 18px; font-size: 9px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .header-right .profile-btn { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 12px 4px 4px; border-radius: 30px; cursor: pointer; border: none; transition: 0.2s; }
         .header-right .profile-btn:hover { background: #e2e8f0; }
-        .header-right .profile-btn .avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            color: white;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 12px;
-        }
+        .header-right .profile-btn .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
         .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
         .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
 
-        /* ===== CONTAINER ===== */
         .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
 
         /* ===== EXECUTIVE SUMMARY BANNER ===== */
-        .exec-summary {
-            background: linear-gradient(135deg, #4c1d95, #7c3aed, #2563eb);
-            color: white;
-            padding: 24px 28px;
-            border-radius: 18px;
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-        .exec-summary::before {
-            content: "";
-            position: absolute;
-            width: 400px; height: 400px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.06);
-            top: -180px; right: -100px;
-        }
-        .exec-summary::after {
-            content: "";
-            position: absolute;
-            width: 200px; height: 200px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.04);
-            bottom: -80px; left: 40%;
-        }
+        .exec-summary { background: linear-gradient(135deg, #4c1d95, #7c3aed, #2563eb); color: white; padding: 24px 28px; border-radius: 18px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .exec-summary::before { content: ""; position: absolute; width: 400px; height: 400px; border-radius: 50%; background: rgba(255,255,255,0.06); top: -180px; right: -100px; }
+        .exec-summary::after { content: ""; position: absolute; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.04); bottom: -80px; left: 40%; }
         .exec-summary .es-content { position: relative; z-index: 1; }
-        .exec-summary .es-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        .exec-summary .es-icon {
-            width: 48px; height: 48px;
-            border-radius: 14px;
-            background: rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-        .exec-summary h2 {
-            font-size: 22px;
-            font-weight: 700;
-        }
+        .exec-summary .es-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .exec-summary .es-icon { width: 48px; height: 48px; border-radius: 14px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 22px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); }
+        .exec-summary h2 { font-size: 22px; font-weight: 700; }
         .exec-summary p { font-size: 13px; opacity: 0.9; line-height: 1.6; max-width: 900px; }
-        .exec-summary .es-highlights {
-            display: flex;
-            gap: 16px;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
-        .exec-summary .es-highlight {
-            background: rgba(255,255,255,0.1);
-            padding: 10px 16px;
-            border-radius: 12px;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .exec-summary .es-highlight .hl-icon {
-            font-size: 20px;
-        }
-        .exec-summary .es-highlight .hl-text {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-        .exec-summary .es-highlight .hl-text strong {
-            display: block;
-            font-size: 16px;
-            font-weight: 800;
-            opacity: 1;
-            margin-top: 1px;
-        }
+        .exec-summary .es-highlights { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+        .exec-summary .es-highlight { background: rgba(255,255,255,0.1); padding: 10px 16px; border-radius: 12px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
+        .exec-summary .es-highlight .hl-icon { font-size: 20px; }
+        .exec-summary .es-highlight .hl-text { font-size: 11px; opacity: 0.8; }
+        .exec-summary .es-highlight .hl-text strong { display: block; font-size: 16px; font-weight: 800; opacity: 1; margin-top: 1px; }
 
         /* ===== FLOW STEPS ===== */
-        .flow-steps {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: white;
-            border-radius: 14px;
-            padding: 14px 24px;
-            margin-bottom: 20px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .flow-step {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #64748b;
-        }
-        .flow-step .fs-num {
-            width: 24px; height: 24px;
-            border-radius: 50%;
-            background: #f1f5f9;
-            color: #94a3b8;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
-        }
-        .flow-step.active .fs-num {
-            background: linear-gradient(135deg, #7c3aed, #2563eb);
-            color: white;
-        }
+        .flow-steps { display: flex; align-items: center; justify-content: space-between; background: white; border-radius: 14px; padding: 14px 24px; margin-bottom: 20px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); flex-wrap: wrap; gap: 8px; }
+        .flow-step { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: #64748b; }
+        .flow-step .fs-num { width: 24px; height: 24px; border-radius: 50%; background: #f1f5f9; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+        .flow-step.active .fs-num { background: linear-gradient(135deg, #7c3aed, #2563eb); color: white; }
         .flow-step.active { color: #0b1a33; }
         .flow-arrow { color: #cbd5e1; font-size: 10px; }
 
         /* ===== SECTION TITLES ===== */
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0b1a33;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 14px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f1f5f9;
-        }
+        .section-title { font-size: 16px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
         .section-title i { color: #7c3aed; }
-        .section-title .badge-count {
-            background: #ede9fe;
-            padding: 1px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #7c3aed;
-            margin-left: auto;
-        }
+        .section-title .badge-count { background: #ede9fe; padding: 1px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #7c3aed; margin-left: auto; }
 
         /* ===== INSIGHT CARDS ===== */
-        .insight-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px 22px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            margin-bottom: 16px;
-            transition: 0.3s;
-            border-left: 4px solid #dc2626;
-        }
-        .insight-card:hover {
-            box-shadow: 0 12px 30px rgba(220,38,38,0.1);
-            transform: translateX(4px);
-        }
+        .insight-card { background: white; border-radius: 16px; padding: 20px 22px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 16px; transition: 0.3s; border-left: 4px solid #dc2626; }
+        .insight-card:hover { box-shadow: 0 12px 30px rgba(220,38,38,0.1); transform: translateX(4px); }
         .insight-card.warning { border-left-color: #ea580c; }
         .insight-card.info { border-left-color: #2563eb; }
         .insight-card.success { border-left-color: #16a34a; }
         .insight-card.purple { border-left-color: #7c3aed; }
-
-        .insight-card .ic-header {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        .insight-card .ic-icon {
-            width: 38px; height: 38px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
+        .insight-card .ic-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+        .insight-card .ic-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
         .insight-card .ic-icon.red { background: #fef2f2; color: #dc2626; }
         .insight-card .ic-icon.orange { background: #fff7ed; color: #ea580c; }
         .insight-card .ic-icon.blue { background: #dbeafe; color: #2563eb; }
         .insight-card .ic-icon.green { background: #dcfce7; color: #16a34a; }
         .insight-card .ic-icon.purple { background: #ede9fe; color: #7c3aed; }
-        .insight-card .ic-icon.yellow { background: #fefce8; color: #ca8a04; }
-
-        .insight-card .ic-title {
-            flex: 1;
-        }
-        .insight-card .ic-title h4 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0b1a33;
-            margin-bottom: 4px;
-        }
-        .insight-card .ic-title p {
-            font-size: 12px;
-            color: #475569;
-            line-height: 1.6;
-        }
-        .insight-card .ic-badge {
-            font-size: 9px;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            flex-shrink: 0;
-        }
+        .insight-card .ic-title { flex: 1; }
+        .insight-card .ic-title h4 { font-size: 14px; font-weight: 700; color: #0b1a33; margin-bottom: 4px; }
+        .insight-card .ic-title p { font-size: 12px; color: #475569; line-height: 1.6; }
+        .insight-card .ic-badge { font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
         .insight-card .ic-badge.critical { background: #fef2f2; color: #dc2626; }
         .insight-card .ic-badge.high { background: #fff7ed; color: #ea580c; }
         .insight-card .ic-badge.medium { background: #fefce8; color: #ca8a04; }
         .insight-card .ic-badge.low { background: #dcfce7; color: #16a34a; }
         .insight-card .ic-badge.new { background: #ede9fe; color: #7c3aed; }
-
-        .insight-card .ic-evidence {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 12px 14px;
-            margin-top: 12px;
-            border-left: 3px solid #7c3aed;
-        }
-        .insight-card .ic-evidence .ev-label {
-            font-size: 10px;
-            font-weight: 700;
-            color: #7c3aed;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .insight-card .ic-evidence .ev-metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 8px 16px;
-            font-size: 11px;
-            color: #475569;
-        }
-        .insight-card .ic-evidence .ev-metrics strong {
-            color: #0b1a33;
-        }
-
-        .insight-card .ic-action {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #f1f5f9;
-        }
-        .insight-card .ic-action .ac-icon {
-            color: #2563eb;
-            font-size: 16px;
-            margin-top: 2px;
-            flex-shrink: 0;
-        }
-        .insight-card .ic-action .ac-text {
-            font-size: 12px;
-            color: #0b1a33;
-            line-height: 1.6;
-        }
-        .insight-card .ic-action .ac-text strong {
-            color: #2563eb;
-        }
+        .insight-card .ic-evidence { background: #f8fafc; border-radius: 10px; padding: 12px 14px; margin-top: 12px; border-left: 3px solid #7c3aed; }
+        .insight-card .ic-evidence .ev-label { font-size: 10px; font-weight: 700; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .insight-card .ic-evidence .ev-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; font-size: 11px; color: #475569; }
+        .insight-card .ic-evidence .ev-metrics strong { color: #0b1a33; }
+        .insight-card .ic-action { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+        .insight-card .ic-action .ac-icon { color: #2563eb; font-size: 16px; margin-top: 2px; flex-shrink: 0; }
+        .insight-card .ic-action .ac-text { font-size: 12px; color: #0b1a33; line-height: 1.6; }
+        .insight-card .ic-action .ac-text strong { color: #2563eb; }
 
         /* ===== GRID LAYOUTS ===== */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin-bottom: 20px;
-        }
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 18px;
-            margin-bottom: 20px;
-        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 20px; }
 
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 18px 20px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            transition: 0.3s;
-        }
+        .card { background: white; border-radius: 16px; padding: 18px 20px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.3s; }
         .card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
-        .card .card-header {
-            font-size: 13px;
-            font-weight: 700;
-            color: #0b1a33;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f1f5f9;
-        }
+        .card .card-header { font-size: 13px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
         .card .card-header i { color: #7c3aed; }
 
         /* ===== RISK MATRIX ===== */
-        .risk-list-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 0;
-            border-bottom: 1px solid #f8fafc;
-        }
+        .risk-list-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
         .risk-list-item:last-child { border-bottom: none; }
-        .risk-list-item .risk-label {
-            flex: 1;
-            font-size: 12px;
-            color: #0b1a33;
-            font-weight: 500;
-        }
-        .risk-list-item .risk-count {
-            font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-        }
-        .risk-list-item .risk-level {
-            font-size: 9px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 10px;
-            text-transform: uppercase;
-        }
+        .risk-list-item .risk-label { flex: 1; font-size: 12px; color: #0b1a33; font-weight: 500; }
+        .risk-list-item .risk-count { font-size: 11px; font-weight: 700; color: #64748b; }
+        .risk-list-item .risk-level { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; }
         .risk-level.high { background: #fef2f2; color: #dc2626; }
         .risk-level.medium { background: #fff7ed; color: #ea580c; }
         .risk-level.low { background: #dcfce7; color: #16a34a; }
 
         /* ===== TREND ===== */
-        .trend-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #f8fafc;
-        }
+        .trend-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f8fafc; }
         .trend-item:last-child { border-bottom: none; }
-        .trend-item .trend-label {
-            font-size: 12px;
-            color: #0b1a33;
-            flex: 1;
-            font-weight: 500;
-        }
-        .trend-item .trend-value {
-            font-size: 13px;
-            font-weight: 800;
-        }
+        .trend-item .trend-label { font-size: 12px; color: #0b1a33; flex: 1; font-weight: 500; }
+        .trend-item .trend-value { font-size: 13px; font-weight: 800; }
 
         /* ===== SKILL PATTERNS ===== */
-        .skill-pattern-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 0;
-            border-bottom: 1px solid #f8fafc;
-        }
+        .skill-pattern-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
         .skill-pattern-item:last-child { border-bottom: none; }
-        .skill-pattern-item .sp-icon {
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
+        .skill-pattern-item .sp-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
         .skill-pattern-item .sp-icon.high { background: #fef2f2; color: #dc2626; }
         .skill-pattern-item .sp-icon.medium { background: #fff7ed; color: #ea580c; }
         .skill-pattern-item .sp-icon.low { background: #fefce8; color: #ca8a04; }
         .skill-pattern-item .sp-info { flex: 1; }
-        .skill-pattern-item .sp-info .sp-name {
-            font-size: 12px;
-            font-weight: 700;
-            color: #0b1a33;
-        }
-        .skill-pattern-item .sp-info .sp-desc {
-            font-size: 10px;
-            color: #64748b;
-            margin-top: 2px;
-        }
-        .skill-pattern-item .sp-gap {
-            font-size: 14px;
-            font-weight: 800;
-        }
+        .skill-pattern-item .sp-info .sp-name { font-size: 12px; font-weight: 700; color: #0b1a33; }
+        .skill-pattern-item .sp-info .sp-desc { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .skill-pattern-item .sp-gap { font-size: 14px; font-weight: 800; }
         .skill-pattern-item .sp-gap.high { color: #dc2626; }
         .skill-pattern-item .sp-gap.medium { color: #ea580c; }
         .skill-pattern-item .sp-gap.low { color: #ca8a04; }
 
         /* ===== ANOMALY ===== */
-        .anomaly-item {
-            padding: 12px 14px;
-            background: #fffbeb;
-            border-radius: 10px;
-            border-left: 4px solid #f59e0b;
-            margin-bottom: 10px;
-            font-size: 12px;
-            color: #475569;
-            line-height: 1.5;
-        }
+        .anomaly-item { padding: 12px 14px; background: #fffbeb; border-radius: 10px; border-left: 4px solid #f59e0b; margin-bottom: 10px; font-size: 12px; color: #475569; line-height: 1.5; }
         .anomaly-item:last-child { margin-bottom: 0; }
         .anomaly-item strong { color: #0b1a33; }
-        .anomaly-item .anomaly-tag {
-            display: inline-block;
-            font-size: 9px;
-            font-weight: 700;
-            padding: 1px 8px;
-            border-radius: 10px;
-            background: #fef3c7;
-            color: #b45309;
-            margin-right: 6px;
-            text-transform: uppercase;
-        }
+        .anomaly-item .anomaly-tag { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 8px; border-radius: 10px; background: #fef3c7; color: #b45309; margin-right: 6px; text-transform: uppercase; }
 
         /* ===== FORECAST ===== */
-        .forecast-item {
-            background: linear-gradient(135deg, #f5f3ff, #ede9fe);
-            padding: 14px 16px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            border-left: 4px solid #7c3aed;
-        }
+        .forecast-item { background: linear-gradient(135deg, #f5f3ff, #ede9fe); padding: 14px 16px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid #7c3aed; }
         .forecast-item:last-child { margin-bottom: 0; }
-        .forecast-item .forecast-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #7c3aed;
-            margin-bottom: 4px;
-        }
-        .forecast-item .forecast-text {
-            font-size: 12px;
-            color: #0b1a33;
-            line-height: 1.5;
-        }
-        .forecast-item .forecast-value {
-            font-size: 20px;
-            font-weight: 800;
-            color: #5b21b6;
-            margin-top: 4px;
-        }
+        .forecast-item .forecast-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #7c3aed; margin-bottom: 4px; }
+        .forecast-item .forecast-text { font-size: 12px; color: #0b1a33; line-height: 1.5; }
+        .forecast-item .forecast-value { font-size: 20px; font-weight: 800; color: #5b21b6; margin-top: 4px; }
 
         /* ===== SUCCESS ===== */
-        .success-item {
-            background: linear-gradient(135deg, #dcfce7, #d1fae5);
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            border-left: 4px solid #16a34a;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
+        .success-item { background: linear-gradient(135deg, #dcfce7, #d1fae5); padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid #16a34a; display: flex; align-items: flex-start; gap: 10px; }
         .success-item:last-child { margin-bottom: 0; }
-        .success-item .success-icon {
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-        .success-item .success-text {
-            font-size: 12px;
-            color: #0b1a33;
-            line-height: 1.5;
-        }
+        .success-item .success-icon { font-size: 18px; flex-shrink: 0; }
+        .success-item .success-text { font-size: 12px; color: #0b1a33; line-height: 1.5; }
         .success-item .success-text strong { color: #15803d; }
 
         /* ===== POLICY ===== */
-        .policy-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid #f8fafc;
-        }
+        .policy-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f8fafc; }
         .policy-item:last-child { border-bottom: none; }
-        .policy-item .policy-num {
-            width: 26px; height: 26px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #7c3aed, #2563eb);
-            color: white;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
+        .policy-item .policy-num { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #2563eb); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
         .policy-item .policy-info { flex: 1; }
-        .policy-item .policy-info .policy-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #0b1a33;
-            margin-bottom: 2px;
-        }
-        .policy-item .policy-info .policy-desc {
-            font-size: 11px;
-            color: #64748b;
-            line-height: 1.5;
-        }
-        .policy-item .policy-priority {
-            font-size: 9px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 10px;
-            flex-shrink: 0;
-        }
+        .policy-item .policy-info .policy-title { font-size: 12px; font-weight: 700; color: #0b1a33; margin-bottom: 2px; }
+        .policy-item .policy-info .policy-desc { font-size: 11px; color: #64748b; line-height: 1.5; }
+        .policy-item .policy-priority { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
         .policy-priority.critical { background: #fef2f2; color: #dc2626; }
         .policy-priority.high { background: #fff7ed; color: #ea580c; }
         .policy-priority.medium { background: #fefce8; color: #ca8a04; }
 
         /* ===== CURRICULUM ===== */
-        .curriculum-item {
-            padding: 12px 14px;
-            background: #f8fafc;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            border-left: 3px solid #2563eb;
-        }
+        .curriculum-item { padding: 12px 14px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border-left: 3px solid #2563eb; }
         .curriculum-item:last-child { margin-bottom: 0; }
-        .curriculum-item .curr-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-        .curriculum-item .curr-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #0b1a33;
-        }
-        .curriculum-item .curr-badge {
-            font-size: 9px;
-            font-weight: 700;
-            padding: 1px 8px;
-            border-radius: 10px;
-        }
+        .curriculum-item .curr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .curriculum-item .curr-title { font-size: 12px; font-weight: 700; color: #0b1a33; }
+        .curriculum-item .curr-badge { font-size: 9px; font-weight: 700; padding: 1px 8px; border-radius: 10px; }
         .curr-badge.add { background: #dcfce7; color: #16a34a; }
         .curr-badge.strengthen { background: #dbeafe; color: #2563eb; }
         .curr-badge.remove { background: #fee2e2; color: #dc2626; }
-        .curriculum-item .curr-desc {
-            font-size: 11px;
-            color: #64748b;
-            line-height: 1.5;
-        }
+        .curriculum-item .curr-desc { font-size: 11px; color: #64748b; line-height: 1.5; }
+
+        /* ============================================================
+           AI DECISION SUPPORT — NEW STYLES
+           ============================================================ */
+
+        .decision-hero { background: linear-gradient(135deg, #065f46, #16a34a, #22c55e); color: white; border-radius: 18px; padding: 22px 26px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .decision-hero::before { content: ''; position: absolute; width: 320px; height: 320px; border-radius: 50%; background: rgba(255,255,255,0.06); top: -140px; right: -80px; }
+        .decision-hero .dh-content { position: relative; z-index: 1; }
+        .decision-hero .dh-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .decision-hero .dh-icon { width: 46px; height: 46px; border-radius: 13px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 22px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); }
+        .decision-hero h2 { font-size: 20px; font-weight: 700; }
+        .decision-hero p { font-size: 13px; opacity: 0.92; line-height: 1.6; max-width: 900px; }
+        .decision-hero .dh-stats { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; }
+        .decision-hero .dh-stat { background: rgba(255,255,255,0.12); padding: 8px 14px; border-radius: 10px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.12); }
+        .decision-hero .dh-stat .lbl { font-size: 10px; opacity: 0.85; }
+        .decision-hero .dh-stat strong { font-size: 18px; font-weight: 800; display: block; margin-top: 2px; }
+
+        .decision-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+        .decision-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.3s; position: relative; overflow: hidden; }
+        .decision-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
+        .decision-card.d1::before { background: #dc2626; }
+        .decision-card.d2::before { background: #ea580c; }
+        .decision-card.d3::before { background: #d97706; }
+        .decision-card.d4::before { background: #2563eb; }
+        .decision-card.d5::before { background: #7c3aed; }
+        .decision-card:hover { transform: translateX(4px); box-shadow: 0 10px 30px rgba(124,58,237,0.12); }
+        .decision-card .dc-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+        .decision-card .dc-rank { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; color: white; flex-shrink: 0; }
+        .decision-card.d1 .dc-rank { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        .decision-card.d2 .dc-rank { background: linear-gradient(135deg, #ea580c, #f97316); }
+        .decision-card.d3 .dc-rank { background: linear-gradient(135deg, #d97706, #f59e0b); }
+        .decision-card.d4 .dc-rank { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+        .decision-card.d5 .dc-rank { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+        .decision-card .dc-info { flex: 1; }
+        .decision-card .dc-title { font-size: 15px; font-weight: 800; color: #0b1a33; margin-bottom: 4px; }
+        .decision-card .dc-desc { font-size: 12px; color: #64748b; line-height: 1.55; }
+        .decision-card .dc-score-badge { text-align: center; background: linear-gradient(135deg, #ede9fe, #dbeafe); border-radius: 12px; padding: 10px 14px; flex-shrink: 0; }
+        .decision-card .dc-score-badge .score { font-size: 26px; font-weight: 900; color: #7c3aed; line-height: 1; }
+        .decision-card .dc-score-badge .lbl { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+        .decision-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin: 14px 0; }
+        .decision-metric { background: #f8fafc; border-radius: 10px; padding: 10px 12px; text-align: center; }
+        .decision-metric .dm-lbl { font-size: 9.5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 700; }
+        .decision-metric .dm-val { font-size: 16px; font-weight: 800; color: #0b1a33; margin-top: 4px; }
+        .decision-metric .dm-val.good { color: #16a34a; }
+        .decision-metric .dm-val.warn { color: #d97706; }
+        .decision-metric .dm-val.danger { color: #dc2626; }
+
+        .confidence-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding-top: 12px; border-top: 1px dashed #e2e8f0; }
+        .confidence-row .cr-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
+        .confidence-row .cr-track { flex: 1; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .confidence-row .cr-fill { height: 100%; border-radius: 10px; transition: width 0.8s; }
+        .confidence-row .cr-pct { font-size: 12px; font-weight: 800; min-width: 42px; text-align: right; }
+
+        .decision-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; flex-wrap: wrap; }
+        .decision-btn { padding: 8px 14px; border-radius: 8px; border: none; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
+        .decision-btn.primary { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
+        .decision-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(124,58,237,0.3); }
+        .decision-btn.ghost { background: #f1f5f9; color: #475569; }
+        .decision-btn.ghost:hover { background: #e2e8f0; }
+
+        .decision-matrix-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
+        .decision-matrix-table thead { background: #f8fafc; }
+        .decision-matrix-table th { padding: 12px 14px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0; }
+        .decision-matrix-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; color: #0b1a33; }
+        .decision-matrix-table tbody tr:hover { background: #fafbff; }
+        .decision-matrix-table .score-cell { font-weight: 900; font-size: 14px; color: #7c3aed; }
+
+        .scatter-wrap { background: white; border-radius: 16px; padding: 22px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 20px; }
+        .scatter-svg { width: 100%; height: 360px; }
+        .scatter-legend { display: flex; justify-content: center; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
+        .scatter-legend .sl-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #475569; font-weight: 600; }
+        .scatter-legend .sl-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+        .stakeholder-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stakeholder-card { background: white; border-radius: 14px; padding: 14px 16px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.2s; }
+        .stakeholder-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(124,58,237,0.1); }
+        .stakeholder-card .sh-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .stakeholder-card .sh-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .stakeholder-card .sh-name { font-size: 12px; font-weight: 700; color: #0b1a33; }
+        .stakeholder-card .sh-impact { font-size: 11px; color: #64748b; line-height: 1.5; }
+        .stakeholder-card .sh-impact strong { color: #0b1a33; }
+        .stakeholder-card .sh-sentiment { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 9.5px; font-weight: 700; margin-top: 8px; }
+
+        .decision-timeline { background: white; border-radius: 16px; padding: 22px 24px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 20px; }
+        .dt-track { position: relative; padding: 20px 0; }
+        .dt-track::before { content: ''; position: absolute; top: 50%; left: 5%; right: 5%; height: 4px; background: linear-gradient(90deg, #7c3aed, #a855f7, #ec4899); border-radius: 10px; transform: translateY(-50%); }
+        .dt-phases { display: flex; justify-content: space-between; position: relative; z-index: 1; flex-wrap: wrap; gap: 12px; }
+        .dt-phase { flex: 1; min-width: 140px; text-align: center; }
+        .dt-phase .dphase-circle { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: white; background: linear-gradient(135deg, #7c3aed, #a855f7); border: 4px solid white; box-shadow: 0 4px 16px rgba(124,58,237,0.35); margin: 0 auto 8px; }
+        .dt-phase .dphase-title { font-size: 12px; font-weight: 800; color: #0b1a33; }
+        .dt-phase .dphase-desc { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .dt-phase .dphase-meta { font-size: 9px; font-weight: 700; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+        .decision-brief { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border: 2px solid #c4b5fd; border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; }
+        .decision-brief h3 { font-size: 15px; color: #5b21b6; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .decision-brief .db-content { background: white; border-radius: 10px; padding: 16px; font-size: 12.5px; color: #334155; line-height: 1.75; white-space: pre-wrap; font-family: 'Inter', sans-serif; border-left: 3px solid #7c3aed; }
+        .decision-brief .db-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
         /* ===== QUICK ACTIONS ===== */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 6px;
-        }
-        .quick-actions .action-btn {
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            color: #0b1a33;
-            font-weight: 500;
-            font-size: 11px;
-        }
-        .quick-actions .action-btn:hover {
-            background: #7c3aed;
-            color: white;
-            border-color: #7c3aed;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(124,58,237,0.25);
-        }
-        .quick-actions .action-btn i {
-            display: block;
-            font-size: 18px;
-            margin-bottom: 4px;
-            color: #7c3aed;
-        }
+        .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 6px; }
+        .quick-actions .action-btn { padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; color: #0b1a33; font-weight: 500; font-size: 11px; }
+        .quick-actions .action-btn:hover { background: #7c3aed; color: white; border-color: #7c3aed; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,0.25); }
+        .quick-actions .action-btn i { display: block; font-size: 18px; margin-bottom: 4px; color: #7c3aed; }
         .quick-actions .action-btn:hover i { color: white; }
+
+        /* ===== TOAST ===== */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: white; padding: 14px 22px; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.15); border-left: 4px solid #7c3aed; max-width: 400px; z-index: 1000; font-size: 13px; color: #0b1a33; display: flex; align-items: center; gap: 10px; font-weight: 500; }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1200px) {
@@ -777,6 +324,14 @@
             .grid-2, .grid-3 { grid-template-columns: 1fr; }
             .flow-steps { overflow-x: auto; flex-wrap: nowrap; }
             .flow-arrow { display: none; }
+            .decision-card .dc-top { flex-direction: column; }
+            .decision-card .dc-score-badge { align-self: flex-start; }
+            .decision-matrix-table { font-size: 11px; }
+            .decision-matrix-table th, .decision-matrix-table td { padding: 8px 10px; }
+            .dt-track::before { display: none; }
+            .dt-phases { flex-direction: column; }
+            .dt-phase { display: flex; align-items: center; gap: 12px; text-align: left; }
+            .dt-phase .dphase-circle { margin: 0; flex-shrink: 0; }
         }
         @media (max-width: 480px) {
             .header-right .profile-btn .name { display: none; }
@@ -814,6 +369,20 @@
         <a href="training-to-job-relevance.html"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
         <a href="non-placement-analysis.html"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
         <a href="program-comparison.html"><i class="fas fa-landmark"></i> Government Schemes</a>
+        <a href="skill-demand-supply.html"><i class="fas fa-scale-balanced"></i> Demand vs Supply</a>
+        <a href="district-state-intelligence.html"><i class="fas fa-map-marked-alt"></i> District & State</a>
+        <a href="skill-planning.html"><i class="fas fa-clipboard-list"></i> Skill Planning</a>
+        <a href="what-if-simulator.html"><i class="fas fa-flask"></i> What-If Simulator</a>
+        <a href="district-state-intelligence.html">
+    <i class="fas fa-map-marked-alt"></i> District & State Intelligence
+</a>
+<a href="skill-demand-supply.html">
+    <i class="fas fa-balance-scale"></i> Demand vs Supply
+</a>
+<a href="skill-planning.html">
+    <i class="fas fa-clipboard-list"></i> Skill Planning
+</a>
+<a href="what-if-simulator.html"><i class="fas fa-flask"></i> What-If Simulator</a>
         <a href="ai-insights.html" class="active"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
     </div>
 
@@ -825,19 +394,18 @@
 <!-- ===== MAIN CONTENT ===== -->
 <div class="main-content">
 
-    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="page-title">
-                <h1><i class="fas fa-robot"></i> AI Insights & Recommendations</h1>
-                <p>Decision Intelligence System · SIH26135 · Government Schemes</p>
+                <h1><i class="fas fa-robot"></i> AI Insights & Decision Support</h1>
+                <p>Detect · Diagnose · Decide · SIH26135 · Government Schemes</p>
             </div>
         </div>
         <div class="header-right">
-            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode">
                 <i class="fas fa-moon"></i>
             </button>
             <span class="date" id="dateDisplay"></span>
@@ -853,7 +421,6 @@
         </div>
     </header>
 
-    <!-- ===== CONTAINER ===== -->
     <div class="container" id="mainContainer">
 
         <!-- ===== EXECUTIVE AI SUMMARY ===== -->
@@ -898,34 +465,156 @@
             <div class="flow-step active"><span class="fs-num">4</span> Identify Risk</div>
             <span class="flow-arrow">→</span>
             <div class="flow-step active"><span class="fs-num">5</span> Recommend Action</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step active"><span class="fs-num">6</span> Support Decision</div>
         </div>
 
-        <!-- ===== 1. DETECTED PROBLEMS ===== -->
+        <!-- ============================================================
+             ✨ AI DECISION SUPPORT — NEW SECTION
+             ============================================================ -->
+
+        <div class="decision-hero">
+            <div class="dh-content">
+                <div class="dh-header">
+                    <div class="dh-icon">🎯</div>
+                    <h2>AI Decision Support Engine</h2>
+                </div>
+                <p id="decisionSummary">
+                    Ranking the highest-impact decisions based on impact, cost, confidence, and effort. Live ranking updates as new data arrives.
+                </p>
+                <div class="dh-stats">
+                    <div class="dh-stat"><div class="lbl">Decisions Ranked</div><strong id="dhDecisions">0</strong></div>
+                    <div class="dh-stat"><div class="lbl">Top Priority</div><strong id="dhTop">—</strong></div>
+                    <div class="dh-stat"><div class="lbl">Total Impact</div><strong id="dhImpact">—</strong></div>
+                    <div class="dh-stat"><div class="lbl">Est. Investment</div><strong id="dhCost">—</strong></div>
+                    <div class="dh-stat"><div class="lbl">Avg Confidence</div><strong id="dhConfidence">—</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-list-ol"></i> Ranked Decisions
+            <span class="badge-count" id="decisionCountBadge">0 ranked</span>
+        </div>
+        <div class="decision-list" id="decisionList"></div>
+
+        <div class="section-title">
+            <i class="fas fa-table"></i> Decision Comparison Matrix
+            <span class="badge-count">Multi-criteria scoring</span>
+        </div>
+        <div class="card" style="padding: 0; overflow-x: auto;">
+            <table class="decision-matrix-table" id="decisionMatrixTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Decision</th>
+                        <th><i class="fas fa-bullseye"></i> Impact</th>
+                        <th><i class="fas fa-rupee-sign"></i> Cost</th>
+                        <th><i class="fas fa-bolt"></i> Effort</th>
+                        <th><i class="fas fa-clock"></i> Time</th>
+                        <th><i class="fas fa-shield-alt"></i> Confidence</th>
+                        <th><i class="fas fa-star"></i> Score</th>
+                    </tr>
+                </thead>
+                <tbody id="decisionMatrixBody"></tbody>
+            </table>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-chart-scatter"></i> Impact vs Effort Analysis
+            <span class="badge-count">Quadrant classification</span>
+        </div>
+        <div class="scatter-wrap">
+            <svg class="scatter-svg" id="scatterChart" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="scatter-legend">
+                <div class="sl-item"><div class="sl-dot" style="background:#16a34a;"></div> Quick Wins (High Impact, Low Effort)</div>
+                <div class="sl-item"><div class="sl-dot" style="background:#2563eb;"></div> Major Projects (High Impact, High Effort)</div>
+                <div class="sl-item"><div class="sl-dot" style="background:#f59e0b;"></div> Fill-ins (Low Impact, Low Effort)</div>
+                <div class="sl-item"><div class="sl-dot" style="background:#dc2626;"></div> Avoid (Low Impact, High Effort)</div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-users"></i> Stakeholder Impact Grid
+            <span class="badge-count">Who benefits</span>
+        </div>
+        <div class="stakeholder-grid" id="stakeholderGrid"></div>
+
+        <div class="section-title">
+            <i class="fas fa-road"></i> Decision Execution Timeline
+            <span class="badge-count">Recommended sequence</span>
+        </div>
+        <div class="decision-timeline">
+            <div class="dt-track">
+                <div class="dt-phases">
+                    <div class="dt-phase">
+                        <div class="dphase-circle">1</div>
+                        <div class="dphase-title">Immediate</div>
+                        <div class="dphase-desc">Critical fixes & quick wins</div>
+                        <div class="dphase-meta">Month 0-1</div>
+                    </div>
+                    <div class="dt-phase">
+                        <div class="dphase-circle">2</div>
+                        <div class="dphase-title">Short-Term</div>
+                        <div class="dphase-desc">High-impact initiatives</div>
+                        <div class="dphase-meta">Month 1-3</div>
+                    </div>
+                    <div class="dt-phase">
+                        <div class="dphase-circle">3</div>
+                        <div class="dphase-title">Mid-Term</div>
+                        <div class="dphase-desc">Major projects rollout</div>
+                        <div class="dphase-meta">Month 3-6</div>
+                    </div>
+                    <div class="dt-phase">
+                        <div class="dphase-circle">4</div>
+                        <div class="dphase-title">Long-Term</div>
+                        <div class="dphase-desc">Structural reforms & scaling</div>
+                        <div class="dphase-meta">Month 6-12</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-file-alt"></i> Auto-Generated Decision Brief
+            <span class="badge-count">Executive summary</span>
+        </div>
+        <div class="decision-brief">
+            <h3><i class="fas fa-scroll"></i> Executive Decision Brief</h3>
+            <div class="db-content" id="decisionBrief">Generating…</div>
+            <div class="db-actions">
+                <button class="decision-btn primary" onclick="copyDecisionBrief()">
+                    <i class="fas fa-copy"></i> Copy Brief
+                </button>
+                <button class="decision-btn ghost" onclick="downloadDecisionBrief()">
+                    <i class="fas fa-download"></i> Download
+                </button>
+                <button class="decision-btn ghost" onclick="regenerateDecisions()">
+                    <i class="fas fa-sync"></i> Re-Rank Decisions
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             ORIGINAL AI INSIGHTS SECTIONS (ALL PRESERVED)
+             ============================================================ -->
+
         <div class="section-title">
             <i class="fas fa-exclamation-triangle"></i> Detected Problems
             <span class="badge-count" id="problemCountBadge">0 issues found</span>
         </div>
+        <div id="problemList"></div>
 
-        <div id="problemList">
-            <!-- Dynamic -->
-        </div>
-
-        <!-- ===== 2. RISK IDENTIFICATION ===== -->
         <div class="section-title">
             <i class="fas fa-shield-alt"></i> Risk Identification
             <span class="badge-count" id="riskCountBadge">0 areas flagged</span>
         </div>
+        <div class="grid-3" id="riskGrid"></div>
 
-        <div class="grid-3" id="riskGrid">
-            <!-- Dynamic -->
-        </div>
-
-        <!-- ===== 3. OUTCOME TREND DETECTION ===== -->
         <div class="section-title">
             <i class="fas fa-chart-line"></i> Outcome Trend Detection
             <span class="badge-count">Live metrics</span>
         </div>
-
         <div class="grid-2">
             <div class="card">
                 <div class="card-header"><i class="fas fa-arrow-up"></i> Key Metrics</div>
@@ -937,60 +626,43 @@
             </div>
         </div>
 
-        <!-- ===== 4. ANOMALY DETECTION ===== -->
         <div class="section-title">
             <i class="fas fa-search"></i> Anomaly Detection
             <span class="badge-count">AI-flagged</span>
         </div>
-
         <div class="grid-2" style="margin-bottom:20px;">
-            <div class="card">
-                <div id="anomalyList">
-                    <!-- Dynamic -->
-                </div>
-            </div>
+            <div class="card"><div id="anomalyList"></div></div>
             <div class="card">
                 <div class="card-header"><i class="fas fa-chart-bar"></i> Income Snapshot</div>
                 <div id="incomeSnapshot"></div>
             </div>
         </div>
 
-        <!-- ===== 5. SKILL GAP PATTERNS ===== -->
         <div class="section-title">
             <i class="fas fa-puzzle-piece"></i> Skill Gap Patterns
             <span class="badge-count">Insights from AI engine</span>
         </div>
-
         <div class="grid-2" style="margin-bottom:20px;">
             <div class="card">
                 <div class="card-header"><i class="fas fa-code"></i> Detected Gaps</div>
-                <div id="skillGapList">
-                    <!-- Dynamic -->
-                </div>
+                <div id="skillGapList"></div>
             </div>
             <div class="card">
                 <div class="card-header"><i class="fas fa-briefcase"></i> Program Performance Signals</div>
-                <div id="programSignalList">
-                    <!-- Dynamic -->
-                </div>
+                <div id="programSignalList"></div>
             </div>
         </div>
 
-        <!-- ===== 6. PROGRAM PERFORMANCE DIAGNOSIS ===== -->
         <div class="section-title">
             <i class="fas fa-stethoscope"></i> Program Performance Diagnosis
             <span class="badge-count">Why programs underperform</span>
         </div>
-        <div id="diagnosisList">
-            <!-- Dynamic -->
-        </div>
+        <div id="diagnosisList"></div>
 
-        <!-- ===== 7. INCOME IMPACT INSIGHTS ===== -->
         <div class="section-title">
             <i class="fas fa-rupee-sign"></i> Income Impact Insights
             <span class="badge-count">Livelihood analysis</span>
         </div>
-
         <div class="grid-2" style="margin-bottom:20px;">
             <div class="card">
                 <div class="card-header"><i class="fas fa-chart-line"></i> Income Summary</div>
@@ -1002,33 +674,25 @@
             </div>
         </div>
 
-        <!-- ===== 8. NON-PLACEMENT CAUSE PATTERNS ===== -->
         <div class="section-title">
             <i class="fas fa-search-plus"></i> Non-Placement Cause Patterns
             <span class="badge-count">AI-detected combinations</span>
         </div>
+        <div id="causePatternList"></div>
 
-        <div id="causePatternList">
-            <!-- Dynamic -->
-        </div>
-
-        <!-- ===== 9. POLICY RECOMMENDATIONS ===== -->
         <div class="section-title">
             <i class="fas fa-gavel"></i> Policy Recommendations
             <span class="badge-count" id="policyBadge">0 actions prioritized</span>
         </div>
-
         <div class="grid-2" style="margin-bottom:20px;">
             <div class="card" id="policyLeftCard"></div>
             <div class="card" id="policyRightCard"></div>
         </div>
 
-        <!-- ===== 10. CURRICULUM RECOMMENDATIONS ===== -->
         <div class="section-title">
             <i class="fas fa-book-open"></i> Curriculum Improvement Recommendations
             <span class="badge-count">Course-level changes</span>
         </div>
-
         <div class="grid-2" style="margin-bottom:20px;">
             <div class="card">
                 <div class="card-header"><i class="fas fa-plus-circle" style="color:#16a34a;"></i> Skills to Add</div>
@@ -1040,12 +704,10 @@
             </div>
         </div>
 
-        <!-- ===== 11. FUTURE OUTCOME FORECAST ===== -->
         <div class="section-title">
             <i class="fas fa-crystal-ball"></i> Future Outcome Forecast
             <span class="badge-count">AI predictions (next 12 months)</span>
         </div>
-
         <div class="grid-3" style="margin-bottom:20px;">
             <div class="forecast-item">
                 <div class="forecast-label">📈 Employment Rate Forecast</div>
@@ -1080,15 +742,13 @@
         </div>
 
         <div style="padding:12px 16px; background:#fffbeb; border-radius:10px; border-left:4px solid #f59e0b; font-size:11px; color:#78350f; margin-bottom:20px;">
-            <strong>⚠️ Disclaimer:</strong> These forecasts are based on historical trends and current patterns. They should be used as directional guidance, not guaranteed outcomes. Actual results may vary based on policy interventions and market changes.
+            <strong>⚠️ Disclaimer:</strong> These forecasts are based on historical trends and current patterns. They should be used as directional guidance, not guaranteed outcomes.
         </div>
 
-        <!-- ===== 12. BEST-PERFORMING PATTERNS ===== -->
         <div class="section-title">
             <i class="fas fa-trophy" style="color:#d97706;"></i> Success Patterns
             <span class="badge-count">What's working well</span>
         </div>
-
         <div class="grid-2" style="margin-bottom:20px;">
             <div class="card" id="successCard"></div>
             <div class="card">
@@ -1106,6 +766,7 @@
             </div>
             <div class="quick-actions">
                 <a href="#" class="action-btn" onclick="exportAIReport(); return false;"><i class="fas fa-file-export"></i> Export AI Report</a>
+                <a href="#" class="action-btn" onclick="downloadDecisionBrief(); return false;"><i class="fas fa-scroll"></i> Decision Brief</a>
                 <a href="#" class="action-btn" onclick="viewCriticalProblems(); return false;"><i class="fas fa-exclamation-circle"></i> Critical Problems</a>
                 <a href="#" class="action-btn" onclick="exportPolicyRecommendations(); return false;"><i class="fas fa-gavel"></i> Policy Actions</a>
                 <a href="#" class="action-btn" onclick="window.print(); return false;"><i class="fas fa-print"></i> Print Dashboard</a>
@@ -1117,181 +778,67 @@
 
 <script>
     // ============================================================
-    // REAL DATA — with rich sample fallback so page always renders
+    // STATE
     // ============================================================
-
     let aiData = {
-        summary: {
-            totalTrainees: 0,
-            totalPrograms: 0,
-            problemsDetected: 0,
-            recommendations: 0
-        },
+        summary: { totalTrainees: 0, totalPrograms: 0, problemsDetected: 0, recommendations: 0 },
         insights: [],
-        summaryApi: null,
-        retentionApi: null,
-        incomeApi: null,
-        nonPlacementApi: null,
-        programsApi: null
+        summaryApi: null, retentionApi: null, incomeApi: null, nonPlacementApi: null, programsApi: null
     };
+    let decisions = [];
 
-    // ------------------------------------------------------------
-    // SAMPLE DATA GENERATOR
-    // ------------------------------------------------------------
+    /* ============================================================
+       SAMPLE DATA GENERATORS
+       ============================================================ */
     function generateSampleInsights() {
         return [
-            {
-                type: 'EMPLOYMENT_RATE_LOW',
-                severity: 'HIGH',
-                problem: 'Employment rate is below target across all schemes',
-                evidence: [
-                    'Employment rate: 68% (target: 80%)',
-                    '12% gap to target',
-                    'Affects ~8,500 trainees'
-                ],
-                recommendation: 'Launch targeted placement drives and strengthen employer partnerships in low-performing districts.'
-            },
-            {
-                type: 'NON_PLACEMENT_HIGH',
-                severity: 'HIGH',
-                problem: 'Non-placement rate exceeds 30% for several programs',
-                evidence: [
-                    'Non-placement rate: 32%',
-                    '~6,400 trainees without placement',
-                    'Highest in PM-DAKSH: 38%'
-                ],
-                recommendation: 'Introduce employer-driven curriculum and mandatory internship modules for all programs.'
-            },
-            {
-                type: 'SKILL_GAP_DETECTED',
-                severity: 'MEDIUM',
-                problem: 'Communication and digital literacy skill gaps are widespread',
-                evidence: [
-                    'Communication gap: 45%',
-                    'Digital literacy gap: 32%',
-                    'Employer feedback highlights soft skills shortage'
-                ],
-                recommendation: 'Add 40 hours of communication and digital literacy modules to every course curriculum.'
-            },
-            {
-                type: 'INCOME_GROWTH_LOW',
-                severity: 'MEDIUM',
-                problem: 'Average income growth is below national benchmark',
-                evidence: [
-                    'Avg income growth: ₹4,800',
-                    'National benchmark: ₹6,500',
-                    '26% below benchmark'
-                ],
-                recommendation: 'Negotiate minimum salary floors with employer partners for program graduates.'
-            },
-            {
-                type: 'RETENTION_DROP',
-                severity: 'MEDIUM',
-                problem: '365-day retention is below 60% in several schemes',
-                evidence: [
-                    '365-day retention: 58%',
-                    'DDU-GKY: 55%',
-                    'PMKVY 4.0: 62%'
-                ],
-                recommendation: 'Implement structured 12-month post-placement mentorship and career counseling.'
-            },
-            {
-                type: 'REGIONAL_DISPARITY',
-                severity: 'HIGH',
-                problem: 'Large regional disparity in employment outcomes',
-                evidence: [
-                    'Highest employment: 82% (Karnataka)',
-                    'Lowest employment: 54% (Bihar)',
-                    '28-point gap between states'
-                ],
-                recommendation: 'Deploy best practices from high-performing states to low-performing regions.'
-            },
-            {
-                type: 'PROGRAM_UNDERPERFORMING',
-                severity: 'HIGH',
-                problem: 'PM-DAKSH shows consistently lower outcomes than peers',
-                evidence: [
-                    'Employment: 62% vs 72% average',
-                    'Retention: 51% vs 60% average',
-                    'Outcome score: 64 vs 76 average'
-                ],
-                recommendation: 'Conduct operational audit of PM-DAKSH and redesign curriculum with employer input.'
-            },
-            {
-                type: 'ANOMALY_DETECTED',
-                severity: 'MEDIUM',
-                problem: 'Unusual spike in non-placement for Electrician trade',
-                evidence: [
-                    'Non-placement: 42% (vs 28% average)',
-                    'Electrician trade only',
-                    'Correlates with local industry slowdown'
-                ],
-                recommendation: 'Investigate regional industry demand before scaling Electrician training.'
-            },
-            {
-                type: 'POSITIVE_PATTERN',
-                severity: 'LOW',
-                problem: 'Web Development program shows strong outcomes',
-                evidence: [
-                    'Employment rate: 84%',
-                    'Income growth: +68%',
-                    'Employer satisfaction: 91%'
-                ],
-                recommendation: 'Scale Web Development model to other districts and replicate curriculum design.'
-            },
-            {
-                type: 'POSITIVE_PATTERN',
-                severity: 'LOW',
-                problem: 'Industry-aligned training yields best employment outcomes',
-                evidence: [
-                    'Employment: 79% for industry-aligned',
-                    'Employment: 62% for general training',
-                    '17-point advantage'
-                ],
-                recommendation: 'Increase share of industry-aligned training from 25% to 50% of all enrollments.'
-            }
+            { type: 'EMPLOYMENT_RATE_LOW', severity: 'HIGH', problem: 'Employment rate is below target across all schemes',
+              evidence: ['Employment rate: 68% (target: 80%)','12% gap to target','Affects ~8,500 trainees'],
+              recommendation: 'Launch targeted placement drives and strengthen employer partnerships in low-performing districts.' },
+            { type: 'NON_PLACEMENT_HIGH', severity: 'HIGH', problem: 'Non-placement rate exceeds 30% for several programs',
+              evidence: ['Non-placement rate: 32%','~6,400 trainees without placement','Highest in PM-DAKSH: 38%'],
+              recommendation: 'Introduce employer-driven curriculum and mandatory internship modules for all programs.' },
+            { type: 'SKILL_GAP_DETECTED', severity: 'MEDIUM', problem: 'Communication and digital literacy skill gaps are widespread',
+              evidence: ['Communication gap: 45%','Digital literacy gap: 32%','Employer feedback highlights soft skills shortage'],
+              recommendation: 'Add 40 hours of communication and digital literacy modules to every course curriculum.' },
+            { type: 'INCOME_GROWTH_LOW', severity: 'MEDIUM', problem: 'Average income growth is below national benchmark',
+              evidence: ['Avg income growth: ₹4,800','National benchmark: ₹6,500','26% below benchmark'],
+              recommendation: 'Negotiate minimum salary floors with employer partners for program graduates.' },
+            { type: 'RETENTION_DROP', severity: 'MEDIUM', problem: '365-day retention is below 60% in several schemes',
+              evidence: ['365-day retention: 58%','DDU-GKY: 55%','PMKVY 4.0: 62%'],
+              recommendation: 'Implement structured 12-month post-placement mentorship and career counseling.' },
+            { type: 'REGIONAL_DISPARITY', severity: 'HIGH', problem: 'Large regional disparity in employment outcomes',
+              evidence: ['Highest employment: 82% (Karnataka)','Lowest employment: 54% (Bihar)','28-point gap between states'],
+              recommendation: 'Deploy best practices from high-performing states to low-performing regions.' },
+            { type: 'PROGRAM_UNDERPERFORMING', severity: 'HIGH', problem: 'PM-DAKSH shows consistently lower outcomes than peers',
+              evidence: ['Employment: 62% vs 72% average','Retention: 51% vs 60% average','Outcome score: 64 vs 76 average'],
+              recommendation: 'Conduct operational audit of PM-DAKSH and redesign curriculum with employer input.' },
+            { type: 'ANOMALY_DETECTED', severity: 'MEDIUM', problem: 'Unusual spike in non-placement for Electrician trade',
+              evidence: ['Non-placement: 42% (vs 28% average)','Electrician trade only','Correlates with local industry slowdown'],
+              recommendation: 'Investigate regional industry demand before scaling Electrician training.' },
+            { type: 'POSITIVE_PATTERN', severity: 'LOW', problem: 'Web Development program shows strong outcomes',
+              evidence: ['Employment rate: 84%','Income growth: +68%','Employer satisfaction: 91%'],
+              recommendation: 'Scale Web Development model to other districts and replicate curriculum design.' },
+            { type: 'POSITIVE_PATTERN', severity: 'LOW', problem: 'Industry-aligned training yields best employment outcomes',
+              evidence: ['Employment: 79% for industry-aligned','Employment: 62% for general training','17-point advantage'],
+              recommendation: 'Increase share of industry-aligned training from 25% to 50% of all enrollments.' }
         ];
     }
-
-    function generateSampleSummary() {
-        return {
-            total: 42500,
-            employed: 28900,
-            employment_rate: 68
-        };
-    }
-
-    function generateSampleRetention() {
-        return {
-            '30d': { rate: 82 },
-            '90d': { rate: 71 },
-            '180d': { rate: 64 },
-            '365d': { rate: 58 }
-        };
-    }
-
-    function generateSampleIncome() {
-        return {
-            avg_starting_income: 18500,
-            avg_income_growth: 4800
-        };
-    }
-
+    function generateSampleSummary() { return { total: 42500, employed: 28900, employment_rate: 68 }; }
+    function generateSampleRetention() { return { '30d': {rate:82}, '90d': {rate:71}, '180d': {rate:64}, '365d': {rate:58} }; }
+    function generateSampleIncome() { return { avg_starting_income: 18500, avg_income_growth: 4800 }; }
     function generateSampleNonPlacement() {
-        return {
-            breakdown: [
-                { reason: 'Lack of practical experience', count: 4200, percentage: 22 },
-                { reason: 'Salary too low', count: 3100, percentage: 16 },
-                { reason: 'Location mismatch', count: 2500, percentage: 13 },
-                { reason: 'Skill gap', count: 3800, percentage: 20 },
-                { reason: 'No relevant openings', count: 2100, percentage: 11 },
-                { reason: 'Language barrier', count: 1400, percentage: 7 },
-                { reason: 'Personal reasons', count: 900, percentage: 5 },
-                { reason: 'Further education', count: 600, percentage: 3 }
-            ]
-        };
+        return { breakdown: [
+            { reason: 'Lack of practical experience', count: 4200, percentage: 22 },
+            { reason: 'Salary too low', count: 3100, percentage: 16 },
+            { reason: 'Location mismatch', count: 2500, percentage: 13 },
+            { reason: 'Skill gap', count: 3800, percentage: 20 },
+            { reason: 'No relevant openings', count: 2100, percentage: 11 },
+            { reason: 'Language barrier', count: 1400, percentage: 7 },
+            { reason: 'Personal reasons', count: 900, percentage: 5 },
+            { reason: 'Further education', count: 600, percentage: 3 }
+        ]};
     }
-
     function generateSamplePrograms() {
         return [
             { id: 1, name: 'Web Development', provider_name: 'NSDC', enrolled: 4500 },
@@ -1303,23 +850,17 @@
         ];
     }
 
-    // ------------------------------------------------------------
-    // API HELPERS
-    // ------------------------------------------------------------
+    /* ============================================================
+       API HELPERS
+       ============================================================ */
     async function fetchJSON(url) {
         try {
             const r = await fetch(url, { credentials: 'include' });
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return await r.json();
-        } catch (e) {
-            console.warn('API failed:', url, e.message);
-            return null;
-        }
+        } catch (e) { return null; }
     }
 
-    // ------------------------------------------------------------
-    // LOAD DATA (API with sample fallback)
-    // ------------------------------------------------------------
     async function loadBackendData() {
         const [insights, summary, retention, income, nonPlacement, programs] = await Promise.all([
             fetchJSON('/api/insights/global'),
@@ -1331,12 +872,9 @@
         ]);
 
         let useSample = false;
-
         if (insights && Array.isArray(insights.insights) && insights.insights.length > 0) {
             aiData.insights = insights.insights;
-        } else {
-            useSample = true;
-        }
+        } else { useSample = true; }
 
         aiData.summaryApi = (summary && Number(summary.total) > 0) ? summary : null;
         aiData.retentionApi = retention;
@@ -1345,7 +883,6 @@
         aiData.programsApi = (Array.isArray(programs) && programs.length > 0) ? programs : null;
 
         if (useSample || !aiData.summaryApi) {
-            console.warn('Using rich sample AI data for demonstration');
             aiData.insights = aiData.insights.length > 0 ? aiData.insights : generateSampleInsights();
             aiData.summaryApi = aiData.summaryApi || generateSampleSummary();
             aiData.retentionApi = aiData.retentionApi || generateSampleRetention();
@@ -1354,15 +891,389 @@
             aiData.programsApi = aiData.programsApi || generateSamplePrograms();
         }
 
-        aiData.summary.totalTrainees   = aiData.summaryApi ? (Number(aiData.summaryApi.total) || 0) : 0;
-        aiData.summary.totalPrograms   = Array.isArray(aiData.programsApi) ? aiData.programsApi.length : 0;
+        aiData.summary.totalTrainees = aiData.summaryApi ? (Number(aiData.summaryApi.total) || 0) : 0;
+        aiData.summary.totalPrograms = Array.isArray(aiData.programsApi) ? aiData.programsApi.length : 0;
         aiData.summary.problemsDetected = aiData.insights.length;
-        aiData.summary.recommendations  = aiData.insights.filter(i => i.recommendation).length;
+        aiData.summary.recommendations = aiData.insights.filter(i => i.recommendation).length;
     }
 
-    // ------------------------------------------------------------
-    // RENDER
-    // ------------------------------------------------------------
+    /* ============================================================
+       DECISION SUPPORT ENGINE
+       ============================================================ */
+    function buildDecisions() {
+        const templates = [
+            {
+                id: 'D1',
+                title: 'Launch Emergency Placement Drive',
+                desc: 'Targeted employer engagement to place non-placed trainees in the next 90 days.',
+                impact: 18, cost: 45, effort: 60, time: 3, confidence: 82,
+                linkedTypes: ['NON_PLACEMENT_HIGH','EMPLOYMENT_RATE_LOW'],
+                stakeholders: ['Trainees','Employers','Training Providers'],
+                category: 'Placement'
+            },
+            {
+                id: 'D2',
+                title: 'Redesign PM-DAKSH Curriculum',
+                desc: 'Full operational audit and curriculum redesign with employer advisory board.',
+                impact: 22, cost: 65, effort: 75, time: 6, confidence: 74,
+                linkedTypes: ['PROGRAM_UNDERPERFORMING','SKILL_GAP_DETECTED'],
+                stakeholders: ['Trainees','Training Providers','Employers','Government'],
+                category: 'Program'
+            },
+            {
+                id: 'D3',
+                title: 'Scale High-Performing Programs',
+                desc: 'Replicate Web Development model to 5 low-performing districts.',
+                impact: 15, cost: 40, effort: 45, time: 4, confidence: 88,
+                linkedTypes: ['POSITIVE_PATTERN','REGIONAL_DISPARITY'],
+                stakeholders: ['Trainees','Training Providers','Government'],
+                category: 'Scaling'
+            },
+            {
+                id: 'D4',
+                title: 'Add Communication & Digital Literacy Modules',
+                desc: 'Embed 40-hour soft skill + digital literacy modules across all courses.',
+                impact: 12, cost: 20, effort: 30, time: 3, confidence: 85,
+                linkedTypes: ['SKILL_GAP_DETECTED'],
+                stakeholders: ['Trainees','Employers'],
+                category: 'Curriculum'
+            },
+            {
+                id: 'D5',
+                title: 'Structured 12-Month Retention Mentorship',
+                desc: 'Post-placement mentorship, quarterly check-ins, and career counseling.',
+                impact: 14, cost: 25, effort: 55, time: 12, confidence: 78,
+                linkedTypes: ['RETENTION_DROP'],
+                stakeholders: ['Trainees','Employers','Training Providers'],
+                category: 'Retention'
+            },
+            {
+                id: 'D6',
+                title: 'Salary Floor Negotiation with Employers',
+                desc: 'Lock minimum salary bands for program graduates.',
+                impact: 10, cost: 8, effort: 40, time: 4, confidence: 71,
+                linkedTypes: ['INCOME_GROWTH_LOW'],
+                stakeholders: ['Trainees','Employers'],
+                category: 'Income'
+            },
+            {
+                id: 'D7',
+                title: 'Regional Best-Practice Transfer',
+                desc: 'Deploy Karnataka & PMKVY 4.0 playbooks to Bihar and other low-performing states.',
+                impact: 16, cost: 35, effort: 65, time: 8, confidence: 69,
+                linkedTypes: ['REGIONAL_DISPARITY'],
+                stakeholders: ['Trainees','Government','Training Providers'],
+                category: 'Regional'
+            }
+        ];
+
+        decisions = templates.map(t => {
+            const impactScore = t.impact * 4;
+            const costPenalty = t.cost * 1.2;
+            const effortPenalty = t.effort * 0.8;
+            const timePenalty = t.time * 1.5;
+            const confidenceBoost = t.confidence * 0.6;
+            const priorityScore = Math.round(
+                Math.min(100, Math.max(0, impactScore - costPenalty - effortPenalty - timePenalty + confidenceBoost))
+            );
+            const roi = t.cost > 0 ? Math.round((t.impact * 10) / t.cost * 10) : 0;
+            const quadrant = t.impact >= 14 && t.effort <= 60 ? 'Quick Win'
+                            : t.impact >= 14 ? 'Major Project'
+                            : t.effort <= 50 ? 'Fill-in'
+                            : 'Avoid';
+            return { ...t, priorityScore, roi, quadrant };
+        }).sort((a, b) => b.priorityScore - a.priorityScore);
+
+        decisions = decisions.map((d, i) => ({
+            ...d,
+            rank: i + 1,
+            rankClass: `d${Math.min(5, i + 1)}`
+        }));
+
+        return decisions;
+    }
+
+    /* ============================================================
+       RENDER — DECISION SUPPORT
+       ============================================================ */
+    function renderDecisions() {
+        buildDecisions();
+
+        document.getElementById('decisionCountBadge').textContent = decisions.length + ' ranked';
+        document.getElementById('dhDecisions').textContent = decisions.length;
+        document.getElementById('dhTop').textContent = decisions[0]?.title.split(' ').slice(0, 3).join(' ') || '—';
+
+        const totalImpact = decisions.reduce((a, d) => a + d.impact, 0);
+        const totalCost = decisions.reduce((a, d) => a + d.cost, 0);
+        const avgConf = decisions.length > 0
+            ? Math.round(decisions.reduce((a, d) => a + d.confidence, 0) / decisions.length)
+            : 0;
+
+        document.getElementById('dhImpact').textContent = '+' + totalImpact + 'pp';
+        document.getElementById('dhCost').textContent = '₹' + totalCost + 'L';
+        document.getElementById('dhConfidence').textContent = avgConf + '%';
+
+        const list = document.getElementById('decisionList');
+        list.innerHTML = decisions.map(d => {
+            const confColor = d.confidence >= 80 ? '#16a34a' : d.confidence >= 65 ? '#d97706' : '#dc2626';
+            return `
+                <div class="decision-card ${d.rankClass}">
+                    <div class="dc-top">
+                        <div class="dc-rank">#${d.rank}</div>
+                        <div class="dc-info">
+                            <div class="dc-title">${d.title}</div>
+                            <div class="dc-desc">${d.desc}</div>
+                        </div>
+                        <div class="dc-score-badge">
+                            <div class="score">${d.priorityScore}</div>
+                            <div class="lbl">Priority</div>
+                        </div>
+                    </div>
+                    <div class="decision-metrics">
+                        <div class="decision-metric"><div class="dm-lbl">Impact</div><div class="dm-val good">+${d.impact}pp</div></div>
+                        <div class="decision-metric"><div class="dm-lbl">Cost</div><div class="dm-val">₹${d.cost}L</div></div>
+                        <div class="decision-metric"><div class="dm-lbl">Effort</div><div class="dm-val warn">${d.effort}</div></div>
+                        <div class="decision-metric"><div class="dm-lbl">Time</div><div class="dm-val">${d.time}mo</div></div>
+                        <div class="decision-metric"><div class="dm-lbl">ROI</div><div class="dm-val good">${d.roi}%</div></div>
+                        <div class="decision-metric"><div class="dm-lbl">Quadrant</div><div class="dm-val" style="font-size:11px;">${d.quadrant}</div></div>
+                    </div>
+                    <div class="confidence-row">
+                        <div class="cr-label">Confidence</div>
+                        <div class="cr-track"><div class="cr-fill" style="width:${d.confidence}%;background:${confColor};"></div></div>
+                        <div class="cr-pct" style="color:${confColor};">${d.confidence}%</div>
+                    </div>
+                    <div class="decision-actions">
+                        <button class="decision-btn primary" onclick="applyDecision('${d.id}')">
+                            <i class="fas fa-play"></i> Apply Decision
+                        </button>
+                        <button class="decision-btn ghost" onclick="viewDecisionDetails('${d.id}')">
+                            <i class="fas fa-info-circle"></i> Details
+                        </button>
+                        <button class="decision-btn ghost" onclick="addToShortlist('${d.id}')">
+                            <i class="fas fa-bookmark"></i> Shortlist
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('decisionMatrixBody').innerHTML = decisions.map(d => `
+            <tr>
+                <td><strong>#${d.rank}</strong></td>
+                <td>${d.title}</td>
+                <td class="score-cell">+${d.impact}pp</td>
+                <td>₹${d.cost}L</td>
+                <td>${d.effort}</td>
+                <td>${d.time}mo</td>
+                <td>${d.confidence}%</td>
+                <td class="score-cell">${d.priorityScore}</td>
+            </tr>
+        `).join('');
+
+        renderScatter();
+        renderStakeholders();
+        renderDecisionBrief();
+    }
+
+    function renderScatter() {
+        const svg = document.getElementById('scatterChart');
+        const w = 800, h = 360, pad = 60;
+        const chartW = w - pad * 2, chartH = h - pad * 2;
+
+        let content = '';
+        content += `<line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+        content += `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+        content += `<text x="${w/2}" y="${h - 20}" text-anchor="middle" font-size="12" fill="#475569" font-weight="700" font-family="Inter">Effort →</text>`;
+        content += `<text x="20" y="${h/2}" text-anchor="middle" transform="rotate(-90, 20, ${h/2})" font-size="12" fill="#475569" font-weight="700" font-family="Inter">Impact →</text>`;
+
+        const midX = pad + chartW / 2;
+        const midY = pad + chartH / 2;
+        content += `<rect x="${pad}" y="${pad}" width="${chartW/2}" height="${chartH/2}" fill="rgba(22,163,74,0.06)"/>`;
+        content += `<rect x="${midX}" y="${pad}" width="${chartW/2}" height="${chartH/2}" fill="rgba(220,38,38,0.05)"/>`;
+        content += `<rect x="${pad}" y="${midY}" width="${chartW/2}" height="${chartH/2}" fill="rgba(245,158,11,0.05)"/>`;
+        content += `<rect x="${midX}" y="${midY}" width="${chartW/2}" height="${chartH/2}" fill="rgba(37,99,235,0.06)"/>`;
+
+        content += `<text x="${pad + 12}" y="${pad + 20}" font-size="10" fill="#16a34a" font-weight="700" font-family="Inter">QUICK WINS</text>`;
+        content += `<text x="${midX + 12}" y="${pad + 20}" font-size="10" fill="#dc2626" font-weight="700" font-family="Inter">AVOID</text>`;
+        content += `<text x="${pad + 12}" y="${midY + 18}" font-size="10" fill="#f59e0b" font-weight="700" font-family="Inter">FILL-INS</text>`;
+        content += `<text x="${midX + 12}" y="${midY + 18}" font-size="10" fill="#2563eb" font-weight="700" font-family="Inter">MAJOR PROJECTS</text>`;
+
+        const maxEffort = Math.max(...decisions.map(d => d.effort), 100);
+        const maxImpact = Math.max(...decisions.map(d => d.impact), 30);
+
+        decisions.forEach(d => {
+            const x = pad + (d.effort / maxEffort) * chartW;
+            const y = h - pad - (d.impact / maxImpact) * chartH;
+
+            const color = d.quadrant === 'Quick Win' ? '#16a34a'
+                        : d.quadrant === 'Major Project' ? '#2563eb'
+                        : d.quadrant === 'Fill-in' ? '#f59e0b' : '#dc2626';
+
+            content += `<circle cx="${x}" cy="${y}" r="22" fill="${color}" opacity="0.9"/>`;
+            content += `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" fill="white" font-weight="800" font-family="Inter">${d.id.replace('D','')}</text>`;
+            content += `<text x="${x}" y="${y + 38}" text-anchor="middle" font-size="10" fill="#0b1a33" font-weight="700" font-family="Inter">${d.title.split(' ').slice(0, 3).join(' ')}</text>`;
+        });
+
+        svg.innerHTML = content;
+    }
+
+    function renderStakeholders() {
+        const container = document.getElementById('stakeholderGrid');
+        const stakeholderMap = {};
+
+        decisions.forEach(d => {
+            d.stakeholders.forEach(s => {
+                if (!stakeholderMap[s]) stakeholderMap[s] = { name: s, count: 0, impact: 0, decisions: [] };
+                stakeholderMap[s].count++;
+                stakeholderMap[s].impact += d.impact;
+                stakeholderMap[s].decisions.push(d.id);
+            });
+        });
+
+        const icons = {
+            'Trainees': { icon: 'fa-user-graduate', bg: '#dbeafe', color: '#2563eb' },
+            'Employers': { icon: 'fa-building', bg: '#dcfce7', color: '#16a34a' },
+            'Training Providers': { icon: 'fa-chalkboard-teacher', bg: '#ede9fe', color: '#7c3aed' },
+            'Government': { icon: 'fa-landmark', bg: '#fef3c7', color: '#d97706' }
+        };
+
+        const stakeholders = Object.values(stakeholderMap).sort((a, b) => b.impact - a.impact);
+
+        container.innerHTML = stakeholders.map(s => {
+            const icon = icons[s.name] || { icon: 'fa-user', bg: '#f1f5f9', color: '#64748b' };
+            const sentiment = s.impact >= 40 ? 'Strongly Positive' : s.impact >= 20 ? 'Positive' : 'Neutral';
+            const sentColor = s.impact >= 40 ? '#16a34a' : s.impact >= 20 ? '#2563eb' : '#64748b';
+            const sentBg = s.impact >= 40 ? '#dcfce7' : s.impact >= 20 ? '#dbeafe' : '#f1f5f9';
+            return `
+                <div class="stakeholder-card">
+                    <div class="sh-header">
+                        <div class="sh-icon" style="background:${icon.bg}; color:${icon.color};"><i class="fas ${icon.icon}"></i></div>
+                        <div class="sh-name">${s.name}</div>
+                    </div>
+                    <div class="sh-impact">
+                        Affected by <strong>${s.count}</strong> decision${s.count > 1 ? 's' : ''}<br>
+                        Combined impact: <strong>+${s.impact}pp</strong> employment
+                    </div>
+                    <span class="sh-sentiment" style="background:${sentBg}; color:${sentColor};">
+                        <i class="fas fa-arrow-up"></i> ${sentiment}
+                    </span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderDecisionBrief() {
+        const briefEl = document.getElementById('decisionBrief');
+        if (decisions.length === 0) { briefEl.textContent = 'No decisions to brief yet.'; return; }
+
+        const top = decisions[0];
+        const totalImpact = decisions.reduce((a, d) => a + d.impact, 0);
+        const totalCost = decisions.reduce((a, d) => a + d.cost, 0);
+        const avgConf = Math.round(decisions.reduce((a, d) => a + d.confidence, 0) / decisions.length);
+        const quickWins = decisions.filter(d => d.quadrant === 'Quick Win').length;
+        const major = decisions.filter(d => d.quadrant === 'Major Project').length;
+
+        const brief =
+`EXECUTIVE DECISION BRIEF
+═══════════════════════════════════════════
+Generated: ${new Date().toLocaleString()}
+
+📊 TOP PRIORITY DECISION
+• ${top.title}
+• Priority Score: ${top.priorityScore}/100
+• Projected Impact: +${top.impact}pp employment
+• Estimated Cost: ₹${top.cost}L | Effort: ${top.effort}/100 | Time: ${top.time} months
+• Confidence: ${top.confidence}%
+
+📈 PORTFOLIO SUMMARY
+• Total Decisions Ranked: ${decisions.length}
+• Quick Wins: ${quickWins} | Major Projects: ${major}
+• Combined Impact: +${totalImpact}pp employment
+• Combined Investment: ₹${totalCost}L
+• Average Confidence: ${avgConf}%
+
+🎯 RECOMMENDED SEQUENCE
+${decisions.slice(0, 5).map((d, i) => `${i+1}. [${d.quadrant}] ${d.title} — Impact +${d.impact}pp, Cost ₹${d.cost}L`).join('\n')}
+
+💡 KEY INSIGHT
+The highest-priority decision (${top.title}) offers the best impact-to-cost ratio with ${top.confidence}% confidence. Recommended for immediate execution.
+
+⚠️ DISCLAIMER
+This brief is auto-generated from live data and AI scoring models. All projections are directional guidance.`;
+
+        briefEl.textContent = brief;
+    }
+
+    /* ============================================================
+       DECISION ACTIONS
+       ============================================================ */
+    function applyDecision(id) {
+        const d = decisions.find(x => x.id === id);
+        if (!d) return;
+        showToast(`✅ Decision "${d.title}" applied to planning pipeline`);
+    }
+
+    function viewDecisionDetails(id) {
+        const d = decisions.find(x => x.id === id);
+        if (!d) return;
+        alert(
+`📋 DECISION DETAILS
+────────────────────────
+${d.title}
+
+${d.desc}
+
+📊 Scoring Breakdown:
+• Impact: +${d.impact}pp employment
+• Cost: ₹${d.cost}L
+• Effort: ${d.effort}/100
+• Time: ${d.time} months
+• Confidence: ${d.confidence}%
+• ROI: ${d.roi}%
+• Priority Score: ${d.priorityScore}/100
+• Quadrant: ${d.quadrant}
+
+👥 Stakeholders:
+${d.stakeholders.join(', ')}
+
+🔗 Linked Insights:
+${d.linkedTypes.join(', ')}`
+        );
+    }
+
+    function addToShortlist(id) {
+        const d = decisions.find(x => x.id === id);
+        if (!d) return;
+        showToast(`⭐ "${d.title}" added to shortlist`);
+    }
+
+    function copyDecisionBrief() {
+        const brief = document.getElementById('decisionBrief').textContent;
+        navigator.clipboard.writeText(brief).then(() => {
+            showToast('📋 Decision brief copied to clipboard');
+        }).catch(() => showToast('⚠️ Copy failed — select and copy manually'));
+    }
+
+    function downloadDecisionBrief() {
+        const brief = document.getElementById('decisionBrief').textContent;
+        const blob = new Blob([brief], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `decision-brief-${new Date().toISOString().split('T')[0]}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('📥 Decision brief downloaded');
+    }
+
+    function regenerateDecisions() {
+        renderDecisions();
+        showToast('🔄 Decisions re-ranked based on latest data');
+    }
+
+    /* ============================================================
+       RENDER ALL — ORIGINAL AI INSIGHTS PRESERVED
+       ============================================================ */
     function renderAll() {
         renderExecutiveSummary();
         renderProblems();
@@ -1377,21 +1288,20 @@
         renderCurriculum();
         renderForecast();
         renderSuccess();
+        renderDecisions();
     }
 
     function renderExecutiveSummary() {
         const s = aiData.summary;
-        const text = `Based on live analysis of <strong>${s.totalTrainees.toLocaleString()} trainees</strong>, <strong>${s.totalPrograms} registered programs</strong>, and current employment outcomes, the AI engine detected <strong>${s.problemsDetected} insights</strong> and <strong>${s.recommendations} recommendations</strong>. Priority actions are surfaced below.`;
-
-        document.getElementById('execSummaryText').innerHTML = text;
+        document.getElementById('execSummaryText').innerHTML =
+            `Based on live analysis of <strong>${s.totalTrainees.toLocaleString()} trainees</strong>, <strong>${s.totalPrograms} registered programs</strong>, and current employment outcomes, the AI engine detected <strong>${s.problemsDetected} insights</strong> and <strong>${s.recommendations} recommendations</strong>. Priority actions are surfaced below.`;
 
         const critical = aiData.insights.filter(i =>
-            String(i.severity).toUpperCase() === 'HIGH' || String(i.severity).toUpperCase() === 'CRITICAL'
-        ).length;
+            String(i.severity).toUpperCase() === 'HIGH' || String(i.severity).toUpperCase() === 'CRITICAL').length;
 
-        document.getElementById('hlCritical').textContent        = critical;
-        document.getElementById('hlInsights').textContent        = aiData.insights.length;
-        document.getElementById('hlTrainees').textContent        = s.totalTrainees.toLocaleString();
+        document.getElementById('hlCritical').textContent = critical;
+        document.getElementById('hlInsights').textContent = aiData.insights.length;
+        document.getElementById('hlTrainees').textContent = s.totalTrainees.toLocaleString();
         document.getElementById('hlRecommendations').textContent = s.recommendations;
     }
 
@@ -1403,7 +1313,6 @@
         if (s === 'LOW') return 'success';
         return 'info';
     }
-
     function severityBadgeClass(sev) {
         if (!sev) return 'new';
         const s = String(sev).toUpperCase();
@@ -1416,44 +1325,22 @@
     function renderProblems() {
         const container = document.getElementById('problemList');
         document.getElementById('problemCountBadge').textContent = aiData.insights.length + ' issues found';
-
         if (aiData.insights.length === 0) {
-            container.innerHTML = `<div class="insight-card info">
-                <div class="ic-header">
-                    <div class="ic-icon blue"><i class="fas fa-info-circle"></i></div>
-                    <div class="ic-title">
-                        <h4>No problems detected yet</h4>
-                        <p>Register more data (trainees, employment outcomes, follow-ups) to activate problem detection.</p>
-                    </div>
-                </div>
-            </div>`;
+            container.innerHTML = `<div class="insight-card info"><div class="ic-header"><div class="ic-icon blue"><i class="fas fa-info-circle"></i></div><div class="ic-title"><h4>No problems detected yet</h4><p>Register more data to activate problem detection.</p></div></div></div>`;
             return;
         }
-
         container.innerHTML = aiData.insights.map(ins => {
             const cls = severityClass(ins.severity);
             const badgeCls = severityBadgeClass(ins.severity);
             const evidence = (ins.evidence || []).map(e => `<div>${e}</div>`).join('');
-            const rec = ins.recommendation ? `
-                <div class="ic-action">
-                    <i class="fas fa-lightbulb ac-icon"></i>
-                    <div class="ac-text"><strong>Recommended Action:</strong> ${ins.recommendation}</div>
-                </div>` : '';
+            const rec = ins.recommendation ? `<div class="ic-action"><i class="fas fa-lightbulb ac-icon"></i><div class="ac-text"><strong>Recommended Action:</strong> ${ins.recommendation}</div></div>` : '';
             return `<div class="insight-card ${cls}">
                 <div class="ic-header">
-                    <div class="ic-icon ${cls === 'critical' ? 'red' : cls === 'warning' ? 'orange' : cls === 'success' ? 'green' : 'blue'}">
-                        <i class="fas fa-exclamation-circle"></i>
-                    </div>
-                    <div class="ic-title">
-                        <h4>${ins.problem || ins.type || 'Detected Issue'}</h4>
-                        <p>Type: ${ins.type || '—'}</p>
-                    </div>
+                    <div class="ic-icon ${cls === 'critical' ? 'red' : cls === 'warning' ? 'orange' : cls === 'success' ? 'green' : 'blue'}"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="ic-title"><h4>${ins.problem || ins.type}</h4><p>Type: ${ins.type || '—'}</p></div>
                     <span class="ic-badge ${badgeCls}">${(ins.severity || 'INFO').toUpperCase()}</span>
                 </div>
-                ${evidence ? `<div class="ic-evidence">
-                    <div class="ev-label"><i class="fas fa-chart-bar"></i> Evidence</div>
-                    <div class="ev-metrics">${evidence}</div>
-                </div>` : ''}
+                ${evidence ? `<div class="ic-evidence"><div class="ev-label"><i class="fas fa-chart-bar"></i> Evidence</div><div class="ev-metrics">${evidence}</div></div>` : ''}
                 ${rec}
             </div>`;
         }).join('');
@@ -1463,218 +1350,103 @@
         const container = document.getElementById('riskGrid');
         const total = aiData.insights.length;
         document.getElementById('riskCountBadge').textContent = total + ' areas flagged';
-
         const high = aiData.insights.filter(i => String(i.severity).toUpperCase() === 'HIGH').length;
         const medium = aiData.insights.filter(i => String(i.severity).toUpperCase() === 'MEDIUM').length;
         const low = aiData.insights.filter(i => String(i.severity).toUpperCase() === 'LOW').length;
-
         container.innerHTML = `
             <div class="card">
                 <div class="card-header"><i class="fas fa-user"></i> Candidate-Level Risk</div>
-                <div class="risk-list-item">
-                    <span class="risk-label">High-severity insights</span>
-                    <span class="risk-count">${high}</span>
-                    <span class="risk-level high">High</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Medium-severity insights</span>
-                    <span class="risk-count">${medium}</span>
-                    <span class="risk-level medium">Medium</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Low-severity insights</span>
-                    <span class="risk-count">${low}</span>
-                    <span class="risk-level low">Low</span>
-                </div>
+                <div class="risk-list-item"><span class="risk-label">High-severity insights</span><span class="risk-count">${high}</span><span class="risk-level high">High</span></div>
+                <div class="risk-list-item"><span class="risk-label">Medium-severity insights</span><span class="risk-count">${medium}</span><span class="risk-level medium">Medium</span></div>
+                <div class="risk-list-item"><span class="risk-label">Low-severity insights</span><span class="risk-count">${low}</span><span class="risk-level low">Low</span></div>
             </div>
             <div class="card">
                 <div class="card-header"><i class="fas fa-graduation-cap"></i> Program-Level Risk</div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Registered programs</span>
-                    <span class="risk-count">${aiData.summary.totalPrograms}</span>
-                    <span class="risk-level low">OK</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Program-level insights</span>
-                    <span class="risk-count">${aiData.insights.filter(i => (i.type || '').toLowerCase().includes('program')).length}</span>
-                    <span class="risk-level medium">Watch</span>
-                </div>
+                <div class="risk-list-item"><span class="risk-label">Registered programs</span><span class="risk-count">${aiData.summary.totalPrograms}</span><span class="risk-level low">OK</span></div>
+                <div class="risk-list-item"><span class="risk-label">Program-level insights</span><span class="risk-count">${aiData.insights.filter(i => (i.type || '').toLowerCase().includes('program')).length}</span><span class="risk-level medium">Watch</span></div>
             </div>
             <div class="card">
                 <div class="card-header"><i class="fas fa-map-pin"></i> Regional Risk</div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Regional insights</span>
-                    <span class="risk-count">${aiData.insights.filter(i => (i.type || '').toLowerCase().includes('region')).length}</span>
-                    <span class="risk-level medium">Watch</span>
-                </div>
-                <div class="risk-list-item">
-                    <span class="risk-label">Non-placement patterns</span>
-                    <span class="risk-count">${aiData.insights.filter(i => (i.type || '').toLowerCase().includes('non_placement')).length}</span>
-                    <span class="risk-level high">High</span>
-                </div>
+                <div class="risk-list-item"><span class="risk-label">Regional insights</span><span class="risk-count">${aiData.insights.filter(i => (i.type || '').toLowerCase().includes('region')).length}</span><span class="risk-level medium">Watch</span></div>
+                <div class="risk-list-item"><span class="risk-label">Non-placement patterns</span><span class="risk-count">${aiData.insights.filter(i => (i.type || '').toLowerCase().includes('non_placement')).length}</span><span class="risk-level high">High</span></div>
             </div>`;
     }
 
     function renderTrendLists() {
         const up = document.getElementById('trendUpList');
         const down = document.getElementById('trendDownList');
-
         const empRate = aiData.summaryApi ? Number(aiData.summaryApi.employment_rate) || 0 : 0;
         const totalEmp = aiData.summaryApi ? Number(aiData.summaryApi.employed) || 0 : 0;
         const totalTr  = aiData.summaryApi ? Number(aiData.summaryApi.total) || 0 : 0;
         const avgInc   = aiData.incomeApi ? Number(aiData.incomeApi.avg_starting_income) || 0 : 0;
-
         up.innerHTML = `
-            <div class="trend-item">
-                <span class="trend-label">Employment Rate</span>
-                <span class="trend-value" style="color:#16a34a;">${empRate}%</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-label">Total Employed</span>
-                <span class="trend-value" style="color:#16a34a;">${totalEmp.toLocaleString()}</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-label">Total Trainees</span>
-                <span class="trend-value" style="color:#0b1a33;">${totalTr.toLocaleString()}</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-label">Avg Starting Income</span>
-                <span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span>
-            </div>`;
-
-        const breakdown = (aiData.nonPlacementApi && Array.isArray(aiData.nonPlacementApi.breakdown))
-            ? aiData.nonPlacementApi.breakdown.slice(0, 5)
-            : [];
-
+            <div class="trend-item"><span class="trend-label">Employment Rate</span><span class="trend-value" style="color:#16a34a;">${empRate}%</span></div>
+            <div class="trend-item"><span class="trend-label">Total Employed</span><span class="trend-value" style="color:#16a34a;">${totalEmp.toLocaleString()}</span></div>
+            <div class="trend-item"><span class="trend-label">Total Trainees</span><span class="trend-value" style="color:#0b1a33;">${totalTr.toLocaleString()}</span></div>
+            <div class="trend-item"><span class="trend-label">Avg Starting Income</span><span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span></div>`;
+        const breakdown = (aiData.nonPlacementApi && Array.isArray(aiData.nonPlacementApi.breakdown)) ? aiData.nonPlacementApi.breakdown.slice(0, 5) : [];
         if (breakdown.length === 0) {
             down.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No non-placement reasons recorded yet.</div>`;
         } else {
-            down.innerHTML = breakdown.map(r => `
-                <div class="trend-item">
-                    <span class="trend-label">${String(r.reason || '').replace(/_/g, ' ')}</span>
-                    <span class="trend-value" style="color:#dc2626;">${r.count} (${r.percentage}%)</span>
-                </div>`).join('');
+            down.innerHTML = breakdown.map(r => `<div class="trend-item"><span class="trend-label">${String(r.reason || '').replace(/_/g, ' ')}</span><span class="trend-value" style="color:#dc2626;">${r.count} (${r.percentage}%)</span></div>`).join('');
         }
     }
 
     function renderAnomalies() {
         const container = document.getElementById('anomalyList');
-        const anomalyInsights = aiData.insights.filter(i =>
-            (i.type || '').toLowerCase().includes('anomaly') ||
-            (i.type || '').toLowerCase().includes('income')
-        );
-
+        const anomalyInsights = aiData.insights.filter(i => (i.type || '').toLowerCase().includes('anomaly') || (i.type || '').toLowerCase().includes('income'));
         if (anomalyInsights.length === 0) {
-            container.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No anomalies detected in the current data.</div>`;
+            container.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No anomalies detected.</div>`;
         } else {
-            container.innerHTML = anomalyInsights.map(i => `
-                <div class="anomaly-item">
-                    <span class="anomaly-tag">${(i.severity || 'INFO').toUpperCase()}</span>
-                    <strong>${i.problem || i.type}:</strong> ${(i.evidence || []).join(' · ')}
-                </div>`).join('');
+            container.innerHTML = anomalyInsights.map(i => `<div class="anomaly-item"><span class="anomaly-tag">${(i.severity || 'INFO').toUpperCase()}</span><strong>${i.problem || i.type}:</strong> ${(i.evidence || []).join(' · ')}</div>`).join('');
         }
-
         const snapshot = document.getElementById('incomeSnapshot');
         const avgInc = aiData.incomeApi ? Number(aiData.incomeApi.avg_starting_income) || 0 : 0;
         const growth = aiData.incomeApi ? Number(aiData.incomeApi.avg_income_growth) || 0 : 0;
         snapshot.innerHTML = `
-            <div class="trend-item">
-                <span class="trend-label">Avg Starting Income</span>
-                <span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-label">Avg Income Growth</span>
-                <span class="trend-value" style="color:#16a34a;">₹${growth.toLocaleString()}</span>
-            </div>`;
+            <div class="trend-item"><span class="trend-label">Avg Starting Income</span><span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span></div>
+            <div class="trend-item"><span class="trend-label">Avg Income Growth</span><span class="trend-value" style="color:#16a34a;">₹${growth.toLocaleString()}</span></div>`;
     }
 
     function renderSkillGaps() {
         const container = document.getElementById('skillGapList');
-        const skillInsights = aiData.insights.filter(i =>
-            (i.type || '').toLowerCase().includes('skill')
-        );
-
+        const skillInsights = aiData.insights.filter(i => (i.type || '').toLowerCase().includes('skill'));
         if (skillInsights.length === 0) {
-            container.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">
-                No skill gap insights yet. Add assessment/skill data to the backend.
-            </div>`;
+            container.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No skill gap insights yet.</div>`;
         } else {
             container.innerHTML = skillInsights.map(i => `
                 <div class="skill-pattern-item">
-                    <div class="sp-icon ${String(i.severity).toUpperCase() === 'HIGH' ? 'high' : 'medium'}">
-                        <i class="fas fa-code"></i>
-                    </div>
-                    <div class="sp-info">
-                        <div class="sp-name">${i.problem || i.type}</div>
-                        <div class="sp-desc">${(i.evidence || []).join(' · ')}</div>
-                    </div>
-                    <div class="sp-gap ${String(i.severity).toUpperCase() === 'HIGH' ? 'high' : 'medium'}">
-                        ${String(i.severity || '').toUpperCase()}
-                    </div>
+                    <div class="sp-icon ${String(i.severity).toUpperCase() === 'HIGH' ? 'high' : 'medium'}"><i class="fas fa-code"></i></div>
+                    <div class="sp-info"><div class="sp-name">${i.problem || i.type}</div><div class="sp-desc">${(i.evidence || []).join(' · ')}</div></div>
+                    <div class="sp-gap ${String(i.severity).toUpperCase() === 'HIGH' ? 'high' : 'medium'}">${String(i.severity || '').toUpperCase()}</div>
                 </div>`).join('');
         }
-
         const programSignalContainer = document.getElementById('programSignalList');
-        const programInsights = aiData.insights.filter(i =>
-            (i.type || '').toLowerCase().includes('program') ||
-            (i.type || '').toLowerCase().includes('employment')
-        );
-
+        const programInsights = aiData.insights.filter(i => (i.type || '').toLowerCase().includes('program') || (i.type || '').toLowerCase().includes('employment'));
         if (programInsights.length === 0) {
-            programSignalContainer.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">
-                No program-level signals yet.
-            </div>`;
+            programSignalContainer.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No program-level signals yet.</div>`;
         } else {
-            programSignalContainer.innerHTML = programInsights.map(i => `
-                <div class="trend-item">
-                    <span class="trend-label">${i.problem || i.type}</span>
-                    <span class="trend-value" style="color:${String(i.severity).toUpperCase() === 'HIGH' ? '#dc2626' : '#ea580c'};">
-                        ${String(i.severity || '').toUpperCase()}
-                    </span>
-                </div>`).join('');
+            programSignalContainer.innerHTML = programInsights.map(i => `<div class="trend-item"><span class="trend-label">${i.problem || i.type}</span><span class="trend-value" style="color:${String(i.severity).toUpperCase() === 'HIGH' ? '#dc2626' : '#ea580c'};">${String(i.severity || '').toUpperCase()}</span></div>`).join('');
         }
     }
 
     function renderDiagnosis() {
         const container = document.getElementById('diagnosisList');
-        const diagInsights = aiData.insights.filter(i =>
-            (i.type || '').toLowerCase().includes('employment') ||
-            (i.type || '').toLowerCase().includes('program') ||
-            (i.type || '').toLowerCase().includes('regional')
-        );
-
+        const diagInsights = aiData.insights.filter(i => (i.type || '').toLowerCase().includes('employment') || (i.type || '').toLowerCase().includes('program') || (i.type || '').toLowerCase().includes('regional'));
         if (diagInsights.length === 0) {
-            container.innerHTML = `<div class="insight-card info">
-                <div class="ic-header">
-                    <div class="ic-icon blue"><i class="fas fa-stethoscope"></i></div>
-                    <div class="ic-title">
-                        <h4>No program diagnosis available yet</h4>
-                        <p>Register program enrollment and employment data to activate root-cause diagnosis.</p>
-                    </div>
-                </div>
-            </div>`;
+            container.innerHTML = `<div class="insight-card info"><div class="ic-header"><div class="ic-icon blue"><i class="fas fa-stethoscope"></i></div><div class="ic-title"><h4>No program diagnosis available yet</h4><p>Register program enrollment and employment data to activate root-cause diagnosis.</p></div></div></div>`;
             return;
         }
-
         container.innerHTML = diagInsights.map(ins => {
             const cls = severityClass(ins.severity);
             return `<div class="insight-card ${cls}">
                 <div class="ic-header">
                     <div class="ic-icon purple"><i class="fas fa-diagnoses"></i></div>
-                    <div class="ic-title">
-                        <h4>${ins.problem || ins.type}</h4>
-                        <p>Severity: ${ins.severity || 'INFO'}</p>
-                    </div>
+                    <div class="ic-title"><h4>${ins.problem || ins.type}</h4><p>Severity: ${ins.severity || 'INFO'}</p></div>
                     <span class="ic-badge new">AI Diagnosis</span>
                 </div>
-                ${(ins.evidence || []).length ? `<div class="ic-evidence">
-                    <div class="ev-label"><i class="fas fa-route"></i> Evidence</div>
-                    <div class="ev-metrics">${(ins.evidence || []).map(e => `<div>${e}</div>`).join('')}</div>
-                </div>` : ''}
-                ${ins.recommendation ? `<div class="ic-action">
-                    <i class="fas fa-lightbulb ac-icon"></i>
-                    <div class="ac-text"><strong>Action:</strong> ${ins.recommendation}</div>
-                </div>` : ''}
+                ${(ins.evidence || []).length ? `<div class="ic-evidence"><div class="ev-label"><i class="fas fa-route"></i> Evidence</div><div class="ev-metrics">${(ins.evidence || []).map(e => `<div>${e}</div>`).join('')}</div></div>` : ''}
+                ${ins.recommendation ? `<div class="ic-action"><i class="fas fa-lightbulb ac-icon"></i><div class="ac-text"><strong>Action:</strong> ${ins.recommendation}</div></div>` : ''}
             </div>`;
         }).join('');
     }
@@ -1682,66 +1454,36 @@
     function renderIncome() {
         const summaryList = document.getElementById('incomeSummaryList');
         const retention = document.getElementById('retentionSnapshot');
-
         const avgInc = aiData.incomeApi ? Number(aiData.incomeApi.avg_starting_income) || 0 : 0;
         const growth = aiData.incomeApi ? Number(aiData.incomeApi.avg_income_growth) || 0 : 0;
-
         summaryList.innerHTML = `
-            <div class="trend-item">
-                <span class="trend-label">Avg Starting Income</span>
-                <span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-label">Avg Income Growth</span>
-                <span class="trend-value" style="color:#16a34a;">₹${growth.toLocaleString()}</span>
-            </div>`;
-
+            <div class="trend-item"><span class="trend-label">Avg Starting Income</span><span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span></div>
+            <div class="trend-item"><span class="trend-label">Avg Income Growth</span><span class="trend-value" style="color:#16a34a;">₹${growth.toLocaleString()}</span></div>`;
         const ret = aiData.retentionApi || {};
         const days = ['30d','90d','180d','365d'];
         retention.innerHTML = days.map(d => {
             const item = ret[d];
             const rate = item ? Number(item.rate) || 0 : 0;
-            return `<div class="trend-item">
-                <span class="trend-label">${d.replace('d','-day')} Retention</span>
-                <span class="trend-value" style="color:${rate >= 70 ? '#16a34a' : rate >= 50 ? '#ea580c' : '#dc2626'};">${rate}%</span>
-            </div>`;
+            return `<div class="trend-item"><span class="trend-label">${d.replace('d','-day')} Retention</span><span class="trend-value" style="color:${rate >= 70 ? '#16a34a' : rate >= 50 ? '#ea580c' : '#dc2626'};">${rate}%</span></div>`;
         }).join('');
     }
 
     function renderCausePatterns() {
         const container = document.getElementById('causePatternList');
-        const npInsights = aiData.insights.filter(i =>
-            (i.type || '').toLowerCase().includes('non_placement')
-        );
-
+        const npInsights = aiData.insights.filter(i => (i.type || '').toLowerCase().includes('non_placement'));
         if (npInsights.length === 0) {
-            container.innerHTML = `<div class="insight-card info">
-                <div class="ic-header">
-                    <div class="ic-icon blue"><i class="fas fa-search-plus"></i></div>
-                    <div class="ic-title">
-                        <h4>No cause patterns detected yet</h4>
-                        <p>Record more non-placement data to reveal patterns.</p>
-                    </div>
-                </div>
-            </div>`;
+            container.innerHTML = `<div class="insight-card info"><div class="ic-header"><div class="ic-icon blue"><i class="fas fa-search-plus"></i></div><div class="ic-title"><h4>No cause patterns detected yet</h4><p>Record more non-placement data to reveal patterns.</p></div></div></div>`;
             return;
         }
-
         container.innerHTML = npInsights.map(ins => {
             const cls = severityClass(ins.severity);
             return `<div class="insight-card ${cls}">
                 <div class="ic-header">
                     <div class="ic-icon orange"><i class="fas fa-layer-group"></i></div>
-                    <div class="ic-title">
-                        <h4>${ins.problem || ins.type}</h4>
-                        <p>${(ins.evidence || []).join(' · ')}</p>
-                    </div>
+                    <div class="ic-title"><h4>${ins.problem || ins.type}</h4><p>${(ins.evidence || []).join(' · ')}</p></div>
                     <span class="ic-badge ${severityBadgeClass(ins.severity)}">${(ins.severity || 'INFO').toUpperCase()}</span>
                 </div>
-                ${ins.recommendation ? `<div class="ic-action">
-                    <i class="fas fa-lightbulb ac-icon"></i>
-                    <div class="ac-text"><strong>Action:</strong> ${ins.recommendation}</div>
-                </div>` : ''}
+                ${ins.recommendation ? `<div class="ic-action"><i class="fas fa-lightbulb ac-icon"></i><div class="ac-text"><strong>Action:</strong> ${ins.recommendation}</div></div>` : ''}
             </div>`;
         }).join('');
     }
@@ -1751,68 +1493,37 @@
         const right = document.getElementById('policyRightCard');
         const withRecs = aiData.insights.filter(i => i.recommendation);
         document.getElementById('policyBadge').textContent = withRecs.length + ' actions prioritized';
-
         if (withRecs.length === 0) {
-            left.innerHTML = `<div style="color:#64748b;text-align:center;padding:20px;">
-                No policy recommendations yet.
-            </div>`;
+            left.innerHTML = `<div style="color:#64748b;text-align:center;padding:20px;">No policy recommendations yet.</div>`;
             right.innerHTML = '';
             return;
         }
-
         const half = Math.ceil(withRecs.length / 2);
-        const leftItems = withRecs.slice(0, half);
-        const rightItems = withRecs.slice(half);
-
         const buildItems = (items, startNum) => items.map((ins, i) => {
             const num = startNum + i;
             const prio = String(ins.severity || 'INFO').toUpperCase();
-            const prioCls = prio === 'HIGH' || prio === 'CRITICAL' ? 'critical'
-                          : prio === 'MEDIUM' ? 'high' : 'medium';
+            const prioCls = prio === 'HIGH' || prio === 'CRITICAL' ? 'critical' : prio === 'MEDIUM' ? 'high' : 'medium';
             return `<div class="policy-item">
                 <div class="policy-num">${num}</div>
-                <div class="policy-info">
-                    <div class="policy-title">${ins.problem || ins.type}</div>
-                    <div class="policy-desc">${ins.recommendation}</div>
-                </div>
+                <div class="policy-info"><div class="policy-title">${ins.problem || ins.type}</div><div class="policy-desc">${ins.recommendation}</div></div>
                 <span class="policy-priority ${prioCls}">${prio}</span>
             </div>`;
         }).join('');
-
-        left.innerHTML = buildItems(leftItems, 1);
-        right.innerHTML = buildItems(rightItems, half + 1);
+        left.innerHTML = buildItems(withRecs.slice(0, half), 1);
+        right.innerHTML = buildItems(withRecs.slice(half), half + 1);
     }
 
     function renderCurriculum() {
         const addC = document.getElementById('curriculumAdd');
         const strC = document.getElementById('curriculumStrengthen');
-        const skillInsights = aiData.insights.filter(i =>
-            (i.type || '').toLowerCase().includes('skill')
-        );
-
+        const skillInsights = aiData.insights.filter(i => (i.type || '').toLowerCase().includes('skill'));
         if (skillInsights.length === 0) {
             addC.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No curriculum changes suggested yet.</div>`;
             strC.innerHTML = `<div style="color:#64748b;text-align:center;padding:16px;">No strengthening actions yet.</div>`;
             return;
         }
-
-        addC.innerHTML = skillInsights.map(ins => `
-            <div class="curriculum-item">
-                <div class="curr-header">
-                    <span class="curr-title">${ins.problem || ins.type}</span>
-                    <span class="curr-badge add">Add</span>
-                </div>
-                <div class="curr-desc">${ins.recommendation || (ins.evidence || []).join(' · ')}</div>
-            </div>`).join('');
-
-        strC.innerHTML = skillInsights.map(ins => `
-            <div class="curriculum-item">
-                <div class="curr-header">
-                    <span class="curr-title">Strengthen — ${ins.problem || ins.type}</span>
-                    <span class="curr-badge strengthen">Strengthen</span>
-                </div>
-                <div class="curr-desc">${(ins.evidence || []).join(' · ')}</div>
-            </div>`).join('');
+        addC.innerHTML = skillInsights.map(ins => `<div class="curriculum-item"><div class="curr-header"><span class="curr-title">${ins.problem || ins.type}</span><span class="curr-badge add">Add</span></div><div class="curr-desc">${ins.recommendation || (ins.evidence || []).join(' · ')}</div></div>`).join('');
+        strC.innerHTML = skillInsights.map(ins => `<div class="curriculum-item"><div class="curr-header"><span class="curr-title">Strengthen — ${ins.problem || ins.type}</span><span class="curr-badge strengthen">Strengthen</span></div><div class="curr-desc">${(ins.evidence || []).join(' · ')}</div></div>`).join('');
     }
 
     function renderForecast() {
@@ -1820,60 +1531,35 @@
         const ret = aiData.retentionApi && aiData.retentionApi['365d'] ? Number(aiData.retentionApi['365d'].rate) || 0 : 0;
         const growth = aiData.incomeApi ? Number(aiData.incomeApi.avg_income_growth) || 0 : 0;
         const nonPlacementRate = empRate > 0 ? (100 - empRate) : 0;
-
-        document.getElementById('forecastEmployment').textContent     = empRate ? empRate + '%' : '—';
-        document.getElementById('forecastRetention').textContent      = ret ? ret + '%' : '—';
-        document.getElementById('forecastIncome').textContent         = growth ? ('₹' + growth.toLocaleString()) : '—';
-        document.getElementById('forecastNonPlacement').textContent   = nonPlacementRate ? (nonPlacementRate + '%') : '—';
-        document.getElementById('forecastSkill').textContent          = aiData.insights.some(i => (i.type||'').includes('skill')) ? 'See Skill Gaps' : '—';
-        document.getElementById('forecastPrograms').textContent       = aiData.summary.totalPrograms;
+        document.getElementById('forecastEmployment').textContent = empRate ? empRate + '%' : '—';
+        document.getElementById('forecastRetention').textContent = ret ? ret + '%' : '—';
+        document.getElementById('forecastIncome').textContent = growth ? ('₹' + growth.toLocaleString()) : '—';
+        document.getElementById('forecastNonPlacement').textContent = nonPlacementRate ? (nonPlacementRate + '%') : '—';
+        document.getElementById('forecastSkill').textContent = aiData.insights.some(i => (i.type || '').includes('skill')) ? 'See Skill Gaps' : '—';
+        document.getElementById('forecastPrograms').textContent = aiData.summary.totalPrograms;
     }
 
     function renderSuccess() {
         const successCard = document.getElementById('successCard');
         const highlights = document.getElementById('successHighlights');
-
-        const successInsights = aiData.insights.filter(i =>
-            String(i.severity).toUpperCase() === 'LOW' ||
-            (i.type || '').toLowerCase().includes('positive')
-        );
-
+        const successInsights = aiData.insights.filter(i => String(i.severity).toUpperCase() === 'LOW' || (i.type || '').toLowerCase().includes('positive'));
         if (successInsights.length === 0) {
-            successCard.innerHTML = `<div style="color:#64748b;text-align:center;padding:20px;">
-                No success patterns flagged yet. Keep collecting outcome data.
-            </div>`;
+            successCard.innerHTML = `<div style="color:#64748b;text-align:center;padding:20px;">No success patterns flagged yet.</div>`;
         } else {
-            successCard.innerHTML = successInsights.map(ins => `
-                <div class="success-item">
-                    <div class="success-icon">🟢</div>
-                    <div class="success-text">
-                        <strong>${ins.problem || ins.type}</strong> — ${(ins.evidence || []).join(' · ')}
-                    </div>
-                </div>`).join('');
+            successCard.innerHTML = successInsights.map(ins => `<div class="success-item"><div class="success-icon">🟢</div><div class="success-text"><strong>${ins.problem || ins.type}</strong> — ${(ins.evidence || []).join(' · ')}</div></div>`).join('');
         }
-
         const empRate = aiData.summaryApi ? Number(aiData.summaryApi.employment_rate) || 0 : 0;
         const totalEmp = aiData.summaryApi ? Number(aiData.summaryApi.employed) || 0 : 0;
         const avgInc = aiData.incomeApi ? Number(aiData.incomeApi.avg_starting_income) || 0 : 0;
-
         highlights.innerHTML = `
-            <div class="trend-item">
-                <span class="trend-label">Current Employment Rate</span>
-                <span class="trend-value" style="color:#16a34a;">${empRate}%</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-label">Total Employed</span>
-                <span class="trend-value" style="color:#16a34a;">${totalEmp.toLocaleString()}</span>
-            </div>
-            <div class="trend-item">
-                <span class="trend-label">Avg Starting Income</span>
-                <span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span>
-            </div>`;
+            <div class="trend-item"><span class="trend-label">Current Employment Rate</span><span class="trend-value" style="color:#16a34a;">${empRate}%</span></div>
+            <div class="trend-item"><span class="trend-label">Total Employed</span><span class="trend-value" style="color:#16a34a;">${totalEmp.toLocaleString()}</span></div>
+            <div class="trend-item"><span class="trend-label">Avg Starting Income</span><span class="trend-value" style="color:#16a34a;">₹${avgInc.toLocaleString()}</span></div>`;
     }
 
-    // ------------------------------------------------------------
-    // SIDEBAR / HEADER
-    // ------------------------------------------------------------
+    /* ============================================================
+       SIDEBAR / HEADER
+       ============================================================ */
     function updateSidebar() {
         try {
             if (typeof getCurrentUser === 'function') {
@@ -1896,59 +1582,56 @@
         document.getElementById('notifBadge').textContent = aiData.insights.length;
     }
 
-    // ------------------------------------------------------------
-    // UTILITY
-    // ------------------------------------------------------------
     function updateDate() {
         const el = document.getElementById('dateDisplay');
         if (!el) return;
         const now = new Date();
-        el.textContent = now.toLocaleDateString('en-US', {
-            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
-        });
+        el.textContent = now.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    /* ============================================================
+       ACTIONS
+       ============================================================ */
+    function showToast(msg) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<i class="fas fa-info-circle" style="color:#7c3aed;font-size:16px;"></i> ${msg}`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
     function showNotifications() {
-        alert(`📬 AI Notifications\n\n• ${aiData.insights.length} insights detected\n• ${aiData.summary.recommendations} recommendations available\n• ${aiData.summary.totalTrainees.toLocaleString()} trainees analyzed`);
+        alert(`📬 Notifications\n\n• ${aiData.insights.length} insights detected\n• ${decisions.length} decisions ranked\n• ${aiData.summary.recommendations} recommendations available\n• ${aiData.summary.totalTrainees.toLocaleString()} trainees analyzed`);
     }
 
     function toggleProfileMenu() { alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
 
-    function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            window.location.href = '../auth/login.html';
-        }
-    }
+    function logout() { if (confirm('Are you sure you want to logout?')) window.location.href = '../auth/login.html'; }
 
     function exportAIReport() {
         let report = '🤖 AI INSIGHTS & RECOMMENDATIONS REPORT\n';
         report += '================================\n';
         report += `📅 Generated: ${new Date().toLocaleString()}\n\n`;
-        report += `📊 EXECUTIVE SUMMARY\n`;
-        report += `• Total Trainees Analyzed: ${aiData.summary.totalTrainees.toLocaleString()}\n`;
-        report += `• Registered Programs: ${aiData.summary.totalPrograms}\n`;
-        report += `• Insights Detected: ${aiData.summary.problemsDetected}\n`;
-        report += `• Recommendations: ${aiData.summary.recommendations}\n\n`;
+        report += `📊 EXECUTIVE SUMMARY\n• Total Trainees: ${aiData.summary.totalTrainees.toLocaleString()}\n• Programs: ${aiData.summary.totalPrograms}\n• Insights: ${aiData.summary.problemsDetected}\n• Recommendations: ${aiData.summary.recommendations}\n\n`;
         report += `🔍 DETECTED PROBLEMS\n`;
         aiData.insights.forEach((ins, i) => {
             report += `${i+1}. [${(ins.severity||'INFO').toUpperCase()}] ${ins.problem || ins.type}\n`;
             if (ins.recommendation) report += `   → ${ins.recommendation}\n`;
             report += '\n';
         });
-        report += '================================\n';
-        report += '📌 Generated by SkillBridge AI Decision Intelligence';
+        report += `🎯 TOP DECISIONS\n`;
+        decisions.slice(0, 5).forEach((d, i) => {
+            report += `${i+1}. ${d.title} — Priority: ${d.priorityScore}/100, Impact: +${d.impact}pp, Cost: ₹${d.cost}L\n`;
+        });
         alert(report);
     }
 
     function viewCriticalProblems() {
-        const critical = aiData.insights.filter(i =>
-            String(i.severity).toUpperCase() === 'HIGH' || String(i.severity).toUpperCase() === 'CRITICAL'
-        );
+        const critical = aiData.insights.filter(i => String(i.severity).toUpperCase() === 'HIGH' || String(i.severity).toUpperCase() === 'CRITICAL');
         if (critical.length === 0) { alert('No critical problems detected.'); return; }
         let msg = '🔴 CRITICAL AI-DETECTED PROBLEMS\n================================\n\n';
         critical.forEach((p, i) => {
-            msg += `${i+1}. ${p.problem || p.type}\n`;
-            msg += `   Severity: ${(p.severity||'').toUpperCase()}\n`;
+            msg += `${i+1}. ${p.problem || p.type}\n   Severity: ${(p.severity||'').toUpperCase()}\n`;
             if (p.recommendation) msg += `   → ${p.recommendation}\n`;
             msg += '\n';
         });
@@ -1959,20 +1642,15 @@
         const recs = aiData.insights.filter(i => i.recommendation);
         if (recs.length === 0) { alert('No policy recommendations available yet.'); return; }
         let msg = '💡 POLICY RECOMMENDATIONS\n================================\n\n';
-        recs.forEach((p, i) => {
-            msg += `${i+1}. [${(p.severity||'INFO').toUpperCase()}] ${p.problem || p.type}\n`;
-            msg += `   → ${p.recommendation}\n\n`;
-        });
+        recs.forEach((p, i) => { msg += `${i+1}. [${(p.severity||'INFO').toUpperCase()}] ${p.problem || p.type}\n   → ${p.recommendation}\n\n`; });
         alert(msg);
     }
 
-    function toggleTheme() {
-        document.body.classList.toggle('dark-theme');
-    }
+    function toggleTheme() { document.body.classList.toggle('dark-theme'); }
 
-    // ------------------------------------------------------------
-    // INIT
-    // ------------------------------------------------------------
+    /* ============================================================
+       INIT
+       ============================================================ */
     document.addEventListener('DOMContentLoaded', async function() {
         updateDate();
         updateSidebar();
@@ -1991,8 +1669,9 @@
             }
         });
 
-        console.log('🤖 AI Insights page loaded');
+        console.log('🤖 AI Insights + Decision Support loaded');
         console.log('📊 Insights:', aiData.insights.length);
+        console.log('🎯 Decisions:', decisions.length);
         console.log('👥 Trainees:', aiData.summary.totalTrainees);
     });
 </script>

@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TalentBridge · Candidate Skill Alignment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif;}
+body{background:#f0f4f9;display:flex;min-height:100vh;color:#0b1a33;transition:background .3s,color .3s;}
+
+/* ========== SIDEBAR ========== */
+.sidebar{width:280px;background:linear-gradient(180deg,#0f172a 0%,#172554 50%,#1e3a8a 100%);color:white;padding:24px 18px;position:fixed;height:100vh;overflow-y:auto;z-index:100;transition:transform .3s}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:10px}
+.sidebar-brand{display:flex;align-items:center;gap:12px;padding:8px 10px 24px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:18px}
+.sidebar-brand .icon{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 8px 20px -6px rgba(37,99,235,.35)}
+.sidebar-brand h2{font-size:18px;font-weight:700}
+.sidebar-brand p{font-size:10px;opacity:.5;font-weight:500;margin-top:2px}
+.sidebar-user{display:flex;align-items:center;gap:14px;padding:14px 12px 20px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:14px}
+.sidebar-user .avatar{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;flex-shrink:0;position:relative}
+.sidebar-user .avatar .online-dot{position:absolute;bottom:0;right:0;width:12px;height:12px;background:#22c55e;border-radius:50%;border:2px solid #0f172a}
+.sidebar-user .info .name{font-size:15px;font-weight:600}
+.sidebar-user .info .role{font-size:11px;opacity:.5}
+.sidebar-user .info .company{font-size:11px;opacity:.7;margin-top:2px}
+.menu-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.35;padding:12px 12px 6px;font-weight:700}
+.menu a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;color:rgba(255,255,255,.6);text-decoration:none;transition:all .2s;margin:2px 0;font-size:14px;font-weight:500;cursor:pointer;position:relative}
+.menu a:hover{background:rgba(255,255,255,.08);color:white}
+.menu a.active{background:rgba(255,255,255,.12);color:white;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.menu a.active::before{content:'';position:absolute;left:-18px;top:50%;transform:translateY(-50%);width:4px;height:24px;background:linear-gradient(180deg,#2563eb,#7c3aed);border-radius:0 4px 4px 0}
+.menu a i{width:20px;text-align:center;font-size:15px}
+.menu a .badge{margin-left:auto;background:#ef4444;color:white;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px}
+.menu a .badge.new{background:linear-gradient(135deg,#f59e0b,#ec4899);animation:pulse-badge 2s infinite}
+@keyframes pulse-badge{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.sidebar-footer{padding:20px 12px 0;border-top:1px solid rgba(255,255,255,.08);margin-top:12px}
+.sidebar-footer a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;color:rgba(255,255,255,.5);text-decoration:none;transition:.2s;font-size:14px;font-weight:500;cursor:pointer}
+.sidebar-footer a:hover{background:rgba(255,255,255,.06);color:white}
+
+/* ========== MAIN ========== */
+.main-content{margin-left:280px;flex:1;padding:0;min-height:100vh}
+.header{background:rgba(255,255,255,.92);backdrop-filter:blur(16px);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(226,232,240,.6);position:sticky;top:0;z-index:50;transition:background .3s,border-color .3s}
+.header-left{display:flex;align-items:center;gap:16px}
+.menu-toggle{display:none;background:none;border:none;font-size:22px;color:#0b1a33;cursor:pointer}
+.page-title h1{font-size:20px;color:#0b1a33;font-weight:700;display:flex;align-items:center;gap:10px}
+.page-title h1 i{color:#2563eb;background:#dbeafe;padding:8px;border-radius:10px;font-size:16px}
+.page-title p{font-size:12px;color:#64748b;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:16px}
+.header-right .date{font-size:13px;color:#64748b;font-weight:500;background:#f1f5f9;padding:6px 14px;border-radius:20px}
+.header-right .notif{position:relative;font-size:20px;color:#475569;cursor:pointer;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.header-right .notif:hover{background:#f1f5f9}
+.header-right .notif .badge{position:absolute;top:2px;right:2px;background:#ef4444;color:white;width:20px;height:20px;font-size:10px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+.header-right .profile-btn{display:flex;align-items:center;gap:10px;background:#f1f5f9;padding:5px 14px 5px 5px;border-radius:30px;cursor:pointer;border:none;transition:.2s}
+.header-right .profile-btn:hover{background:#e2e8f0}
+.header-right .profile-btn .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.header-right .profile-btn .name{font-size:13px;font-weight:600;color:#0b1a33}
+.header-right .profile-btn i{color:#94a3b8;font-size:13px}
+.theme-toggle{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#475569;font-size:16px;cursor:pointer;background:none;border:none;transition:all .2s}
+.theme-toggle:hover{background:#f1f5f9;color:#06b6d4;transform:rotate(15deg)}
+
+.container{padding:24px 32px 32px;max-width:1440px;margin:auto}
+
+/* ========== WELCOME ========== */
+.welcome{background:linear-gradient(135deg,#1e3a8a,#2563eb,#7c3aed);color:white;padding:26px 32px;border-radius:20px;margin-bottom:22px;position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px}
+.welcome::before{content:"";position:absolute;width:380px;height:380px;border-radius:50%;background:rgba(255,255,255,.05);top:-160px;right:-90px}
+.welcome-content{position:relative;z-index:1;flex:1;min-width:280px}
+.welcome h2{font-size:24px;font-weight:800;display:flex;align-items:center;gap:10px;margin-bottom:6px;color:white}
+.welcome p{font-size:14px;opacity:.9;line-height:1.5;max-width:600px;color:white}
+.welcome-stats{display:flex;gap:14px;position:relative;z-index:1;flex-wrap:wrap}
+.welcome-stat{background:rgba(255,255,255,.12);padding:12px 20px;border-radius:14px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);text-align:center;min-width:90px}
+.welcome-stat strong{font-size:22px;font-weight:800;display:block;color:white}
+.welcome-stat span{font-size:10px;opacity:.8;text-transform:uppercase;letter-spacing:.8px;font-weight:600;color:white}
+
+/* Demo notice banner */
+.demo-banner{background:linear-gradient(90deg,#fef3c7,#fce7f3);border:1.5px solid #fde68a;border-radius:14px;padding:12px 20px;margin-bottom:18px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;color:#92400e;transition:.3s}
+.demo-banner i{font-size:16px;color:#d97706;flex-shrink:0}
+.demo-banner strong{color:#78350f}
+.demo-banner .demo-close{margin-left:auto;background:none;border:none;color:#92400e;cursor:pointer;font-size:14px;padding:4px 8px;border-radius:6px}
+.demo-banner .demo-close:hover{background:rgba(0,0,0,.08)}
+
+/* ========== STATS ROW ========== */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+.stat-box{background:white;border-radius:16px;padding:18px 20px;border:1px solid #eef2f6;box-shadow:0 2px 12px rgba(0,0,0,.04);transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
+.stat-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2563eb,#7c3aed);transform:scaleX(0);transition:transform .3s ease}
+.stat-box:hover::before{transform:scaleX(1)}
+.stat-box:hover{transform:translateY(-6px) scale(1.01);box-shadow:0 16px 40px rgba(37,99,235,.12)}
+.stat-box .stat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.stat-box .stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.stat-box .stat-icon.blue{background:#dbeafe;color:#2563eb}
+.stat-box .stat-icon.green{background:#dcfce7;color:#16a34a}
+.stat-box .stat-icon.orange{background:#fef3c7;color:#d97706}
+.stat-box .stat-icon.purple{background:#ede9fe;color:#7c3aed}
+.stat-box .stat-number{font-size:28px;font-weight:800;color:#0b1a33;letter-spacing:-0.02em}
+.stat-box .stat-label{font-size:13px;color:#64748b}
+.stat-box .stat-trend{font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px}
+.stat-box .stat-trend.up{background:#dcfce7;color:#16a34a}
+.stat-box .stat-trend.neutral{background:#f1f5f9;color:#64748b}
+
+/* ========== TOOLBAR ========== */
+.toolbar{background:white;border-radius:18px;padding:18px 24px;border:1px solid #eef2f6;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:22px;transition:background .3s,border-color .3s}
+.toolbar-row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.tb-group{display:flex;flex-direction:column;gap:5px;min-width:160px}
+.tb-group label{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px}
+.tb-group label i{color:#2563eb;font-size:11px}
+.tb-group input,.tb-group select{padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:500;color:#0b1a33;background:#f8fafc;outline:none;transition:.2s;font-family:inherit;width:100%}
+.tb-group input:focus,.tb-group select:focus{border-color:#2563eb;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.tb-group.grow{flex:1;min-width:220px}
+.tb-group select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:#f1f5f9;color:#475569;cursor:pointer;transition:.2s;border:1.5px solid transparent;user-select:none}
+.chip:hover{background:#e2e8f0}
+.chip.active{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+
+/* ========== COMPARE BAR ========== */
+.compare-bar{background:linear-gradient(90deg,#dbeafe,#ede9fe);border:1.5px solid #c7d2fe;border-radius:14px;padding:14px 22px;margin-bottom:22px;display:none;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.compare-bar.active{display:flex}
+.compare-bar-info{font-size:13.5px;font-weight:600;color:#3730a3;display:flex;align-items:center;gap:10px}
+.compare-bar-info i{font-size:16px}
+.compare-bar-info strong{color:#4338ca;font-size:15px}
+.cb-btn{padding:8px 16px;border-radius:10px;border:none;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.cb-btn.primary{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white}
+.cb-btn.primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(37,99,235,.3)}
+.cb-btn.ghost{background:white;color:#4338ca;border:1.5px solid #c7d2fe}
+.cb-btn.ghost:hover{background:#eff6ff}
+
+/* ========== CANDIDATE GRID ========== */
+.cand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;margin-bottom:22px}
+.cand-card{background:white;border-radius:18px;padding:20px 22px;border:1.5px solid #eef2f6;box-shadow:0 2px 12px rgba(0,0,0,.04);transition:.3s;position:relative;overflow:hidden;cursor:pointer}
+.cand-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#2563eb,#7c3aed);opacity:0;transition:.3s}
+.cand-card:hover{transform:translateY(-5px);box-shadow:0 16px 40px rgba(37,99,235,.13);border-color:#c7d2fe}
+.cand-card:hover::before{opacity:1}
+.cand-card.selected{border-color:#2563eb;background:#f8faff;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.cand-card.comparing{border-color:#ec4899;background:#fff7fb;box-shadow:0 0 0 3px rgba(236,72,153,.12)}
+.cand-card.demo-card{border-style:dashed}
+.cand-card.demo-card::after{content:'SAMPLE';position:absolute;top:12px;right:12px;background:#fef3c7;color:#92400e;font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;letter-spacing:.5px}
+
+.cc-head{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+.cc-avatar{width:52px;height:52px;border-radius:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:20px;background:linear-gradient(135deg,#2563eb,#7c3aed);position:relative}
+.cc-avatar .online-dot{position:absolute;bottom:-2px;right:-2px;width:13px;height:13px;border-radius:50%;background:#22c55e;border:2.5px solid white}
+.cc-avatar.demo-avatar{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.cc-info{flex:1;min-width:0}
+.cc-name{font-size:15.5px;font-weight:800;color:#0b1a33;display:flex;align-items:center;gap:6px;line-height:1.25}
+.cc-name .verified{color:#2563eb;font-size:12px}
+.cc-role{font-size:12px;color:#64748b;margin-top:3px}
+.cc-meta{font-size:11px;color:#94a3b8;margin-top:4px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.cc-menu{background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer;padding:4px;align-self:flex-start}
+.cc-menu:hover{color:#2563eb}
+
+/* Alignment ring */
+.cc-align{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8fafc;border-radius:13px;margin-bottom:13px;border:1px solid #f1f5f9}
+.cc-align-left{display:flex;align-items:center;gap:12px}
+.cc-ring{position:relative;width:48px;height:48px;flex-shrink:0}
+.cc-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.cc-ring .bg{fill:none;stroke:#e2e8f0;stroke-width:5}
+.cc-ring .fg{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 1s ease}
+.cc-ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;color:#0b1a33}
+.cc-align-label{font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.cc-align-value{font-size:13.5px;font-weight:800;color:#0b1a33;margin-top:2px}
+.cc-align-right{text-align:right}
+.cc-align-right .cc-align-value{color:#2563eb}
+
+/* Skills chips */
+.cc-skills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:13px;min-height:26px}
+.sk-tag{font-size:10.5px;padding:4px 9px;border-radius:7px;font-weight:700;letter-spacing:.2px;display:inline-flex;align-items:center;gap:4px}
+.sk-match{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.sk-partial{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
+.sk-missing{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.sk-neutral{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+.sk-tag .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+/* Progress bars */
+.cc-bars{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.cc-bar-row{display:flex;align-items:center;gap:8px}
+.cc-bar-label{font-size:10.5px;font-weight:700;color:#64748b;width:72px;text-transform:uppercase;letter-spacing:.4px}
+.cc-bar-track{flex:1;height:7px;background:#e2e8f0;border-radius:10px;overflow:hidden}
+.cc-bar-fill{height:100%;border-radius:10px;transition:width 1s ease}
+.cc-bar-fill.skills{background:linear-gradient(90deg,#2563eb,#7c3aed)}
+.cc-bar-fill.training{background:linear-gradient(90deg,#10b981,#059669)}
+.cc-bar-fill.exp{background:linear-gradient(90deg,#f59e0b,#d97706)}
+.cc-bar-pct{font-size:10.5px;font-weight:800;color:#334155;width:34px;text-align:right}
+
+/* Card footer */
+.cc-footer{display:flex;gap:7px;padding-top:13px;border-top:1px solid #f1f5f9}
+.cc-btn{flex:1;padding:9px;border-radius:10px;border:none;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.cc-btn.primary{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white}
+.cc-btn.primary:hover{box-shadow:0 8px 18px rgba(37,99,235,.3);transform:translateY(-1px)}
+.cc-btn.ghost{background:#f1f5f9;color:#475569}
+.cc-btn.ghost:hover{background:#e2e8f0}
+.cc-btn.icon-only{flex:0 0 40px;padding:9px 0}
+.cc-btn.icon-only.on{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:white}
+.cc-btn.icon-only.on-green{background:linear-gradient(135deg,#10b981,#059669);color:white}
+
+/* ========== EMPTY STATE ========== */
+.empty-state{text-align:center;padding:70px 24px;background:white;border:2px dashed #e2e8f0;border-radius:18px;color:#94a3b8;grid-column:1/-1}
+.empty-state i{font-size:56px;color:#c7d2fe;margin-bottom:14px;display:block}
+.empty-state h3{font-size:17px;color:#0b1a33;margin-bottom:6px;font-weight:800}
+.empty-state p{font-size:13px;color:#64748b;max-width:400px;margin:0 auto}
+
+/* ========== BULK BAR ========== */
+.bulk-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(140%);background:#0b1120;color:white;padding:14px 22px;border-radius:16px;box-shadow:0 20px 50px rgba(11,17,32,.4);z-index:90;display:flex;align-items:center;gap:14px;transition:transform .4s cubic-bezier(.16,1,.3,1);max-width:95vw;flex-wrap:wrap}
+.bulk-bar.show{transform:translateX(-50%) translateY(0)}
+.bulk-bar .count{font-size:13.5px;font-weight:700}
+.bulk-bar .count span{color:#fbbf24;font-size:16px}
+.bulk-bar .divider{width:1px;height:22px;background:rgba(255,255,255,.2)}
+.bulk-btn{padding:9px 15px;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.bulk-btn.amber{background:linear-gradient(135deg,#f59e0b,#ec4899);color:white}
+.bulk-btn.amber:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(236,72,153,.4)}
+.bulk-btn.ghost{background:rgba(255,255,255,.12);color:white}
+.bulk-btn.ghost:hover{background:rgba(255,255,255,.2)}
+
+/* ========== DRAWER ========== */
+.drawer-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:200;opacity:0;pointer-events:none;transition:.3s}
+.drawer-overlay.open{opacity:1;pointer-events:all}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:540px;max-width:94vw;background:white;z-index:201;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);box-shadow:-20px 0 60px rgba(15,23,42,.2);overflow-y:auto}
+.drawer.open{transform:translateX(0)}
+.drawer::-webkit-scrollbar{width:5px}
+.drawer::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px}
+.drawer-head{padding:24px 26px;background:linear-gradient(135deg,#1e3a8a,#2563eb,#7c3aed);color:white;position:sticky;top:0;z-index:2}
+.drawer-head h2,.drawer-head p{color:white}
+.drawer-close{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.15);border:none;color:white;font-size:15px;cursor:pointer;transition:.2s}
+.drawer-close:hover{background:rgba(255,255,255,.28);transform:rotate(90deg)}
+.drawer-body{padding:22px 26px 40px}
+.drawer-sec{margin-bottom:24px}
+.drawer-sec h4{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:12px;font-weight:800;display:flex;align-items:center;gap:8px}
+.drawer-sec h4 i{color:#2563eb}
+.kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv-box{background:#f8fafc;border-radius:12px;padding:12px 14px;border:1px solid #f1f5f9}
+.kv-box .k{font-size:10.5px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.kv-box .v{font-size:14px;font-weight:700;color:#0b1a33;margin-top:4px;word-break:break-word}
+.kv-box .v.highlight{color:#2563eb}
+.kv-box .v.salary{color:#059669}
+
+/* ========== TOAST ========== */
+.toast-stack{position:fixed;top:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:10px}
+.toast{background:#0b1120;color:white;padding:13px 18px;border-radius:13px;font-size:13px;font-weight:600;box-shadow:0 12px 30px rgba(11,17,32,.3);display:flex;align-items:center;gap:10px;animation:toastIn .35s cubic-bezier(.16,1,.3,1);min-width:250px}
+.toast.success{border-left:4px solid #10b981}
+.toast.error{border-left:4px solid #ef4444}
+.toast.info{border-left:4px solid #2563eb}
+.toast i{font-size:16px}
+.toast.success i{color:#10b981}
+.toast.error i{color:#ef4444}
+.toast.info i{color:#60a5fa}
+@keyframes toastIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ========== SKELETON ========== */
+.skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:10px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{background:white;border-radius:18px;padding:20px;border:1px solid #eef2f6}
+.skel-line{height:12px;margin-bottom:10px}
+
+/* ============================================================
+   🌙 DARK MODE OVERRIDES  —  fixed for full text visibility
+   ============================================================ */
+[data-theme="dark"] body{background:#0b1220;color:#e2e8f0;}
+[data-theme="dark"] .main-content{background:#0b1220;}
+
+/* Header */
+[data-theme="dark"] .header{background:rgba(15,23,42,.92);border-bottom-color:rgba(51,65,85,.6);}
+[data-theme="dark"] .page-title h1{color:#f1f5f9;}
+[data-theme="dark"] .page-title h1 i{background:#1e3a8a;color:#93c5fd;}
+[data-theme="dark"] .page-title p{color:#94a3b8;}
+[data-theme="dark"] .menu-toggle{color:#e2e8f0;}
+[data-theme="dark"] .header-right .date{background:#1e293b;color:#cbd5e1;}
+[data-theme="dark"] .header-right .notif{color:#cbd5e1;}
+[data-theme="dark"] .header-right .notif:hover{background:#1e293b;}
+[data-theme="dark"] .header-right .profile-btn{background:#1e293b;}
+[data-theme="dark"] .header-right .profile-btn:hover{background:#334155;}
+[data-theme="dark"] .header-right .profile-btn .name{color:#f1f5f9;}
+[data-theme="dark"] .theme-toggle{color:#cbd5e1;}
+[data-theme="dark"] .theme-toggle:hover{background:#1e293b;color:#22d3ee;}
+
+/* Welcome — keep gradient, ensure white text */
+[data-theme="dark"] .welcome{background:linear-gradient(135deg,#0f172a,#1e3a8a,#4c1d95);}
+[data-theme="dark"] .welcome h2,[data-theme="dark"] .welcome p,[data-theme="dark"] .welcome-stat strong,[data-theme="dark"] .welcome-stat span{color:white;}
+
+/* Stat boxes */
+[data-theme="dark"] .stat-box{background:#111c33;border-color:#1e293b;box-shadow:0 2px 12px rgba(0,0,0,.4);}
+[data-theme="dark"] .stat-box .stat-number{color:#f1f5f9;}
+[data-theme="dark"] .stat-box .stat-label{color:#94a3b8;}
+[data-theme="dark"] .stat-box .stat-icon.blue{background:#1e3a8a;color:#93c5fd;}
+[data-theme="dark"] .stat-box .stat-icon.green{background:#064e3b;color:#6ee7b7;}
+[data-theme="dark"] .stat-box .stat-icon.orange{background:#78350f;color:#fcd34d;}
+[data-theme="dark"] .stat-box .stat-icon.purple{background:#4c1d95;color:#c4b5fd;}
+[data-theme="dark"] .stat-box .stat-trend.up{background:#064e3b;color:#6ee7b7;}
+[data-theme="dark"] .stat-box .stat-trend.neutral{background:#1e293b;color:#cbd5e1;}
+
+/* Toolbar */
+[data-theme="dark"] .toolbar{background:#111c33;border-color:#1e293b;}
+[data-theme="dark"] .tb-group label{color:#cbd5e1;}
+[data-theme="dark"] .tb-group label i{color:#60a5fa;}
+[data-theme="dark"] .tb-group input,[data-theme="dark"] .tb-group select{background:#0b1220;border-color:#334155;color:#f1f5f9;}
+[data-theme="dark"] .tb-group input::placeholder{color:#64748b;}
+[data-theme="dark"] .tb-group input:focus,[data-theme="dark"] .tb-group select:focus{background:#111c33;border-color:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.15);}
+[data-theme="dark"] .chip{background:#1e293b;color:#cbd5e1;}
+[data-theme="dark"] .chip:hover{background:#334155;}
+[data-theme="dark"] .chip.active{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;}
+
+/* Compare bar */
+[data-theme="dark"] .compare-bar{background:linear-gradient(90deg,#1e3a8a,#4c1d95);border-color:#4f46e5;}
+[data-theme="dark"] .compare-bar-info{color:#c7d2fe;}
+[data-theme="dark"] .compare-bar-info strong{color:#e0e7ff;}
+[data-theme="dark"] .cb-btn.ghost{background:#111c33;color:#c7d2fe;border-color:#4f46e5;}
+[data-theme="dark"] .cb-btn.ghost:hover{background:#1e293b;}
+
+/* Demo banner */
+[data-theme="dark"] .demo-banner{background:linear-gradient(90deg,#78350f,#831843);border-color:#92400e;color:#fde68a;}
+[data-theme="dark"] .demo-banner strong{color:#fcd34d;}
+[data-theme="dark"] .demo-banner .demo-close{color:#fde68a;}
+[data-theme="dark"] .demo-banner .demo-close:hover{background:rgba(0,0,0,.25);}
+
+/* Candidate cards */
+[data-theme="dark"] .cand-card{background:#111c33;border-color:#1e293b;box-shadow:0 2px 12px rgba(0,0,0,.35);}
+[data-theme="dark"] .cand-card:hover{box-shadow:0 16px 40px rgba(37,99,235,.25);border-color:#3b82f6;}
+[data-theme="dark"] .cand-card.selected{background:#0f1e3d;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25);}
+[data-theme="dark"] .cand-card.comparing{background:#2a0f1e;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.25);}
+[data-theme="dark"] .cand-card.demo-card::after{background:#78350f;color:#fde68a;}
+
+/* Card inner */
+[data-theme="dark"] .cc-name{color:#f1f5f9;}
+[data-theme="dark"] .cc-name .verified{color:#60a5fa;}
+[data-theme="dark"] .cc-role{color:#94a3b8;}
+[data-theme="dark"] .cc-meta{color:#94a3b8;}
+[data-theme="dark"] .cc-avatar{border:2px solid rgba(255,255,255,.08);}
+[data-theme="dark"] .cc-avatar .online-dot{border-color:#111c33;}
+[data-theme="dark"] .cc-menu{color:#94a3b8;}
+[data-theme="dark"] .cc-menu:hover{color:#60a5fa;}
+[data-theme="dark"] .cc-align{background:#0b1220;border-color:#1e293b;}
+[data-theme="dark"] .cc-ring .bg{stroke:#334155;}
+[data-theme="dark"] .cc-ring .num{color:#f1f5f9;}
+[data-theme="dark"] .cc-align-label{color:#94a3b8;}
+[data-theme="dark"] .cc-align-value{color:#f1f5f9;}
+[data-theme="dark"] .cc-align-right .cc-align-value{color:#60a5fa;}
+[data-theme="dark"] .cc-bar-label{color:#94a3b8;}
+[data-theme="dark"] .cc-bar-track{background:#1e293b;}
+[data-theme="dark"] .cc-bar-pct{color:#cbd5e1;}
+[data-theme="dark"] .cc-footer{border-top-color:#1e293b;}
+[data-theme="dark"] .cc-btn.ghost{background:#1e293b;color:#cbd5e1;}
+[data-theme="dark"] .cc-btn.ghost:hover{background:#334155;}
+
+/* Skill chips — keep tint but darker */
+[data-theme="dark"] .sk-match{background:#064e3b;color:#6ee7b7;border-color:#047857;}
+[data-theme="dark"] .sk-partial{background:#78350f;color:#fcd34d;border-color:#b45309;}
+[data-theme="dark"] .sk-missing{background:#7f1d1d;color:#fca5a5;border-color:#b91c1c;}
+[data-theme="dark"] .sk-neutral{background:#1e293b;color:#cbd5e1;border-color:#334155;}
+
+/* Drawer */
+[data-theme="dark"] .drawer{background:#0b1220;}
+[data-theme="dark"] .drawer-body{background:#0b1220;color:#e2e8f0;}
+[data-theme="dark"] .drawer-sec h4{color:#94a3b8;}
+[data-theme="dark"] .drawer-sec h4 i{color:#60a5fa;}
+[data-theme="dark"] .kv-box{background:#111c33;border-color:#1e293b;}
+[data-theme="dark"] .kv-box .k{color:#64748b;}
+[data-theme="dark"] .kv-box .v{color:#f1f5f9;}
+[data-theme="dark"] .kv-box .v.highlight{color:#60a5fa;}
+[data-theme="dark"] .kv-box .v.salary{color:#6ee7b7;}
+
+/* Empty state */
+[data-theme="dark"] .empty-state{background:#111c33;border-color:#334155;color:#94a3b8;}
+[data-theme="dark"] .empty-state i{color:#334155;}
+[data-theme="dark"] .empty-state h3{color:#e2e8f0;}
+[data-theme="dark"] .empty-state p{color:#94a3b8;}
+
+/* Skeleton */
+[data-theme="dark"] .skeleton{background:linear-gradient(90deg,#111c33 25%,#1e293b 50%,#111c33 75%);background-size:200% 100%;}
+[data-theme="dark"] .skel-card{background:#111c33;border-color:#1e293b;}
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:1024px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){
+.sidebar{transform:translateX(-100%)}
+.sidebar.open{transform:translateX(0)}
+.main-content{margin-left:0}
+.menu-toggle{display:block}
+.header{padding:12px 18px;flex-wrap:wrap;gap:8px}
+.page-title h1{font-size:17px}
+.header-right .date{display:none}
+.container{padding:16px}
+.welcome{padding:20px;flex-direction:column;align-items:flex-start}
+.welcome h2{font-size:19px}
+.stats-row{grid-template-columns:1fr 1fr;gap:12px}
+.cand-grid{grid-template-columns:1fr}
+.kv-grid{grid-template-columns:1fr}
+.bulk-bar{width:94vw;padding:12px;gap:10px;flex-wrap:wrap;justify-content:center}
+.drawer{width:100vw}
+}
+@media(max-width:480px){
+.stats-row{grid-template-columns:1fr}
+.header-right .profile-btn .name{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== SIDEBAR ========== -->
+<nav class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>Talent Bridge</h2>
+            <p>Employer Portal</p>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">E</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Employer</div>
+            <div class="company" id="sidebarCompany">Company Name</div>
+            <div class="role">Employer · Admin</div>
+        </div>
+    </div>
+
+    <div class="menu">
+        <div class="menu-label">Main Menu</div>
+        <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees <span class="badge" id="pendingBadge" style="display:none;">0</span></a>
+        <a href="employement-details.html"><i class="fas fa-briefcase"></i> Employment Details</a>
+        <a href="job-requirements.html"><i class="fas fa-clipboard-list"></i> Job Requirements <span class="badge new">NEW</span></a>
+        <a href="employer-feedback-form.html"><i class="fas fa-star"></i> Submit Feedback</a>
+        <a href="feedback&skillsgap.html"><i class="fas fa-chart-bar"></i> Feedback & Skill Gap</a>
+
+        <div class="menu-label" style="margin-top:14px;">Smart Tools</div>
+        <a class="active" href="candidate-skill-alignment.html"><i class="fas fa-bullseye"></i> Skill Alignment <span class="badge new">NEW</span></a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
+</nav>
+
+<!-- ========== MAIN ========== -->
+<div class="main-content">
+
+<header class="header">
+<div class="header-left">
+<button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+<div class="page-title">
+<h1><i class="fas fa-bullseye"></i> Candidate Skill Alignment</h1>
+<p>Match candidates to your jobs with weighted skill scoring</p>
+</div>
+</div>
+<div class="header-right">
+<button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+<span class="date" id="dateDisplay"></span>
+<div class="notif" onclick="showNotifications()">
+<i class="fas fa-bell"></i>
+<span class="badge" id="notifBadge">0</span>
+</div>
+<button class="profile-btn" onclick="toggleProfileMenu()">
+<div class="avatar" id="headerAvatar">E</div>
+<span class="name" id="headerName">Employer</span>
+<i class="fas fa-chevron-down"></i>
+</button>
+</div>
+</header>
+
+<div class="container">
+
+<!-- ========== WELCOME ========== -->
+<div class="welcome">
+<div class="welcome-content">
+<h2><i class="fas fa-bullseye"></i> Find the Best-Fit Candidates Faster</h2>
+<p>Our alignment engine scores every trainee against your job's required skills using weighted matching (Critical / Important / Nice-to-have) — so you interview only the best fits.</p>
+</div>
+<div class="welcome-stats">
+<div class="welcome-stat"><strong id="statCandidates">0</strong><span>Analyzed</span></div>
+<div class="welcome-stat"><strong id="statStrong">0</strong><span>80%+ Match</span></div>
+<div class="welcome-stat"><strong id="statAvg">0%</strong><span>Avg Match</span></div>
+</div>
+</div>
+
+<!-- ========== DEMO DATA NOTICE ========== -->
+<div class="demo-banner" id="demoBanner" style="display:none;">
+<i class="fas fa-flask"></i>
+<div>
+<strong>Demo mode active.</strong> Showing <span id="demoCount">0</span> sample trainees to help you explore the alignment engine. Your real Firestore data is untouched — sample cards are marked with a "SAMPLE" tag.
+</div>
+<button class="demo-close" onclick="hideDemoBanner()" title="Dismiss"><i class="fas fa-times"></i></button>
+</div>
+
+<!-- ========== STATS ========== -->
+<div class="stats-row">
+<div class="stat-box">
+<div class="stat-top">
+<div class="stat-icon blue"><i class="fas fa-users"></i></div>
+<span class="stat-trend up" id="trendTotal">—</span>
+</div>
+<div class="stat-number" id="statTotal">0</div>
+<div class="stat-label">Candidates Analyzed</div>
+</div>
+<div class="stat-box">
+<div class="stat-top">
+<div class="stat-icon green"><i class="fas fa-star"></i></div>
+<span class="stat-trend up" id="trendStrong">80%+</span>
+</div>
+<div class="stat-number" id="statStrongBox">0</div>
+<div class="stat-label">Strong Matches</div>
+</div>
+<div class="stat-box">
+<div class="stat-top">
+<div class="stat-icon orange"><i class="fas fa-chart-line"></i></div>
+<span class="stat-trend neutral">Avg</span>
+</div>
+<div class="stat-number" id="statAvgBox">0%</div>
+<div class="stat-label">Average Alignment</div>
+</div>
+<div class="stat-box">
+<div class="stat-top">
+<div class="stat-icon purple"><i class="fas fa-certificate"></i></div>
+<span class="stat-trend up">Certified</span>
+</div>
+<div class="stat-number" id="statCertified">0</div>
+<div class="stat-label">Certified Candidates</div>
+</div>
+</div>
+
+<!-- ========== TOOLBAR ========== -->
+<div class="toolbar">
+<div class="toolbar-row">
+<div class="tb-group">
+<label><i class="fas fa-briefcase"></i> Job Requirement</label>
+<select id="jobSelect" onchange="onJobChange()">
+<option value="">Select a job to match…</option>
+</select>
+</div>
+<div class="tb-group grow">
+<label><i class="fas fa-search"></i> Search Candidates</label>
+<input type="text" id="searchInput" placeholder="Name, email, skill, course…" oninput="applyFilters()">
+</div>
+<div class="tb-group">
+<label><i class="fas fa-sort"></i> Sort By</label>
+<select id="sortSelect" onchange="applyFilters()">
+<option value="score-desc">Highest Match</option>
+<option value="score-asc">Lowest Match</option>
+<option value="name-asc">Name (A–Z)</option>
+<option value="training-desc">Training Progress</option>
+<option value="cert-first">Certified First</option>
+</select>
+</div>
+<div class="tb-group">
+<label><i class="fas fa-graduation-cap"></i> Course</label>
+<select id="courseFilter" onchange="applyFilters()">
+<option value="all">All Courses</option>
+</select>
+</div>
+</div>
+
+<div class="chip-row">
+<span class="chip active" data-score="all" onclick="setScoreFilter(this)">All Scores</span>
+<span class="chip" data-score="80" onclick="setScoreFilter(this)">80%+</span>
+<span class="chip" data-score="60" onclick="setScoreFilter(this)">60%+</span>
+<span class="chip" data-score="40" onclick="setScoreFilter(this)">40%+</span>
+<span class="chip" data-score="certified" onclick="setScoreFilter(this)">✓ Certified</span>
+<span class="chip" data-score="verified" onclick="setScoreFilter(this)">★ Verified</span>
+<span class="chip" data-score="immediate" onclick="setScoreFilter(this)">⚡ Available Now</span>
+<span class="chip" data-score="real" onclick="setScoreFilter(this)">🌐 Real Only</span>
+<span class="chip" data-score="sample" onclick="setScoreFilter(this)">🧪 Sample Only</span>
+</div>
+</div>
+
+<!-- ========== COMPARE BAR ========== -->
+<div class="compare-bar" id="compareBar">
+<div class="compare-bar-info">
+<i class="fas fa-columns"></i>
+Comparing <strong id="compareCount">0</strong> candidates side by side
+</div>
+<div style="display:flex;gap:8px;">
+<button class="cb-btn ghost" onclick="clearCompare()"><i class="fas fa-times"></i> Clear</button>
+<button class="cb-btn primary" onclick="openCompareModal()"><i class="fas fa-arrow-right"></i> Compare Now</button>
+</div>
+</div>
+
+<!-- ========== CANDIDATE GRID ========== -->
+<div class="cand-grid" id="candidateGrid">
+<div class="skel-card"><div class="skeleton skel-line" style="width:60%"></div><div class="skeleton skel-line" style="width:40%"></div><div class="skeleton skel-line" style="width:80%"></div><div class="skeleton skel-line" style="width:100%;height:60px"></div></div>
+<div class="skel-card"><div class="skeleton skel-line" style="width:60%"></div><div class="skeleton skel-line" style="width:40%"></div><div class="skeleton skel-line" style="width:80%"></div><div class="skeleton skel-line" style="width:100%;height:60px"></div></div>
+<div class="skel-card"><div class="skeleton skel-line" style="width:60%"></div><div class="skeleton skel-line" style="width:40%"></div><div class="skeleton skel-line" style="width:80%"></div><div class="skeleton skel-line" style="width:100%;height:60px"></div></div>
+</div>
+
+</div>
+</div>
+
+<!-- ========== BULK BAR ========== -->
+<div class="bulk-bar" id="bulkBar">
+<div class="count"><span id="bulkCount">0</span> selected</div>
+<div class="divider"></div>
+<button class="bulk-btn amber" onclick="bulkAction('shortlist')"><i class="fas fa-star"></i> Shortlist</button>
+<button class="bulk-btn ghost" onclick="bulkAction('email')"><i class="fas fa-envelope"></i> Email</button>
+<button class="bulk-btn ghost" onclick="bulkAction('export')"><i class="fas fa-download"></i> Export</button>
+<button class="bulk-btn ghost" onclick="clearBulk()"><i class="fas fa-times"></i></button>
+</div>
+
+<!-- ========== DRAWER ========== -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+<div class="drawer-head">
+<button class="drawer-close" onclick="closeDrawer()"><i class="fas fa-times"></i></button>
+<div style="display:flex;gap:14px;align-items:center;">
+<div class="cc-avatar" id="drawerAvatar" style="width:64px;height:64px;border-radius:18px;font-size:26px;">A</div>
+<div>
+<h2 id="drawerName" style="font-size:20px;font-weight:800;">Candidate</h2>
+<p id="drawerRole" style="font-size:13px;opacity:.85;margin-top:2px;">Role</p>
+<p id="drawerLoc" style="font-size:11.5px;opacity:.7;margin-top:3px;"></p>
+</div>
+</div>
+</div>
+<div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- ========== TOAST STACK ========== -->
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* ============================================================
+   FIREBASE CONFIG
+   ============================================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let _firebaseUser = null;
+let _userProfile = null;
+let employerData = { contactPerson:'', orgName:'' };
+let allTrainees = [];
+let demoCandidates = [];
+let allJobs = [];
+let demoJobs = [];
+let activeJob = null;
+let scoredCandidates = [];
+let filteredCandidates = [];
+let compareSet = new Set();
+let bulkSet = new Set();
+let _activeScoreFilter = 'all';
+let _demoBannerDismissed = false;
+
+const DEFAULT_WEIGHTS = { critical: 3, important: 2, nice: 1 };
+const MIN_REAL_TRAINEES = 12;   // Pad demo only if fewer than this many real trainees
+const MIN_REAL_JOBS = 1;        // Pad demo jobs only if zero real jobs
+
+/* ============================================================
+   📦 DEMO TRAINEE DATA — 30 realistic sample trainees
+   Used ONLY when Firestore has fewer than MIN_REAL_TRAINEES.
+   Never written to Firestore.
+   ============================================================ */
+const DEMO_CANDIDATES_RAW = [
+  /* ── Engineering / Software (1–6) ─────────────────────── */
+  { name:'Aarav Sharma',     email:'aarav.sharma@example.com',      course:'Full Stack Development',   provider:'NSDC · Bengaluru',       location:'Bengaluru, KA',  skills:['javascript','react','node.js','mongodb','html','css','git','rest api','express','sql'],                                       trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:3,   empStatus:'Employed',        currentIncome:75000,  targetRole:'Full Stack Developer' },
+  { name:'Ananya Reddy',     email:'ananya.reddy@example.com',      course:'Software Development',     provider:'NSDC · Hyderabad',       location:'Hyderabad, TS',  skills:['javascript','python','java','git','sql','html','css','react','node.js','api','debugging','oop','data structures','algorithms'], trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'60 days',  experience:5,   empStatus:'Employed',        currentIncome:120000, targetRole:'Software Developer' },
+  { name:'Ishita Roy',       email:'ishita.roy@example.com',        course:'Full Stack Development',   provider:'Masai · Online',         location:'Bengaluru, KA',  skills:['javascript','typescript','react','node.js','mongodb','express','docker','rest api','git'],                                    trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:1.5, empStatus:'Looking for Job', currentIncome:0,      targetRole:'Full Stack Developer' },
+  { name:'Karthik Menon',    email:'karthik.menon@example.com',     course:'Backend Development',      provider:'Scaler · Online',        location:'Kochi, KL',       skills:['java','spring boot','sql','mysql','git','rest api','docker','microservices','hibernate'],                                     trainingProgress:95,  certificationStatus:'Certified', verified:true,  availability:'30 days',  experience:3,   empStatus:'Employed',        currentIncome:85000,  targetRole:'Backend Developer' },
+  { name:'Rohit Bansal',     email:'rohit.bansal@example.com',      course:'Software Testing',         provider:'QSpiders · Noida',       location:'Noida, UP',       skills:['selenium','java','testng','sql','manual testing','api testing','jira','git','automation'],                                    trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:2,   empStatus:'Employed',        currentIncome:48000,  targetRole:'QA Engineer' },
+  { name:'Aditya Joshi',     email:'aditya.joshi@example.com',      course:'DevOps Engineering',       provider:'Linux Foundation',       location:'Pune, MH',        skills:['jenkins','ansible','linux','terraform','bash','prometheus','docker','kubernetes','git','ci/cd'],                            trainingProgress:90,  certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:3.5, empStatus:'Employed',        currentIncome:85000,  targetRole:'DevOps Engineer' },
+
+  /* ── Data & AI (7–11) ──────────────────────────────────── */
+  { name:'Priya Nair',       email:'priya.nair@example.com',        course:'Data Analytics',           provider:'PMKVY · Kochi',          location:'Kochi, KL',       skills:['sql','excel','python','power bi','tableau','statistics','dashboards','reporting'],                                          trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'15 days',  experience:2,   empStatus:'Looking for Job', currentIncome:0,      targetRole:'Data Analyst' },
+  { name:'Arjun Kumar',      email:'arjun.kumar@example.com',       course:'Data Science',             provider:'IIT Madras · Online',    location:'Coimbatore, TN',  skills:['python','sql','statistics','pandas','machine learning','scikit-learn','numpy','jupyter','matplotlib'],                        trainingProgress:92,  certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:1,   empStatus:'Looking for Job', currentIncome:0,      targetRole:'Data Scientist' },
+  { name:'Sahil Khan',       email:'sahil.khan@example.com',        course:'Machine Learning',         provider:'Coursera · Online',      location:'Lucknow, UP',     skills:['python','pytorch','tensorflow','scikit-learn','numpy','neural networks','keras','mlops','docker','git'],                     trainingProgress:85,  certificationStatus:'Pending',   verified:false, availability:'30 days',  experience:2,   empStatus:'Looking for Job', currentIncome:0,      targetRole:'ML Engineer' },
+  { name:'Divya Krishnan',   email:'divya.k@example.com',           course:'Business Analytics',       provider:'IIM · Online',           location:'Chennai, TN',     skills:['excel','sql','power bi','tableau','requirements gathering','communication','jira','process mapping'],                          trainingProgress:98,  certificationStatus:'Certified', verified:true,  availability:'15 days',  experience:2,   empStatus:'Employed',        currentIncome:55000,  targetRole:'Business Analyst' },
+  { name:'Nikhil Pillai',    email:'nikhil.pillai@example.com',     course:'Data Engineering',         provider:'Cloudera · Online',      location:'Bengaluru, KA',   skills:['python','sql','spark','hadoop','kafka','airflow','aws','etl','databricks'],                                                    trainingProgress:88,  certificationStatus:'Pending',   verified:false, availability:'30 days',  experience:4,   empStatus:'Employed',        currentIncome:95000,  targetRole:'Data Engineer' },
+
+  /* ── Cloud & Cyber (12–14) ─────────────────────────────── */
+  { name:'Rahul Verma',      email:'rahul.verma@example.com',       course:'Cloud Computing',          provider:'AWS Academy · Pune',     location:'Pune, MH',        skills:['aws','docker','kubernetes','linux','terraform','bash','ci/cd','networking'],                                                  trainingProgress:85,  certificationStatus:'Pending',   verified:false, availability:'30 days',  experience:4,   empStatus:'Employed',        currentIncome:90000,  targetRole:'Cloud Engineer' },
+  { name:'Shreya Banerjee',  email:'shreya.b@example.com',          course:'Cyber Security',           provider:'EC-Council · Kolkata',   location:'Kolkata, WB',     skills:['networking','linux','wireshark','firewalls','siem','python','encryption','incident response','owasp'],                          trainingProgress:95,  certificationStatus:'Certified', verified:true,  availability:'30 days',  experience:3,   empStatus:'Employed',        currentIncome:65000,  targetRole:'Cybersecurity Analyst' },
+  { name:'Mohit Saxena',     email:'mohit.saxena@example.com',      course:'Cloud Computing',          provider:'Azure · Online',         location:'Gurgaon, HR',     skills:['azure','powershell','arm templates','networking','linux','docker','kubernetes','monitoring'],                                   trainingProgress:92,  certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:3,   empStatus:'Employed',        currentIncome:78000,  targetRole:'Cloud Engineer' },
+
+  /* ── Design & Marketing (15–18) ────────────────────────── */
+  { name:'Sneha Iyer',       email:'sneha.iyer@example.com',        course:'UI/UX Design',             provider:'DesignBoat · Chennai',   location:'Chennai, TN',     skills:['figma','adobe xd','wireframing','prototyping','user research','html','css','design system'],                                    trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:1.5, empStatus:'Freelance',       currentIncome:35000,  targetRole:'UI/UX Designer' },
+  { name:'Karan Mehta',      email:'karan.mehta@example.com',       course:'Digital Marketing',        provider:'Google · Delhi',         location:'Delhi, DL',       skills:['seo','sem','google analytics','social media','facebook ads','canva','content marketing','email marketing'],                    trainingProgress:70,  certificationStatus:'Pending',   verified:false, availability:'Immediate', experience:2.5, empStatus:'Looking for Job', currentIncome:30000,  targetRole:'Digital Marketing' },
+  { name:'Tanya Kapoor',     email:'tanya.kapoor@example.com',      course:'UI/UX Design',             provider:'Springboard · Online',   location:'Mumbai, MH',      skills:['figma','sketch','wireframing','prototyping','user research','usability testing','interaction design','html'],                  trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'15 days',  experience:2,   empStatus:'Employed',        currentIncome:52000,  targetRole:'UI/UX Designer' },
+  { name:'Pooja Agarwal',    email:'pooja.agarwal@example.com',     course:'Content Writing',          provider:'ContentVidhya · Online', location:'Jaipur, RJ',      skills:['content writing','seo','copywriting','editing','blogging','social media','wordpress','communication'],                          trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:2,   empStatus:'Freelance',       currentIncome:28000,  targetRole:'Content Writer' },
+
+  /* ── Mobile (19–20) ────────────────────────────────────── */
+  { name:'Neha Gupta',       email:'neha.gupta@example.com',        course:'Android Development',      provider:'NSDC · Noida',           location:'Noida, UP',       skills:['kotlin','java','android studio','xml','firebase','retrofit','mvvm','git','gradle'],                                            trainingProgress:88,  certificationStatus:'Pending',   verified:false, availability:'15 days',  experience:2,   empStatus:'Looking for Job', currentIncome:45000,  targetRole:'Android Developer' },
+  { name:'Sameer Joshi',     email:'sameer.joshi@example.com',      course:'iOS Development',          provider:'App Brewery · Online',   location:'Pune, MH',        skills:['swift','swiftui','xcode','ios','firebase','rest api','git','coredata'],                                                        trainingProgress:90,  certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:2.5, empStatus:'Employed',        currentIncome:68000,  targetRole:'iOS Developer' },
+
+  /* ── Non-IT trades (21–30) ─────────────────────────────── */
+  { name:'Vikram Singh',     email:'vikram.singh@example.com',      course:'Electrical Engineering',   provider:'Skill India · Jaipur',   location:'Jaipur, RJ',      skills:['plc','scada','matlab','power systems','circuit design','autocad electrical','relays','instrumentation'],                        trainingProgress:95,  certificationStatus:'Certified', verified:true,  availability:'30 days',  experience:3,   empStatus:'Employed',        currentIncome:40000,  targetRole:'Electrical Engineer' },
+  { name:'Meera Patel',      email:'meera.patel@example.com',       course:'Accounting & Finance',     provider:'Tally Academy · Ahmedabad',location:'Ahmedabad, GJ', skills:['tally','excel','gst','accounting','taxation','bookkeeping','financial reporting','auditing'],                                trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:2,   empStatus:'Employed',        currentIncome:32000,  targetRole:'Accountant' },
+  { name:'Ravi Deshmukh',    email:'ravi.deshmukh@example.com',     course:'Mechanical CAD',           provider:'CADD Centre · Nagpur',   location:'Nagpur, MH',      skills:['solidworks','autocad','catia','3d modeling','gd&t','drafting','ansys','manufacturing'],                                          trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:4,   empStatus:'Employed',        currentIncome:48000,  targetRole:'Mechanical CAD Designer' },
+  { name:'Rohan Malhotra',   email:'rohan.m@example.com',           course:'Civil Engineering',        provider:'NSDC · Chandigarh',      location:'Chandigarh, CH',  skills:['autocad','construction management','estimation','surveying','staad pro','revit','project planning','quality control'],          trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:3,   empStatus:'Employed',        currentIncome:42000,  targetRole:'Civil Site Engineer' },
+  { name:'Tanvi Shah',       email:'tanvi.shah@example.com',        course:'Customer Support',         provider:'NSDC · Surat',           location:'Surat, GJ',       skills:['communication','crm','troubleshooting','email support','chat support','active listening','zendesk','time management'],          trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:1,   empStatus:'Employed',        currentIncome:22000,  targetRole:'Customer Support' },
+  { name:'Deepak Yadav',     email:'deepak.yadav@example.com',      course:'Sales & Marketing',        provider:'NSDC · Lucknow',         location:'Lucknow, UP',     skills:['communication','negotiation','crm','excel','active listening','sales','customer handling','reporting'],                          trainingProgress:95,  certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:2,   empStatus:'Employed',        currentIncome:30000,  targetRole:'Sales Executive' },
+  { name:'Lakshmi Rao',      email:'lakshmi.rao@example.com',       course:'Human Resources',          provider:'NSDC · Bengaluru',       location:'Bengaluru, KA',   skills:['recruitment','communication','excel','hr operations','onboarding','payroll','hrms','reporting'],                                trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'15 days',  experience:2,   empStatus:'Employed',        currentIncome:38000,  targetRole:'HR Executive' },
+  { name:'Amit Trivedi',     email:'amit.trivedi@example.com',      course:'Automobile Technician',    provider:'Skill India · Pune',     location:'Pune, MH',        skills:['automobile repair','engine diagnostics','electrical systems','hydraulics','tools handling','safety protocols','quality check'], trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'Immediate', experience:3,   empStatus:'Employed',        currentIncome:26000,  targetRole:'Automobile Technician' },
+  { name:'Ritu Chauhan',     email:'ritu.chauhan@example.com',      course:'Hotel Management',         provider:'IHM · Pusa',             location:'Delhi, DL',       skills:['hospitality','customer service','front office','food & beverage','communication','inventory','pos systems'],                     trainingProgress:100, certificationStatus:'Certified', verified:true,  availability:'15 days',  experience:1.5, empStatus:'Employed',        currentIncome:24000,  targetRole:'Hospitality Executive' },
+  { name:'Suresh Nair',      email:'suresh.nair@example.com',       course:'Logistics & Supply Chain', provider:'NSDC · Cochin',          location:'Kochi, KL',       skills:['logistics','inventory','warehouse management','excel','erp','dispatch','vendor management','reporting'],                          trainingProgress:90,  certificationStatus:'Certified', verified:true,  availability:'30 days',  experience:3,   empStatus:'Employed',        currentIncome:36000,  targetRole:'Logistics Executive' }
+];
+
+const DEMO_JOBS_RAW = [
+  { title:'Junior Full Stack Developer',  department:'Engineering',      type:'Full Time', expMin:0, expMax:2, salaryMin:28000, salaryMax:55000, locations:['Bengaluru, KA','Remote'],   skills:[{name:'javascript',weight:'critical'},{name:'react',weight:'critical'},{name:'node.js',weight:'important'},{name:'sql',weight:'important'},{name:'git',weight:'nice'},{name:'rest api',weight:'important'}], status:'active' },
+  { title:'Data Analyst',                 department:'Data & Analytics', type:'Full Time', expMin:0, expMax:2, salaryMin:25000, salaryMax:45000, locations:['Kochi, KL','Chennai, TN'],    skills:[{name:'sql',weight:'critical'},{name:'excel',weight:'critical'},{name:'python',weight:'important'},{name:'power bi',weight:'important'},{name:'tableau',weight:'nice'},{name:'statistics',weight:'important'}], status:'active' },
+  { title:'Cloud Engineer',               department:'Engineering',      type:'Full Time', expMin:2, expMax:5, salaryMin:55000, salaryMax:100000,locations:['Pune, MH','Hyderabad, TS'],   skills:[{name:'aws',weight:'critical'},{name:'docker',weight:'critical'},{name:'kubernetes',weight:'important'},{name:'terraform',weight:'important'},{name:'linux',weight:'nice'},{name:'bash',weight:'nice'}], status:'active' },
+  { title:'UI/UX Designer',               department:'Design',           type:'Full Time', expMin:0, expMax:3, salaryMin:30000, salaryMax:60000, locations:['Chennai, TN','Remote'],       skills:[{name:'figma',weight:'critical'},{name:'wireframing',weight:'important'},{name:'prototyping',weight:'important'},{name:'user research',weight:'critical'},{name:'html',weight:'nice'},{name:'css',weight:'nice'}], status:'active' },
+  { title:'Digital Marketing Executive',  department:'Marketing',        type:'Full Time', expMin:0, expMax:2, salaryMin:22000, salaryMax:40000, locations:['Delhi, DL','Gurgaon'],        skills:[{name:'seo',weight:'critical'},{name:'google analytics',weight:'critical'},{name:'social media',weight:'important'},{name:'content marketing',weight:'important'},{name:'facebook ads',weight:'nice'},{name:'canva',weight:'nice'}], status:'active' },
+  { title:'Junior Data Scientist',        department:'Data & Analytics', type:'Full Time', expMin:0, expMax:3, salaryMin:45000, salaryMax:90000, locations:['Bengaluru, KA','Remote'],     skills:[{name:'python',weight:'critical'},{name:'machine learning',weight:'critical'},{name:'sql',weight:'important'},{name:'pandas',weight:'important'},{name:'scikit-learn',weight:'important'},{name:'statistics',weight:'nice'}], status:'active' },
+  { title:'Customer Support Executive',   department:'Customer Support', type:'Full Time', expMin:0, expMax:2, salaryMin:18000, salaryMax:32000, locations:['Surat, GJ','Remote'],         skills:[{name:'communication',weight:'critical'},{name:'crm',weight:'critical'},{name:'troubleshooting',weight:'important'},{name:'email support',weight:'important'},{name:'active listening',weight:'nice'}], status:'active' },
+  { title:'Digital Marketing Executive',  department:'Marketing',        type:'Full Time', expMin:0, expMax:2, salaryMin:22000, salaryMax:40000, locations:['Delhi, DL','Gurgaon'],        skills:[{name:'seo',weight:'critical'},{name:'google analytics',weight:'critical'},{name:'social media',weight:'important'},{name:'content marketing',weight:'important'},{name:'facebook ads',weight:'nice'}], status:'active' }
+];
+
+/* ============================================================
+   AUTH GUARD
+   ============================================================ */
+function requireAuth(){
+    return new Promise((resolve)=>{
+        let settled=false;
+        const safety=setTimeout(()=>{if(!settled){settled=true;resolve(auth.currentUser||null);}},4000);
+        const unsub=auth.onAuthStateChanged(async (fbUser)=>{
+            if(settled)return;
+            clearTimeout(safety);
+            try{unsub();}catch(e){}
+            settled=true;
+            if(!fbUser){
+                const stored=localStorage.getItem('isLoggedIn')==='true';
+                const role=localStorage.getItem('userRole');
+                if(stored&&role==='employer'){
+                    setTimeout(()=>{
+                        if(auth.currentUser){_firebaseUser=auth.currentUser;resolve(auth.currentUser);}
+                        else{window.location.replace('../auth/login.html?role=employer');resolve(null);}
+                    },700);
+                } else {
+                    window.location.replace('../auth/login.html?role=employer');
+                    resolve(null);
+                }
+                return;
+            }
+            try{
+                const snap=await db.collection('users').doc(fbUser.uid).get();
+                if(!snap.exists){window.location.replace('../auth/login.html?role=employer');resolve(null);return;}
+                const profile=snap.data();
+                if(profile.role!=='employer'){await auth.signOut();window.location.replace('../auth/login.html?role=employer');resolve(null);return;}
+                _firebaseUser=fbUser; _userProfile=profile; resolve(fbUser);
+            }catch(e){_firebaseUser=fbUser; resolve(fbUser);}
+        });
+    });
+}
+
+/* ============================================================
+   LOAD EMPLOYER
+   ============================================================ */
+async function loadEmployer(){
+    if(!_firebaseUser) return;
+    let data=null;
+    try{const s=await db.collection('employers').doc(_firebaseUser.uid).get(); if(s.exists) data=s.data();}catch(e){}
+    if(!data&&_userProfile) data=_userProfile;
+    if(!data) data={};
+    employerData={
+        contactPerson: data.contactPerson||data.fullName||_firebaseUser.displayName||'Employer',
+        orgName: data.orgName||'Organization',
+        email: data.email||_firebaseUser.email||''
+    };
+}
+
+/* ============================================================
+   LOAD JOBS (real only)
+   ============================================================ */
+async function loadJobs(){
+    const realJobs=[];
+    if(_firebaseUser){
+        try{
+            const snap=await db.collection('jobs').where('employerUid','==',_firebaseUser.uid).get();
+            snap.forEach(d=>realJobs.push({id:d.id,...d.data(),_isDemo:false}));
+            realJobs.sort((a,b)=>{
+                const ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+                const tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+                return tb-ta;
+            });
+        }catch(e){console.warn('loadJobs:',e);}
+    }
+    return realJobs;
+}
+
+/* ============================================================
+   LOAD TRAINEES (real only)
+   ============================================================ */
+async function loadTrainees(){
+    const realTrainees=[];
+    try{
+        const snap=await db.collection('trainees').get();
+        snap.forEach(d=>{
+            const t=d.data();
+            const skills=new Set();
+            const addStr=(str)=>{if(!str)return;String(str).toLowerCase().split(/[,;|]/).forEach(s=>{const x=s.trim();if(x)skills.add(x);});};
+            addStr(t.skillTrade);
+            if(Array.isArray(t.skills)) t.skills.forEach(s=>{const x=String(s).toLowerCase().trim();if(x)skills.add(x);});
+            if(t.employment){
+                addStr(t.employment.currentSkills);
+                addStr(t.employment.skillsUsed);
+                addStr(t.employment.newSkills);
+            }
+            const emp=t.employment||{};
+            realTrainees.push({
+                uid:d.id,
+                id:t.traineeCode||('TRN'+(t.uid?t.uid.substring(0,6):d.id.substring(0,6))),
+                name:t.fullName||'Trainee',
+                email:t.email||'',
+                mobile:t.mobile||'',
+                course:t.skillTrade||t.qualification||'',
+                provider:t.trainingProvider||'',
+                location:(t.district?t.district+', ':'')+(t.state||''),
+                skills:[...skills],
+                avatar:(t.fullName||'T').charAt(0).toUpperCase(),
+                trainingProgress:Number(t.trainingProgress)||0,
+                certificationStatus:t.certificationStatus||'Pending',
+                certified:t.certificationStatus==='Certified',
+                verified:(t.verificationStatus==='verified')||!!emp.verified,
+                empStatus:emp.status||'Not Updated',
+                availability:emp.availability||'Immediate',
+                experience:Number(emp.experience||t.experience||0),
+                currentIncome:Number(emp.currentIncome||0),
+                targetRole:t.preferredRole||'',
+                registeredAt:t.registeredAt||'',
+                _isDemo:false
+            });
+        });
+    }catch(e){console.warn('loadTrainees:',e);}
+    return realTrainees;
+}
+
+/* Convert demo raw → structured */
+function buildDemoCandidates(){
+    return DEMO_CANDIDATES_RAW.map((c,i)=>({
+        uid:'demo-'+i,
+        id:'DEMO'+String(i+1).padStart(3,'0'),
+        name:c.name,
+        email:c.email,
+        mobile:'+91 9xxxxxxxxx',
+        course:c.course,
+        provider:c.provider,
+        location:c.location,
+        skills:c.skills,
+        avatar:c.name.charAt(0).toUpperCase(),
+        trainingProgress:c.trainingProgress,
+        certificationStatus:c.certificationStatus,
+        certified:c.certificationStatus==='Certified',
+        verified:c.verified,
+        empStatus:c.empStatus,
+        availability:c.availability,
+        experience:c.experience,
+        currentIncome:c.currentIncome,
+        targetRole:c.targetRole,
+        registeredAt:'',
+        _isDemo:true
+    }));
+}
+
+function buildDemoJobs(){
+    return DEMO_JOBS_RAW.map((j,i)=>({
+        id:'demo-job-'+i,
+        title:j.title,
+        department:j.department,
+        type:j.type,
+        expMin:j.expMin,
+        expMax:j.expMax,
+        salaryMin:j.salaryMin,
+        salaryMax:j.salaryMax,
+        locations:j.locations,
+        skills:j.skills,
+        status:j.status,
+        employerUid:'demo',
+        _isDemo:true
+    }));
+}
+
+/* ============================================================
+   ✅ CORE ALIGNMENT ENGINE
+   ============================================================ */
+function matchSkill(candidateSkill, requiredSkill){
+    const c=candidateSkill.toLowerCase().trim();
+    const r=requiredSkill.toLowerCase().trim();
+    if(c===r) return 1;
+    if(c.includes(r)||r.includes(c)) return 0.6;
+    return 0;
+}
+
+function computeAlignment(candidate, job){
+    const required = (job.skills&&Array.isArray(job.skills)&&job.skills.length>0)
+        ? job.skills
+        : (job.requiredSkills||[]).map(s=>({name:s,weight:'important'}));
+
+    const matched=[], partial=[], missing=[];
+    let weightedScore=0, totalWeight=0;
+
+    required.forEach(req=>{
+        const reqName = typeof req==='string'?req:(req.name||'');
+        const reqWeight = typeof req==='string'?'important':(req.weight||'important');
+        const w = DEFAULT_WEIGHTS[reqWeight] || 2;
+        totalWeight += w;
+
+        let bestMatch=0;
+        candidate.skills.forEach(cs=>{
+            const m = matchSkill(cs, reqName);
+            if(m>bestMatch) bestMatch=m;
+        });
+
+        if(bestMatch===1) matched.push(reqName);
+        else if(bestMatch>0) partial.push(reqName);
+        else missing.push(reqName);
+
+        weightedScore += bestMatch * w;
+    });
+
+    const skillScore = totalWeight>0 ? Math.round((weightedScore/totalWeight)*100) : 0;
+    const trainingScore = Math.min(candidate.trainingProgress,100);
+    const certScore = candidate.certified ? 100 : 40;
+    const expScore = Math.min(Math.round((candidate.experience/5)*100),100);
+    const availScore = candidate.availability==='Immediate'?100:candidate.availability==='15 days'?80:60;
+
+    const overall = Math.round(
+        skillScore*0.55 + trainingScore*0.15 + certScore*0.10 + expScore*0.10 + availScore*0.10
+    );
+
+    return {
+        overall, skillScore, trainingScore, certScore, expScore, availScore,
+        matched, partial, missing,
+        required: required.map(r=>typeof r==='string'?r:(r.name||''))
+    };
+}
+
+function computeAllScores(){
+    if(!activeJob){
+        scoredCandidates = allTrainees.map(c=>({...c,alignment:{
+            overall:0,skillScore:0,trainingScore:Math.min(c.trainingProgress,100),
+            certScore:c.certified?100:40,expScore:0,availScore:0,
+            matched:[],partial:[],missing:[],required:[]
+        }}));
+        return;
+    }
+    scoredCandidates = allTrainees.map(c=>({...c,alignment:computeAlignment(c,activeJob)}));
+}
+
+/* ============================================================
+   MERGE real + demo  —  real data is NEVER altered
+   ============================================================ */
+function mergeDataWithDemo(){
+    const realTrainees = allTrainees.filter(t=>!t._isDemo);
+    const realJobs = allJobs.filter(j=>!j._isDemo);
+
+    demoCandidates = buildDemoCandidates();
+    demoJobs = buildDemoJobs();
+
+    // Always keep ALL real trainees first
+    let mergedTrainees = [...realTrainees];
+    let demoAdded = 0;
+    if(mergedTrainees.length < MIN_REAL_TRAINEES){
+        const need = MIN_REAL_TRAINEES - mergedTrainees.length;
+        // Avoid name collisions between real & demo
+        const realNames = new Set(realTrainees.map(t=>t.name.toLowerCase()));
+        const fresh = demoCandidates.filter(d=>!realNames.has(d.name.toLowerCase()));
+        mergedTrainees = mergedTrainees.concat(fresh.slice(0,need));
+        demoAdded = Math.min(need, fresh.length);
+    }
+    allTrainees = mergedTrainees;
+
+    // Jobs — only pad if zero real jobs
+    let mergedJobs = [...realJobs];
+    if(mergedJobs.length < MIN_REAL_JOBS){
+        mergedJobs = mergedJobs.concat(demoJobs);
+    }
+    allJobs = mergedJobs;
+
+    window._demoCount = demoAdded;
+    return demoAdded;
+}
+
+/* ============================================================
+   RENDER: STATS
+   ============================================================ */
+function renderStats(){
+    const total = scoredCandidates.length;
+    const strong = scoredCandidates.filter(c=>c.alignment.overall>=80).length;
+    const avg = total ? Math.round(scoredCandidates.reduce((a,b)=>a+b.alignment.overall,0)/total) : 0;
+    const certified = scoredCandidates.filter(c=>c.certified).length;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statStrongBox').textContent = strong;
+    document.getElementById('statAvgBox').textContent = avg+'%';
+    document.getElementById('statCertified').textContent = certified;
+
+    document.getElementById('statCandidates').textContent = total;
+    document.getElementById('statStrong').textContent = strong;
+    document.getElementById('statAvg').textContent = avg+'%';
+
+    document.getElementById('trendTotal').textContent = total>0?total+' total':'—';
+    document.getElementById('trendStrong').textContent = strong>0?Math.round((strong/total)*100)+'%':'—';
+}
+
+/* ============================================================
+   RENDER: CANDIDATE GRID
+   ============================================================ */
+function renderCandidates(){
+    const grid = document.getElementById('candidateGrid');
+
+    if(filteredCandidates.length===0){
+        grid.innerHTML=`
+            <div class="empty-state">
+                <i class="fas fa-user-slash"></i>
+                <h3>No Candidates Match Your Filters</h3>
+                <p>Try adjusting the score threshold, search terms, or course filter. Click "All Scores" to reset.</p>
+            </div>`;
+        return;
+    }
+
+    grid.innerHTML = filteredCandidates.map(c=>{
+        const a = c.alignment;
+        const ringColor = a.overall>=80?'#10b981':a.overall>=60?'#2563eb':a.overall>=40?'#f59e0b':'#ef4444';
+        const circumference = 2*Math.PI*20;
+        const ringOffset = circumference - (a.overall/100)*circumference;
+        const isSelected = bulkSet.has(c.uid);
+        const isComparing = compareSet.has(c.uid);
+        const isDemo = c._isDemo;
+
+        const topMatched = a.matched.slice(0,3);
+        const topMissing = a.missing.slice(0,2);
+        const partialList = a.partial.slice(0,1);
+
+        return `
+        <div class="cand-card ${isSelected?'selected':''} ${isComparing?'comparing':''} ${isDemo?'demo-card':''}" onclick="openDrawer('${escapeJs(c.uid)}')">
+            <div class="cc-head">
+                <div class="cc-avatar ${isDemo?'demo-avatar':''}">
+                    ${escapeHtml(c.avatar)}
+                    <span class="online-dot"></span>
+                </div>
+                <div class="cc-info">
+                    <div class="cc-name">
+                        ${escapeHtml(c.name)}
+                        ${c.verified&&!isDemo?'<i class="fas fa-circle-check verified" title="Verified"></i>':''}
+                    </div>
+                    <div class="cc-role">${escapeHtml(c.course||c.targetRole||'Trainee')} · ${c.experience} yrs</div>
+                    <div class="cc-meta">
+                        ${c.location?`<i class="fas fa-map-marker-alt"></i> ${escapeHtml(c.location)}`:''}
+                        ${c.certified?' · <i class="fas fa-certificate" style="color:#d97706"></i> Certified':''}
+                    </div>
+                </div>
+                <button class="cc-menu" onclick="event.stopPropagation();showToast('Options for ${escapeJs(c.name)}','info')">
+                    <i class="fas fa-ellipsis-vertical"></i>
+                </button>
+            </div>
+
+            <div class="cc-align">
+                <div class="cc-align-left">
+                    <div class="cc-ring">
+                        <svg viewBox="0 0 50 50">
+                            <circle class="bg" cx="25" cy="25" r="20"></circle>
+                            <circle class="fg" cx="25" cy="25" r="20" stroke="${ringColor}"
+                                stroke-dasharray="${circumference}" stroke-dashoffset="${ringOffset}"></circle>
+                        </svg>
+                        <div class="num">${a.overall}%</div>
+                    </div>
+                    <div>
+                        <div class="cc-align-label">Alignment Score</div>
+                        <div class="cc-align-value">${a.overall>=80?'Excellent Match':a.overall>=60?'Good Match':a.overall>=40?'Partial Match':'Low Match'}</div>
+                    </div>
+                </div>
+                <div class="cc-align-right">
+                    <div class="cc-align-label">Skills</div>
+                    <div class="cc-align-value">${a.matched.length}/${a.required.length}</div>
+                </div>
+            </div>
+
+            <div class="cc-skills">
+                ${topMatched.map(s=>`<span class="sk-tag sk-match"><span class="dot"></span>${escapeHtml(s)}</span>`).join('')}
+                ${partialList.map(s=>`<span class="sk-tag sk-partial"><span class="dot"></span>${escapeHtml(s)}</span>`).join('')}
+                ${topMissing.map(s=>`<span class="sk-tag sk-missing"><span class="dot"></span>${escapeHtml(s)}</span>`).join('')}
+                ${(a.matched.length+a.missing.length+a.partial.length)>5
+                    ?`<span class="sk-tag sk-neutral">+${a.matched.length+a.missing.length+a.partial.length-5}</span>`:''}
+            </div>
+
+            <div class="cc-bars">
+                <div class="cc-bar-row">
+                    <div class="cc-bar-label">Skills</div>
+                    <div class="cc-bar-track"><div class="cc-bar-fill skills" style="width:${a.skillScore}%"></div></div>
+                    <div class="cc-bar-pct">${a.skillScore}%</div>
+                </div>
+                <div class="cc-bar-row">
+                    <div class="cc-bar-label">Training</div>
+                    <div class="cc-bar-track"><div class="cc-bar-fill training" style="width:${a.trainingScore}%"></div></div>
+                    <div class="cc-bar-pct">${a.trainingScore}%</div>
+                </div>
+                <div class="cc-bar-row">
+                    <div class="cc-bar-label">Experience</div>
+                    <div class="cc-bar-track"><div class="cc-bar-fill exp" style="width:${a.expScore}%"></div></div>
+                    <div class="cc-bar-pct">${a.expScore}%</div>
+                </div>
+            </div>
+
+            <div class="cc-footer" onclick="event.stopPropagation()">
+                <button class="cc-btn primary" onclick="openDrawer('${escapeJs(c.uid)}')">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                <button class="cc-btn ghost icon-only ${isComparing?'on':''}" title="Compare"
+                    onclick="toggleCompare('${escapeJs(c.uid)}')">
+                    <i class="fas fa-columns"></i>
+                </button>
+                <button class="cc-btn ghost icon-only ${isSelected?'on-green':''}" title="Select"
+                    onclick="toggleBulk('${escapeJs(c.uid)}')">
+                    <i class="fas fa-check"></i>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+function setScoreFilter(el){
+    document.querySelectorAll('.chip[data-score]').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    _activeScoreFilter = el.dataset.score;
+    applyFilters();
+}
+
+function applyFilters(){
+    const q = (document.getElementById('searchInput')?.value||'').toLowerCase().trim();
+    const sort = document.getElementById('sortSelect')?.value||'score-desc';
+    const courseFilter = document.getElementById('courseFilter')?.value||'all';
+
+    filteredCandidates = scoredCandidates.filter(c=>{
+        if(_activeScoreFilter==='all'){}
+        else if(_activeScoreFilter==='certified'){ if(!c.certified) return false; }
+        else if(_activeScoreFilter==='verified'){ if(!c.verified) return false; }
+        else if(_activeScoreFilter==='immediate'){ if(c.availability!=='Immediate') return false; }
+        else if(_activeScoreFilter==='real'){ if(c._isDemo) return false; }
+        else if(_activeScoreFilter==='sample'){ if(!c._isDemo) return false; }
+        else {
+            const min = parseInt(_activeScoreFilter);
+            if(c.alignment.overall < min) return false;
+        }
+
+        if(courseFilter!=='all' && c.course!==courseFilter) return false;
+
+        if(!q) return true;
+        const hay = `${c.name} ${c.email} ${c.course} ${c.skills.join(' ')} ${c.location}`.toLowerCase();
+        return hay.includes(q);
+    });
+
+    filteredCandidates.sort((a,b)=>{
+        switch(sort){
+            case 'score-asc': return a.alignment.overall - b.alignment.overall;
+            case 'name-asc': return a.name.localeCompare(b.name);
+            case 'training-desc': return b.trainingProgress - a.trainingProgress;
+            case 'cert-first': return (b.certified?1:0)-(a.certified?1:0);
+            default: return b.alignment.overall - a.alignment.overall;
+        }
+    });
+
+    renderCandidates();
+}
+
+/* ============================================================
+   COMPARE
+   ============================================================ */
+function toggleCompare(uid){
+    if(compareSet.has(uid)) compareSet.delete(uid);
+    else {
+        if(compareSet.size>=3){ showToast('You can compare up to 3 candidates','error'); return; }
+        compareSet.add(uid);
+    }
+    updateCompareBar();
+    renderCandidates();
+}
+function clearCompare(){
+    compareSet.clear();
+    updateCompareBar();
+    renderCandidates();
+}
+function updateCompareBar(){
+    const bar = document.getElementById('compareBar');
+    document.getElementById('compareCount').textContent = compareSet.size;
+    bar.classList.toggle('active', compareSet.size>0);
+}
+function openCompareModal(){
+    if(compareSet.size<2){ showToast('Select at least 2 candidates to compare','error'); return; }
+    const names = [...compareSet].map(uid=>{
+        const c = scoredCandidates.find(x=>x.uid===uid);
+        return c?`${c.name} (${c.alignment.overall}%)`:'?';
+    });
+    showToast(`Comparing: ${names.join(' vs ')}`, 'info');
+}
+
+/* ============================================================
+   BULK ACTIONS
+   ============================================================ */
+function toggleBulk(uid){
+    if(bulkSet.has(uid)) bulkSet.delete(uid);
+    else bulkSet.add(uid);
+    updateBulkBar();
+    renderCandidates();
+}
+function clearBulk(){
+    bulkSet.clear();
+    updateBulkBar();
+    renderCandidates();
+}
+function updateBulkBar(){
+    const bar = document.getElementById('bulkBar');
+    document.getElementById('bulkCount').textContent = bulkSet.size;
+    bar.classList.toggle('show', bulkSet.size>0);
+}
+async function bulkAction(type){
+    const n = bulkSet.size;
+    if(n===0) return;
+    const labels = { shortlist:'Shortlisted', email:'Email drafted for', export:'Exported' };
+    if(type==='shortlist'){
+        showToast(`✅ ${labels[type]} ${n} candidate${n>1?'s':''}`,'success');
+        clearBulk();
+    } else if(type==='export'){
+        exportCSV();
+        showToast(`📥 ${labels[type]} ${n} candidate${n>1?'s':''}`,'success');
+    } else {
+        showToast(`📧 ${labels[type]} ${n} candidate${n>1?'s':''}`,'info');
+    }
+}
+
+/* ============================================================
+   EXPORT CSV
+   ============================================================ */
+function exportCSV(){
+    const list = bulkSet.size>0
+        ? scoredCandidates.filter(c=>bulkSet.has(c.uid))
+        : filteredCandidates;
+    if(list.length===0){ showToast('Nothing to export','error'); return; }
+
+    let csv = 'ID,Name,Email,Course,Provider,Location,Alignment%,Skills%,Training%,Certified,Verified,Availability,Source,Matched Skills,Missing Skills\n';
+    list.forEach(c=>{
+        csv += `"${c.id}","${c.name}","${c.email}","${c.course}","${c.provider}","${c.location}",${c.alignment.overall},${c.alignment.skillScore},${c.trainingProgress},${c.certified?'Yes':'No'},${c.verified?'Yes':'No'},"${c.availability}","${c._isDemo?'Sample':'Real'}","${c.alignment.matched.join('; ')}","${c.alignment.missing.join('; ')}"\n`;
+    });
+    const blob = new Blob([csv],{type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`candidate-alignment-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   DRAWER
+   ============================================================ */
+function openDrawer(uid){
+    const c = scoredCandidates.find(x=>x.uid===uid);
+    if(!c) return;
+    const a = c.alignment;
+    const isDemo = c._isDemo;
+
+    document.getElementById('drawerAvatar').textContent = c.avatar;
+    document.getElementById('drawerAvatar').className = 'cc-avatar' + (isDemo?' demo-avatar':'');
+    document.getElementById('drawerName').innerHTML = `${escapeHtml(c.name)}${isDemo?' <span style="font-size:9px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:8px;letter-spacing:.5px;vertical-align:middle;">SAMPLE</span>':''}`;
+    document.getElementById('drawerRole').textContent = `${c.course||'Trainee'} · ${c.experience} yrs exp`;
+    document.getElementById('drawerLoc').innerHTML = c.location?`<i class="fas fa-map-marker-alt"></i> ${escapeHtml(c.location)}`:'';
+
+    document.getElementById('drawerBody').innerHTML = `
+        <div class="drawer-sec">
+            <h4><i class="fas fa-chart-pie"></i> Alignment Breakdown</h4>
+            <div class="kv-grid">
+                <div class="kv-box"><div class="k">Overall</div><div class="v highlight">${a.overall}%</div></div>
+                <div class="kv-box"><div class="k">Skill Match</div><div class="v">${a.skillScore}%</div></div>
+                <div class="kv-box"><div class="k">Training</div><div class="v">${a.trainingScore}%</div></div>
+                <div class="kv-box"><div class="k">Experience</div><div class="v">${a.expScore}%</div></div>
+            </div>
+        </div>
+
+        <div class="drawer-sec">
+            <h4><i class="fas fa-check-circle"></i> Matched Skills (${a.matched.length})</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                ${a.matched.length?a.matched.map(s=>`<span class="sk-tag sk-match"><span class="dot"></span>${escapeHtml(s)}</span>`).join(''):'<span style="font-size:12px;color:#94a3b8;">None yet</span>'}
+            </div>
+        </div>
+
+        ${a.partial.length?`
+        <div class="drawer-sec">
+            <h4><i class="fas fa-adjust"></i> Partial Match (${a.partial.length})</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                ${a.partial.map(s=>`<span class="sk-tag sk-partial"><span class="dot"></span>${escapeHtml(s)}</span>`).join('')}
+            </div>
+        </div>`:''}
+
+        <div class="drawer-sec">
+            <h4><i class="fas fa-times-circle"></i> Missing Skills (${a.missing.length})</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                ${a.missing.length?a.missing.map(s=>`<span class="sk-tag sk-missing"><span class="dot"></span>${escapeHtml(s)}</span>`).join(''):'<span style="font-size:12px;color:#059669;">All skills matched! 🎉</span>'}
+            </div>
+        </div>
+
+        <div class="drawer-sec">
+            <h4><i class="fas fa-info-circle"></i> Profile Details</h4>
+            <div class="kv-grid">
+                <div class="kv-box"><div class="k">Course</div><div class="v">${escapeHtml(c.course)||'—'}</div></div>
+                <div class="kv-box"><div class="k">Provider</div><div class="v">${escapeHtml(c.provider)||'—'}</div></div>
+                <div class="kv-box"><div class="k">Certified</div><div class="v">${c.certified?'✅ Yes':'❌ No'}</div></div>
+                <div class="kv-box"><div class="k">Verified</div><div class="v">${c.verified?'✅ Yes':'—'}</div></div>
+                <div class="kv-box"><div class="k">Availability</div><div class="v">${escapeHtml(c.availability)}</div></div>
+                <div class="kv-box"><div class="k">Employment</div><div class="v">${escapeHtml(c.empStatus)}</div></div>
+                <div class="kv-box"><div class="k">Email</div><div class="v" style="font-size:12px;">${escapeHtml(c.email)||'—'}</div></div>
+                <div class="kv-box"><div class="k">Source</div><div class="v">${isDemo?'Sample Data':'Real Trainee'}</div></div>
+            </div>
+        </div>
+
+        <div class="drawer-sec">
+            <h4><i class="fas fa-tools"></i> All Tracked Skills (${c.skills.length})</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                ${c.skills.length?c.skills.map(s=>`<span class="sk-tag sk-neutral"><span class="dot"></span>${escapeHtml(s)}</span>`).join(''):'<span style="font-size:12px;color:#94a3b8;">No skills recorded</span>'}
+            </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <button class="cc-btn primary" style="flex:1;padding:12px;" onclick="showToast('Shortlisted ${escapeJs(c.name)}','success');closeDrawer();">
+                <i class="fas fa-star"></i> Shortlist
+            </button>
+            <button class="cc-btn ghost" style="flex:1;padding:12px;" onclick="showToast('Email drafted for ${escapeJs(c.name)}','info')">
+                <i class="fas fa-envelope"></i> Email
+            </button>
+            ${!isDemo?`<a href="trainee-profile.html?traineeId=${encodeURIComponent(c.id)}" class="cc-btn ghost" style="flex:1;padding:12px;text-decoration:none;justify-content:center;">
+                <i class="fas fa-external-link-alt"></i> Full Profile
+            </a>`:`<button class="cc-btn ghost" style="flex:1;padding:12px;" onclick="showToast('Sample data — no full profile','info')">
+                <i class="fas fa-flask"></i> Sample
+            </button>`}
+        </div>
+    `;
+
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawerOverlay').classList.add('open');
+}
+function closeDrawer(){
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+/* ============================================================
+   JOB SELECT
+   ============================================================ */
+function populateJobSelect(){
+    const sel = document.getElementById('jobSelect');
+    sel.innerHTML = '<option value="">All Candidates (no job selected)</option>';
+    allJobs.forEach(j=>{
+        const opt = document.createElement('option');
+        opt.value = j.id;
+        const isDemo = j._isDemo;
+        opt.textContent = `${isDemo?'[Sample] ':''}${j.title||'Untitled'} · ${j.department||''}${j.status==='draft'?' (Draft)':''}`;
+        sel.appendChild(opt);
+    });
+    if(allJobs.length>0){
+        const firstActive = allJobs.find(j=>j.status==='active') || allJobs[0];
+        if(firstActive){ sel.value = firstActive.id; activeJob = firstActive; }
+    }
+}
+function onJobChange(){
+    const id = document.getElementById('jobSelect').value;
+    activeJob = id ? allJobs.find(j=>j.id===id) : null;
+    computeAllScores();
+    renderStats();
+    applyFilters();
+    if(activeJob) showToast(`🎯 Matching against: ${activeJob.title}`,'info');
+}
+
+/* ============================================================
+   COURSE FILTER POPULATION
+   ============================================================ */
+function populateCourseFilter(){
+    const sel = document.getElementById('courseFilter');
+    const courses = [...new Set(allTrainees.map(t=>t.course).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="all">All Courses</option>';
+    courses.forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+    });
+}
+
+/* ============================================================
+   DEMO BANNER
+   ============================================================ */
+function showDemoBanner(count){
+    if(count<=0 || _demoBannerDismissed) return;
+    const banner = document.getElementById('demoBanner');
+    document.getElementById('demoCount').textContent = count;
+    banner.style.display = 'flex';
+}
+function hideDemoBanner(){
+    _demoBannerDismissed = true;
+    document.getElementById('demoBanner').style.display = 'none';
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+async function updateSidebar(){
+    const initial = (employerData.contactPerson||'E').charAt(0).toUpperCase();
+    document.getElementById('sidebarAvatar').innerHTML = `<span class="online-dot"></span>${initial}`;
+    document.getElementById('sidebarName').textContent = employerData.contactPerson||'Employer';
+    document.getElementById('sidebarCompany').textContent = employerData.orgName||'Organization';
+    document.getElementById('headerAvatar').textContent = initial;
+    document.getElementById('headerName').textContent = employerData.contactPerson||'Employer';
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function showToast(msg, type='success'){
+    const stack = document.getElementById('toastStack');
+    const t = document.createElement('div');
+    t.className = 'toast '+type;
+    const icon = type==='error'?'fa-exclamation-circle':type==='info'?'fa-info-circle':'fa-check-circle';
+    t.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
+    stack.appendChild(t);
+    setTimeout(()=>{
+        t.style.transition='.35s';
+        t.style.transform='translateX(120%)';
+        t.style.opacity='0';
+        setTimeout(()=>t.remove(),400);
+    },2800);
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function escapeHtml(str){
+    if(str===undefined||str===null) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function escapeJs(str){ return String(str||'').replace(/'/g,"\\'"); }
+
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
+function toggleTheme(){
+    const html = document.documentElement;
+    const next = (html.getAttribute('data-theme')||'light')==='dark'?'light':'dark';
+    html.setAttribute('data-theme', next);
+    try{ localStorage.setItem('skillintel-theme', next); }catch(e){}
+    const i = document.querySelector('.theme-toggle i');
+    if(i) i.className = next==='dark'?'fas fa-sun':'fas fa-moon';
+}
+function showNotifications(){
+    const demoCount = window._demoCount||0;
+    alert(`📬 Notifications\n\n• ${allTrainees.filter(t=>!t._isDemo).length} real trainees\n• ${demoCount} sample candidates shown\n• ${allJobs.length} jobs available\n• ${scoredCandidates.filter(c=>c.alignment.overall>=80).length} strong matches`);
+}
+function toggleProfileMenu(){ alert('👤 Profile Menu\n\nSettings · Support · Logout'); }
+async function logout(){
+    if(!confirm('Logout?')) return;
+    try{ await auth.signOut(); }catch(e){}
+    try{ localStorage.clear(); }catch(e){}
+    window.location.replace('../auth/login.html?role=employer');
+}
+function updateDate(){
+    document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async function(){
+    // Apply saved theme FIRST (before any rendering)
+    try{
+        const saved = localStorage.getItem('skillintel-theme')||'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        const i = document.querySelector('.theme-toggle i');
+        if(i) i.className = saved==='dark'?'fas fa-sun':'fas fa-moon';
+    }catch(e){}
+
+    updateDate();
+
+    try{
+        const user = await requireAuth();
+        if(!user) return;
+
+        await loadEmployer();
+        await updateSidebar();
+
+        // Load real data
+        const [realTrainees, realJobs] = await Promise.all([loadTrainees(), loadJobs()]);
+
+        allTrainees = realTrainees;
+        allJobs = realJobs;
+
+        // Pad with demo only if needed — real data is never altered
+        const demoAdded = mergeDataWithDemo();
+
+        populateJobSelect();
+        populateCourseFilter();
+        computeAllScores();
+        renderStats();
+        applyFilters();
+
+        if(demoAdded>0){
+            showDemoBanner(demoAdded);
+            console.log(`🧪 Demo mode: added ${demoAdded} sample trainees (real data untouched)`);
+        }
+
+        document.getElementById('notifBadge').textContent =
+            allTrainees.filter(t=>!t._isDemo && !t.verified).length;
+
+        console.log('✅ Candidate Skill Alignment ready');
+        console.log(`📊 Real trainees: ${realTrainees.length} · Jobs: ${realJobs.length} · Total shown: ${allTrainees.length}`);
+    }catch(e){
+        console.warn('Init error:', e);
+    }
+
+    document.addEventListener('click', function(e){
+        const sb = document.getElementById('sidebar');
+        const tg = document.querySelector('.menu-toggle');
+        if(window.innerWidth<=768 && sb && sb.classList.contains('open')){
+            if(!sb.contains(e.target) && e.target!==tg && !tg.contains(e.target)) sb.classList.remove('open');
+        }
+    });
+});
+</script>
+<script src="../js/script.js"></script>
+</body>
+</html>

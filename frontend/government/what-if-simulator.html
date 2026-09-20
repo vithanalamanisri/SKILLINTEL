@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>What-If Policy Simulator · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar { width: 280px; background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%); color: white; padding: 20px 14px; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; transition: transform 0.3s ease; scrollbar-width: thin; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px; }
+        .sidebar-brand .icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35); }
+        .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
+        .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+        .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.65); text-decoration: none; transition: all 0.2s; margin: 1px 0; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active { background: rgba(255,255,255,0.12); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .menu a i { width: 18px; text-align: center; font-size: 14px; }
+        .menu a .badge { margin-left: auto; background: #ef4444; color: white; font-size: 9px; font-weight: 700; padding: 1px 8px; border-radius: 20px; }
+        .sidebar-footer { padding: 16px 10px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 12px; }
+        .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.5); text-decoration: none; transition: 0.2s; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ===== MAIN ===== */
+        .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
+        .header { background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226,232,240,0.6); position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 8px; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-toggle { display: none; background: none; border: none; font-size: 20px; color: #0b1a33; cursor: pointer; }
+        .header-left .page-title h1 { font-size: 18px; color: #0b1a33; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .header-left .page-title h1 i { color: #7c3aed; }
+        .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right .date { font-size: 12px; color: #64748b; font-weight: 500; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; }
+        .header-right .notif { position: relative; font-size: 18px; color: #475569; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; width: 18px; height: 18px; font-size: 9px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .header-right .profile-btn { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 12px 4px 4px; border-radius: 30px; cursor: pointer; border: none; transition: 0.2s; }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+        .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
+
+        .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
+
+        /* ===== DATA SOURCE BANNER ===== */
+        .data-source-banner { background: linear-gradient(135deg, #4c1d95, #7c3aed, #a855f7); color: white; padding: 12px 20px; border-radius: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(124,58,237,0.25); font-size: 12px; }
+        .data-source-banner .ds-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .data-source-banner .ds-content { flex: 1; }
+        .data-source-banner .ds-title { font-size: 13px; font-weight: 700; }
+        .data-source-banner .ds-sub { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+        .data-source-banner .ds-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+        .data-source-banner .ds-stat { text-align: center; background: rgba(255,255,255,0.12); padding: 4px 12px; border-radius: 8px; font-size: 10px; }
+        .data-source-banner .ds-stat strong { display: block; font-size: 15px; font-weight: 800; }
+
+        /* ===== WELCOME BANNER ===== */
+        .welcome-banner { background: linear-gradient(135deg, #4c1d95, #7c3aed, #ec4899); color: white; padding: 24px 28px; border-radius: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; position: relative; overflow: hidden; }
+        .welcome-banner::before { content: ''; position: absolute; width: 320px; height: 320px; border-radius: 50%; background: rgba(255,255,255,0.06); top: -140px; right: -70px; }
+        .welcome-banner h2 { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+        .welcome-banner p { font-size: 13px; opacity: 0.9; margin-top: 4px; position: relative; z-index: 1; max-width: 680px; }
+        .welcome-banner .banner-stats { display: flex; gap: 18px; flex-wrap: wrap; position: relative; z-index: 1; }
+        .welcome-banner .banner-stats div { text-align: center; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 10px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); }
+        .welcome-banner .banner-stats strong { font-size: 20px; display: block; }
+        .welcome-banner .banner-stats span { font-size: 10px; opacity: 0.8; }
+
+        /* ===== SECTIONS ===== */
+        .section-title { font-size: 16px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
+        .section-title i { color: #7c3aed; }
+        .section-title .badge-count { background: #ede9fe; padding: 1px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #7c3aed; margin-left: auto; }
+
+        /* ===== SIMULATOR LAYOUT ===== */
+        .sim-layout { display: grid; grid-template-columns: 380px 1fr; gap: 20px; margin-bottom: 20px; }
+        @media (max-width: 1100px) { .sim-layout { grid-template-columns: 1fr; } }
+
+        /* ===== CONTROLS PANEL ===== */
+        .controls-panel { background: white; border-radius: 18px; padding: 22px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); position: sticky; top: 80px; height: fit-content; }
+        .controls-panel .cp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid #f1f5f9; }
+        .controls-panel .cp-title { font-size: 14px; font-weight: 800; color: #0b1a33; display: flex; align-items: center; gap: 8px; }
+        .controls-panel .cp-title i { color: #7c3aed; }
+        .controls-panel .cp-reset { padding: 6px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit; }
+        .controls-panel .cp-reset:hover { background: #f1f5f9; }
+
+        .slider-group { margin-bottom: 18px; }
+        .slider-group:last-child { margin-bottom: 0; }
+        .slider-group .sg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .slider-group .sg-label { font-size: 12px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 6px; }
+        .slider-group .sg-label i { color: #7c3aed; font-size: 12px; }
+        .slider-group .sg-value { font-size: 14px; font-weight: 900; color: #7c3aed; }
+        .slider-group input[type="range"] { width: 100%; height: 6px; border-radius: 10px; background: #e2e8f0; -webkit-appearance: none; outline: none; cursor: pointer; }
+        .slider-group input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #a855f7); cursor: pointer; box-shadow: 0 2px 8px rgba(124,58,237,0.4); border: 3px solid white; }
+        .slider-group input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #a855f7); cursor: pointer; box-shadow: 0 2px 8px rgba(124,58,237,0.4); border: 3px solid white; }
+        .slider-group .sg-hint { font-size: 10px; color: #94a3b8; margin-top: 4px; display: flex; justify-content: space-between; }
+        .slider-group .sg-impact { font-size: 10px; font-weight: 700; margin-top: 4px; display: inline-block; padding: 2px 8px; border-radius: 8px; }
+        .sg-impact.positive { background: #dcfce7; color: #16a34a; }
+        .sg-impact.negative { background: #fee2e2; color: #dc2626; }
+        .sg-impact.neutral { background: #f1f5f9; color: #64748b; }
+
+        /* ===== PRESETS ===== */
+        .presets-section { margin-top: 20px; padding-top: 16px; border-top: 2px solid #f1f5f9; }
+        .presets-section .ps-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+        .presets-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .preset-btn { padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #f8fafc; color: #0b1a33; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; font-family: inherit; text-align: left; }
+        .preset-btn:hover { background: #f1f5f9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .preset-btn.active { background: #ede9fe; border-color: #7c3aed; color: #5b21b6; }
+        .preset-btn .pb-icon { font-size: 14px; }
+        .preset-btn.aggressive { border-left: 3px solid #dc2626; }
+        .preset-btn.balanced { border-left: 3px solid #2563eb; }
+        .preset-btn.gradual { border-left: 3px solid #16a34a; }
+        .preset-btn.conservative { border-left: 3px solid #d97706; }
+
+        /* ===== RESULTS PANEL ===== */
+        .results-panel { display: flex; flex-direction: column; gap: 16px; }
+
+        /* ===== HERO RESULT ===== */
+        .hero-result { background: linear-gradient(135deg, #4c1d95, #7c3aed, #a855f7); color: white; border-radius: 18px; padding: 24px 28px; position: relative; overflow: hidden; box-shadow: 0 12px 32px rgba(124,58,237,0.3); }
+        .hero-result::before { content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,0.06); top: -120px; right: -80px; }
+        .hero-result .hr-content { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .hero-result .hr-left { flex: 1; min-width: 220px; }
+        .hero-result .hr-label { font-size: 11px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+        .hero-result .hr-value { font-size: 52px; font-weight: 900; line-height: 1; margin: 6px 0; }
+        .hero-result .hr-desc { font-size: 13px; opacity: 0.92; line-height: 1.5; }
+        .hero-result .hr-right { display: flex; gap: 16px; flex-wrap: wrap; }
+        .hero-result .hr-stat { text-align: center; background: rgba(255,255,255,0.12); padding: 10px 16px; border-radius: 12px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); }
+        .hero-result .hr-stat .hs-label { font-size: 10px; opacity: 0.8; }
+        .hero-result .hr-stat .hs-value { font-size: 22px; font-weight: 900; margin-top: 2px; }
+        .hero-result .hr-stat .hs-delta { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; display: inline-block; margin-top: 4px; background: rgba(255,255,255,0.15); }
+
+        /* ===== DELTA CARDS ===== */
+        .delta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+        .delta-card { background: white; border-radius: 14px; padding: 16px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.3s; }
+        .delta-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(124,58,237,0.1); }
+        .delta-card .dc-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 8px; }
+        .delta-card .dc-value { font-size: 22px; font-weight: 900; color: #0b1a33; }
+        .delta-card .dc-label { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .delta-card .dc-change { font-size: 11px; font-weight: 700; margin-top: 8px; padding: 2px 8px; border-radius: 8px; display: inline-block; }
+        .dc-change.up { background: #dcfce7; color: #16a34a; }
+        .dc-change.down { background: #fee2e2; color: #dc2626; }
+        .dc-change.neutral { background: #f1f5f9; color: #64748b; }
+
+        /* ===== SCENARIO COMPARISON ===== */
+        .comparison-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+        .scenario-card { background: white; border-radius: 16px; padding: 18px; border: 2px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.3s; position: relative; }
+        .scenario-card.current { border-color: #94a3b8; }
+        .scenario-card.simulated { border-color: #7c3aed; box-shadow: 0 8px 24px rgba(124,58,237,0.15); }
+        .scenario-card .scn-badge { position: absolute; top: -10px; left: 16px; font-size: 9px; font-weight: 800; padding: 3px 10px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .scenario-card.current .scn-badge { background: #f1f5f9; color: #475569; }
+        .scenario-card.simulated .scn-badge { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
+        .scenario-card .scn-title { font-size: 13px; font-weight: 800; color: #0b1a33; margin-bottom: 12px; margin-top: 6px; }
+        .scenario-card .scn-metric { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+        .scenario-card .scn-metric:last-child { border-bottom: none; }
+        .scenario-card .scn-metric .label { color: #64748b; }
+        .scenario-card .scn-metric .value { font-weight: 800; color: #0b1a33; }
+        .scenario-card .scn-metric .value.up { color: #16a34a; }
+        .scenario-card .scn-metric .value.down { color: #dc2626; }
+
+        /* ===== IMPACT CHART ===== */
+        .impact-chart-container { background: white; border-radius: 18px; padding: 22px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .impact-chart { display: flex; align-items: flex-end; justify-content: space-around; height: 200px; padding: 4px 0; gap: 12px; }
+        .impact-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; position: relative; }
+        .impact-bar-group .ib-bar { width: 100%; max-width: 50px; border-radius: 6px 6px 0 0; position: relative; transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); min-height: 6px; }
+        .impact-bar-group .ib-bar .ib-val { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #0b1a33; white-space: nowrap; }
+        .impact-bar-group .ib-label { font-size: 10px; color: #64748b; margin-top: 8px; text-align: center; font-weight: 600; }
+        .impact-bar-group .ib-base { position: absolute; bottom: 0; width: 100%; max-width: 50px; border-radius: 6px 6px 0 0; background: rgba(148, 163, 184, 0.25); z-index: 0; }
+        .impact-bar-group .ib-bar.base { z-index: 1; opacity: 0.85; }
+        .impact-bar-group .ib-bar.sim { z-index: 2; }
+
+        /* ===== WATERFALL ===== */
+        .waterfall-container { background: white; border-radius: 18px; padding: 22px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .waterfall { display: flex; flex-direction: column; gap: 8px; }
+        .wf-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+        .wf-row .wf-label { min-width: 150px; font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .wf-row .wf-track { flex: 1; height: 20px; background: #f8fafc; border-radius: 6px; position: relative; overflow: hidden; }
+        .wf-row .wf-bar { height: 100%; border-radius: 6px; transition: width 0.8s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 10px; font-weight: 800; color: white; }
+        .wf-row .wf-bar.positive { background: linear-gradient(90deg, #16a34a, #22c55e); }
+        .wf-row .wf-bar.negative { background: linear-gradient(90deg, #dc2626, #ef4444); }
+        .wf-row .wf-value { min-width: 60px; text-align: right; font-size: 12px; font-weight: 800; color: #0b1a33; }
+
+        /* ===== TIMELINE PROJECTION ===== */
+        .timeline-container { background: white; border-radius: 18px; padding: 22px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .timeline-svg { width: 100%; height: 240px; }
+        .timeline-legend { display: flex; gap: 20px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+        .tl-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #475569; font-weight: 600; }
+        .tl-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+        /* ===== RISK GAUGE ===== */
+        .risk-gauge { display: flex; flex-direction: column; align-items: center; padding: 10px; }
+        .gauge-wrap { position: relative; width: 180px; height: 100px; overflow: hidden; }
+        .gauge-svg { width: 180px; height: 180px; }
+        .gauge-value { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); text-align: center; width: 100%; }
+        .gauge-value .gv-num { font-size: 28px; font-weight: 900; color: #0b1a33; }
+        .gauge-value .gv-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+
+        /* ===== AI INSIGHTS ===== */
+        .insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .insight-card { padding: 16px 18px; border-radius: 14px; border: 1px solid #eef2f6; background: #fafbff; display: flex; gap: 12px; align-items: flex-start; }
+        .insight-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+        .insight-card h4 { font-size: 13px; color: #0b1a33; margin-bottom: 4px; }
+        .insight-card p { font-size: 11.5px; color: #64748b; line-height: 1.5; }
+
+        /* ===== ACTION BAR ===== */
+        .action-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; padding: 16px; background: white; border-radius: 14px; border: 1px solid #eef2f6; }
+        .action-btn { padding: 11px 20px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; font-family: inherit; }
+        .action-btn.primary { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; box-shadow: 0 8px 20px rgba(124,58,237,0.3); }
+        .action-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(124,58,237,0.4); }
+        .action-btn.secondary { background: #ede9fe; color: #5b21b6; }
+        .action-btn.secondary:hover { background: #ddd6fe; }
+        .action-btn.ghost { background: #f1f5f9; color: #475569; }
+        .action-btn.ghost:hover { background: #e2e8f0; }
+
+        /* ===== EMPTY ===== */
+        .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+        .empty-state i { font-size: 40px; display: block; margin-bottom: 10px; color: #c7d2fe; }
+
+        /* ===== TOAST ===== */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: white; padding: 14px 22px; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.15); border-left: 4px solid #7c3aed; max-width: 400px; z-index: 1000; font-size: 13px; color: #0b1a33; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) { .sim-layout { grid-template-columns: 340px 1fr; } }
+        @media (max-width: 900px) { .sim-layout { grid-template-columns: 1fr; } .controls-panel { position: static; } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; } .menu-toggle { display: block; }
+            .header { padding: 10px 16px; } .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; } .container { padding: 12px 14px; }
+            .welcome-banner { flex-direction: column; align-items: flex-start; }
+            .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
+            .hero-result .hr-value { font-size: 40px; }
+            .presets-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+            .hero-result .hr-value { font-size: 34px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div><h2>SkillBridge</h2><p>Government Portal</p></div>
+    </div>
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">G</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Government</div>
+            <div class="role" id="sidebarRole">Admin</div>
+        </div>
+    </div>
+    <div class="menu-label">Analytics</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="government-analytics.html"><i class="fas fa-chart-line"></i> Government Analytics</a>
+        <a href="retention-analytics.html"><i class="fas fa-user-check"></i> Retention Analysis</a>
+        <a href="income.html"><i class="fas fa-rupee-sign"></i> Income/Livelihood</a>
+        <a href="training-to-job-relevance.html"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
+        <a href="non-placement-analysis.html"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
+        <a href="program-comparison.html"><i class="fas fa-landmark"></i> Program Comparison</a>
+        <a href="district-state-intelligence.html"><i class="fas fa-map-marked-alt"></i> District & State Intelligence</a>
+        <a href="skill-demand-supply.html"><i class="fas fa-scale-balanced"></i> Demand vs Supply</a>
+        <a href="skill-planning.html"><i class="fas fa-clipboard-list"></i> Skill Planning</a>
+        <a href="what-if-simulator.html" class="active"><i class="fas fa-flask"></i> What-If Simulator <span class="badge">New</span></a>
+        <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
+    </div>
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<div class="main-content">
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-flask"></i> What-If Policy Simulator</h1>
+                <p>Simulate policy impact · Compare scenarios · Forecast outcomes · SIH26135</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><i class="fas fa-moon"></i></button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">G</div>
+                <span class="name" id="headerName">Government</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- ===== DATA SOURCE BANNER ===== -->
+        <div class="data-source-banner">
+            <div class="ds-icon">🔮</div>
+            <div class="ds-content">
+                <div class="ds-title" id="dsTitle">Live Simulation Engine Ready</div>
+                <div class="ds-sub" id="dsSub">Adjust policy levers · See real-time impact on employment, income, retention</div>
+            </div>
+            <div class="ds-stats">
+                <div class="ds-stat"><strong id="dsTrainees">0</strong>Baseline</div>
+                <div class="ds-stat"><strong id="dsLevers">6</strong>Levers</div>
+                <div class="ds-stat"><strong id="dsScenarios">1</strong>Scenarios</div>
+            </div>
+        </div>
+
+        <!-- ===== HERO BANNER ===== -->
+        <div class="welcome-banner">
+            <div>
+                <h2><i class="fas fa-chess"></i> Policy Scenario Planning</h2>
+                <p>Test policy interventions before committing budget. Model capacity expansion, budget allocation, employer partnerships, and skill-gap interventions to forecast real outcomes.</p>
+            </div>
+            <div class="banner-stats">
+                <div><strong id="bannerBaseline">—</strong><span>Baseline</span></div>
+                <div><strong id="bannerProjected">—</strong><span>Projected</span></div>
+                <div><strong id="bannerDelta">—</strong><span>Impact</span></div>
+                <div><strong id="bannerROI">—</strong><span>ROI</span></div>
+            </div>
+        </div>
+
+        <!-- ===== SIMULATOR LAYOUT ===== -->
+        <div class="sim-layout">
+
+            <!-- CONTROLS PANEL -->
+            <div class="controls-panel">
+                <div class="cp-header">
+                    <div class="cp-title"><i class="fas fa-sliders-h"></i> Policy Levers</div>
+                    <button class="cp-reset" onclick="resetSimulator()"><i class="fas fa-undo"></i> Reset</button>
+                </div>
+
+                <!-- Lever 1: Training Capacity -->
+                <div class="slider-group">
+                    <div class="sg-header">
+                        <div class="sg-label"><i class="fas fa-chalkboard-teacher"></i> Training Capacity</div>
+                        <div class="sg-value" id="capValue">25%</div>
+                    </div>
+                    <input type="range" id="leverCapacity" min="0" max="100" value="25" oninput="runSimulation()">
+                    <div class="sg-hint"><span>No change</span><span>Double capacity</span></div>
+                    <div class="sg-impact positive" id="capImpact">+5.0pp employment</div>
+                </div>
+
+                <!-- Lever 2: Budget -->
+                <div class="slider-group">
+                    <div class="sg-header">
+                        <div class="sg-label"><i class="fas fa-rupee-sign"></i> Budget Increase</div>
+                        <div class="sg-value" id="budgetValue">+50%</div>
+                    </div>
+                    <input type="range" id="leverBudget" min="0" max="200" value="50" oninput="runSimulation()">
+                    <div class="sg-hint"><span>No change</span><span>Triple budget</span></div>
+                    <div class="sg-impact positive" id="budgetImpact">+5.0pp employment</div>
+                </div>
+
+                <!-- Lever 3: Placement Support -->
+                <div class="slider-group">
+                    <div class="sg-header">
+                        <div class="sg-label"><i class="fas fa-handshake"></i> Placement Support</div>
+                        <div class="sg-value" id="placementValue">30%</div>
+                    </div>
+                    <input type="range" id="leverPlacement" min="0" max="100" value="30" oninput="runSimulation()">
+                    <div class="sg-hint"><span>None</span><span>Full support</span></div>
+                    <div class="sg-impact positive" id="placementImpact">+7.5pp employment</div>
+                </div>
+
+                <!-- Lever 4: Curriculum Quality -->
+                <div class="slider-group">
+                    <div class="sg-header">
+                        <div class="sg-label"><i class="fas fa-book-open"></i> Curriculum Quality</div>
+                        <div class="sg-value" id="curriculumValue">20%</div>
+                    </div>
+                    <input type="range" id="leverCurriculum" min="0" max="100" value="20" oninput="runSimulation()">
+                    <div class="sg-hint"><span>Current</span><span>Industry-aligned</span></div>
+                    <div class="sg-impact positive" id="curriculumImpact">+6.0pp skill match</div>
+                </div>
+
+                <!-- Lever 5: Regional Targeting -->
+                <div class="slider-group">
+                    <div class="sg-header">
+                        <div class="sg-label"><i class="fas fa-map-pin"></i> Regional Targeting</div>
+                        <div class="sg-value" id="regionValue">40%</div>
+                    </div>
+                    <input type="range" id="leverRegion" min="0" max="100" value="40" oninput="runSimulation()">
+                    <div class="sg-hint"><span>Uniform</span><span>Gap-focused</span></div>
+                    <div class="sg-impact positive" id="regionImpact">+4.0pp employment</div>
+                </div>
+
+                <!-- Lever 6: Retention Programs -->
+                <div class="slider-group">
+                    <div class="sg-header">
+                        <div class="sg-label"><i class="fas fa-user-check"></i> Retention Programs</div>
+                        <div class="sg-value" id="retentionValue">15%</div>
+                    </div>
+                    <input type="range" id="leverRetention" min="0" max="100" value="15" oninput="runSimulation()">
+                    <div class="sg-hint"><span>None</span><span>Full mentoring</span></div>
+                    <div class="sg-impact positive" id="retentionImpact">+3.0pp retention</div>
+                </div>
+
+                <!-- PRESETS -->
+                <div class="presets-section">
+                    <div class="ps-label"><i class="fas fa-magic"></i> Quick Presets</div>
+                    <div class="presets-grid">
+                        <button class="preset-btn conservative" onclick="applyPreset('conservative')">
+                            <span class="pb-icon">🐢</span> Conservative
+                        </button>
+                        <button class="preset-btn balanced active" onclick="applyPreset('balanced')">
+                            <span class="pb-icon">⚖️</span> Balanced
+                        </button>
+                        <button class="preset-btn aggressive" onclick="applyPreset('aggressive')">
+                            <span class="pb-icon">🚀</span> Aggressive
+                        </button>
+                        <button class="preset-btn gradual" onclick="applyPreset('gradual')">
+                            <span class="pb-icon">📈</span> Gradual
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RESULTS PANEL -->
+            <div class="results-panel">
+
+                <!-- HERO RESULT -->
+                <div class="hero-result">
+                    <div class="hr-content">
+                        <div class="hr-left">
+                            <div class="hr-label">Projected Employment Rate</div>
+                            <div class="hr-value" id="heroValue">—%</div>
+                            <div class="hr-desc" id="heroDesc">Adjust the levers to see projected impact</div>
+                        </div>
+                        <div class="hr-right">
+                            <div class="hr-stat">
+                                <div class="hs-label">Baseline</div>
+                                <div class="hs-value" id="heroBaseline">—%</div>
+                                <div class="hs-delta" id="heroBaselineDelta">Current</div>
+                            </div>
+                            <div class="hr-stat">
+                                <div class="hs-label">Improvement</div>
+                                <div class="hs-value" id="heroDelta">—</div>
+                                <div class="hs-delta" id="heroDeltaLabel">vs baseline</div>
+                            </div>
+                            <div class="hr-stat">
+                                <div class="hs-label">Trainees Impacted</div>
+                                <div class="hs-value" id="heroImpacted">—</div>
+                                <div class="hs-delta">additional</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DELTA CARDS -->
+                <div class="delta-grid">
+                    <div class="delta-card">
+                        <div class="dc-icon" style="background:#dbeafe; color:#2563eb;"><i class="fas fa-briefcase"></i></div>
+                        <div class="dc-value" id="deltaEmployment">—</div>
+                        <div class="dc-label">Employment Rate</div>
+                        <div class="dc-change up" id="deltaEmploymentChange">+0pp</div>
+                    </div>
+                    <div class="delta-card">
+                        <div class="dc-icon" style="background:#dcfce7; color:#16a34a;"><i class="fas fa-rupee-sign"></i></div>
+                        <div class="dc-value" id="deltaIncome">—</div>
+                        <div class="dc-label">Avg Income</div>
+                        <div class="dc-change up" id="deltaIncomeChange">+0%</div>
+                    </div>
+                    <div class="delta-card">
+                        <div class="dc-icon" style="background:#ede9fe; color:#7c3aed;"><i class="fas fa-user-check"></i></div>
+                        <div class="dc-value" id="deltaRetention">—</div>
+                        <div class="dc-label">365-Day Retention</div>
+                        <div class="dc-change up" id="deltaRetentionChange">+0pp</div>
+                    </div>
+                    <div class="delta-card">
+                        <div class="dc-icon" style="background:#fef3c7; color:#d97706;"><i class="fas fa-bullseye"></i></div>
+                        <div class="dc-value" id="deltaSkillMatch">—</div>
+                        <div class="dc-label">Skill Match</div>
+                        <div class="dc-change up" id="deltaSkillMatchChange">+0pp</div>
+                    </div>
+                    <div class="delta-card">
+                        <div class="dc-icon" style="background:#fee2e2; color:#dc2626;"><i class="fas fa-user-slash"></i></div>
+                        <div class="dc-value" id="deltaNonPlacement">—</div>
+                        <div class="dc-label">Non-Placement Rate</div>
+                        <div class="dc-change down" id="deltaNonPlacementChange">-0pp</div>
+                    </div>
+                    <div class="delta-card">
+                        <div class="dc-icon" style="background:#ccfbf1; color:#0d9488;"><i class="fas fa-trophy"></i></div>
+                        <div class="dc-value" id="deltaROI">—</div>
+                        <div class="dc-label">Projected ROI</div>
+                        <div class="dc-change up" id="deltaROIChange">—</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ===== SCENARIO COMPARISON ===== -->
+        <div class="section-title">
+            <i class="fas fa-balance-scale"></i> Scenario Comparison
+            <span class="badge-count">Baseline vs Simulated</span>
+        </div>
+        <div class="comparison-grid" id="comparisonGrid"></div>
+
+        <!-- ===== IMPACT CHART ===== -->
+        <div class="section-title">
+            <i class="fas fa-chart-bar"></i> Metric Impact
+            <span class="badge-count">Current vs simulated</span>
+        </div>
+        <div class="impact-chart-container">
+            <div class="impact-chart" id="impactChart"></div>
+        </div>
+
+        <!-- ===== WATERFALL ===== -->
+        <div class="section-title">
+            <i class="fas fa-water"></i> Impact Waterfall
+            <span class="badge-count">Contribution per lever</span>
+        </div>
+        <div class="waterfall-container">
+            <div class="waterfall" id="waterfall"></div>
+        </div>
+
+        <!-- ===== TIMELINE PROJECTION ===== -->
+        <div class="section-title">
+            <i class="fas fa-chart-line"></i> 12-Month Projection
+            <span class="badge-count">Employment trajectory</span>
+        </div>
+        <div class="timeline-container">
+            <svg class="timeline-svg" id="timelineChart" viewBox="0 0 800 240" preserveAspectRatio="none"></svg>
+            <div class="timeline-legend" id="timelineLegend"></div>
+        </div>
+
+        <!-- ===== RISK GAUGE + AI INSIGHTS ===== -->
+        <div class="section-title">
+            <i class="fas fa-shield-alt"></i> Risk & Insights
+            <span class="badge-count">AI-generated</span>
+        </div>
+        <div class="insights-grid" id="insightsGrid"></div>
+
+        <!-- ===== ACTION BAR ===== -->
+        <div class="action-bar">
+            <button class="action-btn primary" onclick="saveScenario()">
+                <i class="fas fa-save"></i> Save Scenario
+            </button>
+            <button class="action-btn secondary" onclick="compareWithPrevious()">
+                <i class="fas fa-code-compare"></i> Compare Scenarios
+            </button>
+            <button class="action-btn secondary" onclick="exportReport()">
+                <i class="fas fa-file-export"></i> Export Report
+            </button>
+            <button class="action-btn ghost" onclick="applyRecommendation()">
+                <i class="fas fa-magic"></i> Apply Optimal Policy
+            </button>
+            <button class="action-btn ghost" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   FIREBASE CONFIG
+   ============================================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+
+let db = null;
+try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+} catch (e) { console.warn('Firebase init failed:', e.message); }
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let allRecords = [];
+let baseline = {
+    totalTrainees: 0,
+    employed: 0,
+    employmentRate: 0,
+    avgIncome: 0,
+    retention: 0,
+    skillMatch: 0,
+    nonPlacement: 0
+};
+let simulated = {};
+let _govtOfficer = null;
+let savedScenarios = [];
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+function readGovtOfficer() {
+    _govtOfficer = {
+        name: localStorage.getItem('govtOfficerName') || 'Government Official',
+        accessLevel: localStorage.getItem('govtAccessLevel') || 'State',
+        department: localStorage.getItem('govtDepartment') || 'Skill Development',
+        email: localStorage.getItem('userEmail') || '',
+    };
+    return _govtOfficer;
+}
+
+/* ============================================================
+   LOAD TRAINEES FROM FIRESTORE
+   ============================================================ */
+async function loadTrainees() {
+    const records = [];
+    if (!db) return records;
+
+    try {
+        const snap = await db.collection('trainees').get();
+        snap.forEach(doc => {
+            const t = doc.data();
+            const emp = t.employment || {};
+
+            let status = 'unemployed';
+            let income = 0;
+            let retentionDays = 0;
+            if (emp) {
+                const empType = (emp.status || emp.employmentType || '').toLowerCase();
+                if (empType.includes('self')) status = 'self-employed';
+                else if (empType.includes('intern')) status = 'internship';
+                else if (empType.includes('employ') || empType.includes('verified') || empType.includes('full')) status = 'employed';
+                income = Number(emp.currentIncome || emp.monthlyIncome) || 0;
+                const joinDate = emp.joiningDate || emp.startDate;
+                if (joinDate) {
+                    const d = new Date(joinDate);
+                    if (!isNaN(d.getTime())) {
+                        retentionDays = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+                    }
+                }
+            }
+
+            const skillCount = [
+                t.skillTrade, t.skills, t.trainingProgram,
+                emp.currentSkills, emp.skillsUsed, emp.newSkills
+            ].filter(Boolean).length;
+
+            records.push({
+                id: doc.id,
+                state: t.state || 'Unknown',
+                sector: t.sector || t.industry || 'General',
+                status: status,
+                employed: ['employed', 'self-employed', 'internship'].includes(status),
+                income: income,
+                retentionDays: retentionDays,
+                retained: retentionDays >= 365 && ['employed', 'self-employed'].includes(status),
+                skillCount: skillCount,
+                skillMatch: Math.min(100, 40 + skillCount * 10),
+                trainingProgress: Number(t.trainingProgress) || 0
+            });
+        });
+    } catch (e) {
+        console.warn('Trainee load failed:', e.message);
+    }
+    return records;
+}
+
+/* ============================================================
+   COMPUTE BASELINE METRICS
+   ============================================================ */
+function computeBaseline(records) {
+    const total = records.length;
+    if (total === 0) {
+        return {
+            totalTrainees: 0, employed: 0, employmentRate: 0,
+            avgIncome: 0, retention: 0, skillMatch: 0, nonPlacement: 0,
+            avgSkillMatch: 0
+        };
+    }
+
+    const employed = records.filter(r => r.employed).length;
+    const employmentRate = Math.round((employed / total) * 100);
+
+    const incomes = records.filter(r => r.income > 0).map(r => r.income);
+    const avgIncome = incomes.length > 0
+        ? Math.round(incomes.reduce((a, b) => a + b, 0) / incomes.length)
+        : 0;
+
+    const retained = records.filter(r => r.retained).length;
+    const retention = Math.round((retained / total) * 100);
+
+    const skillMatches = records.map(r => r.skillMatch).filter(v => v > 0);
+    const avgSkillMatch = skillMatches.length > 0
+        ? Math.round(skillMatches.reduce((a, b) => a + b, 0) / skillMatches.length)
+        : 0;
+
+    const nonPlacement = 100 - employmentRate;
+
+    return {
+        totalTrainees: total,
+        employed,
+        employmentRate,
+        avgIncome,
+        retention,
+        skillMatch: avgSkillMatch,
+        nonPlacement,
+        avgSkillMatch
+    };
+}
+
+/* ============================================================
+   SIMULATION ENGINE
+   ============================================================ */
+function runSimulation() {
+    // Read all lever values
+    const capacity = parseInt(document.getElementById('leverCapacity').value) || 0;
+    const budget = parseInt(document.getElementById('leverBudget').value) || 0;
+    const placement = parseInt(document.getElementById('leverPlacement').value) || 0;
+    const curriculum = parseInt(document.getElementById('leverCurriculum').value) || 0;
+    const region = parseInt(document.getElementById('leverRegion').value) || 0;
+    const retention = parseInt(document.getElementById('leverRetention').value) || 0;
+
+    // Update displayed lever values
+    document.getElementById('capValue').textContent = capacity + '%';
+    document.getElementById('budgetValue').textContent = '+' + budget + '%';
+    document.getElementById('placementValue').textContent = placement + '%';
+    document.getElementById('curriculumValue').textContent = curriculum + '%';
+    document.getElementById('regionValue').textContent = region + '%';
+    document.getElementById('retentionValue').textContent = retention + '%';
+
+    // Compute individual impacts (weighted model)
+    const capDelta = capacity * 0.20;         // 0-20 pp
+    const budgetDelta = Math.min(20, budget * 0.10);  // 0-20 pp
+    const placementDelta = placement * 0.25;  // 0-25 pp
+    const curriculumDelta = curriculum * 0.15; // 0-15 pp (skill match)
+    const regionDelta = region * 0.10;        // 0-10 pp
+    const retentionDelta = retention * 0.12;  // 0-12 pp
+
+    // Update lever impact hints
+    const updateImpact = (id, val, unit) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (val > 0) {
+            el.textContent = '+' + val.toFixed(1) + 'pp ' + unit;
+            el.className = 'sg-impact positive';
+        } else {
+            el.textContent = 'No change';
+            el.className = 'sg-impact neutral';
+        }
+    };
+
+    updateImpact('capImpact', capDelta, 'employment');
+    updateImpact('budgetImpact', budgetDelta, 'employment');
+    updateImpact('placementImpact', placementDelta, 'employment');
+    updateImpact('curriculumImpact', curriculumDelta, 'skill match');
+    updateImpact('regionImpact', regionDelta, 'employment');
+    updateImpact('retentionImpact', retentionDelta, 'retention');
+
+    // Total employment rate (baseline + combined impact, capped at 98)
+    const combinedEmployment = capDelta + budgetDelta + placementDelta + regionDelta;
+    const newEmploymentRate = Math.min(98, Math.round(baseline.employmentRate + combinedEmployment));
+    const employmentDelta = newEmploymentRate - baseline.employmentRate;
+
+    // Income impact (budget + placement + curriculum)
+    const incomeGrowthPct = (budgetDelta + placementDelta + curriculumDelta) * 0.9;
+    const newIncome = Math.round(baseline.avgIncome * (1 + incomeGrowthPct / 100));
+    const incomeDeltaPct = baseline.avgIncome > 0
+        ? Math.round(((newIncome - baseline.avgIncome) / baseline.avgIncome) * 100)
+        : 0;
+
+    // Retention impact
+    const newRetention = Math.min(98, Math.round(baseline.retention + retentionDelta + placementDelta * 0.3));
+    const retentionDeltaPP = newRetention - baseline.retention;
+
+    // Skill match impact
+    const newSkillMatch = Math.min(98, Math.round(baseline.skillMatch + curriculumDelta + regionDelta * 0.5));
+    const skillMatchDelta = newSkillMatch - baseline.skillMatch;
+
+    // Non-placement rate (inverse of employment)
+    const newNonPlacement = 100 - newEmploymentRate;
+    const nonPlacementDelta = newNonPlacement - baseline.nonPlacement;
+
+    // Trainees impacted
+    const additionalEmployed = Math.round((employmentDelta / 100) * baseline.totalTrainees);
+
+    // ROI calculation (income gain * months / investment)
+    const monthlyIncomeGain = (newIncome - baseline.avgIncome) * additionalEmployed;
+    const annualGain = monthlyIncomeGain * 12;
+    const estimatedInvestment = (budget / 100) * baseline.totalTrainees * 10000 + 500000;
+    const roi = estimatedInvestment > 0 ? Math.round((annualGain / estimatedInvestment) * 100) : 0;
+
+    simulated = {
+        capacity, budget, placement, curriculum, region, retention,
+        employmentRate: newEmploymentRate,
+        employmentDelta,
+        income: newIncome,
+        incomeDeltaPct,
+        retention: newRetention,
+        retentionDelta: retentionDeltaPP,
+        skillMatch: newSkillMatch,
+        skillMatchDelta,
+        nonPlacement: newNonPlacement,
+        nonPlacementDelta,
+        additionalEmployed,
+        roi,
+        estimatedInvestment
+    };
+
+    renderResults();
+}
+
+/* ============================================================
+   RENDER RESULTS
+   ============================================================ */
+function renderResults() {
+    // Hero
+    document.getElementById('heroValue').textContent = simulated.employmentRate + '%';
+    document.getElementById('heroBaseline').textContent = baseline.employmentRate + '%';
+    document.getElementById('heroDelta').textContent = '+' + simulated.employmentDelta + 'pp';
+    document.getElementById('heroImpacted').textContent = '+' + simulated.additionalEmployed.toLocaleString();
+
+    const desc = simulated.employmentDelta > 15
+        ? '🚀 Transformative impact — significant employment gains expected'
+        : simulated.employmentDelta > 8
+        ? '📈 Strong impact — substantial improvement in employment outcomes'
+        : simulated.employmentDelta > 3
+        ? '✅ Moderate impact — measurable improvement in employment'
+        : simulated.employmentDelta > 0
+        ? '📊 Modest impact — small but positive change'
+        : '⚪ No change — adjust levers to simulate impact';
+    document.getElementById('heroDesc').textContent = desc;
+
+    // Delta cards
+    document.getElementById('deltaEmployment').textContent = simulated.employmentRate + '%';
+    document.getElementById('deltaEmploymentChange').textContent = '+' + simulated.employmentDelta + 'pp';
+    document.getElementById('deltaEmploymentChange').className = 'dc-change up';
+
+    document.getElementById('deltaIncome').textContent = '₹' + simulated.income.toLocaleString();
+    document.getElementById('deltaIncomeChange').textContent = '+' + simulated.incomeDeltaPct + '%';
+    document.getElementById('deltaIncomeChange').className = 'dc-change up';
+
+    document.getElementById('deltaRetention').textContent = simulated.retention + '%';
+    document.getElementById('deltaRetentionChange').textContent = '+' + simulated.retentionDelta + 'pp';
+    document.getElementById('deltaRetentionChange').className = 'dc-change up';
+
+    document.getElementById('deltaSkillMatch').textContent = simulated.skillMatch + '%';
+    document.getElementById('deltaSkillMatchChange').textContent = '+' + simulated.skillMatchDelta + 'pp';
+    document.getElementById('deltaSkillMatchChange').className = 'dc-change up';
+
+    document.getElementById('deltaNonPlacement').textContent = simulated.nonPlacement + '%';
+    document.getElementById('deltaNonPlacementChange').textContent = simulated.nonPlacementDelta + 'pp';
+    document.getElementById('deltaNonPlacementChange').className = simulated.nonPlacementDelta < 0 ? 'dc-change down' : 'dc-change up';
+
+    document.getElementById('deltaROI').textContent = simulated.roi + '%';
+    document.getElementById('deltaROIChange').textContent = simulated.roi > 100 ? 'Strong' : simulated.roi > 50 ? 'Moderate' : 'Low';
+    document.getElementById('deltaROIChange').className = simulated.roi > 100 ? 'dc-change up' : 'dc-change neutral';
+
+    // Banner stats
+    document.getElementById('bannerBaseline').textContent = baseline.employmentRate + '%';
+    document.getElementById('bannerProjected').textContent = simulated.employmentRate + '%';
+    document.getElementById('bannerDelta').textContent = '+' + simulated.employmentDelta + 'pp';
+    document.getElementById('bannerROI').textContent = simulated.roi + '%';
+
+    // Scenario comparison
+    renderComparison();
+    // Impact chart
+    renderImpactChart();
+    // Waterfall
+    renderWaterfall();
+    // Timeline
+    renderTimeline();
+    // Insights
+    renderInsights();
+}
+
+/* ============================================================
+   SCENARIO COMPARISON
+   ============================================================ */
+function renderComparison() {
+    const container = document.getElementById('comparisonGrid');
+    const cards = [
+        {
+            title: 'Baseline (No Change)',
+            className: 'current',
+            badge: 'Current',
+            metrics: [
+                { label: 'Employment Rate', value: baseline.employmentRate + '%' },
+                { label: 'Avg Income', value: '₹' + baseline.avgIncome.toLocaleString() },
+                { label: '365-Day Retention', value: baseline.retention + '%' },
+                { label: 'Skill Match', value: baseline.skillMatch + '%' },
+                { label: 'Non-Placement Rate', value: baseline.nonPlacement + '%' }
+            ]
+        },
+        {
+            title: 'Simulated Policy',
+            className: 'simulated',
+            badge: 'Projected',
+            metrics: [
+                { label: 'Employment Rate', value: simulated.employmentRate + '%', change: simulated.employmentDelta, unit: 'pp' },
+                { label: 'Avg Income', value: '₹' + simulated.income.toLocaleString(), change: simulated.incomeDeltaPct, unit: '%' },
+                { label: '365-Day Retention', value: simulated.retention + '%', change: simulated.retentionDelta, unit: 'pp' },
+                { label: 'Skill Match', value: simulated.skillMatch + '%', change: simulated.skillMatchDelta, unit: 'pp' },
+                { label: 'Non-Placement Rate', value: simulated.nonPlacement + '%', change: simulated.nonPlacementDelta, unit: 'pp', inverse: true }
+            ]
+        }
+    ];
+
+    container.innerHTML = cards.map(c => `
+        <div class="scenario-card ${c.className}">
+            <div class="scn-badge">${c.badge}</div>
+            <div class="scn-title">${c.title}</div>
+            ${c.metrics.map(m => {
+                let changeHtml = '';
+                if (m.change !== undefined) {
+                    const isPositive = m.inverse ? m.change < 0 : m.change > 0;
+                    const cls = isPositive ? 'up' : (m.change < 0 && !m.inverse ? 'down' : (m.inverse && m.change > 0 ? 'down' : 'up'));
+                    const sign = m.change > 0 ? '+' : '';
+                    changeHtml = `<div class="scn-metric" style="padding-top:2px;border:none;">
+                        <span class="label"></span>
+                        <span class="value ${cls}">${sign}${m.change}${m.unit}</span>
+                    </div>`;
+                }
+                return `
+                    <div class="scn-metric">
+                        <span class="label">${m.label}</span>
+                        <span class="value">${m.value}</span>
+                    </div>
+                    ${changeHtml}
+                `;
+            }).join('')}
+        </div>
+    `).join('');
+}
+
+/* ============================================================
+   IMPACT BAR CHART
+   ============================================================ */
+function renderImpactChart() {
+    const container = document.getElementById('impactChart');
+    const metrics = [
+        { label: 'Employment', baseline: baseline.employmentRate, simulated: simulated.employmentRate, unit: '%' },
+        { label: 'Retention', baseline: baseline.retention, simulated: simulated.retention, unit: '%' },
+        { label: 'Skill Match', baseline: baseline.skillMatch, simulated: simulated.skillMatch, unit: '%' },
+        { label: 'Non-Placement', baseline: baseline.nonPlacement, simulated: simulated.nonPlacement, unit: '%' }
+    ];
+
+    const maxVal = 100;
+
+    container.innerHTML = metrics.map(m => {
+        const baseHeight = (m.baseline / maxVal) * 180;
+        const simHeight = (m.simulated / maxVal) * 180;
+        const isImprovement = m.label === 'Non-Placement'
+            ? m.simulated < m.baseline
+            : m.simulated > m.baseline;
+        const simColor = isImprovement ? 'linear-gradient(180deg, #a855f7, #7c3aed)' : 'linear-gradient(180deg, #f87171, #dc2626)';
+
+        return `
+            <div class="impact-bar-group">
+                <div class="ib-base" style="height:${baseHeight}px;"></div>
+                <div class="ib-bar sim" style="height:${simHeight}px; background:${simColor};">
+                    <span class="ib-val">${m.simulated}${m.unit}</span>
+                </div>
+                <div class="ib-label">${m.label}<br><span style="font-size:9px;color:#94a3b8;">Base: ${m.baseline}${m.unit}</span></div>
+            </div>
+        `;
+    }).join('');
+}
+
+/* ============================================================
+   WATERFALL CHART
+   ============================================================ */
+function renderWaterfall() {
+    const container = document.getElementById('waterfall');
+
+    const contributions = [
+        { label: '🎓 Training Capacity', value: simulated.capacity * 0.20, unit: 'pp' },
+        { label: '💰 Budget Increase', value: Math.min(20, simulated.budget * 0.10), unit: 'pp' },
+        { label: '🤝 Placement Support', value: simulated.placement * 0.25, unit: 'pp' },
+        { label: '🗺️ Regional Targeting', value: simulated.region * 0.10, unit: 'pp' },
+        { label: '📚 Curriculum Quality', value: simulated.curriculum * 0.15, unit: 'pp (skill match)' },
+        { label: '🔁 Retention Programs', value: simulated.retention * 0.12, unit: 'pp (retention)' }
+    ];
+
+    const maxVal = Math.max(...contributions.map(c => c.value), 1);
+
+    container.innerHTML = contributions.map(c => {
+        const widthPct = (c.value / maxVal) * 100;
+        const isPositive = c.value > 0;
+        return `
+            <div class="wf-row">
+                <div class="wf-label">${c.label}</div>
+                <div class="wf-track">
+                    <div class="wf-bar ${isPositive ? 'positive' : 'negative'}" style="width:${Math.max(widthPct, 8)}%;">
+                        ${c.value.toFixed(1)}
+                    </div>
+                </div>
+                <div class="wf-value">+${c.value.toFixed(1)}${c.unit.split(' ')[0]}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+/* ============================================================
+   TIMELINE PROJECTION (SVG)
+   ============================================================ */
+function renderTimeline() {
+    const svg = document.getElementById('timelineChart');
+    const legend = document.getElementById('timelineLegend');
+
+    const months = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11', 'M12'];
+    const width = 800, height = 240, padding = 50;
+    const chartW = width - padding * 2;
+    const chartH = height - padding * 2;
+
+    // Baseline stays constant
+    const baselineSeries = months.map(() => baseline.employmentRate);
+
+    // Simulated: gradual ramp-up
+    const simulatedSeries = months.map((_, i) => {
+        const progress = Math.min(1, (i + 1) / 9); // Ramps up over 9 months
+        return baseline.employmentRate + (simulated.employmentRate - baseline.employmentRate) * progress;
+    });
+
+    const maxY = Math.max(...simulatedSeries, baseline.employmentRate, 50) * 1.15;
+    const minY = Math.min(...baselineSeries, ...simulatedSeries) * 0.85;
+
+    let svgContent = '';
+
+    // Grid
+    for (let i = 0; i <= 4; i++) {
+        const y = padding + (chartH / 4) * i;
+        svgContent += `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" stroke="#f1f5f9" stroke-width="1"/>`;
+        const val = Math.round(maxY - ((maxY - minY) / 4) * i);
+        svgContent += `<text x="${padding - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#94a3b8" font-family="Inter">${val}%</text>`;
+    }
+
+    // X axis
+    months.forEach((m, i) => {
+        const x = padding + (chartW / 11) * i;
+        svgContent += `<text x="${x}" y="${height - padding + 20}" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="Inter">${m}</text>`;
+    });
+
+    // Baseline line
+    const basePoints = baselineSeries.map((val, i) => {
+        const x = padding + (chartW / 11) * i;
+        const y = padding + chartH - ((val - minY) / (maxY - minY)) * chartH;
+        return `${x},${y}`;
+    }).join(' ');
+    svgContent += `<polyline points="${basePoints}" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,4"/>`;
+
+    // Simulated line
+    const simPoints = simulatedSeries.map((val, i) => {
+        const x = padding + (chartW / 11) * i;
+        const y = padding + chartH - ((val - minY) / (maxY - minY)) * chartH;
+        return `${x},${y}`;
+    }).join(' ');
+    svgContent += `<polyline points="${simPoints}" fill="none" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+    // Dots
+    simulatedSeries.forEach((val, i) => {
+        const x = padding + (chartW / 11) * i;
+        const y = padding + chartH - ((val - minY) / (maxY - minY)) * chartH;
+        svgContent += `<circle cx="${x}" cy="${y}" r="4" fill="#7c3aed" stroke="white" stroke-width="2"/>`;
+    });
+
+    // Shade area under simulated
+    const areaPath = `M ${padding},${padding + chartH} ` +
+        simulatedSeries.map((val, i) => {
+            const x = padding + (chartW / 11) * i;
+            const y = padding + chartH - ((val - minY) / (maxY - minY)) * chartH;
+            return `L ${x},${y}`;
+        }).join(' ') +
+        ` L ${padding + chartW},${padding + chartH} Z`;
+    svgContent += `<path d="${areaPath}" fill="rgba(124, 58, 237, 0.08)"/>`;
+
+    svg.innerHTML = svgContent;
+
+    legend.innerHTML = `
+        <div class="tl-item"><div class="tl-dot" style="background:#94a3b8;"></div> Baseline (no change)</div>
+        <div class="tl-item"><div class="tl-dot" style="background:#7c3aed;"></div> Simulated policy</div>
+        <div class="tl-item"><div class="tl-dot" style="background:rgba(124,58,237,0.2);"></div> Impact zone</div>
+    `;
+}
+
+/* ============================================================
+   INSIGHTS + RISK
+   ============================================================ */
+function renderInsights() {
+    const container = document.getElementById('insightsGrid');
+    const insights = [];
+
+    // Impact insight
+    if (simulated.employmentDelta > 15) {
+        insights.push({
+            icon: '🚀', bg: '#dcfce7', color: '#16a34a',
+            title: 'Transformative Impact',
+            text: `These levers together could increase employment by ${simulated.employmentDelta}pp — benefiting ~${simulated.additionalEmployed.toLocaleString()} additional trainees.`
+        });
+    } else if (simulated.employmentDelta > 5) {
+        insights.push({
+            icon: '📈', bg: '#dbeafe', color: '#2563eb',
+            title: 'Strong Positive Impact',
+            text: `Employment could improve by ${simulated.employmentDelta}pp, helping ~${simulated.additionalEmployed.toLocaleString()} trainees find work.`
+        });
+    } else if (simulated.employmentDelta > 0) {
+        insights.push({
+            icon: '📊', bg: '#fef3c7', color: '#d97706',
+            title: 'Modest Impact',
+            text: `Employment could improve by ${simulated.employmentDelta}pp. Consider increasing key levers to maximise impact.`
+        });
+    } else {
+        insights.push({
+            icon: '⚪', bg: '#f1f5f9', color: '#64748b',
+            title: 'No Significant Change',
+            text: 'Adjust levers to simulate policy impact on outcomes.'
+        });
+    }
+
+    // ROI insight
+    if (simulated.roi > 100) {
+        insights.push({
+            icon: '💰', bg: '#dcfce7', color: '#16a34a',
+            title: 'Strong ROI',
+            text: `Projected ROI of ${simulated.roi}% — every ₹1 invested generates ~₹${(simulated.roi / 100).toFixed(2)} in additional income.`
+        });
+    } else if (simulated.roi > 50) {
+        insights.push({
+            icon: '📊', bg: '#dbeafe', color: '#2563eb',
+            title: 'Moderate ROI',
+            text: `Projected ROI of ${simulated.roi}%. Consider optimising budget allocation for better returns.`
+        });
+    } else {
+        insights.push({
+            icon: '⚠️', bg: '#fef3c7', color: '#d97706',
+            title: 'Low ROI',
+            text: `Projected ROI of ${simulated.roi}%. Focus on highest-impact levers like Placement Support and Curriculum Quality.`
+        });
+    }
+
+    // Best lever insight
+    const levers = [
+        { name: 'Training Capacity', val: simulated.capacity * 0.20 },
+        { name: 'Budget Increase', val: Math.min(20, simulated.budget * 0.10) },
+        { name: 'Placement Support', val: simulated.placement * 0.25 },
+        { name: 'Regional Targeting', val: simulated.region * 0.10 },
+        { name: 'Curriculum Quality', val: simulated.curriculum * 0.15 }
+    ].sort((a, b) => b.val - a.val);
+
+    if (levers[0].val > 0) {
+        insights.push({
+            icon: '🎯', bg: '#ede9fe', color: '#7c3aed',
+            title: 'Highest-Impact Lever',
+            text: `"${levers[0].name}" is contributing most (+${levers[0].val.toFixed(1)}pp). Prioritise this in your policy design.`
+        });
+    }
+
+    // Risk insight
+    if (simulated.employmentDelta > 20) {
+        insights.push({
+            icon: '⚠️', bg: '#fef3c7', color: '#d97706',
+            title: 'Implementation Risk',
+            text: 'Aggressive targets require strong execution capacity. Consider phased rollout to manage risk.'
+        });
+    }
+
+    // Investment insight
+    insights.push({
+        icon: '💵', bg: '#f5f3ff', color: '#7c3aed',
+        title: 'Estimated Investment',
+        text: `Estimated total investment: ₹${formatIndianCurrency(simulated.estimatedInvestment)}. Projected annual income gain: ₹${formatIndianCurrency((simulated.income - baseline.avgIncome) * simulated.additionalEmployed * 12)}.`
+    });
+
+    container.innerHTML = insights.map(i => `
+        <div class="insight-card">
+            <div class="insight-icon" style="background:${i.bg}; color:${i.color};">${i.icon}</div>
+            <div>
+                <h4>${i.title}</h4>
+                <p>${i.text}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+/* ============================================================
+   PRESETS
+   ============================================================ */
+function applyPreset(preset) {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.preset-btn.${preset}`).classList.add('active');
+
+    const presets = {
+        conservative: { capacity: 10, budget: 20, placement: 15, curriculum: 10, region: 20, retention: 5 },
+        balanced: { capacity: 25, budget: 50, placement: 30, curriculum: 20, region: 40, retention: 15 },
+        aggressive: { capacity: 80, budget: 150, placement: 80, curriculum: 70, region: 80, retention: 60 },
+        gradual: { capacity: 15, budget: 30, placement: 20, curriculum: 25, region: 25, retention: 10 }
+    };
+
+    const config = presets[preset] || presets.balanced;
+    document.getElementById('leverCapacity').value = config.capacity;
+    document.getElementById('leverBudget').value = config.budget;
+    document.getElementById('leverPlacement').value = config.placement;
+    document.getElementById('leverCurriculum').value = config.curriculum;
+    document.getElementById('leverRegion').value = config.region;
+    document.getElementById('leverRetention').value = config.retention;
+
+    runSimulation();
+    showToast(`⚙️ Applied ${preset.charAt(0).toUpperCase() + preset.slice(1)} preset`);
+}
+
+function resetSimulator() {
+    document.getElementById('leverCapacity').value = 25;
+    document.getElementById('leverBudget').value = 50;
+    document.getElementById('leverPlacement').value = 30;
+    document.getElementById('leverCurriculum').value = 20;
+    document.getElementById('leverRegion').value = 40;
+    document.getElementById('leverRetention').value = 15;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.preset-btn.balanced').classList.add('active');
+    runSimulation();
+    showToast('🔄 Simulator reset to defaults');
+}
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+function saveScenario() {
+    const scenario = {
+        name: prompt('Name this scenario:', 'Scenario ' + (savedScenarios.length + 1)) || ('Scenario ' + (savedScenarios.length + 1)),
+        timestamp: new Date().toISOString(),
+        levers: {
+            capacity: simulated.capacity,
+            budget: simulated.budget,
+            placement: simulated.placement,
+            curriculum: simulated.curriculum,
+            region: simulated.region,
+            retention: simulated.retention
+        },
+        result: {
+            employmentRate: simulated.employmentRate,
+            employmentDelta: simulated.employmentDelta,
+            income: simulated.income,
+            retention: simulated.retention,
+            skillMatch: simulated.skillMatch,
+            roi: simulated.roi
+        }
+    };
+
+    savedScenarios.push(scenario);
+    try {
+        localStorage.setItem('savedScenarios', JSON.stringify(savedScenarios));
+    } catch (e) { /* silent */ }
+
+    document.getElementById('dsScenarios').textContent = savedScenarios.length;
+    showToast(`💾 Scenario "${scenario.name}" saved`);
+}
+
+function compareWithPrevious() {
+    if (savedScenarios.length === 0) {
+        showToast('⚠️ No saved scenarios to compare');
+        return;
+    }
+    const prev = savedScenarios[savedScenarios.length - 1];
+    alert(
+        `📊 SCENARIO COMPARISON\n\n` +
+        `Previous: ${prev.name}\n` +
+        `Employment: ${prev.result.employmentRate}% (Δ${prev.result.employmentDelta}pp)\n\n` +
+        `Current: Simulated Policy\n` +
+        `Employment: ${simulated.employmentRate}% (Δ${simulated.employmentDelta}pp)\n\n` +
+        `Difference: ${(simulated.employmentRate - prev.result.employmentRate).toFixed(1)}pp`
+    );
+}
+
+function exportReport() {
+    const report = {
+        generatedAt: new Date().toISOString(),
+        baseline,
+        simulated,
+        levers: {
+            capacity: simulated.capacity,
+            budget: simulated.budget,
+            placement: simulated.placement,
+            curriculum: simulated.curriculum,
+            region: simulated.region,
+            retention: simulated.retention
+        },
+        savingsScenarios: savedScenarios
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `what-if-simulation-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📥 Report exported');
+}
+
+function applyRecommendation() {
+    // Auto-apply "optimal" policy based on best impact-per-slider
+    document.getElementById('leverCapacity').value = 70;
+    document.getElementById('leverBudget').value = 120;
+    document.getElementById('leverPlacement').value = 75;
+    document.getElementById('leverCurriculum').value = 65;
+    document.getElementById('leverRegion').value = 70;
+    document.getElementById('leverRetention').value = 50;
+    runSimulation();
+    showToast('✨ Optimal policy applied — review the projected impact');
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function formatIndianCurrency(num) {
+    if (num >= 10000000) return (num / 10000000).toFixed(2) + ' Cr';
+    if (num >= 100000) return (num / 100000).toFixed(2) + ' L';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return Math.round(num).toLocaleString();
+}
+
+function updateDate() {
+    document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+    });
+}
+
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<i class="fas fa-info-circle" style="color:#7c3aed;font-size:16px;"></i> ${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+function showNotifications() {
+    alert(`📬 Notifications\n\n• ${savedScenarios.length} saved scenarios\n• Baseline employment: ${baseline.employmentRate}%\n• Projected: ${simulated.employmentRate}%\n• ROI: ${simulated.roi}%`);
+}
+
+function toggleProfileMenu() {
+    if (!_govtOfficer) return;
+    alert(`👤 ${_govtOfficer.name}\n\nEmail: ${_govtOfficer.email}\nDepartment: ${_govtOfficer.department}`);
+}
+
+function logout() {
+    if (!confirm('Are you sure you want to logout?')) return;
+    ['isLoggedIn', 'userRole', 'userId', 'userEmail', 'currentGovtOfficialId',
+     'govtOfficerName', 'govtAccessLevel', 'govtDepartment'].forEach(k => localStorage.removeItem(k));
+    window.location.href = '../auth/login.html?role=government';
+}
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const next = (html.getAttribute('data-theme') || 'light') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+    const icon = document.querySelector('.theme-toggle i');
+    if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+function updateSidebar() {
+    const name = _govtOfficer?.name || 'Government';
+    const role = _govtOfficer?.accessLevel ? `Admin · ${_govtOfficer.accessLevel}` : 'Admin';
+    const initial = name.charAt(0).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('sidebarRole').textContent = role;
+    document.getElementById('headerAvatar').textContent = initial;
+    document.getElementById('headerName').textContent = name;
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const saved = localStorage.getItem('skillintel-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    } catch (e) {}
+
+    try {
+        savedScenarios = JSON.parse(localStorage.getItem('savedScenarios') || '[]');
+    } catch (e) { savedScenarios = []; }
+
+    updateDate();
+    readGovtOfficer();
+
+    allRecords = await loadTrainees();
+    console.log('✅ Loaded', allRecords.length, 'trainees from Firestore');
+
+    baseline = computeBaseline(allRecords);
+    console.log('📊 Baseline:', baseline);
+
+    // Update banner stats
+    document.getElementById('dsTrainees').textContent = baseline.totalTrainees.toLocaleString();
+    document.getElementById('dsScenarios').textContent = savedScenarios.length;
+
+    // Run initial simulation
+    runSimulation();
+
+    document.addEventListener('click', function(e) {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.querySelector('.menu-toggle');
+        if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+            if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        }
+    });
+
+    console.log('🔮 What-If Policy Simulator initialized');
+});
+</script>
+
+<script src="../js/script.js"></script>
+</body>
+</html>

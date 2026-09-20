@@ -1181,21 +1181,23 @@
 
 <!-- ===== SIDEBAR ===== -->
 <nav class="sidebar" id="sidebar">
+    <div class="sidebar" id="sidebar">
     <div class="sidebar-brand">
         <div class="icon"><i class="fas fa-brain"></i></div>
         <div>
-            <h2>OutcomeIntel</h2>
+            <h2>Talent Bridge</h2>
             <p>Employer Portal</p>
         </div>
     </div>
 
     <div class="sidebar-user">
         <div class="avatar" id="sidebarAvatar">
+            E
             <span class="online-dot"></span>
         </div>
         <div class="info">
-            <div class="name" id="sidebarName"></div>
-            <div class="company" id="sidebarCompany"></div>
+            <div class="name" id="sidebarName">Employer</div>
+            <div class="company" id="sidebarCompany">Company Name</div>
             <div class="role">Employer · Admin</div>
         </div>
     </div>
@@ -1203,15 +1205,20 @@
     <div class="menu">
         <div class="menu-label">Main Menu</div>
         <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
-        <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees <span class="badge" id="pendingBadge" style="display:none;">0</span></a>
+        <a href="verify-trainee.html"><i class="fas fa-user-check"></i> Verify Trainees <span class="badge" id="pendingBadge">0</span></a>
         <a class="active" href="employement-details.html"><i class="fas fa-briefcase"></i> Employment Details</a>
+        <a href="job-requirements.html"><i class="fas fa-clipboard-list"></i> Job Requirements <span class="badge new">NEW</span></a>
         <a href="employer-feedback-form.html"><i class="fas fa-star"></i> Submit Feedback</a>
         <a href="feedback&skillsgap.html"><i class="fas fa-chart-bar"></i> Feedback & Skill Gap</a>
+
+        <div class="menu-label" style="margin-top:14px;">Smart Tools</div>
+        <a href="candidate-skill-alignment.html"><i class="fas fa-bullseye"></i> Skill Alignment <span class="badge new">NEW</span></a>
     </div>
 
     <div class="sidebar-footer">
         <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
+</div>
 </nav>
 
 <!-- ===== MAIN ===== -->

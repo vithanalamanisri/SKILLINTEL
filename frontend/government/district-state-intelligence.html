@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>District & State Intelligence · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f0f4f9; display: flex; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white; padding: 20px 14px;
+            position: fixed; height: 100vh; overflow-y: auto;
+            z-index: 100; transition: transform 0.3s ease;
+            scrollbar-width: thin;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px; }
+        .sidebar-brand .icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35); }
+        .sidebar-brand h2 { font-size: 17px; font-weight: 700; }
+        .sidebar-brand p { font-size: 9px; opacity: 0.5; font-weight: 500; margin-top: 1px; }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; }
+        .sidebar-user .avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+        .sidebar-user .info .name { font-size: 13px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 10px; opacity: 0.5; }
+        .menu-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.35; padding: 10px 10px 4px; font-weight: 700; }
+        .menu a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.65); text-decoration: none; transition: all 0.2s; margin: 1px 0; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active { background: rgba(255,255,255,0.12); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .menu a i { width: 18px; text-align: center; font-size: 14px; }
+        .menu a .badge { margin-left: auto; background: #ef4444; color: white; font-size: 9px; font-weight: 700; padding: 1px 8px; border-radius: 20px; }
+        .sidebar-footer { padding: 16px 10px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 12px; }
+        .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; color: rgba(255,255,255,0.5); text-decoration: none; transition: 0.2s; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+
+        /* ===== MAIN ===== */
+        .main-content { margin-left: 280px; flex: 1; padding: 0; min-height: 100vh; }
+        .header { background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226,232,240,0.6); position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 8px; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-toggle { display: none; background: none; border: none; font-size: 20px; color: #0b1a33; cursor: pointer; }
+        .header-left .page-title h1 { font-size: 18px; color: #0b1a33; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .header-left .page-title h1 i { color: #7c3aed; }
+        .header-left .page-title p { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right .date { font-size: 12px; color: #64748b; font-weight: 500; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; }
+        .header-right .notif { position: relative; font-size: 18px; color: #475569; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; width: 18px; height: 18px; font-size: 9px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .header-right .profile-btn { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 12px 4px 4px; border-radius: 30px; cursor: pointer; border: none; transition: 0.2s; }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+        .header-right .profile-btn .name { font-size: 12px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 12px; }
+
+        .container { padding: 20px 28px 28px; max-width: 1440px; margin: auto; }
+
+        /* ===== DATA SOURCE BANNER ===== */
+        .data-source-banner { background: linear-gradient(135deg, #065f46, #16a34a, #22c55e); color: white; padding: 12px 20px; border-radius: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(22,163,74,0.25); font-size: 12px; }
+        .data-source-banner .ds-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .data-source-banner .ds-content { flex: 1; }
+        .data-source-banner .ds-title { font-size: 13px; font-weight: 700; }
+        .data-source-banner .ds-sub { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+        .data-source-banner .ds-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+        .data-source-banner .ds-stat { text-align: center; background: rgba(255,255,255,0.12); padding: 4px 12px; border-radius: 8px; font-size: 10px; }
+        .data-source-banner .ds-stat strong { display: block; font-size: 15px; font-weight: 800; }
+
+        /* ===== WELCOME BANNER ===== */
+        .welcome-banner { background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed); color: white; padding: 22px 28px; border-radius: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .welcome-banner h2 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .welcome-banner p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+        .welcome-banner .banner-stats { display: flex; gap: 18px; flex-wrap: wrap; }
+        .welcome-banner .banner-stats div { text-align: center; background: rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 10px; }
+        .welcome-banner .banner-stats strong { font-size: 20px; display: block; }
+        .welcome-banner .banner-stats span { font-size: 10px; opacity: 0.7; }
+
+        /* ===== SECTIONS ===== */
+        .section-title { font-size: 16px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
+        .section-title i { color: #7c3aed; }
+        .section-title .badge-count { background: #ede9fe; padding: 1px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #7c3aed; margin-left: auto; }
+
+        /* ===== STATS ===== */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: white; border-radius: 14px; padding: 14px 16px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: all 0.3s; text-align: center; }
+        .stat-box:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(124,58,237,0.08); }
+        .stat-box .stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 0 auto 6px; }
+        .stat-box .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-box .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-icon.rose { background: #fce7f3; color: #db2777; }
+        .stat-box .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-box .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
+        .stat-box .stat-icon.red { background: #fee2e2; color: #dc2626; }
+        .stat-box .stat-number { font-size: 22px; font-weight: 800; color: #0b1a33; }
+        .stat-box .stat-label { font-size: 11px; color: #64748b; }
+        .stat-box .stat-trend { font-size: 10px; font-weight: 600; padding: 1px 8px; border-radius: 20px; display: inline-block; margin-top: 2px; }
+        .stat-box .stat-trend.good { background: #dcfce7; color: #16a34a; }
+        .stat-box .stat-trend.warning { background: #fef3c7; color: #d97706; }
+        .stat-box .stat-trend.danger { background: #fee2e2; color: #dc2626; }
+        .stat-box .stat-trend.neutral { background: #f1f5f9; color: #64748b; }
+
+        /* ===== FILTERS ===== */
+        .filters-section { background: white; border-radius: 16px; padding: 18px 22px; border: 1px solid #eef2f6; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .filters-section .filter-title { font-size: 13px; font-weight: 600; color: #0b1a33; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .filters-section .filter-title i { color: #7c3aed; }
+        .filters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+        .filter-group { display: flex; flex-direction: column; gap: 3px; }
+        .filter-group label { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
+        .filter-group select, .filter-group input { padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 12px; font-weight: 500; color: #0b1a33; background: #f8fafc; outline: none; width: 100%; font-family: inherit; }
+        .filter-group select:focus, .filter-group input:focus { border-color: #7c3aed; background: white; box-shadow: 0 0 0 3px rgba(124,58,237,0.08); }
+        .filter-actions { display: flex; gap: 8px; align-items: end; padding-bottom: 2px; }
+        .btn-filter { padding: 7px 18px; border: none; border-radius: 8px; background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; height: 38px; font-family: inherit; }
+        .btn-filter:hover { transform: scale(1.04); box-shadow: 0 8px 20px rgba(124,58,237,0.3); }
+        .btn-reset { padding: 7px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 12px; cursor: pointer; height: 38px; font-family: inherit; }
+        .btn-reset:hover { background: #f1f5f9; }
+
+        /* ===== VIEW TOGGLE ===== */
+        .view-toggle { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 16px; width: fit-content; }
+        .view-toggle button { padding: 8px 18px; border: none; border-radius: 8px; background: transparent; color: #64748b; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; font-family: inherit; }
+        .view-toggle button:hover { color: #0b1a33; }
+        .view-toggle button.active { background: white; color: #7c3aed; box-shadow: 0 2px 8px rgba(124,58,237,0.15); }
+
+        /* ===== TABLE ===== */
+        .table-container { background: white; border-radius: 16px; border: 1px solid #eef2f6; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .table-container .table-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; gap: 8px; }
+        .table-container .table-header h3 { font-size: 14px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 8px; }
+        .table-container .table-header h3 i { color: #7c3aed; }
+        .table-container .table-header .count { background: #f1f5f9; padding: 1px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; color: #475569; }
+        .table-wrapper { overflow-x: auto; }
+        .table-wrapper table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .table-wrapper thead { background: #f8fafc; border-bottom: 2px solid #eef2f6; }
+        .table-wrapper thead th { padding: 10px 14px; text-align: left; font-weight: 600; color: #475569; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+        .table-wrapper thead th i { margin-right: 4px; color: #94a3b8; }
+        .table-wrapper tbody tr { border-bottom: 1px solid #f1f5f9; transition: 0.2s; cursor: pointer; }
+        .table-wrapper tbody tr:hover { background: #f8fafc; }
+        .table-wrapper tbody td { padding: 10px 14px; color: #0b1a33; vertical-align: middle; }
+        .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        .rank-badge.rank-1 { background: #fef3c7; color: #d97706; }
+        .rank-badge.rank-2 { background: #e2e8f0; color: #475569; }
+        .rank-badge.rank-3 { background: #fed7aa; color: #c2410c; }
+        .rank-badge.rank-other { background: #f1f5f9; color: #94a3b8; }
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+        .status-badge.excellent { background: #dcfce7; color: #16a34a; }
+        .status-badge.good { background: #dbeafe; color: #2563eb; }
+        .status-badge.average { background: #fef3c7; color: #d97706; }
+        .status-badge.poor { background: #fee2e2; color: #dc2626; }
+        .progress-bar { width: 60px; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; display: inline-block; vertical-align: middle; }
+        .progress-bar .fill { height: 100%; border-radius: 10px; }
+
+        /* ===== DISTRICT CARDS ===== */
+        .district-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .district-card { background: white; border-radius: 16px; padding: 16px 18px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.3s; cursor: pointer; position: relative; overflow: hidden; }
+        .district-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(124,58,237,0.12); border-color: #c4b5fd; }
+        .district-card .dc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .district-card .dc-name { font-size: 14px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 6px; }
+        .district-card .dc-state { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .district-card .dc-rank { font-size: 18px; font-weight: 800; }
+        .district-card .dc-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+        .district-card .dc-metric { text-align: center; }
+        .district-card .dc-metric .value { font-size: 16px; font-weight: 800; color: #0b1a33; }
+        .district-card .dc-metric .label { font-size: 9px; color: #64748b; text-transform: uppercase; margin-top: 2px; }
+        .district-card .dc-progress { margin-top: 10px; }
+        .district-card .dc-progress .dc-bar { height: 5px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .district-card .dc-progress .dc-bar .fill { height: 100%; border-radius: 10px; transition: width 0.6s; }
+        .district-card .dc-progress .dc-label { display: flex; justify-content: space-between; font-size: 9.5px; color: #64748b; margin-top: 4px; }
+
+        /* ===== STATE CARDS ===== */
+        .state-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .state-card { background: white; border-radius: 16px; padding: 18px 20px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: 0.3s; position: relative; overflow: hidden; }
+        .state-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(124,58,237,0.12); }
+        .state-card .sc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .state-card .sc-name { font-size: 16px; font-weight: 700; color: #0b1a33; display: flex; align-items: center; gap: 8px; }
+        .state-card .sc-rank { font-size: 22px; font-weight: 900; }
+        .state-card .sc-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .state-card .sc-metric { text-align: center; padding: 8px 4px; background: #f8fafc; border-radius: 8px; }
+        .state-card .sc-metric .value { font-size: 15px; font-weight: 800; color: #0b1a33; }
+        .state-card .sc-metric .label { font-size: 9px; color: #64748b; margin-top: 2px; }
+        .state-card .sc-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: #64748b; }
+
+        /* ===== HEATMAP ===== */
+        .heatmap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-bottom: 20px; }
+        .heat-cell { aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; padding: 6px; text-align: center; }
+        .heat-cell:hover { transform: scale(1.08); z-index: 2; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .heat-cell.h0 { background: #f1f5f9; color: #94a3b8; }
+        .heat-cell.h1 { background: #fee2e2; color: #991b1b; }
+        .heat-cell.h2 { background: #fef3c7; color: #92400e; }
+        .heat-cell.h3 { background: #dbeafe; color: #1e40af; }
+        .heat-cell.h4 { background: #d1fae5; color: #065f46; }
+        .heat-cell.h5 { background: #a7f3d0; color: #064e3b; }
+        .heat-cell .hc-name { font-size: 9px; line-height: 1.1; margin-bottom: 2px; }
+        .heat-cell .hc-value { font-size: 13px; font-weight: 800; }
+
+        /* ===== BAR CHART ===== */
+        .bar-chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 180px; padding: 4px 0; gap: 8px; }
+        .bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+        .bar-group .bar { width: 100%; max-width: 40px; border-radius: 6px 6px 0 0; transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); min-height: 6px; position: relative; }
+        .bar-group .bar .bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #0b1a33; white-space: nowrap; }
+        .bar-group .bar-label { font-size: 9px; color: #64748b; margin-top: 6px; text-align: center; max-width: 70px; word-wrap: break-word; }
+        .bar-group .bar-label .count { font-weight: 700; color: #0b1a33; display: block; }
+
+        /* ===== DONUT ===== */
+        .donut-container { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 8px 0; flex-wrap: wrap; }
+        .donut { width: 150px; height: 150px; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .donut .donut-center { width: 85px; height: 85px; border-radius: 50%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .donut .donut-center .num { font-size: 22px; font-weight: 800; color: #0b1a33; }
+        .donut .donut-center .label { font-size: 9px; color: #64748b; }
+        .donut-legend { display: flex; flex-direction: column; gap: 6px; }
+        .donut-legend .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #475569; }
+        .donut-legend .legend-item .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .donut-legend .legend-item .pct { font-weight: 700; color: #0b1a33; margin-left: auto; }
+
+        /* ===== CHART GRID ===== */
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+        .chart-card { background: white; border-radius: 16px; padding: 18px 20px; border: 1px solid #eef2f6; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .chart-card .card-title { font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .chart-card .card-title i { color: #7c3aed; }
+
+        /* ===== INSIGHTS ===== */
+        .insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .insight-card { padding: 16px 18px; border-radius: 14px; border: 1px solid #eef2f6; background: #fafbff; display: flex; gap: 12px; align-items: flex-start; }
+        .insight-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+        .insight-card h4 { font-size: 13px; color: #0b1a33; margin-bottom: 4px; }
+        .insight-card p { font-size: 11.5px; color: #64748b; line-height: 1.5; }
+
+        /* ===== EMPTY ===== */
+        .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+        .empty-state i { font-size: 40px; display: block; margin-bottom: 10px; color: #c7d2fe; }
+
+        /* ===== TOAST ===== */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: white; padding: 14px 22px; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.15); border-left: 4px solid #7c3aed; max-width: 400px; z-index: 1000; font-size: 13px; color: #0b1a33; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .chart-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 10px 16px; }
+            .header-left .page-title h1 { font-size: 16px; }
+            .header-right .date { display: none; }
+            .container { padding: 12px 14px; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .welcome-banner { flex-direction: column; align-items: flex-start; }
+            .welcome-banner .banner-stats { width: 100%; justify-content: space-around; }
+            .district-grid { grid-template-columns: 1fr 1fr; }
+            .state-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+            .district-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>SkillBridge</h2>
+            <p>Government Portal</p>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">G</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Government</div>
+            <div class="role" id="sidebarRole">Admin</div>
+        </div>
+    </div>
+
+    <div class="menu-label">Analytics</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-home"></i> Overview</a>
+        <a href="government-analytics.html"><i class="fas fa-chart-line"></i> Government Analytics</a>
+        <a href="retention-analytics.html"><i class="fas fa-user-check"></i> Retention Analysis</a>
+        <a href="income.html"><i class="fas fa-rupee-sign"></i> Income/Livelihood</a>
+        <a href="training-to-job-relevance.html"><i class="fas fa-bullseye"></i> Training-Job Relevance</a>
+        <a href="non-placement-analysis.html"><i class="fas fa-user-slash"></i> Non-Placement Analysis</a>
+        <a href="program-comparison.html"><i class="fas fa-landmark"></i> Program Comparison</a>
+        <a href="district-state-intelligence.html" class="active"><i class="fas fa-map-marked-alt"></i> District & State <span class="badge">New</span></a>
+        <a href="skill-demand-supply.html"><i class="fas fa-scale-balanced"></i> Demand vs Supply</a>
+        <a href="skill-planning.html"><i class="fas fa-calendar-alt"></i> Skill Planning</a>
+        <a href="what-if-simulator.html"><i class="fas fa-flask"></i> What-If Simulator</a>
+        <a href="ai-insights.html"><i class="fas fa-robot"></i> AI Insights <span class="badge">New</span></a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-map-marked-alt"></i> District & State Intelligence</h1>
+                <p>Geographic performance analysis · Identify regional gaps · SIH26135</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><i class="fas fa-moon"></i></button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">G</div>
+                <span class="name" id="headerName">Government</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- ===== DATA SOURCE BANNER ===== -->
+        <div class="data-source-banner" id="dataSourceBanner">
+            <div class="ds-icon" id="dsIcon">🗺️</div>
+            <div class="ds-content">
+                <div class="ds-title" id="dsTitle">Loading geographic data…</div>
+                <div class="ds-sub" id="dsSub">Connecting to Firestore</div>
+            </div>
+            <div class="ds-stats">
+                <div class="ds-stat"><strong id="dsStates">0</strong>States</div>
+                <div class="ds-stat"><strong id="dsDistricts">0</strong>Districts</div>
+                <div class="ds-stat"><strong id="dsTrainees">0</strong>Trainees</div>
+            </div>
+        </div>
+
+        <!-- ===== WELCOME BANNER ===== -->
+        <div class="welcome-banner">
+            <div>
+                <h2><i class="fas fa-map"></i> Geographic Intelligence Dashboard</h2>
+                <p>Compare performance across states and districts · Identify high and low performers</p>
+            </div>
+            <div class="banner-stats">
+                <div><strong id="bannerStates">0</strong><span>States</span></div>
+                <div><strong id="bannerDistricts">0</strong><span>Districts</span></div>
+                <div><strong id="bannerTopState">—</strong><span>Top State</span></div>
+                <div><strong id="bannerTopDistrict">—</strong><span>Top District</span></div>
+            </div>
+        </div>
+
+        <!-- ===== FILTERS ===== -->
+        <div class="filters-section">
+            <div class="filter-title"><i class="fas fa-sliders-h"></i> Filter Geographic Data</div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label><i class="fas fa-map-pin"></i> State</label>
+                    <select id="filterState" onchange="applyFilters()">
+                        <option value="all">All States</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-city"></i> District</label>
+                    <select id="filterDistrict" onchange="applyFilters()">
+                        <option value="all">All Districts</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-graduation-cap"></i> Program</label>
+                    <select id="filterProgram" onchange="applyFilters()">
+                        <option value="all">All Programs</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-sort"></i> Sort By</label>
+                    <select id="filterSort" onchange="applyFilters()">
+                        <option value="trainees">Most Trainees</option>
+                        <option value="employment">Highest Employment</option>
+                        <option value="income">Highest Income</option>
+                        <option value="name">Name (A-Z)</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn-filter" onclick="applyFilters()"><i class="fas fa-search"></i> Apply</button>
+                    <button class="btn-reset" onclick="resetFilters()"><i class="fas fa-undo"></i> Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== KPIs ===== -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-icon purple"><i class="fas fa-map-pin"></i></div>
+                <div class="stat-number" id="kpiStates">0</div>
+                <div class="stat-label">States Covered</div>
+                <span class="stat-trend neutral">–</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon blue"><i class="fas fa-city"></i></div>
+                <div class="stat-number" id="kpiDistricts">0</div>
+                <div class="stat-label">Districts Covered</div>
+                <span class="stat-trend neutral">–</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon green"><i class="fas fa-users"></i></div>
+                <div class="stat-number" id="kpiTrainees">0</div>
+                <div class="stat-label">Total Trainees</div>
+                <span class="stat-trend good">● Live</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon orange"><i class="fas fa-briefcase"></i></div>
+                <div class="stat-number" id="kpiEmployment">0%</div>
+                <div class="stat-label">Avg Employment Rate</div>
+                <span class="stat-trend warning">● National</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon teal"><i class="fas fa-rupee-sign"></i></div>
+                <div class="stat-number" id="kpiIncome">₹0</div>
+                <div class="stat-label">Avg Income</div>
+                <span class="stat-trend good">● Live</span>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-number" id="kpiLowPerformers">0</div>
+                <div class="stat-label">Low-Performing Districts</div>
+                <span class="stat-trend danger">● Action</span>
+            </div>
+        </div>
+
+        <!-- ===== VIEW TOGGLE ===== -->
+        <div class="view-toggle">
+            <button class="active" onclick="switchView('state')" id="viewStateBtn">
+                <i class="fas fa-flag"></i> State View
+            </button>
+            <button onclick="switchView('district')" id="viewDistrictBtn">
+                <i class="fas fa-map-pin"></i> District View
+            </button>
+        </div>
+
+        <!-- ===== STATE VIEW ===== -->
+        <div id="stateView">
+            <div class="section-title">
+                <i class="fas fa-flag"></i> State-wise Performance
+                <span class="badge-count" id="stateCountBadge">—</span>
+            </div>
+            <div class="state-grid" id="stateGrid"></div>
+        </div>
+
+        <!-- ===== DISTRICT VIEW ===== -->
+        <div id="districtView" style="display:none;">
+            <div class="section-title">
+                <i class="fas fa-map-pin"></i> District-wise Performance
+                <span class="badge-count" id="districtCountBadge">—</span>
+            </div>
+            <div class="district-grid" id="districtGrid"></div>
+        </div>
+
+        <!-- ===== TOP PERFORMERS BAR CHART ===== -->
+        <div class="section-title">
+            <i class="fas fa-chart-bar"></i> Top Performing <span id="chartTitle">States</span>
+            <span class="badge-count">By Employment Rate</span>
+        </div>
+        <div class="chart-card">
+            <div class="bar-chart-container" id="topPerformersChart"></div>
+        </div>
+
+        <!-- ===== GEOGRAPHIC HEATMAP ===== -->
+        <div class="section-title">
+            <i class="fas fa-fire"></i> Employment Rate Heatmap
+            <span class="badge-count">Darker = higher employment</span>
+        </div>
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+
+        <!-- ===== COMPARATIVE ANALYTICS ===== -->
+        <div class="chart-grid">
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-chart-pie"></i> Employment Distribution</div>
+                <div class="donut-container" id="employmentDonut">
+                    <div class="donut" id="employmentDonutChart">
+                        <div class="donut-center">
+                            <div class="num" id="employmentDonutTotal">0</div>
+                            <div class="label">Trainees</div>
+                        </div>
+                    </div>
+                    <div class="donut-legend" id="employmentLegend"></div>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="card-title"><i class="fas fa-chart-bar"></i> Income Distribution</div>
+                <div class="donut-container" id="incomeDonut">
+                    <div class="donut" id="incomeDonutChart">
+                        <div class="donut-center">
+                            <div class="num" id="incomeDonutTotal">0</div>
+                            <div class="label">Earning</div>
+                        </div>
+                    </div>
+                    <div class="donut-legend" id="incomeLegend"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== DETAILED TABLE ===== -->
+        <div class="section-title">
+            <i class="fas fa-table"></i> Detailed <span id="tableTitle">State</span> Intelligence
+            <span class="badge-count" id="tableCountBadge">—</span>
+        </div>
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-list"></i> Geographic Performance Matrix</h3>
+                <span class="count" id="matrixCount">0 regions</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag"></i> Rank</th>
+                            <th><i class="fas fa-map-pin"></i> <span id="colName">State</span></th>
+                            <th><i class="fas fa-users"></i> Trainees</th>
+                            <th><i class="fas fa-briefcase"></i> Employed</th>
+                            <th><i class="fas fa-percent"></i> Employment Rate</th>
+                            <th><i class="fas fa-rupee-sign"></i> Avg Income</th>
+                            <th><i class="fas fa-graduation-cap"></i> Top Program</th>
+                            <th><i class="fas fa-flag"></i> Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrixBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== AI INSIGHTS ===== -->
+        <div class="section-title">
+            <i class="fas fa-lightbulb"></i> Geographic Insights
+            <span class="badge-count">Auto-generated</span>
+        </div>
+        <div class="insights-grid" id="insightsGrid"></div>
+
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   FIREBASE CONFIG — same as all other govt pages
+   ============================================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
+
+let db = null;
+try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+} catch (e) { console.warn('Firebase init failed:', e.message); }
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let allRecords = [];       // all trainee records
+let stateData = [];        // aggregated state-level intelligence
+let districtData = [];     // aggregated district-level intelligence
+let filteredStates = [];
+let filteredDistricts = [];
+let currentView = 'state';
+let stats = {};
+let _govtOfficer = null;
+
+/* ============================================================
+   AUTH (non-blocking read)
+   ============================================================ */
+function readGovtOfficer() {
+    _govtOfficer = {
+        name: localStorage.getItem('govtOfficerName') || 'Government Official',
+        accessLevel: localStorage.getItem('govtAccessLevel') || 'State',
+        department: localStorage.getItem('govtDepartment') || 'Skill Development',
+        email: localStorage.getItem('userEmail') || '',
+    };
+    return _govtOfficer;
+}
+
+/* ============================================================
+   LOAD TRAINEES FROM FIRESTORE
+   Same field-mapping pattern as all your other govt pages
+   ============================================================ */
+async function loadTrainees() {
+    const records = [];
+    if (!db) return records;
+
+    try {
+        const snap = await db.collection('trainees').get();
+        snap.forEach(doc => {
+            const t = doc.data();
+            const emp = t.employment || {};
+
+            // Determine employment status
+            let status = 'unemployed';
+            let income = 0;
+            if (emp) {
+                const empType = (emp.status || emp.employmentType || '').toLowerCase();
+                if (empType.includes('self')) status = 'self-employed';
+                else if (empType.includes('intern') || empType.includes('apprentice')) status = 'internship';
+                else if (empType.includes('employ') || empType.includes('verified') || empType.includes('full')) status = 'employed';
+                income = Number(emp.currentIncome || emp.monthlyIncome) || 0;
+            }
+
+            // Determine training progress
+            const progress = Number(t.trainingProgress) || 0;
+            const certified = t.certificationStatus === 'Certified';
+
+            records.push({
+                id: doc.id,
+                name: t.fullName || 'Trainee',
+                state: t.state || 'Unknown',
+                district: t.district || 'Unknown',
+                program: t.skillTrade || t.trainingProgram || t.qualification || 'General',
+                provider: t.trainingProvider || 'N/A',
+                sector: t.sector || t.industry || 'General',
+                status: status,
+                income: income,
+                trainingProgress: progress,
+                certified: certified,
+                completed: progress >= 100 || certified,
+                employed: ['employed', 'self-employed', 'internship'].includes(status)
+            });
+        });
+    } catch (e) {
+        console.warn('Trainee load failed:', e.message);
+    }
+    return records;
+}
+
+/* ============================================================
+   AGGREGATE BY STATE
+   ============================================================ */
+function aggregateByState(records) {
+    const map = {};
+    records.forEach(r => {
+        const key = r.state || 'Unknown';
+        if (!map[key]) {
+            map[key] = {
+                name: key,
+                trainees: 0,
+                employed: 0,
+                selfEmployed: 0,
+                internship: 0,
+                unemployed: 0,
+                completed: 0,
+                certified: 0,
+                totalIncome: 0,
+                incomeCount: 0,
+                programs: {},
+                districts: {}
+            };
+        }
+        const s = map[key];
+        s.trainees++;
+        if (r.status === 'employed') s.employed++;
+        else if (r.status === 'self-employed') s.selfEmployed++;
+        else if (r.status === 'internship') s.internship++;
+        else s.unemployed++;
+        if (r.completed) s.completed++;
+        if (r.certified) s.certified++;
+        if (r.income > 0) {
+            s.totalIncome += r.income;
+            s.incomeCount++;
+        }
+        // Track program distribution
+        s.programs[r.program] = (s.programs[r.program] || 0) + 1;
+        // Track districts
+        s.districts[r.district] = (s.districts[r.district] || 0) + 1;
+    });
+
+    // Compute derived metrics
+    return Object.values(map).map(s => {
+        const totalEmployed = s.employed + s.selfEmployed + s.internship;
+        const employmentRate = s.trainees > 0 ? Math.round((totalEmployed / s.trainees) * 100) : 0;
+        const avgIncome = s.incomeCount > 0 ? Math.round(s.totalIncome / s.incomeCount) : 0;
+        const topProgram = Object.entries(s.programs).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+        const districtCount = Object.keys(s.districts).length;
+
+        let status = 'Average';
+        if (employmentRate >= 75) status = 'Excellent';
+        else if (employmentRate >= 60) status = 'Good';
+        else if (employmentRate >= 40) status = 'Average';
+        else status = 'Poor';
+
+        return {
+            name: s.name,
+            trainees: s.trainees,
+            employed: s.employed,
+            selfEmployed: s.selfEmployed,
+            internship: s.internship,
+            unemployed: s.unemployed,
+            totalEmployed,
+            completed: s.completed,
+            certified: s.certified,
+            employmentRate,
+            avgIncome,
+            topProgram,
+            districtCount,
+            status,
+            programs: s.programs,
+            districts: s.districts
+        };
+    });
+}
+
+/* ============================================================
+   AGGREGATE BY DISTRICT
+   ============================================================ */
+function aggregateByDistrict(records) {
+    const map = {};
+    records.forEach(r => {
+        const key = `${r.state}|${r.district}`;
+        if (!map[key]) {
+            map[key] = {
+                name: r.district || 'Unknown',
+                state: r.state || 'Unknown',
+                trainees: 0,
+                employed: 0,
+                selfEmployed: 0,
+                internship: 0,
+                unemployed: 0,
+                completed: 0,
+                certified: 0,
+                totalIncome: 0,
+                incomeCount: 0,
+                programs: {}
+            };
+        }
+        const d = map[key];
+        d.trainees++;
+        if (r.status === 'employed') d.employed++;
+        else if (r.status === 'self-employed') d.selfEmployed++;
+        else if (r.status === 'internship') d.internship++;
+        else d.unemployed++;
+        if (r.completed) d.completed++;
+        if (r.certified) d.certified++;
+        if (r.income > 0) {
+            d.totalIncome += r.income;
+            d.incomeCount++;
+        }
+        d.programs[r.program] = (d.programs[r.program] || 0) + 1;
+    });
+
+    return Object.values(map).map(d => {
+        const totalEmployed = d.employed + d.selfEmployed + d.internship;
+        const employmentRate = d.trainees > 0 ? Math.round((totalEmployed / d.trainees) * 100) : 0;
+        const avgIncome = d.incomeCount > 0 ? Math.round(d.totalIncome / d.incomeCount) : 0;
+        const topProgram = Object.entries(d.programs).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+
+        let status = 'Average';
+        if (employmentRate >= 75) status = 'Excellent';
+        else if (employmentRate >= 60) status = 'Good';
+        else if (employmentRate >= 40) status = 'Average';
+        else status = 'Poor';
+
+        return {
+            name: d.name,
+            state: d.state,
+            trainees: d.trainees,
+            employed: d.employed,
+            selfEmployed: d.selfEmployed,
+            internship: d.internship,
+            unemployed: d.unemployed,
+            totalEmployed,
+            completed: d.completed,
+            certified: d.certified,
+            employmentRate,
+            avgIncome,
+            topProgram,
+            status
+        };
+    });
+}
+
+/* ============================================================
+   APPLY FILTERS
+   ============================================================ */
+function filterRecords() {
+    const state = document.getElementById('filterState').value;
+    const district = document.getElementById('filterDistrict').value;
+    const program = document.getElementById('filterProgram').value;
+
+    return allRecords.filter(r => {
+        if (state !== 'all' && r.state !== state) return false;
+        if (district !== 'all' && r.district !== district) return false;
+        if (program !== 'all' && r.program !== program) return false;
+        return true;
+    });
+}
+
+/* ============================================================
+   STATS
+   ============================================================ */
+function computeStats(filteredStates, filteredDistricts, filteredRecords) {
+    const totalTrainees = filteredRecords.length;
+    const totalEmployed = filteredRecords.filter(r => r.employed).length;
+    const avgEmployment = totalTrainees > 0 ? Math.round((totalEmployed / totalTrainees) * 100) : 0;
+
+    const incomes = filteredRecords.filter(r => r.income > 0).map(r => r.income);
+    const avgIncome = incomes.length > 0 ? Math.round(incomes.reduce((a, b) => a + b, 0) / incomes.length) : 0;
+
+    const lowPerformers = filteredDistricts.filter(d => d.employmentRate < 40 && d.trainees >= 5).length;
+
+    const topState = filteredStates.length > 0
+        ? filteredStates.reduce((b, s) => s.employmentRate > b.employmentRate ? s : b, filteredStates[0])
+        : null;
+    const topDistrict = filteredDistricts.length > 0
+        ? filteredDistricts.reduce((b, d) => d.employmentRate > b.employmentRate ? d : b, filteredDistricts[0])
+        : null;
+
+    stats = {
+        totalStates: filteredStates.length,
+        totalDistricts: filteredDistricts.length,
+        totalTrainees,
+        totalEmployed,
+        avgEmployment,
+        avgIncome,
+        lowPerformers,
+        topState,
+        topDistrict
+    };
+    return stats;
+}
+
+/* ============================================================
+   RENDER FUNCTIONS
+   ============================================================ */
+function renderAll() {
+    const filteredRecords = filterRecords();
+    stateData = aggregateByState(filteredRecords);
+    districtData = aggregateByDistrict(filteredRecords);
+
+    // Apply sorting
+    const sortBy = document.getElementById('filterSort').value;
+    const sortFn = (a, b) => {
+        if (sortBy === 'trainees') return b.trainees - a.trainees;
+        if (sortBy === 'employment') return b.employmentRate - a.employmentRate;
+        if (sortBy === 'income') return b.avgIncome - a.avgIncome;
+        if (sortBy === 'name') return a.name.localeCompare(b.name);
+        return 0;
+    };
+    stateData.sort(sortFn);
+    districtData.sort(sortFn);
+
+    filteredStates = stateData;
+    filteredDistricts = districtData;
+    computeStats(filteredStates, filteredDistricts, filteredRecords);
+
+    renderDataSourceBanner();
+    renderBanner();
+    renderKPIs();
+    renderStateCards();
+    renderDistrictCards();
+    renderTopPerformersChart();
+    renderHeatmap();
+    renderEmploymentDonut();
+    renderIncomeDonut();
+    renderMatrix();
+    renderInsights();
+    updateSidebar();
+    updateNotificationBadge();
+}
+
+function renderDataSourceBanner() {
+    document.getElementById('dsTitle').textContent = 'Live Firestore Data';
+    document.getElementById('dsSub').textContent = `${allRecords.length} trainee records · ${stateData.length} states · ${districtData.length} districts`;
+    document.getElementById('dsStates').textContent = stateData.length;
+    document.getElementById('dsDistricts').textContent = districtData.length;
+    document.getElementById('dsTrainees').textContent = allRecords.length;
+}
+
+function renderBanner() {
+    document.getElementById('bannerStates').textContent = stats.totalStates;
+    document.getElementById('bannerDistricts').textContent = stats.totalDistricts;
+    document.getElementById('bannerTopState').textContent = stats.topState ? stats.topState.name : '—';
+    document.getElementById('bannerTopDistrict').textContent = stats.topDistrict ? stats.topDistrict.name : '—';
+}
+
+function renderKPIs() {
+    document.getElementById('kpiStates').textContent = stats.totalStates;
+    document.getElementById('kpiDistricts').textContent = stats.totalDistricts;
+    document.getElementById('kpiTrainees').textContent = stats.totalTrainees.toLocaleString();
+    document.getElementById('kpiEmployment').textContent = stats.avgEmployment + '%';
+    document.getElementById('kpiIncome').textContent = '₹' + (stats.avgIncome >= 1000 ? (stats.avgIncome / 1000).toFixed(1) + 'K' : stats.avgIncome);
+    document.getElementById('kpiLowPerformers').textContent = stats.lowPerformers;
+}
+
+function renderStateCards() {
+    const grid = document.getElementById('stateGrid');
+    document.getElementById('stateCountBadge').textContent = stateData.length + ' states';
+
+    if (stateData.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-map"></i><p>No state data available</p></div>';
+        return;
+    }
+
+    grid.innerHTML = stateData.map((s, i) => {
+        const rank = i + 1;
+        const rankColor = rank === 1 ? '#d97706' : rank === 2 ? '#475569' : rank === 3 ? '#c2410c' : '#94a3b8';
+        const statusClass = s.status === 'Excellent' ? 'excellent' :
+                           s.status === 'Good' ? 'good' :
+                           s.status === 'Average' ? 'average' : 'poor';
+        return `
+            <div class="state-card" onclick="drilldownState('${escapeHtml(s.name)}')">
+                <div class="sc-header">
+                    <div>
+                        <div class="sc-name">📍 ${escapeHtml(s.name)}</div>
+                        <div style="font-size:10px;color:#64748b;margin-top:2px;">${s.districtCount} districts covered</div>
+                    </div>
+                    <div class="sc-rank" style="color:${rankColor};">#${rank}</div>
+                </div>
+                <div class="sc-metrics">
+                    <div class="sc-metric">
+                        <div class="value">${s.trainees}</div>
+                        <div class="label">Trainees</div>
+                    </div>
+                    <div class="sc-metric">
+                        <div class="value" style="color:#16a34a;">${s.totalEmployed}</div>
+                        <div class="label">Employed</div>
+                    </div>
+                    <div class="sc-metric">
+                        <div class="value" style="color:${s.employmentRate >= 60 ? '#16a34a' : s.employmentRate >= 40 ? '#d97706' : '#dc2626'};">${s.employmentRate}%</div>
+                        <div class="label">Employment</div>
+                    </div>
+                </div>
+                <div class="sc-footer">
+                    <span><i class="fas fa-rupee-sign"></i> ₹${s.avgIncome.toLocaleString()}</span>
+                    <span class="status-badge ${statusClass}">${s.status}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderDistrictCards() {
+    const grid = document.getElementById('districtGrid');
+    document.getElementById('districtCountBadge').textContent = districtData.length + ' districts';
+
+    if (districtData.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-city"></i><p>No district data available</p></div>';
+        return;
+    }
+
+    grid.innerHTML = districtData.map((d, i) => {
+        const rank = i + 1;
+        const rankColor = rank === 1 ? '#d97706' : rank === 2 ? '#475569' : rank === 3 ? '#c2410c' : '#94a3b8';
+        const empColor = d.employmentRate >= 60 ? '#16a34a' : d.employmentRate >= 40 ? '#d97706' : '#dc2626';
+        return `
+            <div class="district-card">
+                <div class="dc-header">
+                    <div>
+                        <div class="dc-name">📍 ${escapeHtml(d.name)}</div>
+                        <div class="dc-state">${escapeHtml(d.state)}</div>
+                    </div>
+                    <div class="dc-rank" style="color:${rankColor};">#${rank}</div>
+                </div>
+                <div class="dc-metrics">
+                    <div class="dc-metric">
+                        <div class="value">${d.trainees}</div>
+                        <div class="label">Trainees</div>
+                    </div>
+                    <div class="dc-metric">
+                        <div class="value" style="color:${empColor};">${d.employmentRate}%</div>
+                        <div class="label">Employment</div>
+                    </div>
+                </div>
+                <div class="dc-progress">
+                    <div class="dc-bar"><div class="fill" style="width:${d.employmentRate}%;background:${empColor};"></div></div>
+                    <div class="dc-label">
+                        <span>₹${d.avgIncome.toLocaleString()}</span>
+                        <span>${d.totalEmployed}/${d.trainees} employed</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderTopPerformersChart() {
+    const container = document.getElementById('topPerformersChart');
+    const data = currentView === 'state' ? stateData : districtData;
+    const top = [...data].sort((a, b) => b.employmentRate - a.employmentRate).slice(0, 8);
+    document.getElementById('chartTitle').textContent = currentView === 'state' ? 'States' : 'Districts';
+
+    if (top.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-chart-bar"></i><p>No data</p></div>';
+        return;
+    }
+
+    const maxRate = Math.max(...top.map(t => t.employmentRate), 1);
+
+    container.innerHTML = top.map(t => {
+        const height = Math.max((t.employmentRate / maxRate) * 150, 10);
+        const color = t.employmentRate >= 75 ? '#22c55e' :
+                     t.employmentRate >= 60 ? '#16a34a' :
+                     t.employmentRate >= 40 ? '#eab308' : '#ef4444';
+        return `
+            <div class="bar-group">
+                <div class="bar" style="height:${height}px;background:${color};">
+                    <span class="bar-value">${t.employmentRate}%</span>
+                </div>
+                <div class="bar-label">
+                    ${escapeHtml(t.name.length > 12 ? t.name.substring(0, 12) + '…' : t.name)}
+                    <span class="count">${t.trainees}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderHeatmap() {
+    const grid = document.getElementById('heatmapGrid');
+    const data = currentView === 'state' ? stateData : districtData;
+
+    if (data.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">No data</div>';
+        return;
+    }
+
+    const sorted = [...data].sort((a, b) => b.employmentRate - a.employmentRate);
+    grid.innerHTML = sorted.map(d => {
+        let level = 0;
+        if (d.employmentRate >= 80) level = 5;
+        else if (d.employmentRate >= 65) level = 4;
+        else if (d.employmentRate >= 50) level = 3;
+        else if (d.employmentRate >= 35) level = 2;
+        else if (d.employmentRate >= 20) level = 1;
+        else level = 0;
+
+        const short = d.name.length > 10 ? d.name.substring(0, 8) + '…' : d.name;
+        return `
+            <div class="heat-cell h${level}" title="${escapeHtml(d.name)}: ${d.employmentRate}% employment, ${d.trainees} trainees">
+                <div class="hc-name">${escapeHtml(short)}</div>
+                <div class="hc-value">${d.employmentRate}%</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderEmploymentDonut() {
+    const container = document.getElementById('employmentDonutChart');
+    const legend = document.getElementById('employmentLegend');
+
+    const filteredRecords = filterRecords();
+    const employed = filteredRecords.filter(r => r.status === 'employed').length;
+    const selfEmployed = filteredRecords.filter(r => r.status === 'self-employed').length;
+    const internship = filteredRecords.filter(r => r.status === 'internship').length;
+    const unemployed = filteredRecords.filter(r => r.status === 'unemployed').length;
+    const total = filteredRecords.length;
+
+    if (total === 0) {
+        container.style.background = '#e2e8f0';
+        document.getElementById('employmentDonutTotal').textContent = '0';
+        legend.innerHTML = '<div class="legend-item" style="color:#64748b;">No data</div>';
+        return;
+    }
+
+    const data = [
+        { label: 'Employed', value: employed, color: '#22c55e' },
+        { label: 'Self-Employed', value: selfEmployed, color: '#2563eb' },
+        { label: 'Internship', value: internship, color: '#d97706' },
+        { label: 'Unemployed', value: unemployed, color: '#dc2626' }
+    ];
+
+    let gradient = '';
+    let angle = 0;
+    data.forEach(d => {
+        const pct = (d.value / total) * 100;
+        if (pct > 0) {
+            const deg = (pct / 100) * 360;
+            gradient += `${d.color} ${angle}deg ${angle + deg}deg, `;
+            angle += deg;
+        }
+    });
+    gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
+
+    container.style.background = `conic-gradient(${gradient})`;
+    document.getElementById('employmentDonutTotal').textContent = total;
+
+    legend.innerHTML = data.map(d => {
+        const pct = Math.round((d.value / total) * 100);
+        return `
+            <div class="legend-item">
+                <div class="dot" style="background:${d.color};"></div>
+                ${d.label} <span class="pct">${d.value} (${pct}%)</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderIncomeDonut() {
+    const container = document.getElementById('incomeDonutChart');
+    const legend = document.getElementById('incomeLegend');
+
+    const filteredRecords = filterRecords();
+    const dist = {
+        'No Income': 0,
+        '₹0-10K': 0,
+        '₹10K-20K': 0,
+        '₹20K-30K': 0,
+        '₹30K+': 0
+    };
+
+    let earningCount = 0;
+    filteredRecords.forEach(r => {
+        if (r.income === 0) dist['No Income']++;
+        else if (r.income <= 10000) dist['₹0-10K']++;
+        else if (r.income <= 20000) dist['₹10K-20K']++;
+        else if (r.income <= 30000) dist['₹20K-30K']++;
+        else dist['₹30K+']++;
+        if (r.income > 0) earningCount++;
+    });
+
+    const total = filteredRecords.length;
+    if (total === 0) {
+        container.style.background = '#e2e8f0';
+        document.getElementById('incomeDonutTotal').textContent = '0';
+        legend.innerHTML = '<div class="legend-item" style="color:#64748b;">No data</div>';
+        return;
+    }
+
+    const colors = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#2563eb'];
+    const labels = Object.keys(dist);
+    const values = Object.values(dist);
+
+    let gradient = '';
+    let angle = 0;
+    values.forEach((val, i) => {
+        const pct = (val / total) * 100;
+        if (pct > 0) {
+            const deg = (pct / 100) * 360;
+            gradient += `${colors[i]} ${angle}deg ${angle + deg}deg, `;
+            angle += deg;
+        }
+    });
+    gradient = gradient.slice(0, -2) || '#e2e8f0 0deg 360deg';
+
+    container.style.background = `conic-gradient(${gradient})`;
+    document.getElementById('incomeDonutTotal').textContent = earningCount;
+
+    legend.innerHTML = labels.map((label, i) => {
+        const pct = total > 0 ? Math.round((values[i] / total) * 100) : 0;
+        return `
+            <div class="legend-item">
+                <div class="dot" style="background:${colors[i]};"></div>
+                ${label} <span class="pct">${values[i]} (${pct}%)</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderMatrix() {
+    const tbody = document.getElementById('matrixBody');
+    const data = currentView === 'state' ? stateData : districtData;
+    document.getElementById('tableTitle').textContent = currentView === 'state' ? 'State' : 'District';
+    document.getElementById('colName').textContent = currentView === 'state' ? 'State' : 'District';
+    document.getElementById('matrixCount').textContent = data.length + ' regions';
+    document.getElementById('tableCountBadge').textContent = data.length + ' regions';
+
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">No data</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = data.map((d, i) => {
+        const rank = i + 1;
+        const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+        const statusClass = d.status === 'Excellent' ? 'excellent' :
+                           d.status === 'Good' ? 'good' :
+                           d.status === 'Average' ? 'average' : 'poor';
+        const empColor = d.employmentRate >= 60 ? '#16a34a' :
+                        d.employmentRate >= 40 ? '#d97706' : '#dc2626';
+        return `
+            <tr onclick="drilldownRow('${escapeHtml(d.name)}', '${escapeHtml(d.state || '')}')">
+                <td><span class="rank-badge ${rankClass}">${rank}</span></td>
+                <td>
+                    <strong>${escapeHtml(d.name)}</strong>
+                    ${d.state ? `<div style="font-size:10px;color:#64748b;">${escapeHtml(d.state)}</div>` : ''}
+                </td>
+                <td>${d.trainees.toLocaleString()}</td>
+                <td style="color:#16a34a;font-weight:700;">${d.totalEmployed.toLocaleString()}</td>
+                <td>
+                    <div class="progress-bar"><div class="fill" style="width:${d.employmentRate}%;background:${empColor};"></div></div>
+                    <span style="margin-left:6px;font-size:11px;font-weight:700;color:${empColor};">${d.employmentRate}%</span>
+                </td>
+                <td>₹${d.avgIncome.toLocaleString()}</td>
+                <td><span style="font-size:11px;color:#64748b;">${escapeHtml(d.topProgram)}</span></td>
+                <td><span class="status-badge ${statusClass}">${d.status}</span></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderInsights() {
+    const grid = document.getElementById('insightsGrid');
+    if (stateData.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-lightbulb"></i><p>No insights available</p></div>';
+        return;
+    }
+
+    const insights = [];
+
+    // Top performer
+    const top = [...stateData].sort((a, b) => b.employmentRate - a.employmentRate)[0];
+    if (top) {
+        insights.push({
+            icon: '🏆', bg: '#fef3c7', color: '#d97706',
+            title: 'Top Performing State',
+            text: `${top.name} leads with ${top.employmentRate}% employment rate across ${top.trainees} trainees.`
+        });
+    }
+
+    // Bottom performer
+    const low = [...stateData].filter(s => s.trainees >= 5).sort((a, b) => a.employmentRate - b.employmentRate)[0];
+    if (low) {
+        insights.push({
+            icon: '⚠️', bg: '#fef2f2', color: '#dc2626',
+            title: 'Needs Intervention',
+            text: `${low.name} has only ${low.employmentRate}% employment rate — targeted programs recommended.`
+        });
+    }
+
+    // Highest income
+    const topIncome = [...stateData].sort((a, b) => b.avgIncome - a.avgIncome)[0];
+    if (topIncome) {
+        insights.push({
+            icon: '💰', bg: '#dcfce7', color: '#16a34a',
+            title: 'Highest Avg Income',
+            text: `${topIncome.name} trainees earn ₹${topIncome.avgIncome.toLocaleString()} on average.`
+        });
+    }
+
+    // Regional disparity
+    if (stateData.length >= 2) {
+        const rates = stateData.filter(s => s.trainees >= 5).map(s => s.employmentRate);
+        const max = Math.max(...rates);
+        const min = Math.min(...rates);
+        const gap = max - min;
+        if (gap > 20) {
+            insights.push({
+                icon: '📊', bg: '#f5f3ff', color: '#7c3aed',
+                title: 'Regional Disparity',
+                text: `${gap}-point gap between highest and lowest performing states — needs policy attention.`
+            });
+        }
+    }
+
+    // Low performers count
+    if (stats.lowPerformers > 0) {
+        insights.push({
+            icon: '🎯', bg: '#fef3c7', color: '#d97706',
+            title: 'Action Required',
+            text: `${stats.lowPerformers} district${stats.lowPerformers > 1 ? 's' : ''} have employment rates below 40% and need support.`
+        });
+    }
+
+    grid.innerHTML = insights.map(i => `
+        <div class="insight-card">
+            <div class="insight-icon" style="background:${i.bg}; color:${i.color};">${i.icon}</div>
+            <div>
+                <h4>${i.title}</h4>
+                <p>${i.text}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+/* ============================================================
+   FILTER OPTIONS
+   ============================================================ */
+function populateFilterOptions() {
+    const states = [...new Set(allRecords.map(r => r.state).filter(Boolean))].sort();
+    const districts = [...new Set(allRecords.map(r => r.district).filter(Boolean))].sort();
+    const programs = [...new Set(allRecords.map(r => r.program).filter(p => p && p !== 'General'))].sort();
+
+    const stateSelect = document.getElementById('filterState');
+    stateSelect.innerHTML = '<option value="all">All States</option>' +
+        states.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+
+    const districtSelect = document.getElementById('filterDistrict');
+    districtSelect.innerHTML = '<option value="all">All Districts</option>' +
+        districts.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+
+    const programSelect = document.getElementById('filterProgram');
+    programSelect.innerHTML = '<option value="all">All Programs</option>' +
+        programs.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+}
+
+/* ============================================================
+   VIEW TOGGLE
+   ============================================================ */
+function switchView(view) {
+    currentView = view;
+    document.getElementById('viewStateBtn').classList.toggle('active', view === 'state');
+    document.getElementById('viewDistrictBtn').classList.toggle('active', view === 'district');
+    document.getElementById('stateView').style.display = view === 'state' ? 'block' : 'none';
+    document.getElementById('districtView').style.display = view === 'district' ? 'block' : 'none';
+    renderTopPerformersChart();
+    renderHeatmap();
+    renderMatrix();
+}
+
+/* ============================================================
+   DRILLDOWN
+   ============================================================ */
+function drilldownState(stateName) {
+    document.getElementById('filterState').value = stateName;
+    applyFilters();
+    switchView('district');
+    showToast(`📍 Showing districts in ${stateName}`);
+}
+
+function drilldownRow(name, state) {
+    if (currentView === 'state') {
+        drilldownState(name);
+    } else {
+        showToast(`📍 ${name}, ${state}`);
+    }
+}
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+function applyFilters() {
+    renderAll();
+}
+
+function resetFilters() {
+    document.getElementById('filterState').value = 'all';
+    document.getElementById('filterDistrict').value = 'all';
+    document.getElementById('filterProgram').value = 'all';
+    document.getElementById('filterSort').value = 'trainees';
+    renderAll();
+    showToast('🔄 Filters reset');
+}
+
+/* ============================================================
+   SIDEBAR / HEADER
+   ============================================================ */
+function updateSidebar() {
+    const name = _govtOfficer?.name || 'Government';
+    const role = _govtOfficer?.accessLevel ? `Admin · ${_govtOfficer.accessLevel}` : 'Admin';
+    const initial = name.charAt(0).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('sidebarRole').textContent = role;
+    document.getElementById('headerAvatar').textContent = initial;
+    document.getElementById('headerName').textContent = name;
+}
+
+function updateNotificationBadge() {
+    document.getElementById('notifBadge').textContent = stats.lowPerformers || 0;
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+function escapeHtml(s) {
+    if (s === undefined || s === null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function updateDate() {
+    document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+    });
+}
+
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<i class="fas fa-info-circle" style="color:#7c3aed;font-size:16px;"></i> ${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+function showNotifications() {
+    alert(`📬 Notifications\n\n• ${stats.lowPerformers} low-performing districts\n• ${stats.totalStates} states covered\n• ${stats.totalDistricts} districts covered\n• ${stats.totalTrainees} total trainees`);
+}
+
+function toggleProfileMenu() {
+    if (!_govtOfficer) return;
+    alert(`👤 ${_govtOfficer.name}\n\nEmail: ${_govtOfficer.email}\nDepartment: ${_govtOfficer.department}\nAccess Level: ${_govtOfficer.accessLevel}`);
+}
+
+function logout() {
+    if (!confirm('Are you sure you want to logout?')) return;
+    ['isLoggedIn', 'userRole', 'userId', 'userEmail', 'currentGovtOfficialId',
+     'govtOfficerName', 'govtAccessLevel', 'govtDepartment'].forEach(k => localStorage.removeItem(k));
+    window.location.href = '../auth/login.html?role=government';
+}
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const next = (html.getAttribute('data-theme') || 'light') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+    const icon = document.querySelector('.theme-toggle i');
+    if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const saved = localStorage.getItem('skillintel-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    } catch (e) {}
+
+    updateDate();
+    readGovtOfficer();
+
+    allRecords = await loadTrainees();
+    console.log('✅ Loaded', allRecords.length, 'trainees from Firestore');
+
+    populateFilterOptions();
+    renderAll();
+
+    document.addEventListener('click', function(e) {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.querySelector('.menu-toggle');
+        if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+            if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        }
+    });
+
+    console.log('🗺️ District & State Intelligence initialized');
+});
+</script>
+
+<script src="../js/script.js"></script>
+</body>
+</html>
