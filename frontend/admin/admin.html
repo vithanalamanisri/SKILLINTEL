@@ -187,210 +187,6 @@
         .admin-login-card .back-link a { color: #dc2626; font-weight: 600; text-decoration: none; }
         .admin-login-card .back-link a:hover { text-decoration: underline; }
 
-        /* ═══ OTP SCREEN ═══ */
-        .otp-step { display: none; }
-        .otp-step.active { display: block; }
-
-        .otp-info-box {
-            background: linear-gradient(135deg, #eff6ff, #ede9fe);
-            border: 1px solid #bfdbfe;
-            border-radius: 12px;
-            padding: 0.9rem 1rem;
-            margin-bottom: 1.4rem;
-            font-size: 0.78rem;
-            color: #1e40af;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.6rem;
-        }
-        .otp-info-box i { font-size: 1rem; color: #2563eb; flex-shrink: 0; margin-top: 2px; }
-        .otp-info-box strong { color: #1e3a8a; word-break: break-all; }
-        html[data-theme="dark"] .otp-info-box {
-            background: rgba(37, 99, 235, 0.12);
-            border-color: rgba(37, 99, 235, 0.3);
-            color: #93C5FD;
-        }
-        html[data-theme="dark"] .otp-info-box strong { color: #BFDBFE; }
-
-        .otp-dev-warning {
-            background: #fef3c7;
-            border: 2px dashed #f59e0b;
-            border-radius: 12px;
-            padding: 0.9rem 1rem;
-            margin-bottom: 1.2rem;
-            font-size: 0.78rem;
-            color: #92400e;
-            line-height: 1.5;
-        }
-        .otp-dev-warning strong { color: #78350f; display: block; margin-bottom: 0.3rem; }
-        .otp-dev-warning .otp-code-display {
-            font-family: monospace;
-            font-size: 1.6rem;
-            font-weight: 900;
-            color: #b45309;
-            letter-spacing: 0.4em;
-            text-align: center;
-            padding: 0.6rem;
-            background: white;
-            border-radius: 8px;
-            margin-top: 0.5rem;
-            border: 1px solid #fcd34d;
-        }
-        html[data-theme="dark"] .otp-dev-warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: #FCD34D;
-            border-color: rgba(245, 158, 11, 0.4);
-        }
-        html[data-theme="dark"] .otp-dev-warning strong { color: #FDE68A; }
-        html[data-theme="dark"] .otp-dev-warning .otp-code-display {
-            background: #1A2338;
-            color: #FBBF24;
-            border-color: rgba(245, 158, 11, 0.4);
-        }
-
-        .otp-inputs {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin: 1.4rem 0 1rem;
-            flex-wrap: nowrap;
-        }
-        .otp-inputs input {
-            width: 48px;
-            height: 56px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: #0b1a33;
-            background: #f8fafc;
-            outline: none;
-            transition: all 0.15s;
-            font-family: 'Inter', monospace;
-        }
-        html[data-theme="dark"] .otp-inputs input {
-            background: #1A2338;
-            border-color: rgba(255,255,255,0.12);
-            color: #F1F5F9;
-        }
-        .otp-inputs input:focus {
-            border-color: #dc2626;
-            background: white;
-            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
-            transform: translateY(-2px);
-        }
-        html[data-theme="dark"] .otp-inputs input:focus { background: #0F172A; }
-        .otp-inputs input.filled {
-            border-color: #dc2626;
-            background: #fef2f2;
-        }
-        html[data-theme="dark"] .otp-inputs input.filled { background: rgba(220, 38, 38, 0.15); }
-        .otp-inputs input.error {
-            border-color: #dc2626;
-            background: #fee2e2;
-            animation: shake 0.4s;
-        }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-6px); }
-            75% { transform: translateX(6px); }
-        }
-
-        .otp-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-        .otp-timer {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.4rem 0.8rem;
-            background: #f1f5f9;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.72rem;
-        }
-        html[data-theme="dark"] .otp-timer {
-            background: #1A2338;
-            color: #94A3B8;
-        }
-        .otp-timer.warning { background: #fef3c7; color: #92400e; }
-        html[data-theme="dark"] .otp-timer.warning { background: rgba(245, 158, 11, 0.18); color: #FCD34D; }
-        .otp-timer.danger { background: #fee2e2; color: #dc2626; }
-        html[data-theme="dark"] .otp-timer.danger { background: rgba(239, 68, 68, 0.18); color: #F87171; }
-
-        .otp-attempts {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-weight: 700;
-            font-size: 0.72rem;
-            color: #dc2626;
-        }
-
-        .otp-resend-btn {
-            background: none;
-            border: none;
-            color: #dc2626;
-            font-weight: 700;
-            font-size: 0.75rem;
-            cursor: pointer;
-            padding: 0.4rem 0.8rem;
-            border-radius: 8px;
-            transition: 0.15s;
-        }
-        .otp-resend-btn:hover:not(:disabled) { background: #fee2e2; }
-        .otp-resend-btn:disabled { color: #94a3b8; cursor: not-allowed; }
-
-        .otp-remember {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            padding: 0.8rem 1rem;
-            background: #f8fafc;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            font-size: 0.78rem;
-            color: #334155;
-            cursor: pointer;
-        }
-        html[data-theme="dark"] .otp-remember {
-            background: #1A2338;
-            color: #E2E8F0;
-        }
-        .otp-remember input {
-            width: 18px;
-            height: 18px;
-            accent-color: #dc2626;
-            cursor: pointer;
-        }
-
-        .otp-back-btn {
-            display: block;
-            width: 100%;
-            margin-top: 0.8rem;
-            padding: 0.7rem;
-            background: none;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            color: #64748b;
-            font-weight: 600;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: 0.15s;
-        }
-        .otp-back-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
-        html[data-theme="dark"] .otp-back-btn {
-            border-color: rgba(255,255,255,0.12);
-            color: #94A3B8;
-        }
-        html[data-theme="dark"] .otp-back-btn:hover { background: #1E293B; }
-
         /* ═══ ADMIN LAYOUT ═══ */
         .admin-panel { display: none; min-height: 100vh; }
         .admin-panel.show { display: flex; }
@@ -1187,129 +983,55 @@
             .modal .form-row { grid-template-columns: 1fr; }
             .stats-grid { grid-template-columns: 1fr; }
             .health-ring-wrapper { flex-direction: column; }
-            .otp-inputs { gap: 0.3rem; }
-            .otp-inputs input { width: 42px; height: 50px; font-size: 1.2rem; }
-        }
-        @media (max-width: 400px) {
-            .otp-inputs input { width: 36px; height: 44px; font-size: 1rem; }
         }
     </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     LOGIN SCREEN — STEP 1: Email/Password
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══ LOGIN SCREEN ═══ -->
 <div class="admin-login-screen" id="loginScreen">
     <div class="admin-login-card">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-user-shield"></i></div>
+        </div>
+        <h1>Admin Access</h1>
+        <div class="sub">Restricted · Authorized Personnel Only</div>
+        <div class="lock-icon"><i class="fas fa-lock"></i></div>
 
-        <!-- STEP 1: Credentials -->
-        <div class="login-step" id="step1">
-            <div class="brand">
-                <div class="brand-icon"><i class="fas fa-user-shield"></i></div>
+        <div class="error-msg" id="loginError">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="loginErrorText">Invalid credentials</span>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fas fa-envelope"></i> Admin Email</label>
+            <div class="input-wrap">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="adminUser" placeholder="admin@skillintel.gov.in" autocomplete="email" />
             </div>
-            <h1>Admin Access</h1>
-            <div class="sub">Restricted · Authorized Personnel Only</div>
-            <div class="lock-icon"><i class="fas fa-lock"></i></div>
-
-            <div class="error-msg" id="loginError">
-                <i class="fas fa-exclamation-circle"></i>
-                <span id="loginErrorText">Invalid credentials</span>
-            </div>
-
-            <div class="form-group">
-                <label><i class="fas fa-envelope"></i> Admin Email</label>
-                <div class="input-wrap">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="adminUser" placeholder="admin@skillintel.gov.in" autocomplete="email" />
-                </div>
-            </div>
-            <div class="form-group">
-                <label><i class="fas fa-key"></i> Admin Password</label>
-                <div class="input-wrap">
-                    <i class="fas fa-key"></i>
-                    <input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" />
-                    <button type="button" class="toggle-pw" onclick="toggleAdminPass()">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-
-            <button class="login-btn" id="adminLoginBtn" onclick="adminLogin()">
-                <i class="fas fa-arrow-right"></i> Continue to Verification
-            </button>
-
-            <div class="back-link">
-                <a href="../index.html"><i class="fas fa-arrow-left"></i> Back to Home</a>
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-key"></i> Admin Password</label>
+            <div class="input-wrap">
+                <i class="fas fa-key"></i>
+                <input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" />
+                <button type="button" class="toggle-pw" onclick="toggleAdminPass()">
+                    <i class="fas fa-eye"></i>
+                </button>
             </div>
         </div>
 
-        <!-- STEP 2: OTP Verification -->
-        <div class="login-step otp-step" id="step2">
-            <div class="brand">
-                <div class="brand-icon"><i class="fas fa-shield-halved"></i></div>
-            </div>
-            <h1>Two-Factor Verification</h1>
-            <div class="sub" id="otpSubtitle">Enter the 6-digit code sent to your email</div>
+        <button class="login-btn" id="adminLoginBtn" onclick="adminLogin()">
+            <i class="fas fa-sign-in-alt"></i> Access Admin Panel
+        </button>
 
-            <div class="otp-info-box" id="otpInfoBox">
-                <i class="fas fa-envelope-open-text"></i>
-                <div>
-                    We sent a 6-digit code to <strong id="otpEmailDisplay">your email</strong>.
-                    It expires in <strong>5 minutes</strong>.
-                </div>
-            </div>
-
-            <div class="otp-dev-warning" id="otpDevWarning" style="display: none;">
-                <strong>⚠️ DEV MODE — Email service not configured</strong>
-                In production, this code is sent to your email.
-                <div class="otp-code-display" id="devOtpCode">------</div>
-            </div>
-
-            <div class="otp-inputs" id="otpInputs">
-                <input type="tel" maxlength="1" data-idx="0" inputmode="numeric" autocomplete="one-time-code" autofocus />
-                <input type="tel" maxlength="1" data-idx="1" inputmode="numeric" />
-                <input type="tel" maxlength="1" data-idx="2" inputmode="numeric" />
-                <input type="tel" maxlength="1" data-idx="3" inputmode="numeric" />
-                <input type="tel" maxlength="1" data-idx="4" inputmode="numeric" />
-                <input type="tel" maxlength="1" data-idx="5" inputmode="numeric" />
-            </div>
-
-            <div class="otp-meta">
-                <div class="otp-timer" id="otpTimerBox">
-                    <i class="fas fa-clock"></i>
-                    <span id="otpTimer">05:00</span>
-                </div>
-                <div class="otp-attempts" id="otpAttempts" style="display:none;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span id="otpAttemptsText">Attempt 1 of 3</span>
-                </div>
-            </div>
-
-            <label class="otp-remember">
-                <input type="checkbox" id="rememberDevice" />
-                <span>Remember this device for 30 days</span>
-            </label>
-
-            <button class="login-btn" id="otpVerifyBtn" onclick="verifyOTP()">
-                <i class="fas fa-shield-halved"></i> Verify & Access Panel
-            </button>
-
-            <button class="otp-resend-btn" id="otpResendBtn" onclick="resendOTP()">
-                <i class="fas fa-redo"></i> Resend code
-            </button>
-
-            <button class="otp-back-btn" onclick="backToLogin()">
-                <i class="fas fa-arrow-left"></i> Back to login
-            </button>
+        <div class="back-link">
+            <a href="../index.html"><i class="fas fa-arrow-left"></i> Back to Home</a>
         </div>
-
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     ADMIN PANEL
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══ ADMIN PANEL ═══ -->
 <div class="admin-panel" id="adminPanel">
 
     <aside class="admin-sidebar" id="adminSidebar">
@@ -1851,27 +1573,6 @@
                     </div>
                     <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save Settings</button>
                 </div>
-                <div class="admin-card">
-                    <div class="admin-card-header"><h3><i class="fas fa-shield-halved"></i> Security</h3></div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--adm-bg-3); border-radius: 10px; margin-bottom: 0.8rem;">
-                        <div>
-                            <div style="font-weight: 700; font-size: 0.85rem; color: var(--adm-text); margin-bottom: 0.2rem;">
-                                <i class="fas fa-check-circle" style="color: #10b981;"></i> Two-Factor Authentication (OTP)
-                            </div>
-                            <div style="font-size: 0.72rem; color: var(--adm-text-3);">Required for all admin logins</div>
-                        </div>
-                        <span class="badge active">Enabled</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--adm-bg-3); border-radius: 10px;">
-                        <div>
-                            <div style="font-weight: 700; font-size: 0.85rem; color: var(--adm-text); margin-bottom: 0.2rem;">
-                                <i class="fas fa-history" style="color: #2563eb;"></i> OTP Attempt Limit
-                            </div>
-                            <div style="font-size: 0.72rem; color: var(--adm-text-3);">Auto-lock after 3 failed attempts</div>
-                        </div>
-                        <span class="badge active">3 attempts</span>
-                    </div>
-                </div>
             </div>
 
         </div>
@@ -1904,13 +1605,9 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   SKILLINTEL · SUPER ADMIN PANEL v4.0 — WITH OTP
-   · Two-step login: Email/Password → 6-digit OTP
-   · OTP stored in Firestore with 5-min expiry
-   · 3-attempt limit per OTP session
-   · Optional "Remember device for 30 days"
-   · Dev mode: shows OTP on screen if email not configured
-   · All v3.3 features preserved (dark mode, session timer, bulk actions, etc.)
+   SKILLINTEL · SUPER ADMIN PANEL v5.0 — SIMPLE LOGIN (NO OTP)
+   · Email + Password only
+   · Clean, fast, no email service needed
    ═══════════════════════════════════════════════════════════════ */
 
 const firebaseConfig = {
@@ -1929,8 +1626,6 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
 
 const GOVT_ACTIVITY_KEY = 'govtActivityLog';
 const ADMIN_ACTIVITY_KEY = 'adminActivities';
-const REMEMBER_DEVICE_KEY = 'adminRememberedDevice';
-const REMEMBER_DAYS = 30;
 
 /* STATE */
 let _firebaseUser = null;
@@ -1940,18 +1635,6 @@ let _sessionTimerInterval = null;
 let _backendCache = {
     trainees: [], employers: [], providers: [], govtOfficials: [], loaded: false
 };
-
-/* OTP STATE */
-let _pendingAdminLogin = null;      // { fbUser, profile, email }
-let _currentOtp = null;             // The 6-digit code
-let _otpExpiry = null;              // Expiry timestamp
-let _otpAttempts = 0;               // Failed attempts
-let _otpTimerInterval = null;       // Countdown timer
-let _otpResendCooldown = null;      // Resend cooldown timer
-
-const OTP_EXPIRY_SECONDS = 300;      // 5 minutes
-const OTP_MAX_ATTEMPTS = 3;
-const OTP_RESEND_COOLDOWN = 60;      // 60s before allowing resend
 
 /* ═══════════════════════════════════════════════════════════════
    FIREBASE LOAD
@@ -1977,96 +1660,7 @@ async function loadRealDataFromBackend() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   OTP GENERATION & STORAGE
-   ═══════════════════════════════════════════════════════════════ */
-function generateOTP() {
-    return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-function hashOTP(code) {
-    // Simple hash for storage (not cryptographic but sufficient)
-    let hash = 0;
-    for (let i = 0; i < code.length; i++) {
-        hash = ((hash << 5) - hash) + code.charCodeAt(i);
-        hash = hash & hash;
-    }
-    return String(Math.abs(hash));
-}
-
-async function storeOTP(uid, code, email) {
-    const expiry = Date.now() + OTP_EXPIRY_SECONDS * 1000;
-    try {
-        await db.collection('adminOtp').doc(uid).set({
-            codeHash: hashOTP(code),
-            email: email,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            expiresAt: new Date(expiry).toISOString(),
-            attempts: 0,
-            verified: false
-        });
-        console.log('🔐 OTP stored for', email);
-        return { expiry };
-    } catch (err) {
-        console.warn('OTP store failed:', err);
-        return { expiry };
-    }
-}
-
-async function verifyStoredOTP(uid, code) {
-    try {
-        const snap = await db.collection('adminOtp').doc(uid).get();
-        if (!snap.exists) return { valid: false, reason: 'no-otp' };
-        const data = snap.data();
-        if (Date.now() > new Date(data.expiresAt).getTime()) return { valid: false, reason: 'expired' };
-        if (data.verified) return { valid: true };
-        if (data.codeHash !== hashOTP(code)) {
-            const newAttempts = (data.attempts || 0) + 1;
-            await db.collection('adminOtp').doc(uid).update({ attempts: newAttempts });
-            return { valid: false, reason: 'invalid', attempts: newAttempts };
-        }
-        await db.collection('adminOtp').doc(uid).update({ verified: true });
-        return { valid: true };
-    } catch (err) {
-        console.warn('OTP verify failed:', err);
-        return { valid: false, reason: 'error' };
-    }
-}
-
-async function clearOTP(uid) {
-    try { await db.collection('adminOtp').doc(uid).delete(); } catch (e) {}
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   SEND OTP (EMAIL OR DEV MODE)
-   ═══════════════════════════════════════════════════════════════ */
-async function sendOTPEmail(email, code) {
-    // Attempt to send via Firebase Email Link (fallback)
-    // For production, replace with EmailJS / SendGrid / backend endpoint
-    try {
-        // Try EmailJS if configured
-        if (typeof emailjs !== 'undefined' && window.EMAILJS_CONFIG) {
-            await emailjs.send(
-                window.EMAILJS_CONFIG.serviceId,
-                window.EMAILJS_CONFIG.templateId,
-                {
-                    to_email: email,
-                    otp_code: code,
-                    app_name: 'SKILLINTEL Admin',
-                    expiry_minutes: 5
-                },
-                window.EMAILJS_CONFIG.userId
-            );
-            return { sent: true, method: 'emailjs' };
-        }
-    } catch (err) {
-        console.warn('EmailJS send failed:', err);
-    }
-    // Dev mode — OTP shown on screen
-    return { sent: false, method: 'dev' };
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   STEP 1: LOGIN WITH EMAIL/PASSWORD → TRIGGER OTP
+   LOGIN (EMAIL + PASSWORD ONLY)
    ═══════════════════════════════════════════════════════════════ */
 async function adminLogin() {
     const user = document.getElementById('adminUser').value.trim().toLowerCase();
@@ -2083,7 +1677,7 @@ async function adminLogin() {
 
     btn.disabled = true;
     const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying credentials...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
 
     try {
         const cred = await auth.signInWithEmailAndPassword(user, pass);
@@ -2110,46 +1704,20 @@ async function adminLogin() {
             return;
         }
 
-        // Check "remember this device"
-        if (isDeviceRemembered(fbUser.uid)) {
-            console.log('🔓 Device remembered — skipping OTP');
-            _firebaseUser = fbUser;
-            _userProfile = data;
-            await db.collection('users').doc(fbUser.uid).update({
-                lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLoginMethod: 'remembered-device'
-            }).catch(() => {});
-            logAudit('Admin Login', 'Remembered device — OTP skipped');
-            logActivity('Admin logged in via remembered device', 'success');
-            await showPanel();
-            toast(`Welcome back, ${data.fullName || data.email}!`, 'success');
-            return;
-        }
+        // Success — set session and show panel
+        _firebaseUser = fbUser;
+        _userProfile = data;
 
-        // Trigger OTP flow
-        console.log('🔐 Credentials OK — starting OTP flow for', fbUser.email);
+        db.collection('users').doc(fbUser.uid).update({
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(() => {});
 
-        _pendingAdminLogin = {
-            fbUser: fbUser,
-            profile: data,
-            email: fbUser.email || data.email
-        };
+        logAudit('Admin Login', 'Successful login');
+        logActivity('Admin logged in', 'success');
 
-        // Generate + store OTP
-        const otp = generateOTP();
-        _currentOtp = otp;
-        _otpAttempts = 0;
-
-        const { expiry } = await storeOTP(fbUser.uid, otp, _pendingAdminLogin.email);
-        _otpExpiry = expiry;
-
-        // Send OTP (or show in dev mode)
-        const sendResult = await sendOTPEmail(_pendingAdminLogin.email, otp);
-
-        // Transition UI to OTP screen
-        transitionToOTPStep(_pendingAdminLogin.email, otp, sendResult);
-
-        logActivity(`OTP generated for ${_pendingAdminLogin.email}`, 'info');
+        document.getElementById('loginScreen').classList.add('hidden');
+        await showPanel();
+        toast(`Welcome back, ${data.fullName || data.email || 'Admin'}!`, 'success');
 
     } catch (err) {
         console.error('Admin login error:', err);
@@ -2171,379 +1739,16 @@ async function adminLogin() {
     }
 }
 
-function transitionToOTPStep(email, otp, sendResult) {
-    document.getElementById('step1').style.display = 'none';
-    document.getElementById('step2').classList.add('active');
-    document.getElementById('step2').style.display = 'block';
-
-    document.getElementById('otpEmailDisplay').textContent = email;
-    document.getElementById('otpSubtitle').textContent = `Enter the 6-digit code sent to ${email}`;
-
-    // Dev mode warning
-    if (sendResult.method === 'dev') {
-        document.getElementById('otpDevWarning').style.display = 'block';
-        document.getElementById('devOtpCode').textContent = otp;
-        document.getElementById('otpInfoBox').style.display = 'none';
+function toggleAdminPass() {
+    const input = document.getElementById('adminPass');
+    const icon = document.querySelector('.admin-login-card .toggle-pw i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
     } else {
-        document.getElementById('otpDevWarning').style.display = 'none';
-        document.getElementById('otpInfoBox').style.display = 'flex';
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
     }
-
-    // Reset OTP inputs
-    document.querySelectorAll('#otpInputs input').forEach(i => {
-        i.value = '';
-        i.classList.remove('filled', 'error');
-    });
-
-    // Focus first input
-    setTimeout(() => {
-        document.querySelector('#otpInputs input[data-idx="0"]')?.focus();
-    }, 200);
-
-    // Start timers
-    startOTPCountdown();
-    startResendCooldown();
-
-    // Reset verify button
-    const btn = document.getElementById('otpVerifyBtn');
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify & Access Panel';
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   STEP 2: OTP VERIFICATION
-   ═══════════════════════════════════════════════════════════════ */
-async function verifyOTP() {
-    const code = getOTPCode();
-    const btn = document.getElementById('otpVerifyBtn');
-
-    if (code.length !== 6) {
-        shakeInputs();
-        toast('Enter all 6 digits', 'error');
-        return;
-    }
-
-    if (!_pendingAdminLogin) {
-        toast('Session expired. Please login again.', 'error');
-        backToLogin();
-        return;
-    }
-
-    // Check local expiry
-    if (Date.now() > _otpExpiry) {
-        toast('OTP expired. Request a new one.', 'error');
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-
-    try {
-        // Verify against Firestore
-        const result = await verifyStoredOTP(_pendingAdminLogin.fbUser.uid, code);
-
-        if (result.valid) {
-            // Success — finalize login
-            await completeLogin();
-        } else {
-            _otpAttempts++;
-            shakeInputs();
-
-            let msg = 'Invalid OTP. Try again.';
-            if (result.reason === 'expired') msg = 'OTP has expired. Request a new one.';
-            else if (result.reason === 'no-otp') msg = 'No OTP found. Please login again.';
-            else if (_otpAttempts >= OTP_MAX_ATTEMPTS) msg = `Too many failed attempts. Locked out.`;
-
-            toast(msg, 'error');
-            logSecurityEvent('OTP verification failed', `Attempt ${_otpAttempts} — ${result.reason}`);
-
-            // Update attempt counter display
-            document.getElementById('otpAttempts').style.display = 'inline-flex';
-            document.getElementById('otpAttemptsText').textContent = `Attempt ${_otpAttempts} of ${OTP_MAX_ATTEMPTS}`;
-
-            // Lock out after max attempts
-            if (_otpAttempts >= OTP_MAX_ATTEMPTS) {
-                await handleLockout();
-                return;
-            }
-
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify & Access Panel';
-        }
-    } catch (err) {
-        console.error('OTP verification error:', err);
-        toast('Verification failed. Try again.', 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify & Access Panel';
-    }
-}
-
-async function completeLogin() {
-    const { fbUser, profile } = _pendingAdminLogin;
-
-    // Remember this device if checkbox checked
-    if (document.getElementById('rememberDevice').checked) {
-        rememberDevice(fbUser.uid);
-    }
-
-    // Clear OTP from Firestore
-    await clearOTP(fbUser.uid);
-
-    // Set session
-    _firebaseUser = fbUser;
-    _userProfile = profile;
-
-    await db.collection('users').doc(fbUser.uid).update({
-        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-        lastLoginMethod: 'otp-verified'
-    }).catch(() => {});
-
-    logAudit('Admin Login', 'OTP verified successfully');
-    logActivity('Admin logged in (OTP verified)', 'success');
-
-    // Cleanup
-    stopOTPCountdown();
-    stopResendCooldown();
-    _pendingAdminLogin = null;
-    _currentOtp = null;
-    _otpAttempts = 0;
-
-    // Show panel
-    document.getElementById('loginScreen').classList.add('hidden');
-    await showPanel();
-    toast(`Welcome, ${profile.fullName || profile.email}!`, 'success');
-}
-
-async function handleLockout() {
-    logSecurityEvent('OTP lockout', `Email: ${_pendingAdminLogin?.email}`);
-    logActivity('Admin locked out after 3 failed OTP attempts', 'error');
-    toast('Too many failed attempts. Redirecting to login...', 'error');
-
-    if (_pendingAdminLogin) {
-        await clearOTP(_pendingAdminLogin.fbUser.uid).catch(() => {});
-    }
-
-    setTimeout(() => {
-        backToLogin();
-    }, 2000);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   OTP INPUT HANDLING
-   ═══════════════════════════════════════════════════════════════ */
-function getOTPCode() {
-    return Array.from(document.querySelectorAll('#otpInputs input')).map(i => i.value).join('');
-}
-
-function shakeInputs() {
-    document.querySelectorAll('#otpInputs input').forEach(i => {
-        i.classList.add('error');
-        setTimeout(() => i.classList.remove('error'), 500);
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const inputs = document.querySelectorAll('#otpInputs input');
-    inputs.forEach((input, idx) => {
-        input.addEventListener('input', (e) => {
-            const val = e.target.value.replace(/\D/g, '');
-            e.target.value = val.slice(0, 1);
-            if (val) {
-                e.target.classList.add('filled');
-                if (idx < inputs.length - 1) inputs[idx + 1].focus();
-                if (idx === inputs.length - 1) {
-                    const code = getOTPCode();
-                    if (code.length === 6) setTimeout(verifyOTP, 150);
-                }
-            } else {
-                e.target.classList.remove('filled');
-            }
-        });
-
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && !e.target.value && idx > 0) {
-                inputs[idx - 1].focus();
-                inputs[idx - 1].value = '';
-                inputs[idx - 1].classList.remove('filled');
-            }
-            if (e.key === 'ArrowLeft' && idx > 0) inputs[idx - 1].focus();
-            if (e.key === 'ArrowRight' && idx < inputs.length - 1) inputs[idx + 1].focus();
-            if (e.key === 'Enter') verifyOTP();
-        });
-
-        input.addEventListener('paste', (e) => {
-            e.preventDefault();
-            const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
-            if (!pasted) return;
-            const chars = pasted.slice(0, 6).split('');
-            chars.forEach((ch, i) => {
-                if (inputs[i]) {
-                    inputs[i].value = ch;
-                    inputs[i].classList.add('filled');
-                }
-            });
-            if (chars.length === 6) setTimeout(verifyOTP, 150);
-        });
-    });
-});
-
-/* ═══════════════════════════════════════════════════════════════
-   OTP TIMERS
-   ═══════════════════════════════════════════════════════════════ */
-function startOTPCountdown() {
-    stopOTPCountdown();
-    const timerEl = document.getElementById('otpTimer');
-    const boxEl = document.getElementById('otpTimerBox');
-
-    _otpTimerInterval = setInterval(() => {
-        const remaining = Math.max(0, Math.floor((_otpExpiry - Date.now()) / 1000));
-        const min = Math.floor(remaining / 60);
-        const sec = remaining % 60;
-        if (timerEl) timerEl.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-
-        if (boxEl) {
-            boxEl.classList.remove('warning', 'danger');
-            if (remaining <= 60) boxEl.classList.add('danger');
-            else if (remaining <= 120) boxEl.classList.add('warning');
-        }
-
-        if (remaining <= 0) {
-            stopOTPCountdown();
-            if (timerEl) timerEl.textContent = '00:00';
-        }
-    }, 1000);
-}
-
-function stopOTPCountdown() {
-    if (_otpTimerInterval) { clearInterval(_otpTimerInterval); _otpTimerInterval = null; }
-}
-
-function startResendCooldown() {
-    stopResendCooldown();
-    const btn = document.getElementById('otpResendBtn');
-    let countdown = OTP_RESEND_COOLDOWN;
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fas fa-clock"></i> Resend in ${countdown}s`;
-
-    _otpResendCooldown = setInterval(() => {
-        countdown--;
-        if (countdown <= 0) {
-            stopResendCooldown();
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-redo"></i> Resend code';
-        } else {
-            btn.innerHTML = `<i class="fas fa-clock"></i> Resend in ${countdown}s`;
-        }
-    }, 1000);
-}
-
-function stopResendCooldown() {
-    if (_otpResendCooldown) { clearInterval(_otpResendCooldown); _otpResendCooldown = null; }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   RESEND OTP
-   ═══════════════════════════════════════════════════════════════ */
-async function resendOTP() {
-    if (!_pendingAdminLogin) {
-        toast('Session expired. Login again.', 'error');
-        return;
-    }
-
-    const btn = document.getElementById('otpResendBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-
-    // Generate new OTP
-    const newOtp = generateOTP();
-    _currentOtp = newOtp;
-    _otpAttempts = 0;
-
-    const { expiry } = await storeOTP(_pendingAdminLogin.fbUser.uid, newOtp, _pendingAdminLogin.email);
-    _otpExpiry = expiry;
-
-    const sendResult = await sendOTPEmail(_pendingAdminLogin.email, newOtp);
-
-    // Update dev display
-    if (sendResult.method === 'dev') {
-        document.getElementById('otpDevWarning').style.display = 'block';
-        document.getElementById('devOtpCode').textContent = newOtp;
-        document.getElementById('otpInfoBox').style.display = 'none';
-    }
-
-    // Reset inputs
-    document.querySelectorAll('#otpInputs input').forEach(i => {
-        i.value = '';
-        i.classList.remove('filled', 'error');
-    });
-    document.querySelector('#otpInputs input[data-idx="0"]')?.focus();
-
-    // Reset attempts display
-    document.getElementById('otpAttempts').style.display = 'none';
-
-    // Restart timers
-    startOTPCountdown();
-    startResendCooldown();
-
-    toast('New OTP sent to your email', 'success');
-    logActivity(`OTP resent to ${_pendingAdminLogin.email}`, 'info');
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   BACK TO LOGIN
-   ═══════════════════════════════════════════════════════════════ */
-function backToLogin() {
-    stopOTPCountdown();
-    stopResendCooldown();
-
-    if (_pendingAdminLogin?.fbUser) {
-        clearOTP(_pendingAdminLogin.fbUser.uid).catch(() => {});
-    }
-
-    _pendingAdminLogin = null;
-    _currentOtp = null;
-    _otpAttempts = 0;
-
-    document.getElementById('step2').classList.remove('active');
-    document.getElementById('step2').style.display = 'none';
-    document.getElementById('step1').style.display = 'block';
-    document.getElementById('adminPass').value = '';
-
-    // Reset button
-    const btn = document.getElementById('adminLoginBtn');
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-arrow-right"></i> Continue to Verification';
-
-    auth.signOut().catch(() => {});
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   REMEMBER DEVICE
-   ═══════════════════════════════════════════════════════════════ */
-function rememberDevice(uid) {
-    const token = {
-        uid: uid,
-        expiresAt: Date.now() + REMEMBER_DAYS * 86400000,
-        token: generateOTP() + generateOTP()
-    };
-    try {
-        localStorage.setItem(REMEMBER_DEVICE_KEY, JSON.stringify(token));
-        console.log('🔓 Device remembered for 30 days');
-    } catch (e) {}
-}
-
-function isDeviceRemembered(uid) {
-    try {
-        const raw = localStorage.getItem(REMEMBER_DEVICE_KEY);
-        if (!raw) return false;
-        const token = JSON.parse(raw);
-        if (token.uid !== uid) return false;
-        if (Date.now() > token.expiresAt) {
-            localStorage.removeItem(REMEMBER_DEVICE_KEY);
-            return false;
-        }
-        return true;
-    } catch (e) { return false; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2578,13 +1783,6 @@ async function checkAdminSession() {
             const data = snap.data();
             if (data.role !== 'admin' && data.role !== 'super_admin' && data.role !== 'verifier') {
                 await auth.signOut();
-                return;
-            }
-            // Session persistence: only auto-login if device was remembered
-            if (!isDeviceRemembered(fbUser.uid)) {
-                await auth.signOut();
-                document.getElementById('loginScreen').classList.remove('hidden');
-                document.getElementById('adminPanel').classList.remove('show');
                 return;
             }
             _firebaseUser = fbUser;
@@ -2628,18 +1826,6 @@ function startSessionTimer() {
         const el = document.getElementById('sessionDuration');
         if (el) el.textContent = h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`;
     }, 1000);
-}
-
-function toggleAdminPass() {
-    const input = document.getElementById('adminPass');
-    const icon = document.querySelector('.admin-login-card .toggle-pw i');
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.className = 'fas fa-eye-slash';
-    } else {
-        input.type = 'password';
-        icon.className = 'fas fa-eye';
-    }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -4027,7 +3213,6 @@ function handleSearchSelect(index) {
 
 const TOUR_STEPS = [
     { icon: 'fa-shield-halved', title: 'Welcome to Admin Panel', text: 'Your central control center. All data comes from real Firebase users.' },
-    { icon: 'fa-key', title: 'Two-Factor Login', text: 'Every login requires email/password + 6-digit OTP sent to your email.' },
     { icon: 'fa-users', title: 'User Management', text: 'Manage Trainees, Employers, and Providers from a single screen.' },
     { icon: 'fa-landmark', title: 'Government Access', text: 'Provision authorized Government Officials with secure credentials.' },
     { icon: 'fa-brain', title: 'AI Insights', text: 'AI analyzes real platform data to surface skill gaps and risks.' },
@@ -4164,13 +3349,9 @@ window.deleteContactMessage = deleteContactMessage;
 window.clearAllContactMessages = clearAllContactMessages;
 window.togglePasswordVisibility = togglePasswordVisibility;
 window.copyGovtCredentials = copyGovtCredentials;
-window.verifyOTP = verifyOTP;
-window.resendOTP = resendOTP;
-window.backToLogin = backToLogin;
-window.generateOTP = generateOTP;
 
-console.log('%c[SKILLINTEL Admin] v4.0 loaded — WITH OTP 2FA', 'color: #22c55e; font-weight: bold; font-size: 14px;');
-console.log('%c✅ Two-step login · 6-digit OTP · 5-min expiry · 3-attempt limit · Remember device', 'color: #10b981; font-weight: 700;');
+console.log('%c[SKILLINTEL Admin] v5.0 loaded — Simple email+password login', 'color: #22c55e; font-weight: bold; font-size: 14px;');
+console.log('%c✅ No OTP · No email service needed · Just works', 'color: #10b981; font-weight: 700;');
 </script>
 
 </body>

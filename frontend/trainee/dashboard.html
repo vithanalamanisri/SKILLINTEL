@@ -5,15 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>SkillBridge · Trainee Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
 
-    <!-- ✅ Firebase SDK (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('skillintel-theme') || 'light';
+          document.documentElement.setAttribute('data-theme', saved);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
         body { background: #f4f7ff; color: #1e293b; display: flex; min-height: 100vh; }
 
         /* ===== SIDEBAR ===== */
@@ -56,6 +69,7 @@
             background: rgba(255,255,255,0.2);
             display: flex; align-items: center; justify-content: center;
             font-size: 20px; font-weight: 700;
+            flex-shrink: 0;
         }
         .sidebar-user .info .name { font-size: 14px; font-weight: 600; }
         .sidebar-user .info .role { font-size: 11px; opacity: 0.7; }
@@ -81,6 +95,17 @@
             color: white;
         }
         .sidebar-nav a i { width: 20px; text-align: center; font-size: 16px; }
+        .sidebar-nav a .count-badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            min-width: 20px;
+            text-align: center;
+        }
 
         .sidebar-footer {
             padding: 20px 20px 0;
@@ -99,13 +124,8 @@
         }
         .sidebar-footer a:hover { background: rgba(255,255,255,0.1); color: white; }
 
-        /* ===== MAIN CONTENT ===== */
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 0;
-            min-height: 100vh;
-        }
+        /* ===== MAIN ===== */
+        .main-content { margin-left: 260px; flex: 1; padding: 0; min-height: 100vh; }
 
         /* ===== HEADER ===== */
         .header {
@@ -130,18 +150,37 @@
         .logo i { font-size: 26px; }
         .header-right { display: flex; align-items: center; gap: 20px; }
         .header-right .user-name { font-weight: 600; font-size: 15px; }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+        .theme-toggle:hover { background: rgba(255,255,255,0.25); transform: rotate(15deg); }
+
         .notification-icon { position: relative; font-size: 20px; cursor: pointer; }
         .badge {
             position: absolute; top: -8px; right: -10px;
             background: #ef4444; color: white;
             width: 20px; height: 20px; font-size: 11px;
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
         }
         .logout-btn {
             background: rgba(255,255,255,0.15); border: none; color: white;
             padding: 8px 18px; border-radius: 30px; cursor: pointer;
             font-size: 13px; font-weight: 600; transition: 0.2s;
             display: flex; align-items: center; gap: 8px;
+            font-family: inherit;
         }
         .logout-btn:hover { background: rgba(255,255,255,0.25); }
 
@@ -174,18 +213,36 @@
             border-radius: 16px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.07);
             border-left: 5px solid #2563eb;
+            transition: 0.25s;
         }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(37,99,235,0.12); }
         .stat-card:nth-child(2) { border-color: #7c3aed; }
         .stat-card:nth-child(3) { border-color: #22c55e; }
         .stat-card:nth-child(4) { border-color: #f59e0b; }
-        .stat-card h4 { color: #64748b; margin-bottom: 10px; font-size: 14px; }
-        .stat-card h2 { font-size: 28px; font-weight: 700; }
-        .stat-card .sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+        .stat-card h4 { color: #64748b; margin-bottom: 10px; font-size: 14px; font-weight: 600; }
+        .stat-card h2 { font-size: 28px; font-weight: 700; color: #0b1a33; line-height: 1.1; }
+        .stat-card .sub { font-size: 12px; color: #94a3b8; margin-top: 6px; }
 
-        /* ===== CONTENT SECTIONS ===== */
-        .content-section { display: none; }
-        .content-section.active { display: block; }
+        /* ===== LOADING ===== */
+        .loading-box {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 5px 18px rgba(0,0,0,0.08);
+        }
+        .loading-spinner {
+            width: 52px; height: 52px;
+            border: 4px solid #ede9fe;
+            border-top-color: #7c3aed;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-box p { color: #64748b; font-size: 15px; font-weight: 500; }
 
+        /* ===== DASHBOARD GRID ===== */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -203,56 +260,73 @@
         .card h3 {
             color: #2563eb;
             margin-bottom: 18px;
-            padding-bottom: 10px;
+            padding-bottom: 12px;
             border-bottom: 2px solid #eef2ff;
-            display: flex; align-items: center; gap: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 18px;
+            font-weight: 700;
         }
         .card h3 i { font-size: 20px; }
-        .card p {
-            margin: 10px 0; font-size: 14px;
-            display: flex; justify-content: space-between;
-            border-bottom: 1px dashed #f1f5f9;
-            padding-bottom: 8px;
-        }
-        .card p:last-child { border-bottom: none; }
-        .card p b { color: #475569; font-weight: 600; }
-        .card p span { color: #0b1a33; font-weight: 500; }
 
+        /* Row layout for card info */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 9px 0;
+            border-bottom: 1px dashed #f1f5f9;
+            font-size: 13.5px;
+        }
+        .info-row:last-of-type { border-bottom: none; }
+        .info-row .label { color: #64748b; font-weight: 600; flex-shrink: 0; }
+        .info-row .value { color: #0b1a33; font-weight: 500; text-align: right; word-break: break-word; }
+
+        /* Profile */
         .profile { text-align: center; }
         .profile-photo {
             width: 100px; height: 100px; margin: 0 auto 15px;
             border-radius: 50%;
             background: linear-gradient(135deg, #2563eb, #7c3aed);
             display: flex; align-items: center; justify-content: center;
-            font-size: 45px; color: white; border: 5px solid #dbeafe;
+            font-size: 45px; color: white; font-weight: 800;
+            border: 5px solid #dbeafe;
+            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
         }
+        .profile h3 { justify-content: center; }
 
+        /* Progress */
         .progress-container {
-            width: 100%; height: 14px;
+            width: 100%; height: 12px;
             background: #e2e8f0; border-radius: 20px; overflow: hidden; margin: 10px 0;
         }
         .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #2563eb, #7c3aed);
-            border-radius: 20px; transition: width 0.5s ease;
+            border-radius: 20px; transition: width 0.6s ease;
         }
 
+        /* Status badges */
         .status-badge {
-            display: inline-block; padding: 6px 16px; border-radius: 20px;
-            font-size: 13px; font-weight: 600; margin-top: 8px;
+            display: inline-block; padding: 5px 14px; border-radius: 20px;
+            font-size: 12px; font-weight: 700;
         }
         .status-badge.success { background: #dcfce7; color: #15803d; }
         .status-badge.warning { background: #fef3c7; color: #b45309; }
         .status-badge.info { background: #dbeafe; color: #1d4ed8; }
         .status-badge.primary { background: #eef2ff; color: #4f46e5; }
+        .status-badge.danger { background: #fee2e2; color: #dc2626; }
 
+        /* Buttons */
         button {
             border: none;
             background: linear-gradient(135deg, #2563eb, #7c3aed);
             color: white; padding: 10px 18px; border-radius: 10px;
             cursor: pointer; margin: 5px 3px; font-size: 14px; font-weight: 600;
             transition: 0.3s; display: inline-flex; align-items: center; gap: 8px;
+            font-family: inherit;
         }
         button:hover { transform: scale(1.03); box-shadow: 0 5px 15px rgba(37,99,235,0.3); }
         button.btn-outline { background: transparent; color: #2563eb; border: 2px solid #2563eb; }
@@ -260,47 +334,7 @@
         button.btn-success { background: #22c55e; }
         button.btn-success:hover { background: #16a34a; }
 
-        .notification {
-            background: #f8faff; padding: 12px 15px; margin-bottom: 10px;
-            border-radius: 10px; border-left: 4px solid #7c3aed;
-            display: flex; align-items: center; gap: 10px; font-size: 14px;
-        }
-        .notification i { color: #7c3aed; }
-
-        .quick-actions {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-        }
-        .quick-actions button { margin: 0; justify-content: center; }
-
-        .achievement {
-            display: flex; align-items: center; gap: 15px;
-            padding: 12px 15px; background: #f8faff; border-radius: 10px; margin-bottom: 10px;
-        }
-        .achievement-icon { font-size: 28px; }
-        .achievement b { font-size: 15px; display: block; }
-        .achievement p { font-size: 13px; color: #64748b; margin: 0; border: none; padding: 0; }
-
-        .timeline-item {
-            border-left: 3px solid #2563eb;
-            padding-left: 15px; padding-bottom: 18px; margin-left: 8px;
-        }
-        .timeline-item:last-child { padding-bottom: 0; }
-        .timeline-item b { display: block; font-size: 15px; }
-        .timeline-item p { font-size: 13px; color: #64748b; margin: 3px 0 0 0; border: none; padding: 0; }
-
-        .suggestion {
-            padding: 12px 15px; background: #eef2ff; border-radius: 10px; margin-bottom: 10px;
-            display: flex; align-items: center; gap: 10px; font-size: 14px;
-        }
-        .suggestion i { color: #2563eb; font-size: 18px; }
-
-        .document {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 15px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px;
-        }
-        .document span { display: flex; align-items: center; gap: 10px; font-weight: 500; }
-        .document button { padding: 5px 15px; font-size: 12px; }
-
+        /* Follow-up grid */
         .followup-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;
         }
@@ -308,20 +342,57 @@
             background: #f1f5f9; border-radius: 12px; padding: 12px; text-align: center;
             border: 2px solid transparent;
         }
-        .followup-item .days { font-size: 12px; color: #94a3b8; font-weight: 600; }
-        .followup-item .status-icon { font-size: 24px; margin-top: 5px; }
+        .followup-item .days { font-size: 12px; color: #94a3b8; font-weight: 700; }
+        .followup-item .status-icon { font-size: 22px; margin-top: 5px; }
         .followup-item.completed { background: #dcfce7; border-color: #22c55e; }
         .followup-item.due { background: #fef3c7; border-color: #f59e0b; }
 
+        /* Timeline */
+        .timeline-item {
+            border-left: 3px solid #2563eb;
+            padding-left: 15px; padding-bottom: 18px; margin-left: 8px;
+            position: relative;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -7px; top: 4px;
+            width: 12px; height: 12px;
+            background: #2563eb;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px #2563eb;
+        }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-item b { display: block; font-size: 15px; color: #0b1a33; }
+        .timeline-item p { font-size: 13px; color: #64748b; margin: 3px 0 0 0; }
+
+        /* No data */
         .no-data {
             text-align: center; padding: 60px 20px;
             background: white; border-radius: 18px; box-shadow: 0 5px 18px rgba(0,0,0,0.08);
-            margin: 20px;
         }
-        .no-data i { font-size: 60px; color: #2563eb; margin-bottom: 20px; }
+        .no-data i { font-size: 60px; color: #2563eb; margin-bottom: 20px; display: block; }
         .no-data h2 { font-size: 24px; color: #0b1a33; margin-bottom: 10px; }
-        .no-data p { color: #64748b; font-size: 16px; }
+        .no-data p { color: #64748b; font-size: 16px; margin-bottom: 20px; }
 
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: white; padding: 14px 22px; border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            border-left: 4px solid #7c3aed;
+            max-width: 400px; z-index: 1000;
+            font-size: 13px; color: #0b1a33;
+            display: flex; align-items: center; gap: 10px; font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
@@ -332,7 +403,6 @@
             .container { padding: 15px; }
             .stats { grid-template-columns: 1fr 1fr; }
             .dashboard-grid { grid-template-columns: 1fr; }
-            .quick-actions { grid-template-columns: 1fr; }
             .followup-grid { grid-template-columns: 1fr 1fr; }
             .welcome h2 { font-size: 22px; }
         }
@@ -345,7 +415,7 @@
 </head>
 <body>
 
-<!-- ===== SIDEBAR ===== -->
+<!-- ===== SIDEBAR (SINGLE, CLEAN) ===== -->
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
         <i class="fas fa-brain"></i>
@@ -355,32 +425,37 @@
         </div>
     </div>
 
-    <div class="sidebar" id="sidebar">
-    <div class="brand">
-        <div class="brand-icon"><i class="fas fa-brain"></i></div>
-        <div><h2>MySkillJourney</h2><p>Trainee Portal</p></div>
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">T</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Trainee</div>
+            <div class="role">Trainee Account</div>
+        </div>
     </div>
-    <div class="menu">
-        <div class="menu-title">Main Menu</div>
+
+    <div class="sidebar-nav">
+        <div class="nav-label">Main Menu</div>
         <a href="dashboard.html" class="active"><i class="fas fa-home"></i> Dashboard</a>
         <a href="resume-intelligence.html"><i class="fas fa-file-alt"></i> Resume Intelligence</a>
         <a href="employment.html"><i class="fas fa-briefcase"></i> Employment</a>
         <a href="follow-up.html"><i class="fas fa-calendar-check"></i> Follow-up</a>
         <a href="history.html"><i class="fas fa-history"></i> Outcome History</a>
-        <div class="menu-title" style="margin-top:18px;">Career Tools</div>
+
+        <div class="nav-label" style="margin-top:18px;">Career Tools</div>
         <a href="career-alignment.html"><i class="fas fa-compass"></i> Career Alignment</a>
         <a href="industry-demand.html"><i class="fas fa-chart-line"></i> Industry Demand</a>
         <a href="ai-recommendations.html"><i class="fas fa-robot"></i> AI Coach</a>
         <a href="job-discovery.html"><i class="fas fa-search"></i> Find Jobs <span class="count-badge" id="menuJobCount">0</span></a>
     </div>
-    <div class="sidebar-footer"><a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
-</div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
 </nav>
 
 <!-- ===== MAIN CONTENT ===== -->
 <div class="main-content">
 
-    <!-- ===== HEADER ===== -->
     <div class="header">
         <div class="header-left">
             <button class="menu-toggle" onclick="toggleSidebar()">
@@ -388,13 +463,13 @@
             </button>
             <div class="logo">
                 <i class="fas fa-brain"></i>
-                <span>Skill<span style="font-weight:300;">Training Platoform</span></span>
+                <span>Skill<span style="font-weight:300;">Journey</span></span>
             </div>
         </div>
         <div class="header-right">
-  <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
-      <i class="fas fa-moon"></i>
-    </button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
             <span class="user-name" id="headerUserName">Trainee</span>
             <div class="notification-icon" onclick="showNotifications()">
                 <i class="fas fa-bell"></i>
@@ -406,252 +481,266 @@
         </div>
     </div>
 
-    <!-- ===== CONTAINER ===== -->
     <div class="container">
 
-        <!-- WELCOME -->
         <div class="welcome" id="welcomeBanner">
             <h2 id="welcomeTitle"><i class="fas fa-hand-peace"></i> Welcome Back! 🎉</h2>
             <p id="welcomeSub">Track your training, certification, employment and career growth in one place.</p>
         </div>
 
-        <!-- STATS -->
         <div class="stats" id="statsGrid">
             <div class="stat-card">
                 <h4>📚 Training Progress</h4>
-                <h2 id="statTraining">-</h2>
+                <h2 id="statTraining">—</h2>
                 <div class="sub" id="statTrainingSub">Loading...</div>
             </div>
             <div class="stat-card">
                 <h4>🎓 Certification</h4>
-                <h2 id="statCertification">-</h2>
+                <h2 id="statCertification">—</h2>
                 <div class="sub" id="statCertSub">Loading...</div>
             </div>
             <div class="stat-card">
                 <h4>💼 Employment</h4>
-                <h2 id="statEmployment">-</h2>
+                <h2 id="statEmployment">—</h2>
                 <div class="sub" id="statEmploySub">Loading...</div>
             </div>
             <div class="stat-card">
                 <h4>💰 Monthly Income</h4>
-                <h2 id="statIncome">-</h2>
+                <h2 id="statIncome">—</h2>
                 <div class="sub" id="statIncomeSub">Loading...</div>
             </div>
         </div>
 
-        <!-- CONTENT -->
         <div id="contentContainer">
-            <!-- Rendered by JavaScript -->
+            <div class="loading-box">
+                <div class="loading-spinner"></div>
+                <p>Loading your dashboard…</p>
+            </div>
         </div>
 
     </div>
 </div>
 
 <script>
-    // ============================================================
-    // FIREBASE CONFIG
-    // ============================================================
-    const firebaseConfig = {
-        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
-        authDomain: "skillbridge-70863.firebaseapp.com",
-        projectId: "skillbridge-70863",
-        storageBucket: "skillbridge-70863.firebasestorage.app",
-        messagingSenderId: "912671486056",
-        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
-    };
+/* ═══════════════════════════════════════════════════════════════
+   FIREBASE CONFIG
+   ═══════════════════════════════════════════════════════════════ */
+const firebaseConfig = {
+    apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+    authDomain: "skillbridge-70863.firebaseapp.com",
+    projectId: "skillbridge-70863",
+    storageBucket: "skillbridge-70863.firebasestorage.app",
+    messagingSenderId: "912671486056",
+    appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+};
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    // ============================================================
-    // CACHE — set after loadAllData()
-    // ============================================================
-    let _trainee = null;      // merged trainee profile
-    let _userProfile = null;   // users/{uid} doc
-    let _firebaseUser = null;  // firebase auth user
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════ */
+let _trainee = null;
+let _userProfile = null;
+let _firebaseUser = null;
 
-    // ============================================================
-    // AUTH GUARD — redirect to login if not signed in
-    // ============================================================
-    function requireAuth() {
-        return new Promise((resolve, reject) => {
-            const unsub = auth.onAuthStateChanged(async (fbUser) => {
-                unsub();
-                if (!fbUser) {
+/* ═══════════════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════════════ */
+function escapeHtml(s) {
+    if (s === undefined || s === null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatDate(val) {
+    if (!val) return '—';
+    try {
+        const d = val.toDate ? val.toDate() : new Date(val);
+        if (isNaN(d.getTime())) return String(val);
+        return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch (e) { return String(val); }
+}
+
+function showToast(msg, type = 'info') {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+    const color = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#7c3aed';
+    toast.innerHTML = `<i class="fas ${icon}" style="color:${color};font-size:16px;"></i> ${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTH GUARD
+   ═══════════════════════════════════════════════════════════════ */
+function requireAuth() {
+    return new Promise((resolve, reject) => {
+        const unsub = auth.onAuthStateChanged(async (fbUser) => {
+            unsub();
+            if (!fbUser) {
+                window.location.href = '../auth/login.html?role=trainee';
+                reject('not-authenticated');
+                return;
+            }
+            try {
+                const snap = await db.collection('users').doc(fbUser.uid).get();
+                if (!snap.exists) {
                     window.location.href = '../auth/login.html?role=trainee';
-                    reject('not-authenticated');
+                    reject('no-profile');
                     return;
                 }
-                try {
-                    // Verify role
-                    const snap = await db.collection('users').doc(fbUser.uid).get();
-                    if (!snap.exists) {
-                        window.location.href = '../auth/login.html?role=trainee';
-                        reject('no-profile');
-                        return;
-                    }
-                    const profile = snap.data();
-                    if (profile.role !== 'trainee') {
-                        await auth.signOut();
-                        window.location.href = '../auth/login.html?role=trainee';
-                        reject('wrong-role');
-                        return;
-                    }
-                    _firebaseUser = fbUser;
-                    _userProfile = profile;
-                    resolve(fbUser);
-                } catch (e) {
-                    console.error('Auth guard error:', e);
-                    reject(e);
+                const profile = snap.data();
+                if (profile.role !== 'trainee') {
+                    await auth.signOut();
+                    window.location.href = '../auth/login.html?role=trainee';
+                    reject('wrong-role');
+                    return;
                 }
-            });
+                _firebaseUser = fbUser;
+                _userProfile = profile;
+                resolve(fbUser);
+            } catch (e) {
+                console.error('Auth guard error:', e);
+                reject(e);
+            }
         });
-    }
+    });
+}
 
-    // ============================================================
-    // LOAD ALL DATA — reads from Firestore
-    //   users/{uid}      → identity, role
-    //   trainees/{uid}   → full trainee profile + baseline
-    //   employers/{uid}  → (looked up by email if employment exists)
-    //   employment data  → stored inside trainees/{uid} as `employment`
-    //   followups        → stored inside trainees/{uid} as `followups`
-    // ============================================================
-    async function loadAllData() {
-        if (!_firebaseUser) {
-            return { traineeData: null, employmentData: null, followupData: null };
-        }
+/* ═══════════════════════════════════════════════════════════════
+   LOAD ALL DATA — Firestore first, users fallback
+   ═══════════════════════════════════════════════════════════════ */
+async function loadAllData() {
+    if (!_firebaseUser) return { traineeData: null, employmentData: null, followupData: null };
 
-        const uid = _firebaseUser.uid;
+    const uid = _firebaseUser.uid;
+    let traineeDoc = null;
 
-        // ---- 1. Read trainee doc from Firestore ----
-        let traineeDoc = null;
+    // 1. Try trainees/{uid}
+    try {
+        const snap = await db.collection('trainees').doc(uid).get();
+        if (snap.exists) traineeDoc = snap.data();
+    } catch (e) { console.warn('trainees/{uid} read failed:', e); }
+
+    // 2. Fall back to users/{uid}
+    let userDoc = _userProfile;
+    if (!traineeDoc && !userDoc) {
         try {
-            const snap = await db.collection('trainees').doc(uid).get();
-            if (snap.exists) traineeDoc = snap.data();
-        } catch (e) {
-            console.warn('Could not read trainees/{uid}:', e);
-        }
-
-        // ---- 2. Read users/{uid} as fallback ----
-        let userDoc = _userProfile;
-        if (!userDoc) {
-            try {
-                const snap = await db.collection('users').doc(uid).get();
-                if (snap.exists) userDoc = snap.data();
-            } catch (e) {}
-        }
-
-        // ---- 3. Merge into traineeData (Firestore-first) ----
-        const src = traineeDoc || userDoc || {};
-        const traineeData = {
-            traineeId:        src.traineeCode || ('TRN' + uid.substring(0, 6).toUpperCase()),
-            fullName:         src.fullName || src.displayName || _firebaseUser.displayName || 'Trainee',
-            email:            src.email || _firebaseUser.email || '',
-            mobile:           src.mobile || '',
-            state:            src.state || '',
-            district:         src.district || '',
-            village:          src.village || src.city || '',
-            areaType:         src.areaType || '',
-            dob:              src.dob || '',
-            gender:           src.gender || '',
-            education:        src.qualification || src.education || '',
-            skillTrade:       src.skillTrade || src.skills || '',
-            trainingProvider: src.trainingProvider || '',
-            batchId:          src.batchId || '',
-            enrollmentId:     src.enrollmentId || '',
-            trainingMode:     src.trainingMode || '',
-            trainingProgram:  src.trainingProgram || '',
-            startDate:        src.startDate || '',
-            completionDate:   src.completionDate || '',
-            registrationDate: src.registeredAt ? src.registeredAt.split('T')[0]
-                              : (src.createdAt && src.createdAt.toDate ? src.createdAt.toDate().toISOString().split('T')[0] : '—'),
-            employmentStatus: src.employmentStatus || '',
-            prevIncome:       Number(src.prevIncome) || 0,
-            careerGoal:       src.careerGoal || '',
-            preferredRole:    src.preferredRole || '',
-            preferredLocation: src.preferredLocation || '',
-            // Optional training-progress fields (may not exist yet)
-            trainingProgress:  Number(src.trainingProgress) || 0,
-            completedModules:  Number(src.completedModules) || 0,
-            totalModules:      Number(src.totalModules) || 10,
-            certificationStatus: src.certificationStatus || 'Pending',
-            certificateName:   src.certificateName || 'Not Certified',
-            profileCompletion: Number(src.profileCompletion) || 90,
-            status:            src.status || 'Active',
-            // Nested optional sub-objects
-            _employment:       src.employment || null,
-            _followups:        src.followups || null,
-        };
-
-        // ---- 4. Employment data (from trainees/{uid}.employment) ----
-        let employmentData = null;
-        if (traineeData._employment) {
-            const e = traineeData._employment;
-            employmentData = {
-                status:          e.status || 'Not Updated',
-                companyName:     e.companyName || e.employerName || 'N/A',
-                jobRole:         e.jobRole || 'N/A',
-                employmentType:  e.employmentType || 'N/A',
-                joiningDate:     e.joiningDate || e.startDate || 'N/A',
-                currentIncome:   Number(e.currentIncome || e.monthlyIncome) || 0,
-                previousIncome:  Number(e.previousIncome || traineeData.prevIncome) || 0,
-                jobCity:         e.jobCity || e.jobLocation || traineeData.district || 'N/A',
-            };
-        } else {
-            employmentData = {
-                status:         'Not Updated',
-                companyName:    '—',
-                jobRole:        '—',
-                employmentType: '—',
-                joiningDate:    '—',
-                currentIncome:  0,
-                previousIncome: traineeData.prevIncome || 0,
-                jobCity:        traineeData.district || '—',
-            };
-        }
-
-        // ---- 5. Follow-up data ----
-        let followupData = null;
-        if (Array.isArray(traineeData._followups) && traineeData._followups.length > 0) {
-            const pending = traineeData._followups.find(f => f.status === 'due' || f.status === 'pending')
-                            || traineeData._followups[0];
-            followupData = {
-                status:        pending.status === 'completed' ? 'Completed'
-                              : pending.status === 'due' ? 'In Progress'
-                              : 'Pending',
-                period:        String(pending.periodDays || pending.period || 90),
-                date:          pending.dueDate || pending.date || '—',
-                notifications: traineeData._followups.filter(f => f.status !== 'completed').length,
-                _all:          traineeData._followups,
-            };
-        } else {
-            followupData = {
-                status:        'Pending',
-                period:        '90',
-                date:          '—',
-                notifications: 0,
-                _all:          null,
-            };
-        }
-
-        _trainee = traineeData;
-        return { traineeData, employmentData, followupData };
+            const snap = await db.collection('users').doc(uid).get();
+            if (snap.exists) userDoc = snap.data();
+        } catch (e) {}
     }
 
-    // ============================================================
-    // RENDER DASHBOARD
-    // ============================================================
-    async function renderDashboard() {
+    const src = traineeDoc || userDoc || {};
+
+    // Normalize skill trade — strip commas if it's actually a list
+    let skillTrade = src.skillTrade || '';
+    if (!skillTrade && src.skills) {
+        skillTrade = Array.isArray(src.skills) ? src.skills.join(', ') : String(src.skills);
+    }
+
+    const traineeData = {
+        traineeId:        src.traineeCode || ('TRN' + uid.substring(0, 6).toUpperCase()),
+        fullName:         src.fullName || src.displayName || _firebaseUser.displayName || 'Trainee',
+        email:            src.email || _firebaseUser.email || '',
+        mobile:           src.mobile || src.phone || '',
+        state:            src.state || '',
+        district:         src.district || '',
+        village:          src.village || src.city || '',
+        dob:              src.dob || src.dateOfBirth || '',
+        gender:           src.gender || '',
+        education:        src.qualification || src.education || '',
+        skillTrade:       skillTrade || '—',
+        trainingProvider: src.trainingProvider || '—',
+        batchId:          src.batchId || '—',
+        enrollmentId:     src.enrollmentId || '—',
+        trainingMode:     src.trainingMode || '—',
+        trainingProgram:  src.trainingProgram || '—',
+        startDate:        formatDate(src.startDate),
+        completionDate:   formatDate(src.completionDate),
+        registrationDate: formatDate(src.registeredAt || src.createdAt),
+        employmentStatus: src.employmentStatus || '',
+        prevIncome:       Number(src.prevIncome) || 0,
+        careerGoal:       src.careerGoal || '',
+        preferredRole:    src.preferredRole || '',
+        preferredLocation: src.preferredLocation || '',
+        trainingProgress:  Number(src.trainingProgress) || 0,
+        completedModules:  Number(src.completedModules) || 0,
+        totalModules:      Number(src.totalModules) || 10,
+        certificationStatus: src.certificationStatus || 'Pending',
+        certificateName:   src.certificateName || 'Not Certified',
+        profileCompletion: Number(src.profileCompletion) || 90,
+        status:            src.status || 'Active',
+        _employment:       src.employment || null,
+        _followups:        src.followups || null,
+    };
+
+    // Employment
+    let employmentData;
+    if (traineeData._employment) {
+        const e = traineeData._employment;
+        employmentData = {
+            status:          e.status || 'Not Updated',
+            companyName:     e.companyName || e.employerName || '—',
+            jobRole:         e.jobRole || '—',
+            employmentType:  e.employmentType || '—',
+            joiningDate:     formatDate(e.joiningDate || e.startDate),
+            currentIncome:   Number(e.currentIncome || e.monthlyIncome) || 0,
+            previousIncome:  Number(e.previousIncome || traineeData.prevIncome) || 0,
+            jobCity:         e.jobCity || e.jobLocation || traineeData.district || '—',
+        };
+    } else {
+        employmentData = {
+            status: 'Not Updated', companyName: '—', jobRole: '—', employmentType: '—',
+            joiningDate: '—', currentIncome: 0,
+            previousIncome: traineeData.prevIncome || 0,
+            jobCity: traineeData.district || '—',
+        };
+    }
+
+    // Follow-ups
+    let followupData;
+    if (Array.isArray(traineeData._followups) && traineeData._followups.length > 0) {
+        const pending = traineeData._followups.find(f => f.status === 'due' || f.status === 'pending') || traineeData._followups[0];
+        followupData = {
+            status:        pending.status === 'completed' ? 'Completed'
+                          : pending.status === 'due' ? 'In Progress'
+                          : 'Pending',
+            period:        String(pending.periodDays || pending.period || 90),
+            date:          formatDate(pending.dueDate || pending.date),
+            notifications: traineeData._followups.filter(f => f.status !== 'completed').length,
+            _all:          traineeData._followups,
+        };
+    } else {
+        followupData = { status: 'Pending', period: '90', date: '—', notifications: 0, _all: null };
+    }
+
+    _trainee = traineeData;
+    return { traineeData, employmentData, followupData };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER DASHBOARD
+   ═══════════════════════════════════════════════════════════════ */
+async function renderDashboard() {
+    try {
         const { traineeData, employmentData, followupData } = await loadAllData();
 
-        if (!traineeData || !traineeData.fullName) {
+        // No data case
+        if (!traineeData || !traineeData.fullName || traineeData.fullName === 'Trainee') {
             document.getElementById('contentContainer').innerHTML = `
                 <div class="no-data">
                     <i class="fas fa-user-graduate"></i>
                     <h2>No Trainee Data Found</h2>
                     <p>Please complete your registration first, or log in again.</p>
-                    <br>
                     <a href="../auth/trainee-register.html" style="display:inline-block; background:linear-gradient(135deg,#2563eb,#7c3aed); color:white; padding:12px 30px; border-radius:12px; text-decoration:none; font-weight:600;">
                         <i class="fas fa-user-plus"></i> Go to Registration
                     </a>
@@ -660,275 +749,332 @@
             return;
         }
 
-        // ---- HEADER ----
-        const initial = traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : 'T';
-        document.getElementById('sidebarAvatar').textContent = initial;
-        document.getElementById('sidebarName').textContent = traineeData.fullName || 'Trainee';
-        document.getElementById('headerUserName').textContent = traineeData.fullName || 'Trainee';
+        // ---- HEADER / SIDEBAR ----
+        const initial = (traineeData.fullName || 'T').charAt(0).toUpperCase();
+        const avatarEl = document.getElementById('sidebarAvatar');
+        const nameEl = document.getElementById('sidebarName');
+        const headerNameEl = document.getElementById('headerUserName');
+        if (avatarEl) avatarEl.textContent = initial;
+        if (nameEl) nameEl.textContent = traineeData.fullName || 'Trainee';
+        if (headerNameEl) headerNameEl.textContent = traineeData.fullName || 'Trainee';
 
         // ---- WELCOME ----
-        document.getElementById('welcomeTitle').innerHTML = `<i class="fas fa-hand-peace"></i> Welcome Back, ${traineeData.fullName || 'Trainee'}! 🎉`;
-        document.getElementById('welcomeSub').textContent = 'Track your training, certification, employment and career growth in one place.';
+        document.getElementById('welcomeTitle').innerHTML =
+            `<i class="fas fa-hand-peace"></i> Welcome Back, ${escapeHtml(traineeData.fullName)}! 🎉`;
+        document.getElementById('welcomeSub').textContent =
+            'Track your training, certification, employment and career growth in one place.';
 
         // ---- STATS ----
         const trainingProgress = traineeData.trainingProgress || 0;
         document.getElementById('statTraining').textContent = trainingProgress + '%';
-        document.getElementById('statTrainingSub').textContent = `${traineeData.completedModules || 0}/${traineeData.totalModules || 10} modules`;
+        document.getElementById('statTrainingSub').textContent =
+            `${traineeData.completedModules}/${traineeData.totalModules} modules`;
 
-        document.getElementById('statCertification').textContent = traineeData.certificationStatus || 'Pending';
-        document.getElementById('statCertSub').textContent = traineeData.certificateName || 'Not Certified';
+        document.getElementById('statCertification').textContent = traineeData.certificationStatus;
+        document.getElementById('statCertSub').textContent = traineeData.certificateName;
 
-        const empStatus = employmentData.status || 'Not Updated';
-        document.getElementById('statEmployment').textContent = empStatus;
-        document.getElementById('statEmploySub').textContent = employmentData.companyName || 'No company';
+        document.getElementById('statEmployment').textContent = employmentData.status;
+        document.getElementById('statEmploySub').textContent = employmentData.companyName;
 
         const currentIncome = parseInt(employmentData.currentIncome) || 0;
-        document.getElementById('statIncome').textContent = '₹' + currentIncome.toLocaleString();
         const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 0;
         const growth = prevIncome > 0 ? Math.round(((currentIncome - prevIncome) / prevIncome) * 100) : 0;
-        document.getElementById('statIncomeSub').textContent = growth !== 0 ? `⬆ ${growth}% growth` : 'No growth data yet';
+
+        document.getElementById('statIncome').textContent = '₹' + currentIncome.toLocaleString();
+        document.getElementById('statIncomeSub').textContent =
+            growth !== 0 ? `${growth > 0 ? '⬆' : '⬇'} ${Math.abs(growth)}% growth` : 'No growth data yet';
 
         // ---- NOTIFICATION BADGE ----
-        const notifCount = followupData.notifications || 0;
-        document.getElementById('notificationBadge').textContent = notifCount;
+        const notifBadge = document.getElementById('notificationBadge');
+        if (notifBadge) notifBadge.textContent = followupData.notifications || 0;
 
         // ---- OVERVIEW ----
         renderOverview(traineeData, employmentData, followupData);
-    }
 
-    // ============================================================
-    // RENDER OVERVIEW
-    // ============================================================
-    function renderOverview(traineeData, employmentData, followupData) {
-        const currentIncome = parseInt(employmentData.currentIncome) || 0;
-        const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 0;
-        const growth = prevIncome > 0 ? Math.round(((currentIncome - prevIncome) / prevIncome) * 100) : 0;
-
-        // Build follow-up grid
-        let followupGrid = '';
-        if (followupData._all && followupData._all.length > 0) {
-            followupGrid = followupData._all.map(f => {
-                const isCompleted = f.status === 'completed';
-                const isDue = f.status === 'due' || f.status === 'overdue';
-                const cls = isCompleted ? 'completed' : isDue ? 'due' : '';
-                const icon = isCompleted ? '✅' : isDue ? '⏳' : '📅';
-                const days = f.periodDays || f.period || '—';
-                return `
-                    <div class="followup-item ${cls}">
-                        <div class="days">${days} Days</div>
-                        <div class="status-icon">${icon}</div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            followupGrid = `
-                <div class="followup-item completed"><div class="days">30 Days</div><div class="status-icon">✅</div></div>
-                <div class="followup-item due"><div class="days">90 Days</div><div class="status-icon">⏳</div></div>
-                <div class="followup-item"><div class="days">180 Days</div><div class="status-icon">📅</div></div>
-                <div class="followup-item"><div class="days">365 Days</div><div class="status-icon">🔒</div></div>
-            `;
-        }
-
-        const html = `
-            <div class="content-section active" id="section-overview">
-                <div class="dashboard-grid">
-                    <!-- Profile Card -->
-                    <div class="card profile">
-                        <div class="profile-photo">${traineeData.fullName ? traineeData.fullName.charAt(0).toUpperCase() : '👤'}</div>
-                        <h3><i class="fas fa-user-circle"></i> Profile Card</h3>
-                        <p><b>Trainee Name:</b> <span>${traineeData.fullName || 'N/A'}</span></p>
-                        <p><b>Trainee ID:</b> <span>${traineeData.traineeId || 'N/A'}</span></p>
-                        <p><b>Mobile Number:</b> <span>${traineeData.mobile || 'N/A'}</span></p>
-                        <p><b>Email:</b> <span>${traineeData.email || 'N/A'}</span></p>
-                        <p><b>Training Program:</b> <span>${traineeData.skillTrade || 'N/A'}</span></p>
-                        <p><b>Training Provider:</b> <span>${traineeData.trainingProvider || 'N/A'}</span></p>
-                        <p><b>Batch Details:</b> <span>${traineeData.batchId || 'N/A'}</span></p>
-                        <p><b>Profile Completion:</b> <span>${traineeData.profileCompletion || 90}%</span></p>
-                        <div class="progress-container">
-                            <div class="progress-bar" style="width:${traineeData.profileCompletion || 90}%"></div>
-                        </div>
-                    </div>
-
-                    <!-- Employment Status -->
-                    <div class="card">
-                        <h3><i class="fas fa-briefcase"></i> Employment Status</h3>
-                        <p><b>Status:</b> <span class="status-badge ${employmentData.status === 'Employed' || employmentData.status === 'Verified' ? 'success' : 'warning'}">${employmentData.status || 'Not Updated'}</span></p>
-                        <p><b>Company:</b> <span>${employmentData.companyName || 'N/A'}</span></p>
-                        <p><b>Job Role:</b> <span>${employmentData.jobRole || 'N/A'}</span></p>
-                        <p><b>Employment Type:</b> <span>${employmentData.employmentType || 'N/A'}</span></p>
-                        <p><b>Joining Date:</b> <span>${employmentData.joiningDate || 'N/A'}</span></p>
-                        <p><b>Location:</b> <span>${employmentData.jobCity || 'N/A'}</span></p>
-                        <a href="employment.html" style="margin-top:10px; display:inline-block; text-decoration:none;">
-                            <button class="btn-outline" style="font-size:12px; padding:6px 16px;"><i class="fas fa-edit"></i> Update Employment</button>
-                        </a>
-                    </div>
-
-                    <!-- Income -->
-                    <div class="card">
-                        <h3><i class="fas fa-chart-line"></i> Current Income</h3>
-                        <p><b>Monthly Salary:</b> <span style="font-size:22px; font-weight:700; color:#1a56db;">₹${currentIncome.toLocaleString()}</span></p>
-                        <p><b>Previous Income:</b> <span>₹${prevIncome.toLocaleString()}</span></p>
-                        <p><b>Income Growth:</b> <span class="status-badge ${growth > 0 ? 'success' : 'warning'}">📈 ${growth}%</span></p>
-                        <div style="background:#f1f5f9;border-radius:12px;padding:12px;margin:10px 0;display:flex;justify-content:space-around;align-items:center;">
-                            <div style="text-align:center;"><div style="font-size:11px;color:#94a3b8;">Before</div><div style="font-weight:700;">₹${prevIncome.toLocaleString()}</div></div>
-                            <div><i class="fas fa-arrow-right" style="color:#1a56db;"></i></div>
-                            <div style="text-align:center;"><div style="font-size:11px;color:#94a3b8;">After</div><div style="font-weight:700;color:#10b981;">₹${currentIncome.toLocaleString()}</div></div>
-                        </div>
-                        <a href="employment.html" style="text-decoration:none;">
-                            <button class="btn-outline" style="font-size:12px; padding:6px 16px;"><i class="fas fa-edit"></i> Update Income</button>
-                        </a>
-                    </div>
-
-                    <!-- Follow-up Status -->
-                    <div class="card">
-                        <h3><i class="fas fa-calendar-check"></i> Follow-up Schedule</h3>
-                        <div class="followup-grid">
-                            ${followupGrid}
-                        </div>
-                        <p><b>Next Date:</b> <span>${followupData.date || '—'}</span></p>
-                        <p><b>Status:</b> <span class="status-badge ${followupData.status === 'Completed' ? 'success' : 'warning'}">${followupData.status || 'Pending'}</span></p>
-                        <a href="follow-up.html" style="text-decoration:none;">
-                            <button class="btn-success" style="font-size:12px; padding:6px 16px;"><i class="fas fa-pen"></i> Complete Follow-up</button>
-                        </a>
-                    </div>
-
-                    <!-- Career Journey -->
-                    <div class="card">
-                        <h3><i class="fas fa-road"></i> Career Journey</h3>
-                        <div class="timeline-item">
-                            <b>👤 Registration</b>
-                            <p>Successfully Registered on ${traineeData.registrationDate || '—'}</p>
-                        </div>
-                        <div class="timeline-item">
-                            <b>📚 Training</b>
-                            <p>${traineeData.skillTrade || 'Training'} · ${traineeData.trainingProgress || 0}% completed</p>
-                        </div>
-                        <div class="timeline-item">
-                            <b>💼 Employment</b>
-                            <p>${employmentData.status || 'Not employed yet'}</p>
-                        </div>
-                        <div class="timeline-item">
-                            <b>📅 Follow-up</b>
-                            <p>${followupData.status || 'Pending'} · ${followupData.period || '—'} Days</p>
-                        </div>
-                        <div class="timeline-item">
-                            <b>🚀 Career Growth</b>
-                            <p>${growth > 0 ? growth + '% income growth' : 'Tracking progress'}</p>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="card">
-                        <h3><i class="fas fa-pen"></i> Quick Actions</h3>
-                        <p style="border:none; padding:0; margin-bottom:12px; font-size:14px; color:#64748b;">Update your latest career information.</p>
-                        <div class="quick-actions">
-                            <a href="employment.html" style="text-decoration:none; width:100%;">
-                                <button style="width:100%; justify-content:center;"><i class="fas fa-briefcase"></i> Update Employment</button>
-                            </a>
-                            <a href="follow-up.html" style="text-decoration:none; width:100%;">
-                                <button style="width:100%; justify-content:center;"><i class="fas fa-calendar"></i> Update Follow-up</button>
-                            </a>
-                            <a href="history.html" style="text-decoration:none; width:100%;">
-                                <button style="width:100%; justify-content:center;"><i class="fas fa-history"></i> View History</button>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+    } catch (err) {
+        console.error('renderDashboard error:', err);
+        document.getElementById('contentContainer').innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                <h2>Could not load dashboard</h2>
+                <p>${escapeHtml(err.message || 'Unknown error')}</p>
+                <button onclick="location.reload()"><i class="fas fa-sync"></i> Retry</button>
             </div>
         `;
-        document.getElementById('contentContainer').innerHTML = html;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER OVERVIEW
+   ═══════════════════════════════════════════════════════════════ */
+function renderOverview(traineeData, employmentData, followupData) {
+    const currentIncome = parseInt(employmentData.currentIncome) || 0;
+    const prevIncome = parseInt(employmentData.previousIncome) || traineeData.prevIncome || 0;
+    const growth = prevIncome > 0 ? Math.round(((currentIncome - prevIncome) / prevIncome) * 100) : 0;
+
+    // Follow-up grid
+    let followupGrid = '';
+    if (followupData._all && followupData._all.length > 0) {
+        followupGrid = followupData._all.map(f => {
+            const isCompleted = f.status === 'completed';
+            const isDue = f.status === 'due' || f.status === 'overdue';
+            const cls = isCompleted ? 'completed' : isDue ? 'due' : '';
+            const icon = isCompleted ? '✅' : isDue ? '⏳' : '📅';
+            const days = f.periodDays || f.period || '—';
+            return `
+                <div class="followup-item ${cls}">
+                    <div class="days">${days} Days</div>
+                    <div class="status-icon">${icon}</div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        followupGrid = `
+            <div class="followup-item completed"><div class="days">30 Days</div><div class="status-icon">✅</div></div>
+            <div class="followup-item due"><div class="days">90 Days</div><div class="status-icon">⏳</div></div>
+            <div class="followup-item"><div class="days">180 Days</div><div class="status-icon">📅</div></div>
+            <div class="followup-item"><div class="days">365 Days</div><div class="status-icon">🔒</div></div>
+        `;
     }
 
-    // ============================================================
-    // SIDEBAR NAVIGATION (no-op, links are real hrefs)
-    // ============================================================
-    function setupSidebarNavigation() {
-        console.log('Sidebar links configured for navigation');
-    }
+    const employmentStatusClass =
+        (employmentData.status === 'Employed' || employmentData.status === 'Verified') ? 'success'
+        : employmentData.status === 'Not Updated' ? 'warning'
+        : 'info';
 
-    // ============================================================
-    // TOGGLE SIDEBAR
-    // ============================================================
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('open');
-    }
+    const html = `
+        <div class="content-section active" id="section-overview">
+            <div class="dashboard-grid">
 
-    // ============================================================
-    // SHOW NOTIFICATIONS
-    // ============================================================
-    async function showNotifications() {
+                <!-- PROFILE CARD -->
+                <div class="card profile">
+                    <div class="profile-photo">${escapeHtml(traineeData.fullName.charAt(0).toUpperCase())}</div>
+                    <h3><i class="fas fa-user-circle"></i> Profile</h3>
+                    <div class="info-row"><span class="label">Name</span><span class="value">${escapeHtml(traineeData.fullName)}</span></div>
+                    <div class="info-row"><span class="label">Trainee ID</span><span class="value">${escapeHtml(traineeData.traineeId)}</span></div>
+                    <div class="info-row"><span class="label">Mobile</span><span class="value">${escapeHtml(traineeData.mobile || '—')}</span></div>
+                    <div class="info-row"><span class="label">Email</span><span class="value">${escapeHtml(traineeData.email || '—')}</span></div>
+                    <div class="info-row"><span class="label">Program</span><span class="value">${escapeHtml(traineeData.skillTrade)}</span></div>
+                    <div class="info-row"><span class="label">Provider</span><span class="value">${escapeHtml(traineeData.trainingProvider)}</span></div>
+                    <div class="info-row"><span class="label">Batch</span><span class="value">${escapeHtml(traineeData.batchId)}</span></div>
+                    <div class="info-row"><span class="label">Profile</span><span class="value">${traineeData.profileCompletion}%</span></div>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width:${traineeData.profileCompletion}%"></div>
+                    </div>
+                </div>
+
+                <!-- EMPLOYMENT -->
+                <div class="card">
+                    <h3><i class="fas fa-briefcase"></i> Employment</h3>
+                    <div class="info-row">
+                        <span class="label">Status</span>
+                        <span class="value"><span class="status-badge ${employmentStatusClass}">${escapeHtml(employmentData.status)}</span></span>
+                    </div>
+                    <div class="info-row"><span class="label">Company</span><span class="value">${escapeHtml(employmentData.companyName)}</span></div>
+                    <div class="info-row"><span class="label">Role</span><span class="value">${escapeHtml(employmentData.jobRole)}</span></div>
+                    <div class="info-row"><span class="label">Type</span><span class="value">${escapeHtml(employmentData.employmentType)}</span></div>
+                    <div class="info-row"><span class="label">Joining Date</span><span class="value">${escapeHtml(employmentData.joiningDate)}</span></div>
+                    <div class="info-row"><span class="label">Location</span><span class="value">${escapeHtml(employmentData.jobCity)}</span></div>
+                    <a href="employment.html" style="text-decoration:none; display:block; margin-top:14px;">
+                        <button class="btn-outline" style="width:100%; justify-content:center; font-size:13px;">
+                            <i class="fas fa-edit"></i> Update Employment
+                        </button>
+                    </a>
+                </div>
+
+                <!-- INCOME -->
+                <div class="card">
+                    <h3><i class="fas fa-chart-line"></i> Income</h3>
+                    <div class="info-row"><span class="label">Current Salary</span><span class="value" style="font-size:20px; font-weight:800; color:#1a56db;">₹${currentIncome.toLocaleString()}</span></div>
+                    <div class="info-row"><span class="label">Previous Income</span><span class="value">₹${prevIncome.toLocaleString()}</span></div>
+                    <div class="info-row">
+                        <span class="label">Growth</span>
+                        <span class="value"><span class="status-badge ${growth > 0 ? 'success' : 'warning'}">${growth > 0 ? '📈' : '📊'} ${growth}%</span></span>
+                    </div>
+                    <div style="background:#f1f5f9;border-radius:12px;padding:12px;margin:12px 0;display:flex;justify-content:space-around;align-items:center;">
+                        <div style="text-align:center;">
+                            <div style="font-size:11px;color:#94a3b8;font-weight:600;">BEFORE</div>
+                            <div style="font-weight:700;margin-top:2px;">₹${prevIncome.toLocaleString()}</div>
+                        </div>
+                        <div><i class="fas fa-arrow-right" style="color:#1a56db;font-size:18px;"></i></div>
+                        <div style="text-align:center;">
+                            <div style="font-size:11px;color:#94a3b8;font-weight:600;">AFTER</div>
+                            <div style="font-weight:700;color:#10b981;margin-top:2px;">₹${currentIncome.toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <a href="employment.html" style="text-decoration:none; display:block;">
+                        <button class="btn-outline" style="width:100%; justify-content:center; font-size:13px;">
+                            <i class="fas fa-edit"></i> Update Income
+                        </button>
+                    </a>
+                </div>
+
+                <!-- FOLLOW-UP -->
+                <div class="card">
+                    <h3><i class="fas fa-calendar-check"></i> Follow-up Schedule</h3>
+                    <div class="followup-grid">${followupGrid}</div>
+                    <div class="info-row"><span class="label">Next Date</span><span class="value">${escapeHtml(followupData.date)}</span></div>
+                    <div class="info-row">
+                        <span class="label">Status</span>
+                        <span class="value"><span class="status-badge ${followupData.status === 'Completed' ? 'success' : 'warning'}">${escapeHtml(followupData.status)}</span></span>
+                    </div>
+                    <a href="follow-up.html" style="text-decoration:none; display:block; margin-top:12px;">
+                        <button class="btn-success" style="width:100%; justify-content:center; font-size:13px;">
+                            <i class="fas fa-pen"></i> Complete Follow-up
+                        </button>
+                    </a>
+                </div>
+
+                <!-- CAREER JOURNEY -->
+                <div class="card">
+                    <h3><i class="fas fa-road"></i> Career Journey</h3>
+                    <div class="timeline-item">
+                        <b>👤 Registration</b>
+                        <p>${escapeHtml(traineeData.registrationDate)}</p>
+                    </div>
+                    <div class="timeline-item">
+                        <b>📚 Training</b>
+                        <p>${escapeHtml(traineeData.skillTrade)} · ${traineeData.trainingProgress}% complete</p>
+                    </div>
+                    <div class="timeline-item">
+                        <b>💼 Employment</b>
+                        <p>${escapeHtml(employmentData.status)}</p>
+                    </div>
+                    <div class="timeline-item">
+                        <b>📅 Follow-up</b>
+                        <p>${escapeHtml(followupData.status)} · ${escapeHtml(followupData.period)} Days</p>
+                    </div>
+                    <div class="timeline-item">
+                        <b>🚀 Career Growth</b>
+                        <p>${growth > 0 ? growth + '% income growth' : 'Tracking progress'}</p>
+                    </div>
+                </div>
+
+                <!-- QUICK ACTIONS -->
+                <div class="card">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    <p style="font-size:13.5px; color:#64748b; margin-bottom:14px;">Update your latest career information.</p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <a href="employment.html" style="text-decoration:none;">
+                            <button style="width:100%; justify-content:center;"><i class="fas fa-briefcase"></i> Employment</button>
+                        </a>
+                        <a href="follow-up.html" style="text-decoration:none;">
+                            <button style="width:100%; justify-content:center;"><i class="fas fa-calendar"></i> Follow-up</button>
+                        </a>
+                        <a href="history.html" style="text-decoration:none;">
+                            <button style="width:100%; justify-content:center;"><i class="fas fa-history"></i> History</button>
+                        </a>
+                        <a href="resume-intelligence.html" style="text-decoration:none;">
+                            <button style="width:100%; justify-content:center;"><i class="fas fa-file-alt"></i> Resume</button>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
+    document.getElementById('contentContainer').innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR TOGGLE
+   ═══════════════════════════════════════════════════════════════ */
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════════ */
+async function showNotifications() {
+    try {
         const { followupData } = await loadAllData();
-        let msg = '📬 Notifications:\n\n';
+        let msg = '📬 Notifications\n\n';
         if (followupData) {
             msg += `• Follow-up Status: ${followupData.status || 'Pending'}\n`;
             msg += `• Next Follow-up: ${followupData.period || '90'} Days\n`;
+            msg += `• Pending Actions: ${followupData.notifications || 0}\n`;
         } else {
             msg += '• No new notifications.\n';
         }
         alert(msg);
+    } catch (e) {
+        alert('Could not load notifications');
     }
+}
 
-    // ============================================================
-    // LOGOUT — Firebase
-    // ============================================================
-    async function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            try { await auth.signOut(); } catch (e) {}
-            try {
-                localStorage.removeItem('currentTraineeId');
-                localStorage.removeItem('currentTraineeEmail');
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userRole');
-                localStorage.removeItem('userId');
-            } catch (e) {}
-            window.location.href = '../auth/login.html?role=trainee';
-        }
-    }
+/* ═══════════════════════════════════════════════════════════════
+   LOGOUT
+   ═══════════════════════════════════════════════════════════════ */
+async function logout() {
+    if (!confirm('Are you sure you want to logout?')) return;
+    try { await auth.signOut(); } catch (e) {}
+    try {
+        ['currentTraineeId', 'currentTraineeEmail', 'isLoggedIn', 'userRole', 'userId']
+            .forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+    window.location.href = '../auth/login.html?role=trainee';
+}
 
-    // ============================================================
-    // THEME TOGGLE
-    // ============================================================
-    function toggleTheme() {
-        const html = document.documentElement;
-        const current = html.getAttribute('data-theme') || 'light';
-        const next = current === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', next);
-        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
-        const icon = document.querySelector('.theme-toggle i');
-        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
+/* ═══════════════════════════════════════════════════════════════
+   THEME TOGGLE
+   ═══════════════════════════════════════════════════════════════ */
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+    const icon = document.getElementById('themeIcon');
+    if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
 
-    // ============================================================
-    // INITIALIZE
-    // ============================================================
-    document.addEventListener('DOMContentLoaded', async function() {
-        // Apply saved theme
-        try {
-            const saved = localStorage.getItem('skillintel-theme') || 'light';
-            document.documentElement.setAttribute('data-theme', saved);
-            const icon = document.querySelector('.theme-toggle i');
-            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        } catch (e) {}
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async function() {
+    // Apply saved theme
+    try {
+        const saved = localStorage.getItem('skillintel-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    } catch (e) {}
 
-        // Auth guard + load
-        try {
-            await requireAuth();
-            await renderDashboard();
-        } catch (e) {
-            console.warn('Init aborted:', e);
-        }
-
-        // Mobile: close sidebar on outside click
-        document.addEventListener('click', function(e) {
-            const sidebar = document.getElementById('sidebar');
-            const toggle = document.querySelector('.menu-toggle');
-            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
-                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
-                    sidebar.classList.remove('open');
-                }
+    // Auth + render
+    try {
+        await requireAuth();
+        await renderDashboard();
+        console.log('✅ Trainee dashboard loaded');
+    } catch (e) {
+        console.warn('Init aborted:', e);
+        // Show error state if not redirected
+        if (e !== 'not-authenticated' && e !== 'no-profile' && e !== 'wrong-role') {
+            const container = document.getElementById('contentContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i>
+                        <h2>Dashboard error</h2>
+                        <p>${escapeHtml(e.message || e)}</p>
+                        <button onclick="location.reload()"><i class="fas fa-sync"></i> Retry</button>
+                    </div>
+                `;
             }
-        });
+        }
+    }
+
+    // Mobile: close sidebar on outside click
+    document.addEventListener('click', function(e) {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.querySelector('.menu-toggle');
+        if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+            if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        }
     });
+});
 </script>
 
 <script src="../js/script.js"></script>

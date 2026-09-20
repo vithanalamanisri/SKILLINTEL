@@ -457,9 +457,14 @@ body{min-height:100vh;display:flex;}
 
 <!-- TAB: MY APPLICATIONS -->
 <div class="tab-panel" id="panel-myapps">
-<div class="apps-list" id="myAppsList">
-<div class="loading"><div class="spinner"></div><p style="color:#64748b;font-size:14px">Loading your applications…</p></div>
-</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+        <button onclick="manualRefreshApplications()" style="padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;box-shadow:0 6px 16px rgba(37,99,235,.25)">
+            <i class="fas fa-sync-alt"></i> Refresh Applications
+        </button>
+    </div>
+    <div class="apps-list" id="myAppsList">
+        <div class="loading"><div class="spinner"></div><p style="color:#64748b;font-size:14px">Loading your applications…</p></div>
+    </div>
 </div>
 
 <!-- TAB: NOTIFICATIONS -->
@@ -731,6 +736,7 @@ skillTrade:d.skillTrade||'',
 state:d.state||'',
 district:d.district||''
 };
+console.log('👤 Trainee loaded:', _traineeData.fullName, '| skills:', _traineeData.skills.length);
 }catch(e){console.warn('loadTrainee:',e);}
 }
 
@@ -811,32 +817,97 @@ applyTrainingFilters();
 }
 
 /* ============================================================ */
-/* SUBSCRIBE MY APPLICATIONS                                    */
+/* SUBSCRIBE MY APPLICATIONS (robust — never loses data)        */
 /* ============================================================ */
 function subscribeToMyApplications(){
-if(!_firebaseUser)return;
-if(unsubscribeApps){try{unsubscribeApps();}catch(e){}unsubscribeApps=null;}
-try{
-unsubscribeApps=db.collection('applications')
-.where('traineeUid','==',_firebaseUser.uid)
-.onSnapshot(snap=>{
-myApplications=[];
-snap.forEach(d=>myApplications.push({id:d.id,...d.data()}));
+    if(!_firebaseUser){
+        console.warn('⚠️ subscribeToMyApplications called without user — retrying in 500ms');
+        setTimeout(subscribeToMyApplications, 500);
+        return;
+    }
+    if(unsubscribeApps){try{unsubscribeApps();}catch(e){}unsubscribeApps=null;}
 
-myApplications.sort((a,b)=>{
-const ta=a.statusUpdatedAt&&a.statusUpdatedAt.toDate?a.statusUpdatedAt.toDate().getTime():(a.appliedAt&&a.appliedAt.toDate?a.appliedAt.toDate().getTime():0);
-const tb=b.statusUpdatedAt&&b.statusUpdatedAt.toDate?b.statusUpdatedAt.toDate().getTime():(b.appliedAt&&b.appliedAt.toDate?b.appliedAt.toDate().getTime():0);
-return tb-ta;
-});
+    console.log('📡 Subscribing to applications for uid:', _firebaseUser.uid);
 
-renderMyApplications();
-renderNotifications();
-updateNotifBadge();
-renderHero();
-applyFilters();
-},err=>console.warn('Apps listener:',err));
-}catch(e){console.warn(e);}
+    try{
+        unsubscribeApps = db.collection('applications')
+            .where('traineeUid','==',_firebaseUser.uid)
+            .onSnapshot(
+                snap => {
+                    console.log('✅ Applications snapshot received:', snap.size, 'documents');
+                    myApplications = [];
+                    snap.forEach(d => myApplications.push({id: d.id, ...d.data()}));
+
+                    myApplications.sort((a,b)=>{
+                        const ta = a.appliedAt?.toDate ? a.appliedAt.toDate().getTime() : 0;
+                        const tb = b.appliedAt?.toDate ? b.appliedAt.toDate().getTime() : 0;
+                        return tb - ta;
+                    });
+
+                    renderMyApplications();
+                    renderNotifications();
+                    updateNotifBadge();
+                    renderHero();
+                    applyFilters();
+
+                    const badge = document.getElementById('myAppsCount');
+                    if(badge) badge.textContent = myApplications.length;
+                },
+                err => {
+                    console.error('❌ Applications listener error:', err);
+                    loadMyApplicationsOnce();
+                }
+            );
+    } catch(e){
+        console.error('subscribeToMyApplications threw:', e);
+        loadMyApplicationsOnce();
+    }
 }
+
+/* One-time fallback fetch — always runs if listener fails */
+async function loadMyApplicationsOnce(){
+    if(!_firebaseUser) return;
+    try{
+        const snap = await db.collection('applications')
+            .where('traineeUid','==',_firebaseUser.uid)
+            .get();
+
+        myApplications = [];
+        snap.forEach(d => myApplications.push({id: d.id, ...d.data()}));
+
+        myApplications.sort((a,b)=>{
+            const ta = a.appliedAt?.toDate ? a.appliedAt.toDate().getTime() : 0;
+            const tb = b.appliedAt?.toDate ? b.appliedAt.toDate().getTime() : 0;
+            return tb - ta;
+        });
+
+        console.log('📥 Fallback fetched applications:', myApplications.length);
+        renderMyApplications();
+        renderNotifications();
+        updateNotifBadge();
+        renderHero();
+        applyFilters();
+
+        const badge = document.getElementById('myAppsCount');
+        if(badge) badge.textContent = myApplications.length;
+    } catch(e){
+        console.warn('Fallback application fetch failed:', e);
+    }
+}
+
+/* Manual refresh */
+async function manualRefreshApplications(){
+    const container = document.getElementById('myAppsList');
+    if(container){
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><p style="color:#64748b;font-size:14px">Refreshing…</p></div>';
+    }
+    await loadMyApplicationsOnce();
+    if(!unsubscribeApps){
+        subscribeToMyApplications();
+    }
+    showToast('✅ Applications refreshed', 'success');
+}
+window.manualRefreshApplications = manualRefreshApplications;
 
 /* ============================================================ */
 /* SUBSCRIBE MY ENROLLMENTS                                     */
@@ -1143,7 +1214,6 @@ const enrolledCount=Number(p.enrolled)||0;
 const seatsLeft=Math.max(seats-enrolledCount,0);
 const seatsPct=seats?Math.min((enrolledCount/seats)*100,100):0;
 const statusLabel=(p.status||'active').charAt(0).toUpperCase()+(p.status||'active').slice(1);
-const isDemo=p._isDemo;
 
 return `
 <div class="training-card ${enrolled?'enrolled':''}">
@@ -1337,9 +1407,7 @@ enrollInProgram(p);
 }
 
 async function enrollInProgram(program){
-const btn=document.activeElement;
 try{
-// Check for duplicate
 const existing=await db.collection('enrollments')
 .where('traineeUid','==',_firebaseUser.uid)
 .where('programId','==',program.id)
@@ -1369,7 +1437,6 @@ progress:0,
 enrolledAt:firebase.firestore.FieldValue.serverTimestamp()
 });
 
-// Increment enrollment count on program
 try{
 await db.collection('programs').doc(program.id).update({
 enrolled:firebase.firestore.FieldValue.increment(1)
@@ -1378,7 +1445,6 @@ enrolled:firebase.firestore.FieldValue.increment(1)
 
 showToast(`✅ Enrollment request sent! Provider will confirm soon.`,'success');
 
-// Local optimistic update
 myEnrollments.push({
 programId:program.id,
 programName:program.name,
@@ -1493,6 +1559,10 @@ await db.collection('jobs').doc(j.id).update({applications:firebase.firestore.Fi
 showToast('✅ Application submitted! Employer will contact you soon.','success');
 closeModal('applyModal');
 currentApplyJob=null;
+
+// Immediately refresh applications
+setTimeout(loadMyApplicationsOnce, 500);
+
 }catch(e){
 console.error('Submit failed:',e);
 showToast('❌ Could not submit. Try again.','error');
@@ -1688,8 +1758,15 @@ const tab=document.querySelector(`.tab[data-tab="${name}"]`);
 const panel=document.getElementById('panel-'+name);
 if(tab)tab.classList.add('active');
 if(panel)panel.classList.add('active');
-if(name==='myapps')renderMyApplications();
-if(name==='notifications')renderNotifications();
+
+if(name==='myapps'){
+// Always re-fetch fresh data when opening this tab
+loadMyApplicationsOnce();
+}
+if(name==='notifications'){
+if(!unsubscribeApps)subscribeToMyApplications();
+renderNotifications();
+}
 if(name==='training')renderTraining();
 }
 document.querySelectorAll('.tab').forEach(t=>{
@@ -1748,58 +1825,106 @@ if(e.key==='Escape')document.querySelectorAll('.modal-overlay').forEach(m=>m.cla
 });
 
 /* ============================================================ */
-/* INIT                                                         */
+/* LOAD MY DATA ONCE (saved + enrollments + applications)       */
 /* ============================================================ */
-document.addEventListener('DOMContentLoaded',async function(){
-if(_initDone)return;
-_initDone=true;
-
-try{
-const saved=localStorage.getItem('skillintel-theme')||'light';
-document.documentElement.setAttribute('data-theme',saved);
-const i=document.querySelector('.theme-toggle i');
-if(i)i.className=saved==='dark'?'fas fa-sun':'fas fa-moon';
-}catch(e){}
-
-const user=await resolveAuth();
-if(!user)return;
-
-await loadTrainee();
-await loadMyDataOnce();
-
-renderHero();
-subscribeToJobs();
-subscribeToPrograms();
-subscribeToMyApplications();
-subscribeToMyEnrollments();
-
-console.log('✅ Job Discovery + Training ready');
-
-document.addEventListener('click',function(e){
-const sb=document.getElementById('sidebar');
-const tg=document.querySelector('.menu-toggle');
-if(!sb||window.innerWidth>768)return;
-if(!sb.classList.contains('open'))return;
-if(!sb.contains(e.target)&&e.target!==tg&&!tg.contains(e.target))sb.classList.remove('open');
-});
-});
-
 async function loadMyDataOnce(){
-if(!_firebaseUser)return;
-try{
-const snap=await db.collection('saved_jobs').where('traineeUid','==',_firebaseUser.uid).get();
-mySavedJobs=[];
-snap.forEach(d=>mySavedJobs.push({id:d.id,...d.data()}));
-}catch(e){console.warn('loadSaved:',e);}
-try{
-const snap=await db.collection('enrollments').where('traineeUid','==',_firebaseUser.uid).get();
-myEnrollments=[];
-snap.forEach(d=>myEnrollments.push({id:d.id,...d.data()}));
-renderTraining();
-renderHero();
-}catch(e){console.warn('loadEnrollments:',e);}
+    if(!_firebaseUser) return;
+
+    // Load saved jobs
+    try{
+        const snap = await db.collection('saved_jobs')
+            .where('traineeUid','==',_firebaseUser.uid)
+            .get();
+        mySavedJobs = [];
+        snap.forEach(d => mySavedJobs.push({id: d.id, ...d.data()}));
+        console.log('📥 Loaded saved jobs:', mySavedJobs.length);
+    } catch(e){
+        console.warn('loadSaved:', e);
+    }
+
+    // Load enrollments
+    try{
+        const snap = await db.collection('enrollments')
+            .where('traineeUid','==',_firebaseUser.uid)
+            .get();
+        myEnrollments = [];
+        snap.forEach(d => myEnrollments.push({id: d.id, ...d.data()}));
+        console.log('📥 Loaded enrollments:', myEnrollments.length);
+        renderTraining();
+        renderHero();
+    } catch(e){
+        console.warn('loadEnrollments:', e);
+    }
+
+    // Load applications (initial fetch before listener attaches)
+    await loadMyApplicationsOnce();
 }
 
+/* ============================================================ */
+/* INIT                                                         */
+/* ============================================================ */
+document.addEventListener('DOMContentLoaded', async function(){
+    if(_initDone) return;
+    _initDone = true;
+
+    // Apply saved theme
+    try{
+        const saved = localStorage.getItem('skillintel-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        const i = document.querySelector('.theme-toggle i');
+        if(i) i.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    } catch(e){}
+
+    // Resolve auth
+    const user = await resolveAuth();
+    if(!user){
+        console.warn('No user — halting init');
+        return;
+    }
+
+    console.log('👤 Logged in as:', user.email, '| UID:', user.uid);
+
+    // Load trainee profile
+    await loadTrainee();
+
+    // Load saved jobs + enrollments + applications (one-time fallback)
+    await loadMyDataOnce();
+
+    // Render hero first
+    renderHero();
+
+    // Now attach live listeners
+    subscribeToJobs();
+    subscribeToPrograms();
+    subscribeToMyApplications();
+    subscribeToMyEnrollments();
+
+    // Extra safety: force-render applications after 3 seconds
+    setTimeout(() => {
+        if(myApplications.length === 0){
+            console.log('🔄 No apps detected via listener — running fallback fetch');
+            loadMyApplicationsOnce();
+        } else {
+            renderMyApplications();
+            updateNotifBadge();
+        }
+    }, 3000);
+
+    console.log('✅ Job Discovery + Training ready');
+
+    // Outside-click to close sidebar on mobile
+    document.addEventListener('click', function(e){
+        const sb = document.getElementById('sidebar');
+        const tg = document.querySelector('.menu-toggle');
+        if(!sb || window.innerWidth > 768) return;
+        if(!sb.classList.contains('open')) return;
+        if(!sb.contains(e.target) && e.target !== tg && !tg.contains(e.target)) sb.classList.remove('open');
+    });
+});
+
+/* ============================================================ */
+/* CLEANUP                                                      */
+/* ============================================================ */
 window.addEventListener('beforeunload',()=>{
 if(unsubscribeJobs){try{unsubscribeJobs();}catch(e){}}
 if(unsubscribeApps){try{unsubscribeApps();}catch(e){}}
